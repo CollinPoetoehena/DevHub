@@ -25,6 +25,20 @@ In enterprise environments, it is common to split reusable components into separ
 If any component grows too large or needs to be separated for other reasons, it can always be split into its own dedicated repository.
 
 ## Project Structure
-The project structure is organized by component type, with each type having its own directory:
+The project structure is organized by component type, with each type having its own top-level directory:
 
-TODO: make this here later, also add separate for /scripts wich has reusable scripts for publishing packages, CI/CD, etc., and the GitHub Actions folder for publishing workflows, etc. 
+```
+dev-hub/
+├── .github/
+│   └── workflows/      # GitHub Actions workflows (publishing, linting, etc.)
+├── scripts/            # Reusable shell/Python scripts (CI/CD helpers, package publishing, etc.)
+├── terraform/          # Reusable Terraform modules (IaC)
+│   ├── README.md       # Module index, naming conventions, and usage
+│   └── <module-name>/  # One directory per module
+├── ansible/            # Reusable Ansible roles and playbooks
+│   ├── README.md       # Role index, naming conventions, and usage
+│   └── roles/          # One directory per role
+├── <package-type>/     # Other reusable libraries/packages (e.g. Python, Go, etc.)
+│   └── README.md
+└── README.md
+```

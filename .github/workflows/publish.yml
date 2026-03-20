@@ -1,0 +1,117 @@
+# This workflow builds a Docker image for the Go API and pushes it to the Container Registry
+name: Publish
+# TODO: sometime make the publish workflow, such as read which specific package is updated via folder name, such as terraform, ansible, etc.
+# TODO: then apply general steps (e.g. git tag, etc.), then potentially something specific for each type, such as ansible, etc.
+# TODO: some may not need anything specific, such as Terraform you can just load with the Git URL, etc.
+
+on:
+  # Trigger workflow on push to the specified branch and paths
+  push:
+    branches: [ initial-setup-planning ]
+    paths:
+      - 'services/api-example/**'
+      - '.github/workflows/api-example-docker.yml'
+
+# Variables for the workflow
+env:
+  IMAGE_NAME: transacflow-api-example
+  IMAGE_TAG: latest
+  REGISTRY: ghcr.io
+  REQUEST_RETURN_STRING: "Hello, TransacFlow!"
+  PORT: 80
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image to GitHub Container Registry
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # Allows workflow to read repository contents
+      packages: write  # Allows workflow to push Docker images to GitHub Packages/Container Registry
+    # Set outputs for use in other jobs
+    outputs:
+      image_tag: ${{ steps.set-tag.outputs.image_tag }} # Output the full image tag for use in deployment job
+    steps:
+      # Check out the repository code so workflow can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Log in to GitHub Container Registry (${{ env.REGISTRY}}) using GitHub credentials
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY}}
+          username: ${{ github.repository_owner }} # GitHub repository owner
+          password: ${{ secrets.GITHUB_TOKEN }} # Github automatically provides this token to authenticate actions
+
+      # Set lowercase owner for image tag (${{ env.REGISTRY}} requires lowercase repository names)
+      - name: Set image tag (includes lowercase owner for ${{ env.REGISTRY}} naming)
+        id: set-tag
+        run: |
+          echo "Repository owner: ${{ github.repository_owner }}"
+          owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+          echo "owner=$owner" >> $GITHUB_OUTPUT
+          echo "Lowercase owner created: $owner"
+          
+          image_tag="${{ env.REGISTRY}}/$owner/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
+          echo "Full image tag: $image_tag"
+
+      # Build the Docker image and push it to GitHub Container Registry
+      # - context: Path to the Docker build context in the repository
+      # - push: true means the image will be pushed to the registry
+      # - tags: The full image name and tag (using the lowercase owner)
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/api-example
+          push: true
+          tags: ${{ steps.set-tag.outputs.image_tag }}
+  
+  # Deploy job to Azure VM
+  # Requires secrets to be set in the repository:
+  #   - AZURE_VM_SSH_KEY: SSH private key for accessing the VM
+  #   - AZURE_VM_USER: Username for the VM
+  #   - AZURE_VM_IP: Public IP address of the VM
+  deploy:
+    name: Deploy to Azure VM
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      # Install SSH key for accessing the Azure VM (this adds the key to the ssh-agent)
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.AZURE_VM_SSH_KEY }}
+      
+      # TODO: later configure VMs with Ansible, such as via jump host, but for now do it like this for testing
+      # TODO: manually install Docker on the VM for now: https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
+      # Test afterwards with SSH on VM: docker run hello-world
+
+      - name: Log in to GitHub Container Registry on VM
+        # Github automatically provides this token to authenticate actions
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} \
+            "echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY}} -u ${{ github.repository_owner }} --password-stdin"
+
+      - name: Pull and run Docker image on VM (also removes existing container if present, ignore errors from that)
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} \
+            "docker pull ${{ needs.build-and-push.outputs.image_tag }} && \
+            docker rm -f transacflow-api-example || true && \
+            docker run -d --name transacflow-api-example -p ${{ env.PORT }}:${{ env.PORT }} ${{ needs.build-and-push.outputs.image_tag }}"
+
+      # Test the deployed API by making an HTTP request to the public IP and checking the response
+      - name: Verify API response
+        run: |
+          for i in {1..10}; do
+            RESPONSE=$(curl -s http://${{ secrets.AZURE_VM_IP }}:${{ env.PORT }}/ || true)
+            echo "Response: $RESPONSE"
+            if [[ "$RESPONSE" == *"${{ env.REQUEST_RETURN_STRING }}"* ]]; then
+              echo "API returned expected string: $RESPONSE"
+              exit 0
+            fi
+            echo "Waiting for API..."
+            sleep 3
+          done
+          echo "API did not return expected string after several attempts."
+          exit 1

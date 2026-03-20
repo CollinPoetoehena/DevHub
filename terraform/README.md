@@ -32,6 +32,8 @@ Where:
 - `<PROVIDER>` is the name of the cloud provider or service (e.g., `aws`, `azurerm`, etc.).
 - `<NAME>` is a brief description of the module's functionality or the resource it manages (e.g., `vpc`, `ec2`, `s3`, `eks`, etc.).
 
+This is applied via the `terraform` folder, so the module directories are named `<provider>-<name>`, e.g. `azurerm-vm`, `azurerm-network`, etc. This naming convention makes it clear at a glance which provider and resource type each module is for, and is consistent with common Terraform module naming practices.
+
 ## Usage
 
 Reference a module from this repository directly in your Terraform configuration:
