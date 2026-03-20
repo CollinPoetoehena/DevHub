@@ -125,6 +125,9 @@ module "network" {
 | `peerings` | Flat map of VNet peering connections. Azure peering is unidirectional; declare both sides for full mesh. | `map(object)` | no |
 | `peerings[*].vnet_key` | Key from `var.vnets` — the local VNet that initiates the peering | `string` | yes |
 | `peerings[*].remote_vnet_key` | Key from `var.vnets` — the remote VNet to peer with; resource ID resolved internally | `string` | yes |
+| `peerings[*].allow_forwarded_traffic` | Allow traffic forwarded from the remote VNet (not originated there) | `bool` | no (default: `false`) |
+| `peerings[*].allow_gateway_transit` | Allow the remote VNet to use this VNet's gateway | `bool` | no (default: `false`) |
+| `peerings[*].use_remote_gateways` | Use the remote VNet's gateway for routing (requires `allow_gateway_transit` on the remote side) | `bool` | no (default: `false`) |
 | `nsgs` | Map of NSGs to create. Key is the NSG name. | `map(object)` | no |
 | `nsgs[*].security_rules` | List of security rules for the NSG | `list(object)` | no |
 | `subnets` | Map of subnets to create. Key is the subnet name. | `map(object)` | yes |

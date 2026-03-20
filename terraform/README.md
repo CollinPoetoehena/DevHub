@@ -46,8 +46,6 @@ module "example" {
 
 | Module | Description |
 |--------|-------------|
-| [azurerm-vm](./azurerm-vm/README.md) | Creates one or more Azure Linux VMs with NICs, optional public IPs, and NSG associations |
+| [azurerm-vm](./azurerm-vm/README.md) | Creates one or more Azure Linux VMs with NICs and optional public IPs |
 | [azurerm-keyvault](./azurerm-keyvault/README.md) | Creates an Azure Key Vault with an optional access policy for keys, secrets, and certificates |
 | [azurerm-network](./azurerm-network/README.md) | Creates a full Azure network stack — VNets, NSGs, and Subnets — in a single call |
-
-TODO: add here short description later per module, and link to the module's README.md for more details.
