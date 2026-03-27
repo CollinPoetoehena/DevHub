@@ -1,44 +1,32 @@
 # DevHub
-DevHub: A central repository for storing and sharing reusable development resources, libraries, modules, and tools across multiple languages and technologies.
+DevHub: A central hub referencing reusable development resources, libraries, modules, and tools across multiple languages and technologies.
 
 While DevHub primarily serves as a hub for my personal development projects, it is publicly available to benefit others who may find these resources useful and wish to access them easily without necessary credentials.
 
 ## Table of Contents
 1. [Documentation](#documentation)
 2. [Design](#design)
-3. [Project Structure](#project-structure)
+3. [Repositories](#repositories)
 
 ## Documentation
-The documentation is intentionally kept minimal, with the main documentation limited to this README.md file, and specific files per type in this repository (e.g. Terraform modules README.md, Ansible roles README.md, etc.). 
+The documentation is intentionally kept minimal, with the main documentation limited to this README.md file and the individual repository READMEs linked below.
 
 ## Design
-DevHub is a central repository (monorepo) for all reusable components I use in my projects—including Terraform modules, Ansible roles, and more. This approach is especially handy for my personal projects, and offers several benefits:
+DevHub started as a monorepo containing all reusable components—Terraform modules, Ansible roles, and more. However, this approach has a practical limitation: Git does not support cloning only a subdirectory of a repository. Cloning the repo always pulls everything, which is wasteful and inconvenient when a consumer only needs one component type.
 
-- Centralized management of all reusable code.
-- Easier maintenance and updates for solo development.
-- Simplified structure—just one repository to track.
-- Keeps other project repositories clean, without mixing in reusable logic or modules.
-- Allows all logic for publishing packages (such as scripts, CI/CD, etc.) to be managed centrally, avoiding repetition (DRY) and keeping things simple (KISS).
+To address this, each component type now lives in its own dedicated repository. This offers several benefits:
 
-In enterprise environments, it is common to split reusable components into separate repositories per type (e.g., Ansible roles, Terraform modules) or even individual repositories per package/component. However, since this is mainly for my personal projects, I keep everything together in this repository for convenience.
+- Consumers clone only what they need, nothing more.
+- Each repository has a focused scope, versioning, and release cycle.
+- Keeps CI/CD pipelines and tooling scoped and simpler per component type.
+- Follows common best practices for distributing reusable infrastructure components.
 
-If any component grows too large or needs to be separated for other reasons, it can always be split into its own dedicated repository.
+DevHub remains the central index—this README links to all the individual repositories so they are easy to discover. In addition, dev-hub centralizes all shared publishing logic: GitHub Actions workflows, helper scripts, and any other CI/CD tooling used to release or validate components. Individual repositories reference or reuse these centrally managed pipelines rather than duplicating them.
 
-## Project Structure
-The project structure is organized by component type, with each type having its own top-level directory:
+## Repositories
 
-```
-dev-hub/
-├── .github/
-│   └── workflows/      # GitHub Actions workflows (publishing, linting, etc.)
-├── scripts/            # Reusable shell/Python scripts (CI/CD helpers, package publishing, etc.)
-├── terraform/          # Reusable Terraform modules (IaC)
-│   ├── README.md       # Module index, naming conventions, and usage
-│   └── <module-name>/  # One directory per module
-├── ansible/            # Reusable Ansible roles and playbooks
-│   ├── README.md       # Role index, naming conventions, and usage
-│   └── roles/          # One directory per role
-├── <package-type>/     # Other reusable libraries/packages (e.g. Python, Go, etc.)
-│   └── README.md
-└── README.md
-```
+| Component | Index | Description |
+|-----------|-------|-------------|
+| Terraform | [Terraform.md](Terraform.md) | Reusable Terraform modules (IaC) |
+| Ansible | [Ansible.md](Ansible.md) | Reusable Ansible roles and playbooks |
+| Helm | [Helm.md](Helm.md) | Reusable Helm charts |
