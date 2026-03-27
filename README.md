@@ -32,7 +32,13 @@ Each repository follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR
 ### Creating a release
 
 ```bash
-git tag v1.0.0
+# List commits (used to find the commit hash for the tag)
+git log --oneline
+# Create an annotated tag with a message (recommended for releases)
+git tag -a <tagname> <commit-hash> -m "Your message"
+git push origin <tagname>
+# Example:
+git tag -a v1.0.0 abc123 -m "Initial release of terraform-azurerm-base"
 git push origin v1.0.0
 ```
 

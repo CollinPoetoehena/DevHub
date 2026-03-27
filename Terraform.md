@@ -52,7 +52,8 @@ module "example" {
 
 | Module | Repository | Description |
 |--------|------------|-------------|
-| azurerm-base | *https://github.com/CollinPoetoehena/terraform-azurerm-base* | Creates a base Azure infrastructure stack — networking and Linux VMs — in a single call |
+| terraform-azurerm-network | *https://github.com/CollinPoetoehena/terraform-azurerm-network* | Terraform module that creates a complete Azure network stack — VNets, peerings, NSGs, subnets, and NSG associations. |
+| terraform-azurerm-compute | *https://github.com/CollinPoetoehena/terraform-azurerm-compute* | Terraform module that creates compute resources in Azure — Linux VMs, NICs, and public IPs |
 
 ## README Template
 
