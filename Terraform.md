@@ -67,6 +67,15 @@ When creating a new module repository, use the following template as the startin
 
 <Short description of what this module does.>
 
+## Requirements
+
+| Name | Version |
+|------|---------|
+| | |
+
+## Design
+<Any design notes or implementation details worth mentioning.>
+
 ## Usage
 
 ```hcl
