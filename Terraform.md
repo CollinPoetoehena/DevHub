@@ -44,7 +44,7 @@ Each module repository contains its own README with usage instructions. The gene
 
 ```hcl
 module "example" {
-  source = "git::https://github.com/CollinPoetoehena/<module-repo>.git?ref=main"
+  source = "git::https://github.com/CollinPoetoehena/<module-repo>.git?ref=v1.0.0"
 }
 ```
 
@@ -52,9 +52,7 @@ module "example" {
 
 | Module | Repository | Description |
 |--------|------------|-------------|
-| azurerm-vm | *(link)* | Creates one or more Azure Linux VMs with NICs and optional public IPs |
-| azurerm-keyvault | *(link)* | Creates an Azure Key Vault with an optional access policy for keys, secrets, and certificates |
-| azurerm-network | *(link)* | Creates a full Azure network stack — VNets, NSGs, and Subnets — in a single call |
+| azurerm-base | *https://github.com/CollinPoetoehena/terraform-azurerm-base* | Creates a base Azure infrastructure stack — networking and Linux VMs — in a single call |
 
 ## README Template
 
@@ -86,7 +84,7 @@ When creating a new module repository, use the following template as the startin
 
 ```hcl
 module "example" {
-  source = "git::https://github.com/CollinPoetoehena/terraform-<PROVIDER>-<NAME>.git?ref=main"
+  source = "git::https://github.com/CollinPoetoehena/terraform-<PROVIDER>-<NAME>.git?ref=v1.0.0"
 
   # required variables
 }

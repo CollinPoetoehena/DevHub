@@ -61,7 +61,7 @@ helm install <release-name> .
 
 | Chart | Repository | Description |
 |-------|------------|-------------|
-| _(none yet)_ | | Charts will be listed here as they are added |
+| helm-monitoring | *https://github.com/CollinPoetoehena/helm-monitoring* | Reusable monitoring chart for metrics, dashboards, alerting, logging, and tracing |
 
 ## README Template
 
