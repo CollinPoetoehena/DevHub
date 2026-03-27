@@ -1,4 +1,2 @@
 # name: Publish
-# TODO: sometime make the publish workflow, such as read which specific package is updated via folder name, such as terraform, ansible, etc.
-# TODO: then apply general steps (e.g. git tag, etc.), then potentially something specific for each type, such as ansible, etc.
-# TODO: some may not need anything specific, such as Terraform you can just load with the Git URL, etc.
+# TODO: sometime make the publish workflow which can be used by all packages with an entry for type and then handle the publishing logic, such as git tag for versioning, etc.
