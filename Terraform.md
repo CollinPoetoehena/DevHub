@@ -6,11 +6,7 @@ Each module lives in its own dedicated repository. This file serves as the index
 
 ## Dev-Hub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Terraform modules. It holds:
-
-- This index file ([Terraform.md](Terraform.md)) — register new modules here and link their repositories.
-- Conventions, structure guidelines, and usage patterns documented below.
-- All shared publishing logic: GitHub Actions workflows, helper scripts, and any other CI/CD tooling used to release or validate modules. Individual module repositories reference or reuse these centrally managed pipelines rather than duplicating them.
+This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 

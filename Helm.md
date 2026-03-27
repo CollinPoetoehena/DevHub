@@ -6,11 +6,7 @@ Each chart lives in its own dedicated repository. This file serves as the index 
 
 ## Dev-Hub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Helm charts. It holds:
-
-- This index file ([Helm.md](Helm.md)) — register new charts here and link their repositories.
-- Conventions, structure guidelines, and usage patterns documented below.
-- All shared publishing logic: GitHub Actions workflows, helper scripts, and any other CI/CD tooling used to package and publish charts to a registry. Individual chart repositories reference or reuse these centrally managed pipelines rather than duplicating them.
+This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
