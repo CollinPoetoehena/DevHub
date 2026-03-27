@@ -1,11 +1,20 @@
 # =============================================================================
-# azurerm-base - Base Azure Infrastructure Stack
+# terraform-azurerm-base - Base Azure Infrastructure Stack
 # =============================================================================
 # Creates base Azure infrastructure in a single module:
 #   - Virtual Networks + optional VNet peering
 #   - Network Security Groups with dynamic security rules
 #   - Subnets + optional NSG associations
 #   - Linux Virtual Machines with NICs and optional public IPs
+# =============================================================================
+
+# =============================================================================
+# Network Component - Full Azure Network Stack
+# =============================================================================
+# Creates a complete network topology in one flat module:
+#   - Virtual Networks + optional VNet peering
+#   - Network Security Groups with dynamic security rules
+#   - Subnets + optional NSG associations
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -26,8 +35,8 @@ resource "azurerm_virtual_network" "main" {
 resource "azurerm_virtual_network_peering" "main" {
   for_each = var.peerings
 
-  name                = each.key
-  resource_group_name = var.resource_group_name
+  name                      = each.key
+  resource_group_name       = var.resource_group_name
   // Directly use the name and id of the VNets from azurerm_virtual_network to avoid hardcoding strings here
   // This also establishes an implicit dependency, ensuring VNets are created before peerings
   virtual_network_name      = azurerm_virtual_network.main[each.value.vnet_key].name
@@ -89,9 +98,15 @@ resource "azurerm_subnet_network_security_group_association" "main" {
   network_security_group_id = azurerm_network_security_group.main[each.value].id
 }
 
-# -----------------------------------------------------------------------------
-# Virtual Machines
-# -----------------------------------------------------------------------------
+# =============================================================================
+# VM Component - Creates Multiple VMs with Network Connectivity
+# =============================================================================
+# Accepts a map of VM definitions and creates all resources via for_each.
+# Resources created per VM:
+#   - Public IP          (only for VMs with assign_public_ip = true)
+#   - Network Interface  (NIC(s) for the VM, attached to the correct subnet)
+#   - Linux VM           (the compute resource)
+# =============================================================================
 
 # Public IP — only for NICs that need external access (e.g. mgmt NIC on a jump host)
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip

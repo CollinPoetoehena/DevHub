@@ -9,8 +9,8 @@ locals {
   # This local bridges that gap: it transforms the nested input into the flat map that
   # azurerm_public_ip and azurerm_network_interface need, without exposing that complexity
   # to the module caller.
-  # This small added complexity allows a much cleaner and more intuitive module interface,
-  # where all information about a VM is in one place (the vms var) and there's no need to correlate
+  # This small added complexity allows a much cleaner and more intuitive module interface, 
+  # where all information about a VM is in one place (the vms var) and there's no need to correlate 
   # separate variables for NICs, images, etc.
   nics = {
     for pair in flatten([

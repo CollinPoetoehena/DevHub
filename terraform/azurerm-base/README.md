@@ -15,7 +15,11 @@ The `azurerm` provider must be configured by the root module before calling this
 
 ## Design
 
-This module is intentionally kept **flat** — no submodules. All resources live in a single `main.tf` with comment blocks separating each logical section. Keeping everything in one module avoids the Terraform limitation where every module boundary requires its own full `variables.tf` and `outputs.tf`, meaning all shared variables (`location`, `resource_group_name`, `tags`) would have to be declared multiple times for no real benefit.
+- **Flat module — no submodules.** All resources live in a single `main.tf` with comment blocks separating each logical section. Keeping everything in one module avoids the Terraform limitation where every module boundary requires its own full `variables.tf` and `outputs.tf` (Terraform has no mechanism to re-export variables or outputs), meaning all shared variables (`location`, `resource_group_name`, `tags`) would have to be declared multiple times for no real benefit. Therefore, for a small, cohesive set of resources like this base stack, a flat module with clear comment sections gives the same logical separation at zero extra cost while maximizing simplicity and maintainability.
+
+- **`vms` map is the single source of truth for VM definitions.** Everything needed to define a VM — size, credentials, NICs, image, and OS disk — lives inside the `vms` map so each VM is fully self-contained. The only variables outside `vms` are `location`, `resource_group_name`, and `tags`: these are pure infrastructure context that applies to every resource the module creates, not to any single VM. This way the module is easy to use and understand, and adding a new VM is as simple as adding a new entry to the `vms` map. The alternative is to add more variables outside the `vms` map for each aspect of the VM definition (e.g. a separate variable for NIC definitions, another for image definitions, etc.) and then require the user to correlate these with the correct VM via some key or index. This adds unnecessary complexity and indirection without any real benefit, since all the information needed to define a VM is already available at the time of defining the VM in the `vms` map. This does have the drawback of having to add some additional computations in `locals.tf` to produce the final flattened maps needed for resource creation and outputs, but this is a small price to pay for the improved usability and maintainability of the module interface.
+
+- **NSGs are applied at the subnet level, not per NIC.** This covers all resources in the subnet consistently and is the recommended Azure approach. If a specific VM needs its own NSG rules as an exception, an `azurerm_network_interface_security_group_association` can be added in the calling root module. However, this is not recommended — NSGs should stay at the subnet level for simplicity and consistency (VMs are ephemeral and can be recreated, subnets are persistent, so per-VM NSGs add unnecessary complexity).
 
 ```
 terraform-azurerm-base/
@@ -60,12 +64,15 @@ module "base" {
   # Networking
   # ---------------------------------------------------------------------------
 
+  # Hub-and-spoke: hub VNet for shared services, spoke VNet for workloads
   vnets = {
     "hub-vnet"   = { address_space = "10.0.0.0/16" }
     "spoke-vnet" = { address_space = "10.1.0.0/16" }
   }
 
   # Peering is unidirectional in Azure — declare both directions for full connectivity.
+  # Use remote_vnet_key to reference a VNet created by this module (ID resolved internally).
+  # Use remote_vnet_id for VNets outside this module (e.g. in another resource group).
   peerings = {
     "hub-to-spoke" = {
       vnet_key                = "hub-vnet"
@@ -80,6 +87,7 @@ module "base" {
   }
 
   nsgs = {
+    # Hub NSG: allows SSH from anywhere into the jump host subnet
     "hub-nsg" = {
       security_rules = [
         {
@@ -95,6 +103,7 @@ module "base" {
         }
       ]
     }
+    # Spoke NSG: allows internal traffic from the hub address space only
     "spoke-nsg" = {
       security_rules = [
         {
@@ -139,6 +148,11 @@ module "base" {
           subnet_id        = "/subscriptions/.../subnets/hub-subnet"
           assign_public_ip = true
         },
+        # internal-nic: internal NIC for communication with private resources
+        {
+          name      = "internal-nic"
+          subnet_id = "/subscriptions/.../subnets/spoke-subnet"
+        },
       ]
 
       image = {
@@ -152,6 +166,7 @@ module "base" {
       }
     }
 
+    # app-server: private VM reachable only via the jump host
     "app-server" = {
       size           = "Standard_D2s_v5"
       admin_username = "azureuser"
@@ -254,9 +269,3 @@ module "base" {
 | `nic_names` | Map of NIC key (`<vm-name>-<nic-name>`) → NIC name as created in Azure |
 | `ssh_commands` | Map of NIC key (`<vm-name>-<nic-name>`) → ready-to-use SSH command (only NICs with a public IP) |
 | `local_formatted_nics` | The `local.nics` map, included as an output for debugging/visibility purposes |
-
-## Notes
-
-- **NSG design**: NSGs are applied at the subnet level (not per NIC). This covers all resources in a subnet consistently and is the recommended Azure approach. If a specific VM needs its own NSG, add an `azurerm_network_interface_security_group_association` in the root module.
-- **VM authentication**: Password authentication is disabled — SSH key only.
-- **VM NICs**: Subnet IDs for VM NICs can reference outputs from the networking section of this module (e.g. `module.base.subnet_ids["hub-subnet"]`) when both networking and VMs are provisioned together.

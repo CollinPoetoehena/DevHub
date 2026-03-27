@@ -76,6 +76,12 @@ When creating a new module repository, use the following template as the startin
 ## Design
 <Any design notes or implementation details worth mentioning.>
 
+## Resources Created
+
+| Resource | Description |
+|----------|-------------|
+| | |
+
 ## Usage
 
 ```hcl
