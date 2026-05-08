@@ -102,4 +102,3 @@ module "example" {
 | Name | Description |
 |------|-------------|
 | | |
-```

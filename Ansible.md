@@ -34,7 +34,9 @@ Only the directories actually needed by a role are included — empty placeholde
 
 ## Role Naming Convention
 
-Roles follow the [Ansible Galaxy naming convention](https://galaxy.ansible.com/docs/contributing/creating_role.html): lowercase letters, digits, and underscores only. Names should be descriptive and scoped to what the role configures, e.g. `docker`, `nginx`, `java_install`.
+Roles follow the [Ansible Galaxy naming convention](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html): lowercase letters, digits, and underscores only. Names should be descriptive and scoped to what the role configures, e.g. `docker`, `nginx`, `java_install`.
+
+Role repositories are named using the pattern `ansible-role-<topic>`, where `<topic>` matches the role name (e.g. `ansible-role-docker`, `ansible-role-nginx`, `ansible-role-java_install`).
 
 ## Usage
 
@@ -49,7 +51,8 @@ Or declare it in a `requirements.yml` file:
 ```yaml
 roles:
   - name: <role-name>
-    src: git+https://github.com/CollinPoetoehena/<role-repo>.git
+    src: https://github.com/CollinPoetoehena/<role-repo>.git
+    scm: git
     version: main
 ```
 
@@ -88,9 +91,25 @@ List any dependencies or prerequisites here.
 
 ## Usage
 
+Requirements file example (same directory as ansible.cfg, create a file called requirements.yml):
+```yaml
+---
+roles:
+  - name: <role-name>
+    src: https://github.com/CollinPoetoehena/<role-name>.git
+    scm: git
+    version: <version or branch>
+``` 
+
+Then install with: 
+```sh
+# NOTE: Example of roles path for -p is "roles/" (you can also specify this in ansible.cfg)
+ansible-galaxy install -r requirements.yml -p <path/to/roles>
+```
+
+Example playbook using this role (e.g. site.yml):
 ```yaml
 - hosts: all
   roles:
     - role: <role-name>
-```
 ```

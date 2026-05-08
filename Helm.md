@@ -85,4 +85,3 @@ helm install <release-name> oci://ghcr.io/CollinPoetoehena/<chart-name> --versio
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | | | | |
-```
