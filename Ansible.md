@@ -66,7 +66,7 @@ ansible-galaxy install -r requirements.yml
 
 | Role | Repository | Description |
 |------|------------|-------------|
-| _(none yet)_ | | Roles will be listed here as they are added |
+| ansible-role-jumphost | [ansible-role-jumphost](https://github.com/CollinPoetoehena/ansible-role-jumphost) | Configures a jumphost for secure access to internal networks. |
 
 ## README Template
 
