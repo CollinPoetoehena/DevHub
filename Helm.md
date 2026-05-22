@@ -6,7 +6,7 @@ Each chart lives in its own dedicated repository. This file serves as the index 
 
 ## Dev-Hub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
+This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Helm charts, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -61,7 +61,7 @@ helm install <release-name> .
 
 | Chart | Repository | Description |
 |-------|------------|-------------|
-| helm-monitoring | *https://github.com/CollinPoetoehena/helm-monitoring* | Reusable monitoring chart for metrics, dashboards, alerting, logging, and tracing |
+| _(none yet)_ | | Roles will be listed here as they are added |
 
 ## README Template
 

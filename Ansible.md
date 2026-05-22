@@ -6,7 +6,7 @@ Each role lives in its own dedicated repository. This file serves as the index a
 
 ## Dev-Hub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
+This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Ansible roles, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -31,6 +31,14 @@ Each role repository follows the [Ansible Role Directory Structure](https://docs
 ```
 
 Only the directories actually needed by a role are included — empty placeholder directories are omitted.
+
+To scaffold this structure automatically, use `ansible-galaxy role init`:
+
+```bash
+ansible-galaxy role init <role-name>
+```
+
+This generates the full directory layout with placeholder files. Remove any directories not needed by the role after initializing, and/or add your own custom directories and files as needed.
 
 ## Role Naming Convention
 
@@ -66,7 +74,9 @@ ansible-galaxy install -r requirements.yml
 
 | Role | Repository | Description |
 |------|------------|-------------|
+| ansible-role-users | [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users) | Configures OS users and groups, including sudo policies and SSH key management. |
 | ansible-role-jumphost | [ansible-role-jumphost](https://github.com/CollinPoetoehena/ansible-role-jumphost) | Configures a jumphost for secure access to internal networks. |
+| ansible-role-mgmtvm | [ansible-role-mgmtvm](https://github.com/CollinPoetoehena/ansible-role-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
 
 ## README Template
 

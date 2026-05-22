@@ -44,7 +44,7 @@ Each module repository contains its own README with usage instructions. The gene
 
 ```hcl
 module "example" {
-  source = "git::https://github.com/CollinPoetoehena/<module-repo>.git?ref=v1.0.0"
+  source = "git::https://github.com/CollinPoetoehena/<module-repo>.git?ref=<version>"
 }
 ```
 
@@ -85,7 +85,7 @@ When creating a new module repository, use the following template as the startin
 
 ```hcl
 module "example" {
-  source = "git::https://github.com/CollinPoetoehena/terraform-<PROVIDER>-<NAME>.git?ref=v1.0.0"
+  source = "git::https://github.com/CollinPoetoehena/terraform-<PROVIDER>-<NAME>.git?ref=<version>"
 
   # required variables
 }
