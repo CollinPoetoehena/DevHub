@@ -165,10 +165,11 @@ If budget is a constraint, **start with 1 mini PC + 1–2 older devices** and ex
 ### Current Personal Setup
 My current home lab setup consists of:
 
-| Role | Device | CPU | RAM | Storage | Source |
-|------|--------|-----|-----|---------|--------|
-| Compute node 1 + 2 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | 16 GB | 512 GB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 |
-| Quorum node | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 |
+| Role | Device | CPU | RAM | Storage | Source | Why chosen |
+|------|--------|-----|-----|---------|--------|------------|
+| Compute node 1 + 2 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | 16 GB | 512 GB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
+| Quorum node | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to complete the 3-node quorum at zero extra cost. |
+| Extra node | Raspberry Pi 4 Model B | ARM Cortex-A72 (1.5 GHz, 4 cores, 4 threads) | 4 GB | 64 GB microSD | Personal (already owned), bought from Raspberry Store in 2025 for about €200 total (Raspberry Pi 4 Model B, Case, Case Fan, microSD, etc.) | Not the recommended choice for this lab — see [Why NOT Raspberry Pi](#why-not-raspberry-pi). However, it was already on hand so it was integrated into the cluster rather than left unused. |
 
 TODO: at the end add my specific setup for what I chose eventually and use now, etc.
 
