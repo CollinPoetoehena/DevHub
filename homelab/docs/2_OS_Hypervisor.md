@@ -1,9 +1,8 @@
-# TODO
+# TODO: OS and/or Hypervisor Installation and Configuration
 
+Each node needs a clean, consistent operating system or hypervisor.
 
-# TODO: create dir for configuring with 2_... and then 1_Installing_OS, etc. inside that folder:
-
-# Installing OS
+TODO: make this generic for OS or Hypervisor: Proxmox VE, Ubuntu, etc. Add that when I start doing the actual steps, etc.
 
 TODO: short introduction on this, since this is the first step to setting up the homelab after buying the hardware: the first step is to install the OS on the hardware, which will be the foundation for everything else. This involves creating a bootable USB drive with the OS installer, configuring the BIOS settings to boot from the USB, and then following the installation process. The choice of OS will depend on your preferences and requirements.
 
@@ -126,7 +125,27 @@ It is recommended to erase the disk and do a clean installation, since dual boot
 
 ---
 
-## Restore Bootable USB back to normal use (optional):
+## Post-Installation Setup
+
+### System Updates
+
+First thing after installation:
+
+```bash
+# For Debian/Ubuntu-based distributions
+sudo apt update
+sudo apt upgrade -y
+
+# For Arch-based distributions
+sudo pacman -Syu
+
+# For Fedora
+sudo dnf update -y
+```
+
+TODO: when starting homelab, make the specific post install steps here, such as using a separate .md file for this!
+
+### Restore Bootable USB back to normal use (optional):
 
 1. Insert the USB drive back into your computer
 2. Open File Explorer (Windows laptop or Linux does not really matter)
@@ -236,24 +255,3 @@ journalctl -xe                   # View system logs
 ```
 
 ---
-
-# TODO: here a separate file later for post installation:
-# Post-Installation Setup
-
-### System Updates
-
-First thing after installation:
-
-```bash
-# For Debian/Ubuntu-based distributions
-sudo apt update
-sudo apt upgrade -y
-
-# For Arch-based distributions
-sudo pacman -Syu
-
-# For Fedora
-sudo dnf update -y
-```
-
-TODO: when starting homelab, make the specific post install steps here, such as using a separate .md file for this!
