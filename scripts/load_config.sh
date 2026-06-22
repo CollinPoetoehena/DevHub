@@ -44,6 +44,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Display loaded configuration
@@ -54,6 +55,10 @@ echo "  SCRIPTS_ROOT_DIR: $SCRIPTS_ROOT_DIR"
 echo 
 
 # Functions to display colored messages
+log_debug() {
+    echo -e "${CYAN}[DEBUG] ${NC}$1"
+}
+
 log_info() {
     echo -e "${BLUE}[INFO] ${NC}$1"
 }
@@ -88,7 +93,7 @@ log_header_2() {
 
 log_header_3() {
     echo ""
-    echo -e "${YELLOW}[INFO]  -- $1 --${NC}"
+    echo -e "${YELLOW}[INFO]  --- $1 ---${NC}"
     echo ""
 }
 
