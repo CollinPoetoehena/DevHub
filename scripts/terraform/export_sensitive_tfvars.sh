@@ -90,6 +90,15 @@ if [ -z "$OUTPUT_DIR" ]; then
     exit 1
 fi
 
+##################################################################################################################
+# TODO: for my homelab I will also use different providers like Proxmox for creating VMs there, etc.
+# TODO: so add in lib the handling function of creating the file, etc., and then based on the used provider
+# TODO: such as Azure or Proxmox, etc., call the corresponding function to export the variables needed for that provider, and then
+# TODO: add the generic vars always (e.g. my IP, etc.), etc.
+##################################################################################################################
+
+
+
 # Check Azure config dir for safety to ensure the correct Azure environment is targeted (see: Azure Account Isolation in dev-hub/scripts/terraform/lib.sh)
 check_azure_config_dir "${HOME}/.azure-${PROJECT_NAME}"
 
