@@ -29,16 +29,16 @@ All packages and images follow [Semantic Versioning](https://semver.org/): **`MA
 
 > **Note:** the `v` prefix is not used in this project, but is commonly used in many ecosystems (e.g. `v1.0.0` instead of `1.0.0`). The important part is the `MAJOR.MINOR.PATCH` format, not the presence of a `v` prefix. So, version the packages without the `v` prefix (e.g. `1.0.0`, `2.1.3`, etc.) to follow the standard SemVer format. 
 
-## Qualifiers (pre-releases)
+### Qualifiers (pre-releases)
 
 Append an optional **qualifier** to the version to publish a **pre-release** build without consuming a real version number. This is especially useful during development or testing, where you want to iterate freely before committing to the next stable version.
 
-**Why this matters:** Once you publish `1.0.1` and something still needs to change (e.g. after testing you still find a bug or incomplete change), you are forced to jump to `1.0.2`. Using a qualifier lets you publish test builds (e.g. `1.0.1a`, `1.0.1b`, `1.0.1rc1`, etc.) and only cut the real `1.0.1` when the build is confirmed stable.
+**Why this matters:** Once you publish `1.0.1` and something still needs to change (e.g. after testing you still find a bug or incomplete change), you are forced to jump to `1.0.2`. Using a qualifier lets you publish test builds (e.g. `1.0.1a`, `1.0.1a1`, `1.0.1a2`, `1.0.1b`, `1.0.1rc1`, etc.) and only cut the real `1.0.1` when the build is confirmed stable.
 
 **Format:** `MAJOR.MINOR.PATCH<qualifier>` — the qualifier follows immediately after `PATCH` (optionally with a separator `-`). For example:
 | Qualifier style | Examples | Typical use |
 |---|---|---|
-| Letters (`a`, `b`, `c`, …) | `1.0.1a`, `1.0.1b` | Quick iteration during development |
+| Letters (`a`, `b`, `c`, …) | `1.0.1a`, `1.0.1a1`, `1.0.1a2`, `1.0.1b`  | Quick iteration during development |
 | Alpha | `1.0.1alpha`, `1.0.1-alpha` | Early / unstable builds |
 | Beta | `1.0.1beta`, `1.0.1-beta` | Feature-complete but still being validated |
 | Preview | `1.0.1preview`, `1.0.1-preview` | Preview build |
