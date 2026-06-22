@@ -1,6 +1,6 @@
-# TODO
+# Home Lab
 
-TODO: make this the starting point of HomeLab, below add Design section and then the steps for installing and using the HomeLab, etc.
+This is the central documentation for my personal home lab. It covers the goals, design, and step-by-step setup from buying hardware to a running cluster with Kubernetes, monitoring, and GitOps automation.
 
 ## Personal Goal
 
@@ -32,13 +32,15 @@ Key components:
 
 TODO: does this still apply at the end of my home lab setup? Update when I have my final home lab setup and architecture finalized and working!
 
-# Installation & Setup of Personal Home Lab
-TODO: here shortly explain the steps for installing and setting up the home lab, including the order of operations, prerequisites, and any other relevant information. Note that this is the personal home lab setup for myself based on the goals listed above, but it is documented here as generically as possible to be useful for others, if you have different goals, your setup may differ. The steps below are a general outline of the process, and may be adjusted based on your specific hardware, software, and learning objectives.
-TODO: reference all files further for the setup.
+# Installation & Setup
 
-# TODO: create dir for configuring with 2_... and then 1_Installing_OS, etc. inside that folder:
+This section documents the step-by-step process for building this home lab from scratch — from defining goals and buying hardware to a fully running cluster. The **setup is based on my personal goals and hardware choices**, but **documented as generically as possible to be useful to others**. If your hardware or goals differ, adjust accordingly.
 
-
-
-# TODO: here a separate file later for post installation:
-
+| Step | File | Description |
+|------|------|-------------|
+| 1 | [Goals & Hardware](docs/1_Goals_Hardware.md) | Define goals, choose hardware type, compare refurbished shops, and decide on your node setup. |
+| 2 | [OS & Hypervisor](docs/2_OS_Hypervisor.md) | Install the OS or hypervisor (e.g. Proxmox VE, Ubuntu) on each node — bootable USB, BIOS config, and installation process. |
+| 3 | [Cluster & Network](docs/3_Cluster_Network.md) | Link nodes into a cluster, configure networking — Gigabit switch, static IPs, VLANs, and join nodes via Proxmox cluster or k3s/kubeadm. |
+| 4 | [Core Services](docs/4_Core_Services.md) | Deploy the core stack — container runtime, GitHub Runners, monitoring (Prometheus + Grafana), and logging. |
+| 5 | [Storage & Backups](docs/5_Storage_Backups.md) | Storage and backup strategy — why cloud-based backups fit this lab's goals, and when NAS/RAID makes sense. |
+| 6 | [Experiment](docs/6_Experiment.md) | The ongoing phase — experiment, break things, and learn. |
