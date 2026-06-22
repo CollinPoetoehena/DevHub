@@ -15,7 +15,9 @@ This is the central documentation for my personal home lab. It covers the goals,
 
 ## Personal Goal
 
-The goal of this home lab is simple: **learn the fundamentals of DevOps and Software Engineering, and have fun doing it.** Topics include networking, Linux, Kubernetes, monitoring (Grafana, Prometheus), infrastructure automation, and more — because I genuinely enjoy experimenting with these things and want to advance my Engineering skills.
+The goal of this home lab is simple: **learn the fundamentals of DevOps and Software Engineering, and have fun doing it — while building a cool and satisfying home lab to experiment with.** Topics include networking, Linux, Kubernetes, monitoring (Grafana, Prometheus), infrastructure automation, and more — because I genuinely enjoy experimenting with these things and want to advance my Engineering skills.
+
+There's something genuinely cool and satisfying about having a real home lab cluster sitting on your desk: physical nodes, real networking, services you deployed yourself, dashboards showing live metrics from your own hardware. It's not just a learning environment — it's a playground to break things, try out new tools before using them at work, and experiment without any consequences. And it just looks and feels awesome.
 
 In my work I use these techniques daily and will continue to do so: VMs, networking, Linux, containers, etc. Having hands-on experience with them makes my work easier and more enjoyable, and makes me a better Engineer overall. A home lab is the best way to get that unrestricted, persistent environment where you can break things, fix them, and learn without consequences.
 
@@ -56,6 +58,6 @@ This section documents the step-by-step process for building this home lab from 
 | 1 | [Goals & Hardware](docs/1_Goals_Hardware.md) | Define goals, choose hardware type, compare refurbished shops, and decide on your node setup. |
 | 2 | [OS & Hypervisor](docs/2_OS_Hypervisor.md) | Install the OS or hypervisor (e.g. Proxmox VE, Ubuntu) on each node — bootable USB, BIOS config, and installation process. |
 | 3 | [Cluster & Network](docs/3_Cluster_Network.md) | Link nodes into a cluster, configure networking — Gigabit switch, static IPs, VLANs, and join nodes via Proxmox cluster or k3s/kubeadm. |
-| 4 | [Core Services](docs/4_Core_Services.md) | Deploy the core stack — container runtime, GitHub Runners, monitoring (Prometheus + Grafana), and logging. |
+| 4 | [Core Services & Monitoring](docs/4_Core_Services_Monitoring.md) | Deploy the core stack — container runtime, GitHub Runners, monitoring (Prometheus + Grafana), and logging, etc. |
 | 5 | [Storage & Backups](docs/5_Storage_Backups.md) | Storage and backup strategy — why cloud-based backups fit this lab's goals, and when NAS/RAID makes sense. |
 | 6 | [Experiment](docs/6_Experiment.md) | The ongoing phase — experiment, break things, and learn. |

@@ -117,7 +117,7 @@ Companies replace hardware on a fixed cycle — often every 3–5 years, regardl
 - **Compact size** — easy to stack for a small cluster.
 - **Reliable business-grade hardware** — built for corporate environments, long lifespan (e.g. Dell, Lenovo, etc., see [Why Enterprise-Grade Hardware?](#why-enterprise-grade-eg-dell-lenovo-hp)).
 - **Easy to upgrade** — RAM and NVMe SSD upgrades are simple.
-- **Perfect for clustering** — ideal for a 2–3 node Proxmox or Kubernetes cluster.
+- **Perfect for clustering** — ideal for a multi-node Proxmox or Kubernetes cluster.
 
 ### Why Enterprise-Grade (e.g. Dell, Lenovo, HP)
 
@@ -158,6 +158,22 @@ You can of course add more nodes if you want but note that 3 is the sweet spot f
 - **2 identical refurbished enterprise-grade mini PCs** — the main compute nodes, providing real-world hardware experience (e.g. Lenovo ThinkCentre Tiny, Dell OptiPlex Micro, HP EliteDesk Mini, etc.).
 - **1 older piece of hardware** — e.g. an old laptop. Lower specs are fine for a third node; it still completes the quorum and adds variety.
 
+### Recommended Specs per Node
+
+| Component | Recommended | Notes |
+|-----------|-------------|-------|
+| **CPU** | 4+ cores Intel N-series or 12th-gen Core i5 — full VT-x and VT-d support | Enough to run Proxmox + multiple VMs simultaneously without contention. |
+| **RAM** | 16 GB | Minimum for comfortably running Proxmox with a few VMs. 32 GB if you can afford it for the main compute nodes. |
+| **Storage** | NVMe SSD | Significantly faster than SATA SSD (3–7 GB/s vs ~550 MB/s) and far faster than HDD. Matters for VM boot times, live migration, snapshot I/O, and running multiple VMs in parallel. Most enterprise-grade mini PCs ship with an M.2 slot, making NVMe a natural fit — no cables, no adapters, compact form factor. |
+
+**Storage sizing — intentional asymmetry:**
+
+Not all nodes need the same storage size. A good approach is:
+- **1× larger drive (e.g. 512 GB-1 TB)** on one node — acts as a "shock absorber": migration staging area, ISO storage, snapshots, and local VM disks when you need fast temporary storage, etc.
+- **Smaller drives (e.g. 256 GB)** on the other compute nodes — sufficient for the OS, Proxmox, and their resident VMs, etc.
+
+This asymmetry is intentional: the larger node handles temporary bulk workloads so the compute nodes stay lean and focused.
+
 ### Starting Small
 
 If budget is a constraint, **start with 1 mini PC + 1–2 older devices** and expand later. You can still learn the fundamentals with a smaller cluster and add a second mini PC when ready. This keeps initial costs low while giving you a working multi-node environment from day one.
@@ -167,11 +183,9 @@ My current home lab setup consists of:
 
 | Role | Device | CPU | RAM | Storage | Source | Why chosen |
 |------|--------|-----|-----|---------|--------|------------|
-| Compute node 1 + 2 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | 16 GB | 512 GB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
+| Compute node 1 + 2 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | 16 GB | 256 GB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
 | Quorum node | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to complete the 3-node quorum at zero extra cost. |
 | Extra node | Raspberry Pi 4 Model B | ARM Cortex-A72 (1.5 GHz, 4 cores, 4 threads) | 4 GB | 64 GB microSD | Personal (already owned), bought from Raspberry Store in 2025 for about €200 total (Raspberry Pi 4 Model B, Case, Case Fan, microSD, etc.) | Not the recommended choice for this lab — see [Why NOT Raspberry Pi](#why-not-raspberry-pi). However, it was already on hand so it was integrated into the cluster rather than left unused. |
-
-TODO: at the end add my specific setup for what I chose eventually and use now, etc.
 
 #### How to Check Your Hardware Specs
 
