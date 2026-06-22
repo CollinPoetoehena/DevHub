@@ -1,5 +1,8 @@
 # TODO: OS and/or Hypervisor Installation and Configuration
 
+TODO: this is now copied from my earlier experience with installing an OS on an old laptop and made generic and some small changes, etc. Update it with the specific setup from the homelab when I start on it and have the specific setup, etc.
+
+
 Each node needs a clean, consistent operating system or hypervisor.
 
 TODO: make this generic for OS or Hypervisor: Proxmox VE, Ubuntu, etc. Add that when I start doing the actual steps, etc.

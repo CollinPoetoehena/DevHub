@@ -1,4 +1,6 @@
-# TODO: here creating the cluster of nodes and the network between them
+# TODO: Fill this in when I start on the actual home lab and get to this point, etc. 
+
+TODO: here creating the cluster of nodes and the network between them
 
 Link your nodes together so they behave as one system.
 

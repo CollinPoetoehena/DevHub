@@ -1,4 +1,4 @@
-# TODO
+# TODO: Fill this in when I start on the actual home lab and get to this point, etc.
 
 TODO: install core services: Start running the tools that make your home lab useful.
 
