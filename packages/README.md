@@ -1,6 +1,17 @@
 # Packages
 
-TODO: short intro here and TOC
+This section covers all reusable packages maintained under DevHub — including Terraform modules, Ansible roles, and Helm charts. Each component type lives in its own dedicated repository. This README documents the design rationale, repository index, and shared conventions (versioning, releases).
+
+---
+
+## Table of Contents
+
+- [Packages Design](#packages-design)
+- [Repositories](#repositories)
+- [Versioning](#versioning)
+  - [Qualifiers (pre-releases)](#qualifiers-pre-releases)
+  - [Creating a release](#creating-a-release)
+  - [Deleting a release](#deleting-a-release)
 
 ---
 
