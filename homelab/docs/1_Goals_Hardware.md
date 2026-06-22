@@ -19,7 +19,7 @@ This document covers the goals for this home lab and all decisions around choosi
 - [Node Setup](#node-setup)
   - [How Many Nodes](#how-many-nodes)
   - [Recommended Node Composition](#recommended-node-composition)
-  - [Starting Small](#starting-small)
+  - [Start Small, Expand Later](#start-small-expand-later)
   - [Current Personal Setup](#current-personal-setup)
 
 ---
@@ -174,9 +174,11 @@ Not all nodes need the same storage size. A good approach is:
 
 This asymmetry is intentional: the larger node handles temporary bulk workloads so the compute nodes stay lean and focused.
 
-### Starting Small
+### Start Small, Expand Later
 
 If budget is a constraint, **start with 1 mini PC + 1–2 older devices** and expand later. You can still learn the fundamentals with a smaller cluster and add a second mini PC when ready. This keeps initial costs low while giving you a working multi-node environment from day one.
+
+That's exactly how I started: my old Acer laptop and 1 Mini PC I bought refurbished. Once I had those running I expanded to the full setup described in [Current Personal Setup](#current-personal-setup).
 
 ### Current Personal Setup
 My current home lab setup consists of:
