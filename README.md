@@ -3,6 +3,10 @@ DevHub: My central development hub — a personal lab and reference repository f
 
 DevHub brings together my home lab (a hands-on learning environment for DevOps, Kubernetes, networking, and infrastructure automation) and my reusable packages (Terraform modules, Ansible roles, Helm charts, etc.) under one roof. It serves as both the central index and the documentation/code repository for everything I build, learn, and experiment with. While primarily a personal hub, it is publicly available for anyone who finds these resources useful.
 
+The name reflects what the project is:
+- **Dev** — short for *development* and *DevOps*: the main focus areas of this repository. Everything here is about building, automating, and learning through hands-on development work.
+- **Hub** — a central point that connects everything together. Like a hub in a wheel, all parts of my personal development work (home lab, reusable packages, shared tooling, etc.) connect back to this one place. It's the single source of truth and starting point for navigating all of it.
+
 ---
 
 ## Table of Contents
