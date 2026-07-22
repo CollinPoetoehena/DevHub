@@ -1,154 +1,65 @@
-# TODO: OS and/or Hypervisor Installation and Configuration
+# OS and Hypervisor Installation
 
-TODO: this is now copied from my earlier experience with installing an OS on an old laptop and made generic and some small changes, etc. Update it with the specific setup from the homelab when I start on it and have the specific setup, etc.
+TODO: this below document is done and checked, only update some parts with some specific steps I do where necessary, etc. After that this part is done!
 
+This document is split into three chapters:
 
-Each node needs a clean, consistent operating system or hypervisor.
+1. [Create a bootable USB (general process)](#chapter-1-bootable-usb-general)
+2. [Install a hypervisor (Proxmox VE)](#chapter-2-hypervisor-installation-proxmox-ve)
+3. [Install a Linux OS for worker nodes (example: Ubuntu Server LTS)](#chapter-3-linux-os-installation-worker-node-example)
 
-TODO: make this generic for OS or Hypervisor: Proxmox VE, Ubuntu, etc. Add that when I start doing the actual steps, etc.
+Use this as the baseline process for preparing homelab nodes.
 
-TODO: short introduction on this, since this is the first step to setting up the homelab after buying the hardware: the first step is to install the OS on the hardware, which will be the foundation for everything else. This involves creating a bootable USB drive with the OS installer, configuring the BIOS settings to boot from the USB, and then following the installation process. The choice of OS will depend on your preferences and requirements.
+## Chapter 1: Bootable USB (General)
 
-TODO: add here specific instructions later, such as on my old laptop I can install Proxmox VE, then on the others maybe a different OS, etc., think about that?
+A bootable USB is a USB drive prepared with an installer image (ISO) so a machine can start directly from it and run an OS or hypervisor installation.
 
-TODO: TOC here
+### Prerequisites
 
-## Prerequisites
+Before you start:
 
-Before beginning the installation, gather the following:
+- [ ] USB flash drive (8 GB minimum, 16 GB recommended)
+- [ ] ISO image for the target installer (Proxmox VE or Linux distribution)
+- [ ] USB writing tool (Rufus, balenaEtcher, or `dd`)
+- [ ] Target hardware (laptop, desktop, mini PC, etc.)
 
-- [ ] USB flash drive (8GB minimum, 16GB recommended)
-- [ ] ISO file of the chosen OS 
-- [ ] USB creation tool (Rufus, balenaEtcher, or dd)
-- [ ] Hardware to install on (e.g. old laptop, desktop, mini PC, etc.)
+### Create the Bootable USB
 
----
+1. Download the correct ISO from the official project website.
+2. Download and open your USB writing tool (I prefer [Rufus](https://rufus.ie/en/) but you can also use [balenaEtcher](https://www.balena.io/etcher/))
+3. Insert the USB drive.
+4. Select the USB device and ISO image in the USB writing tool.
+5. Keep default settings unless the project documentation requires changes.
+6. Click "Start" and wait for completion (click "OK" on any prompts). Note that all existing data on the USB will be erased!
+7. Safely eject the USB drive.
 
-## Installation Process
+### BIOS/UEFI Preparation
+BIOS/UEFI is the motherboard firmware menu used before any OS loads. You use it to control boot order and low-level hardware boot settings.
 
-### Creating a Bootable USB
-
-1. **Download the ISO file of the chosen OS**:
-   - Visit the official distribution website
-   - Download the appropriate ISO file
-
-2. **Download Rufus** or **balenaEtcher**:
-   - Rufus: https://rufus.ie/
-   - balenaEtcher: https://www.balena.io/etcher/
-
-3. **Create Bootable USB**:
-   - Insert USB drive (will be erased!)
-   - Launch Rufus/Etcher (from laptop, not necessary to run from the USB itself!)
-   - Select the ISO file
-   - Select the USB drive as the device (probably listed as "NO LABEL (D:)" or similar)
-   - Check other settings (default usually fine)
-   - Click "Start" and wait for completion (click "OK" on any prompts)
-
-### BIOS Configuration
-The BIOS Configuration section explains how to access your hardware's firmware settings (BIOS/UEFI) to configure it for booting from USB. This is not a Windows application, it's a low-level system interface that exists before Windows even loads.
+The BIOS Configuration section explains how to access your hardware's firmware settings (BIOS/UEFI) to configure it for booting from USB. This is not an OS application, it's a low-level system interface that exists before any OS even loads.
 
 To configure these settings:
 
-1. **Access BIOS/UEFI**:
-   - Shut down your compute device completely (not restart)
-   - Press the power button to turn it on
-   - Immediately and repeatedly press one of these keys:
-      - F2 (most common for Windows computers, in this experiment it was F2)
-      - F12 (opens boot menu)
-      - Del or Esc (alternative keys)
-      - Watch the screen during boot, the computer usually shows a splash screen with the correct key
+1. Power off the target machine fully. Insert the USB drive (do not boot into any OS yet), otherwise you will not be able to set this as the first boot device in boot order.
+2. Power on and repeatedly press BIOS/UEFI key (`F2`, `F12`, `Del`, `Esc`, depends on vendor). In previous attempts, it was usually `F2` for me, such as on an old Acer laptop.
+3. Adjust settings:
+   - Set USB as first boot device (or use one-time boot menu) in the boot order.
+   - Disable Fast Boot.
+   - Keep UEFI mode unless your hardware specifically requires Legacy/CSM.
+   - If Linux installer complains about Intel RST/Optane, switch storage mode to AHCI. Note that on some machines the option may be hidden. For example, with an old Acer laptop, I had to press Ctrl+s to reveal the option under Main > SATA Mode, where I could select AHCI.
+   - If Secure Boot causes boot issues, disable it temporarily.
+4. Exit and save. Then reboot (`F10` on many systems from the BIOS/UEFI menu) or just power off and back on.
 
-2. **Adjust Settings**:
-   - **Boot Order**: Move USB to first position
-   - **Secure Boot**: Disable (if present, may prevent Linux from booting)
-     - **Important**: Security settings are often locked by default
-     - If you cannot edit settings, you must first set a Supervisor Password:
-       1. Select "Set Supervisor Password"
-       2. Enter and confirm a new password
-       3. **Write this password down** - you'll need it to access BIOS later (if you forget it, you may be locked out of BIOS and need to contact the manufacturer for a reset)
-       4. Settings will now become editable
-     - **Alternative Approach (I selected this option during the experiment)**: Skip this step and try installing Ubuntu with Secure Boot enabled (Ubuntu 24.04 LTS supports Secure Boot). Only return to disable Secure Boot if installation fails.
-   - **Fast Boot**: Disable (helps with boot issues)
-   - **Intel RST/Optane**: Change to AHCI mode (will otherwise cause installation issues on Ubuntu). 
-      - If you're **erasing Windows** (Option 1 of Disk Partitioning), this change is completely safe and you do not need to back up any data
-      - On some computers the option may be hidden. In this experiment (Acer laptop), pressing Ctrl+s revealed the option under Main > SATA Mode, where you could select AHCI.
-      - On Ubuntu it may prompt you to disable it if you skip this step: [Intel RST (Rapid Storage Technology)](https://documentation.ubuntu.com/desktop/en/latest/reference/intel-rst-during-ubuntu-installation/)
-   - You'll see a message: "Turn off RST" or "Change storage controller to AHCI"
-   - **Legacy/UEFI Mode**: Note your current setting
-     - Modern systems: Use UEFI
-     - Older systems: May require Legacy/CSM mode
+### Boot from USB
 
-3. **Save and Exit** (usually F10)
----
+1. Make sure the USB drive is inserted.
+2. Reboot.
+3. Select USB from boot menu.
+4. Start installer entry from the USB menu. Details for the installer process are in the next chapters (Proxmox VE or Linux OS).
 
-### Booting from USB
+### Optional: Restore USB to Normal Use
 
-It may already start from the USB if you set it as the first boot device in the previous step (skip the first steps). If not, you can manually follow the first steps to boot from the USB:
-
-1. **Insert the bootable USB (if not done already)** into the computer
-2. **Restart** the computer
-3. **Select USB as boot device**:
-   - Either from BIOS boot menu (F12, F9, or similar)
-   - Or automatically if USB is first in boot order
-4. **Select "Try or Install Linux Ubuntu" (the option to install Linux from the USB)** from the boot menu
-5. **Follow on-screen instructions** to load the live environment or start installation. Follow the official installation guide for your chosen distribution for detailed steps, such as [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop).
-
-### Disk Partitioning
-
-Choose your installation strategy:
-
-#### Option 1: Erase Disk (Simplest)
-- **Use Case**: No need to keep Windows
-- **Result**: Entire disk used for Linux
-- Select "Erase disk and install Linux" in the installer
-
-#### Option 2: Dual Boot (Keep Windows)
-- **Use Case**: Want both Windows and Linux
-- **Steps**:
-  1. Shrink Windows partition from Windows Disk Management first
-  2. Create free space (50GB+ recommended for Linux)
-  3. During Linux installation, select "Install alongside Windows"
-  4. Or manually partition:
-     - `/` (root): 25GB+ (ext4)
-     - `/home`: Remaining space (ext4)
-     - `swap`: 2GB or equal to RAM (swap)
-     - `/boot/efi`: 512MB (if UEFI, FAT32)
-
-#### Option 3: Manual Partitioning
-```
-Recommended partition scheme for standalone Linux:
-/boot/efi   512MB   FAT32   (UEFI systems only)
-/           30GB    ext4    (root filesystem)
-swap        4GB     swap    (equal to RAM for hibernation)
-/home       Rest    ext4    (user data)
-```
-
-#### Recommended Choice: Option 1 - Erase Disk
-It is recommended to erase the disk and do a clean installation, since dual booting reduces the available disk space for Linux and adds complexity to the installation process. For a homelab environment, it's often more beneficial to have a dedicated Linux system without the overhead of maintaining a dual boot setup.
-
----
-
-## Post-Installation Setup
-
-### System Updates
-
-First thing after installation:
-
-```bash
-# For Debian/Ubuntu-based distributions
-sudo apt update
-sudo apt upgrade -y
-
-# For Arch-based distributions
-sudo pacman -Syu
-
-# For Fedora
-sudo dnf update -y
-```
-
-TODO: when starting homelab, make the specific post install steps here, such as using a separate .md file for this!
-
-### Restore Bootable USB back to normal use (optional):
+After installation, you can reformat the USB as a single FAT32 or exFAT partition.
 
 1. Insert the USB drive back into your computer
 2. Open File Explorer (Windows laptop or Linux does not really matter)
@@ -167,19 +78,114 @@ After that, the USB is completely normal again.
 
 ---
 
-## Troubleshooting
+## Chapter 2: Hypervisor Installation (Proxmox VE)
 
-### Common Issues and Solutions encountered:
+Use this chapter for your virtualization host nodes.
 
-#### Boot Issues
-- **Problem**: System won't boot from USB
-  - **Solution**: Check BIOS boot order, disable Secure Boot
-  
-- **Problem**: GRUB error after installation
-  - **Solution**: Reinstall GRUB from live USB
+A hypervisor is software that lets one physical machine run multiple virtual machines. Proxmox VE is the platform that manages those VMs, storage, and virtual networking. 
 
-- **Problem**: System freezes during boot, such as "Your device ran into a problem and needs to restart. We'll restart for you." 
-  - **Solution**: This often happens if Intel RST driver was removed from Storage Controllers but BIOS is still in RST/Optane mode. Boot into Windows Safe Mode to restore:
+Proxmox VE is chosen because it is currently the main open-source hypervisor that is actively maintained, has a strong community, and is free to use.
+
+### Proxmox VE Prerequisites
+
+- [ ] Proxmox VE ISO downloaded from the official site
+- [ ] At least one SSD/NVMe for host storage
+- [ ] Planned static management IP, gateway, and DNS
+- [ ] Planned hostname (example: `pve1.homelab.local`)
+
+### Install Proxmox VE
+
+1. Boot target machine from the Proxmox USB.
+2. Select `Install Proxmox VE` in the boot menu.
+3. Accept license and choose target disk.
+4. Select filesystem (default `ext4` is fine to start; ZFS is optional if planned).
+5. Configure locale, timezone, and keyboard.
+6. Set a strong `root` password and admin email.
+7. Configure management network:
+   - Assign static IP/CIDR: pick an unused IP in your management subnet and enter it with prefix, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve this IP in DHCP so it is never assigned to another device.
+   - Set gateway: enter your router/firewall LAN IP on the same subnet (e.g. `192.168.1.1`). To determine it, check your router admin page, or on an already connected Linux machine run `ip r` and use the `default via ...` address.
+   - Set DNS server: use a reachable resolver such as your router DNS, local DNS (e.g. Pi-hole/AdGuard), or public DNS (`1.1.1.1`, `8.8.8.8`). To determine your current DNS, check router DHCP/DNS settings, or on Linux run `resolvectl status` (or `cat /etc/resolv.conf`) on a working device in the same network.
+    - Set FQDN hostname: use full name format `hostname.domain`, for example `pve1.homelab.local`; determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
+8. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
+9. Remove USB and reboot.
+
+### First Login and Baseline Setup
+
+1. Open browser to `https://<proxmox-ip>:8006`.
+2. Log in as `root` with PAM realm.
+3. Run updates from shell:
+
+```bash
+apt update
+apt full-upgrade -y
+```
+
+4. Verify network bridge (`vmbr0`) is present and bound to primary NIC.
+5. Set up storage/datastore layout according to your plan.
+
+---
+
+## Chapter 3: Linux OS Installation (Worker Node Example)
+
+Use this chapter for non-hypervisor nodes (k3s/k8s workers, utility hosts, monitoring nodes, etc.).
+
+A worker node is a regular Linux server that runs workloads or supporting services, rather than hosting virtual machines for other systems.
+
+### Example Target
+
+- Distribution: Ubuntu Server LTS
+- Role: Worker node
+
+### Install Linux Worker Node
+
+1. Boot target machine from Linux USB.
+2. Start installer (for Ubuntu: `Try or Install Ubuntu Server`).
+3. Configure language, keyboard, and network.
+4. Set static IP if this node should not rely on DHCP.
+5. Partition disk:
+   - Recommended for dedicated worker node: erase disk and install clean.
+   - Manual option example:
+
+```text
+/boot/efi   512MB   FAT32   (UEFI systems)
+/           30GB+   ext4    (root)
+swap        2-8GB   swap    (or based on RAM/usage)
+/var        remaining ext4  (optional split for workloads/logs)
+```
+
+6. Create admin user.
+7. Enable OpenSSH during install.
+8. Complete install, remove USB, and reboot.
+
+### Post-Install Baseline (Linux Worker)
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo timedatectl set-timezone <your-timezone>
+sudo hostnamectl set-hostname <node-name>
+```
+
+Recommended next checks:
+
+- Verify SSH connectivity from management machine
+- Verify static IP, gateway, and DNS
+- Add node to inventory/config management (Ansible, etc.)
+
+---
+
+## Troubleshooting (Applies to Both)
+
+### Boot and Installer Issues
+
+- Problem: USB not detected or not booting.
+  - Solution: recreate USB, check boot order, try different USB port, disable Fast Boot.
+
+- Problem: Installer cannot detect internal disk.
+  - Solution: switch BIOS storage mode from Intel RST/Optane to AHCI.
+
+- Problem: System freezes during boot, such as "Your device ran into a problem and needs to restart. We'll restart for you." 
+  - Solution: This often happens if Intel RST driver was removed from Storage Controllers but BIOS is still in RST/Optane mode. Boot into Windows Safe Mode to restore:
     1. Power off the laptop completely
     2. Remove the USB drive
     3. Turn on and immediately start tapping **F8** or **Shift+F8** repeatedly to enter Windwos Recovery/Automatic Repair Mode. This can be tricky on modern laptops due to fast boot times, so you may need to try a few times. In this experiment, it went to a mode where it did not have a network connection and prompted to press Enter to see other recovery options. Here I selected Quick Repair and enabled Hotspot on my mobile phone for network connection.
@@ -189,41 +195,26 @@ After that, the USB is completely normal again.
        - Change SATA Mode to AHCI as explained in the earlier steps for BIOS/UEFI configuration
        - Save and Exit
        - Boot from the USB with Linux, such as Ubuntu, and continue the installation
-       - Repeat this 3 times - Windows will boot into Recovery mode
+       - Repeat this 3 times - Windows will boot into Recovery mode.
 
-#### Hardware Issues
-- **Problem**: Wi-Fi not working
-  - **Solution**: Install proprietary drivers, use USB Wi-Fi adapter temporarily
-  
-- **Problem**: Screen resolution incorrect
-  - **Solution**: Install graphics drivers, edit `/etc/X11/xorg.conf`
+### Network Issues
 
-#### Performance Issues
-- **Problem**: System slow/laggy
-  - **Solution**: Check running processes with `htop`, disable unnecessary startup programs
+- Problem: No network after install.
+  - Solution: confirm NIC name, static config, gateway, DNS; test with `ip a` and `ping`.
 
-#### Sound Issues
-- **Problem**: No audio output
-  - **Solution**: 
-    ```bash
-    # Check audio devices
-    aplay -l
-    
-    # Restart audio service
-    pulseaudio -k
-    pulseaudio --start
-    ```
+### Performance Issues
+
+- Problem: Node feels slow.
+  - Solution: check thermal throttling, disk health, and running services (`htop`, `iostat`, `dmesg`).
+
 ---
 
 ## Resources
 
-- [Article on how to install Linux on old hardware](https://www.linuxoperatingsystem.net/how-to-install-linux-os-on-your-old-pc/) - Full install guide on how to install Linux on old hardware
-- [Article on installing Linux on Windows laptops](https://linuxvox.com/blog/how-to-install-ubuntu-from-windows/) - Guide on how to install Linux on Windows laptops
-- [Ubuntu Documentation](https://documentation.ubuntu.com/) - Official Ubuntu documentation
-- [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) - Official Ubuntu installation instructions
-- [Linux Journey](https://linuxjourney.com/) - Interactive Linux learning   
-- [The Linux Command Line](http://linuxcommand.org/) - Command line tutorial
-- [DistroWatch](https://distrowatch.com/) - Linux distribution information
+- [Proxmox VE Documentation](https://pve.proxmox.com/pve-docs/)
+- [Proxmox VE Installation Guide](https://pve.proxmox.com/wiki/Installation)
+- [Ubuntu Documentation](https://documentation.ubuntu.com/)
+- [Ubuntu Server Install Tutorial](https://ubuntu.com/tutorials/install-ubuntu-server)
 
 ### Useful Commands Reference
 
@@ -250,11 +241,15 @@ mv [source] [dest]         # Move/rename files
 rm [file]                  # Remove file
 mkdir [directory]          # Create directory
 
+# Networking quick checks
+ip a                     # Show network interfaces and assigned IP addresses
+ip r                     # Show routing table (default gateway and routes)
+ping -c 3 1.1.1.1        # Test basic outbound network connectivity (no DNS required)
+ping -c 3 google.com     # Test connectivity plus DNS name resolution
+
 # System management
 sudo systemctl status [service]  # Check service status
 sudo systemctl start [service]   # Start service
 sudo systemctl enable [service]  # Enable service at boot
 journalctl -xe                   # View system logs
 ```
-
----
