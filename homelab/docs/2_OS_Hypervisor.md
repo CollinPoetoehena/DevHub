@@ -47,7 +47,7 @@ To configure these settings:
    - Disable Fast Boot.
    - Keep UEFI mode unless your hardware specifically requires Legacy/CSM.
    - If Linux installer complains about Intel RST/Optane, switch storage mode to AHCI. Note that on some machines the option may be hidden. For example, with an old Acer laptop, I had to press Ctrl+s to reveal the option under Main > SATA Mode, where I could select AHCI.
-   - If Secure Boot causes boot issues, disable it temporarily.
+   - Disable Secure Boot to allow for easier installation of unsigned bootloaders (e.g. Proxmox usually does not start with Secure Boot Enabled). You can always re-enable it later if you want. For this you usually first need to set a Supervisor Password in the BIOS/UEFI menu under the Security tab, then you can disable Secure Boot. Make sure to remember this password and keep it safe because you will need it to re-enable Secure Boot later. 
 4. Exit and save. Then reboot (`F10` on many systems from the BIOS/UEFI menu) or just power off and back on.
 
 ### Boot from USB
@@ -188,7 +188,7 @@ Recommended next checks:
   - Solution: This often happens if Intel RST driver was removed from Storage Controllers but BIOS is still in RST/Optane mode. Boot into Windows Safe Mode to restore:
     1. Power off the laptop completely
     2. Remove the USB drive
-    3. Turn on and immediately start tapping **F8** or **Shift+F8** repeatedly to enter Windwos Recovery/Automatic Repair Mode. This can be tricky on modern laptops due to fast boot times, so you may need to try a few times. In this experiment, it went to a mode where it did not have a network connection and prompted to press Enter to see other recovery options. Here I selected Quick Repair and enabled Hotspot on my mobile phone for network connection.
+    3. Turn on and immediately start tapping **F8** or **Shift+F8** repeatedly to enter Windows Recovery/Automatic Repair Mode. This can be tricky on modern laptops due to fast boot times, so you may need to try a few times. In this experiment, it went to a mode where it did not have a network connection and prompted to press Enter to see other recovery options. Here I selected Quick Repair and enabled Hotspot on my mobile phone for network connection.
     4. If that doesn't work, go back into the BIOS/UEFI settings and set the SATA Mode to AHCI and boot with Ubuntu on USB:
        - Press power button
        - Enter BIOS/UEFI (see steps above for explanation)
@@ -196,6 +196,21 @@ Recommended next checks:
        - Save and Exit
        - Boot from the USB with Linux, such as Ubuntu, and continue the installation
        - Repeat this 3 times - Windows will boot into Recovery mode.
+
+- Problem: After Proxmox installation, machine keeps rebooting and shows "Boot Option Restoration" (blue screen).
+  - Solution: Firmware cannot find or trust the Proxmox EFI boot entry. In this case the problem was that I did not Disable Secure Boot, causing it to fail. Fix it in BIOS/UEFI:
+    1. Power off fully, unplug USB devices, then enter BIOS/UEFI with the method described in [BIOS/UEFI Preparation](#biosuefi-preparation).
+    2. Load BIOS defaults (`F9`), then set:
+       - Boot mode: UEFI
+       - Fast Boot: Disabled
+       - Secure Boot: Disabled, as explained in [BIOS/UEFI Preparation](#biosuefi-preparation). With Secure Boot Enabled Proxmox will not boot because the bootloader is unsigned. You can re-enable Secure Boot later if you want, but for now it must be disabled to allow Proxmox to boot.
+       - F12 Boot Menu: Enabled
+    3. Move internal Proxmox boot entry to top of boot order.
+    4. If no Proxmox entry exists, add one from EFI file browser:
+       - `\\EFI\\proxmox\\grubx64.efi`
+       - or `\\EFI\\debian\\grubx64.efi`
+    5. Save (`F10`) and reboot.
+    6. If loop continues, boot Proxmox USB in rescue mode and reinstall the EFI bootloader.
 
 ### Network Issues
 
