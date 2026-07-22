@@ -101,18 +101,103 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 4. Select filesystem (default `ext4` is fine to start; ZFS is optional if planned).
 5. Configure locale, timezone, and keyboard.
 6. Set a strong `root` password and admin email.
-7. Configure management network:
-   - Assign static IP/CIDR: pick an unused IP in your management subnet and enter it with prefix, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve this IP in DHCP so it is never assigned to another device.
-   - Set gateway: enter your router/firewall LAN IP on the same subnet (e.g. `192.168.1.1`). To determine it, check your router admin page, or on an already connected Linux machine run `ip r` and use the `default via ...` address.
-   - Set DNS server: use a reachable resolver such as your router DNS, local DNS (e.g. Pi-hole/AdGuard), or public DNS (`1.1.1.1`, `8.8.8.8`). To determine your current DNS, check router DHCP/DNS settings, or on Linux run `resolvectl status` (or `cat /etc/resolv.conf`) on a working device in the same network.
-    - Set FQDN hostname: use full name format `hostname.domain`, for example `pve1.homelab.local`; determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
+7. Configure management network (VERY IMPORTANT to configure this correctly, otherwise you may not have correct connectivity to the Proxmox web interface after install):
+  - Assign static IP/CIDR: pick an unused IP in your management subnet and enter it with prefix, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve this IP in DHCP so it is never assigned to another device.
+  - Set gateway: enter your router/firewall LAN IP on the same subnet (e.g. `192.168.1.1`). To determine it, check your router admin page, or on an already connected Linux machine run `ip r` and use the `default via ...` address.
+  - Set DNS server: use a reachable resolver such as your router DNS, local DNS (e.g. Pi-hole/AdGuard), or public DNS (`1.1.1.1`, `8.8.8.8`). To determine your current DNS, check router DHCP/DNS settings, or on Linux run `resolvectl status` (or `cat /etc/resolv.conf`) on a working device in the same network.
+  - Set FQDN hostname: use full name format `hostname.domain`, for example `pve1.homelab.local`; determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
+
+  Example: derive values from a working laptop in the same network before starting Proxmox install.
+```sh
+$ ip r
+default via 192.168.144.1 dev eth0 proto kernel 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
+192.168.49.0/24 dev br-4c412f4ff897 proto kernel scope link src 192.168.49.1 linkdown 
+192.168.144.0/20 dev eth0 proto kernel scope link src 192.168.151.174
+
+$ resolvectl status
+Global
+         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+  resolv.conf mode: foreign
+Current DNS Server: 10.255.255.254
+       DNS Servers: 10.255.255.254
+        DNS Domain: home
+
+Link 2 (eth0)
+    Current Scopes: none
+         Protocols: -DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+
+Link 3 (br-4c412f4ff897)
+    Current Scopes: none
+         Protocols: -DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+
+Link 4 (docker0)
+```
+  What to enter in Proxmox installer from this example:
+  - Static IP/CIDR: `192.168.151.200/20` (same `/20` subnet as existing LAN, and `192.168.151.200` is an example unused host IP in that subnet).
+  - Gateway: `192.168.144.1` (taken from `default via ...`; this is the route out of the local network).
+  - DNS server: `192.168.144.1` (router DNS from `resolvectl`; add public DNS later as fallback if needed).
+  - FQDN hostname: `pve1.homelab.local` (role-based host `pve1` + local domain `local` from DNS domain/search domain).
+  
+  Basic connectivity test: after install, from Proxmox console run:
+```sh
+ping -c 3 <gateway-ip>   # Test connectivity to gateway (LAN router)
+ping -c 3 1.1.1.1        # Test basic outbound network connectivity (no DNS required)
+ping -c 3 google.com     # Test connectivity plus DNS name resolution
+```
+  
+  If you need to reconfigure, you can follow these steps in the running Proxmox console:
+```sh
+# 1) Log in on Proxmox local console as root, then back up current config
+cp /etc/network/interfaces /etc/network/interfaces.bak
+
+# 2) Identify physical NIC name (example: eno1, enp3s0)
+ip -br link
+
+# 3) Edit Proxmox network config
+nano /etc/network/interfaces
+
+# 4) Example config (replace eno1 and IPs for your LAN)
+cat <<'EOF'
+auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.151.200/20
+    gateway 192.168.144.1
+    bridge-ports eno1
+    bridge-stp off
+    bridge-fd 0
+EOF
+
+# NOTE: Make sure the 'address' line has no typos, extra characters, or spaces. 
+# The format is exactly: 'address <IP>/<CIDR>'
+
+# 5) Optionally update DNS server in /etc/resolv.conf (or use resolvconf if installed)
+nano /etc/resolv.conf
+# Example resolv.conf content:
+search homelab.local
+nameserver 192.168.144.1
+
+# 6) Apply by rebooting (safest during initial setup)
+reboot
+
+# 7) After reboot, verify from Proxmox console
+ip a
+ip r
+cat /etc/resolv.conf
+```
+  Use these values because they match the detected LAN route (`192.168.144.0/20`), use a valid host IP in that range, and keep gateway/DNS reachable from the same network.
 8. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
 9. Remove USB and reboot.
 
 ### First Login and Baseline Setup
 
 1. Open browser to `https://<proxmox-ip>:8006`.
-2. Log in as `root` with PAM realm.
+2. Log in as `root` user (shows `pve login:`) and enter the password you set during installation.
 3. Run updates from shell:
 
 ```bash
@@ -215,7 +300,36 @@ Recommended next checks:
 ### Network Issues
 
 - Problem: No network after install.
-  - Solution: confirm NIC name, static config, gateway, DNS; test with `ip a` and `ping`.
+  - Solution: confirm NIC name, static config, gateway, DNS; diagnose with:
+
+```bash
+ip a
+ip r
+cat /etc/network/interfaces
+systemctl status networking
+```
+
+    Common causes:
+    - vmbr0 bridge is down: run `ifup vmbr0` to bring it up.
+    - Physical NIC not bound: verify `bridge-ports eno1` (or your NIC name) exists in `/etc/network/interfaces`.
+    - Gateway unreachable: verify ethernet cable connected, and `ip r` shows `default via <gateway IP, such as 192.168.144.1>`.
+
+- Problem: `ip a` shows all interfaces down except the default route is correct, and the gateway is still unreachable.
+  - Solution: the bridge or physical NIC is not actually up yet, even though the route is correct.
+    1. Bring up the physical NIC first, for example: `ifup eno1`.
+    2. Then bring up the bridge: `ifup vmbr0`.
+    3. Verify both are up: `ip a` should show `UP` on the NIC and `vmbr0`.
+    4. Test the gateway again: `ping -c 3 192.168.144.1`.
+    5. If it still fails, restart networking: `systemctl restart networking`, then recheck `ip a` and `ip r`.
+
+- Problem: After reconfiguring `/etc/network/interfaces`, `systemctl status networking` shows error like `does not appear to be an IPv4 or IPv6 address`.
+  - Cause: typo in IP address (extra character, malformed CIDR, etc.).
+  - Solution:
+    1. Check the exact error message.
+    2. Edit the file: `nano /etc/network/interfaces`
+    3. Verify the `address` line is exactly: `address 192.168.151.200/20` (no extra characters like `X`).
+    4. Save, exit, then restart: `systemctl restart networking`
+    5. Verify bridge is up: `ip a` should show `vmbr0` with the correct IP.
 
 ### Performance Issues
 
@@ -257,6 +371,7 @@ rm [file]                  # Remove file
 mkdir [directory]          # Create directory
 
 # Networking quick checks
+cat /etc/resolv.conf     # Show DNS resolver configuration
 ip a                     # Show network interfaces and assigned IP addresses
 ip r                     # Show routing table (default gateway and routes)
 ping -c 3 1.1.1.1        # Test basic outbound network connectivity (no DNS required)
