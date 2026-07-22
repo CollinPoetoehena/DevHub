@@ -28,6 +28,8 @@ This document covers the goals for this home lab and all decisions around choosi
 
 The personal goal is described in detail in the [Home Lab README](../README.md#personal-goal). In short: learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
 
+Personally, I work as a DevOps Engineer, not as a hardware, network, or storage engineer. That means this lab is mostly about broadening my knowledge and following personal interest, but not about mastering hardware, networking, or storage topics at a deeply advanced specialist level like hardware, network, or storage engineers do. It is focused on theory, practical understanding, and some more advanced concepts, but not on the most advanced specialist work a dedicated network, storage, or hardware engineer would do. For example, building and operating an entire self-hosted storage or private cloud setup, such as a full NAS-style platform that hosts its own Netflix, etc., is not a goal of this lab.
+
 The hardware choices below are driven by this goal: affordable, real-world-grade, and sufficient for running a small Kubernetes cluster with Proxmox, Ansible, Terraform, and monitoring tools.
 
 ---
