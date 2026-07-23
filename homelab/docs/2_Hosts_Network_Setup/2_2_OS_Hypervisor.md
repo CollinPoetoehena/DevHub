@@ -100,16 +100,13 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 3. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
 4. Remove USB and reboot.
 
-TODO: add in separate network config and now use a router in between from now on from my Raspberry Pi to avoid conflicts.
-TODO: make it 2_Host_Network_Config as a folder and add a README.md, then 3_Cluster
-TODO: add problems: Home network some devices cannot connect to internet. In this case, I had quite a couple devices that had this such as my phone, a TV, and a printer (connected wiht Ethernet). Likely because Proxmox VE on the main network did some things, TODO: let AI do what it might have done, causing IP conflicts likely which is why there were such problems for some devices, but not all. TODO: add additional troubleshooting here is logging into your ISPs modem, which I did in this case and saw some IP conflicts. Solutions: TODO: with AI in general you can reserve static IPs and internal bridge, etc., but that does not provide full safety, a better solution is a dedicated router for the homelab, which provides a full isolated network for the homelab where Proxmox and all other things in the dedicated homelab network cannot interfere (and with that break) the home network. This is the choice I made because it provides full safety to avoid breaking the home network, and because it is very fun to learn more about networking and create my own router, etc.
-TODO: in the meantime when I set up this router, I shutdown the Proxmox VE host and add Linux on it in the meantime via the bootable USB with Ubuntu Desktop (see steps in the documentation in this repository for how to do that) to avoid Proxmox VE on that host continuing to interfering with the network each time I start the host while I was still able to use that machine (now with Ubuntu Desktop on it). Then when the router is ready, I can reinstall Proxmox VE on the host again.
-
-TODO: router inloggen ook om IP Static toe te wijzen aan de home lab router! Dit doe je door in te loggen op je ISPs modem.
-TODO: network doc updaten met eigen router maken, zoals een Raspberry Pi, etc. En dan met Ansible.
 
 #### Network Configuration Notes
 See [Proxmox VE Network Configuration](https://pve.proxmox.com/wiki/Network_Configuration) for details. The following contains notes for my home lab setup. See steps below, using subsections because of the longer instructions.
+
+TODO: update below with the network setup of previous step to use the router from that setup. 
+TODO: make a separate section in that file to state how you can get the required network config.
+
 ##### 1. Network Planning
 Determine the network settings **before** installing Proxmox VE.
   - Make sure a network cable is connected from the Proxmox host to your LAN/router.
@@ -216,8 +213,6 @@ reboot
 # 7) Re-verify after reboot: See verify networking immediately after Proxmox installation section above.
 ```
 
-If interface states are still wrong after reboot (`DOWN` or missing `LOWER_UP`), check cable/port first, then verify the NIC name in `bridge-ports` exactly matches `ip -br link` output.
-
 ### First Login and Baseline Setup
 
 1. Open browser to `https://<proxmox-ip>:8006`.
@@ -236,7 +231,7 @@ apt full-upgrade -y
 
 ## Chapter 3: Linux OS Installation (Worker Node Example)
 
-Use this chapter for non-hypervisor nodes (k3s/k8s workers, utility hosts, monitoring nodes, etc.).
+Use this chapter for non-hypervisor nodes (k8s workers, utility hosts, monitoring nodes, etc.).
 
 A worker node is a regular Linux server that runs workloads or supporting services, rather than hosting virtual machines for other systems.
 
@@ -287,44 +282,51 @@ Recommended next checks:
 
 ### Boot and Installer Issues
 
-- Problem: USB not detected or not booting.
-  - Solution: recreate USB, check boot order, try different USB port, disable Fast Boot.
+#### USB not detected or not booting
 
-- Problem: Installer cannot detect internal disk.
-  - Solution: switch BIOS storage mode from Intel RST/Optane to AHCI.
+Recreate USB, check boot order, try different USB port, disable Fast Boot.
 
-- Problem: System freezes during boot, such as "Your device ran into a problem and needs to restart. We'll restart for you." 
-  - Solution: This often happens if Intel RST driver was removed from Storage Controllers but BIOS is still in RST/Optane mode. Boot into Windows Safe Mode to restore:
-    1. Power off the laptop completely
-    2. Remove the USB drive
-    3. Turn on and immediately start tapping **F8** or **Shift+F8** repeatedly to enter Windows Recovery/Automatic Repair Mode. This can be tricky on modern laptops due to fast boot times, so you may need to try a few times. In this experiment, it went to a mode where it did not have a network connection and prompted to press Enter to see other recovery options. Here I selected Quick Repair and enabled Hotspot on my mobile phone for network connection.
-    4. If that doesn't work, go back into the BIOS/UEFI settings and set the SATA Mode to AHCI and boot with Ubuntu on USB:
-       - Press power button
-       - Enter BIOS/UEFI (see steps above for explanation)
-       - Change SATA Mode to AHCI as explained in the earlier steps for BIOS/UEFI configuration
-       - Save and Exit
-       - Boot from the USB with Linux, such as Ubuntu, and continue the installation
-       - Repeat this 3 times - Windows will boot into Recovery mode.
+#### Installer cannot detect internal disk
 
-- Problem: After Proxmox installation, machine keeps rebooting and shows "Boot Option Restoration" (blue screen).
-  - Solution: Firmware cannot find or trust the Proxmox EFI boot entry. In this case the problem was that I did not Disable Secure Boot, causing it to fail. Fix it in BIOS/UEFI:
-    1. Power off fully, unplug USB devices, then enter BIOS/UEFI with the method described in [BIOS/UEFI Preparation](#biosuefi-preparation).
-    2. Load BIOS defaults (`F9`), then set:
-       - Boot mode: UEFI
-       - Fast Boot: Disabled
-       - Secure Boot: Disabled, as explained in [BIOS/UEFI Preparation](#biosuefi-preparation). With Secure Boot Enabled Proxmox will not boot because the bootloader is unsigned. You can re-enable Secure Boot later if you want, but for now it must be disabled to allow Proxmox to boot.
-       - F12 Boot Menu: Enabled
-    3. Move internal Proxmox boot entry to top of boot order.
-    4. If no Proxmox entry exists, add one from EFI file browser:
-       - `\\EFI\\proxmox\\grubx64.efi`
-       - or `\\EFI\\debian\\grubx64.efi`
-    5. Save (`F10`) and reboot.
-    6. If loop continues, boot Proxmox USB in rescue mode and reinstall the EFI bootloader.
+Switch BIOS storage mode from Intel RST/Optane to AHCI.
+
+#### System freezes during boot ("Your device ran into a problem and needs to restart")
+
+This often happens if Intel RST driver was removed from Storage Controllers but BIOS is still in RST/Optane mode. Boot into Windows Safe Mode to restore:
+
+1. Power off the laptop completely.
+2. Remove the USB drive.
+3. Turn on and immediately start tapping **F8** or **Shift+F8** repeatedly to enter Windows Recovery/Automatic Repair Mode. This can be tricky on modern laptops due to fast boot times, so you may need to try a few times. In this experiment, it went to a mode where it did not have a network connection and prompted to press Enter to see other recovery options. Here I selected Quick Repair and enabled Hotspot on my mobile phone for network connection.
+4. If that doesn't work, go back into the BIOS/UEFI settings and set the SATA Mode to AHCI and boot with Ubuntu on USB:
+   - Press power button.
+   - Enter BIOS/UEFI (see steps above for explanation).
+   - Change SATA Mode to AHCI as explained in the earlier steps for BIOS/UEFI configuration.
+   - Save and Exit.
+   - Boot from the USB with Linux, such as Ubuntu, and continue the installation.
+   - Repeat this 3 times — Windows will boot into Recovery mode.
+
+#### After Proxmox installation, machine keeps rebooting and shows "Boot Option Restoration" (blue screen)
+
+Firmware cannot find or trust the Proxmox EFI boot entry. In this case the problem was that I did not Disable Secure Boot, causing it to fail. Fix it in BIOS/UEFI:
+
+1. Power off fully, unplug USB devices, then enter BIOS/UEFI with the method described in [BIOS/UEFI Preparation](#biosuefi-preparation).
+2. Load BIOS defaults (`F9`), then set:
+   - Boot mode: UEFI
+   - Fast Boot: Disabled
+   - Secure Boot: Disabled, as explained in [BIOS/UEFI Preparation](#biosuefi-preparation). With Secure Boot Enabled Proxmox will not boot because the bootloader is unsigned. You can re-enable Secure Boot later if you want, but for now it must be disabled to allow Proxmox to boot.
+   - F12 Boot Menu: Enabled
+3. Move internal Proxmox boot entry to top of boot order.
+4. If no Proxmox entry exists, add one from EFI file browser:
+   - `\\EFI\\proxmox\\grubx64.efi`
+   - or `\\EFI\\debian\\grubx64.efi`
+5. Save (`F10`) and reboot.
+6. If loop continues, boot Proxmox USB in rescue mode and reinstall the EFI bootloader.
 
 ### Network Issues
 
-- Problem: No network after install.
-  - Solution: confirm NIC name, static config, gateway, DNS; diagnose with:
+#### No network after install
+
+Confirm NIC name, static config, gateway, and DNS; diagnose with:
 
 ```bash
 ip a
@@ -333,32 +335,36 @@ cat /etc/network/interfaces
 systemctl status networking
 ```
 
-    Common causes:
-    - vmbr0 bridge is down: run `ifup vmbr0` to bring it up.
-    - Physical NIC not bound: verify `bridge-ports eno1` (or your NIC name) exists in `/etc/network/interfaces`.
-    - Gateway unreachable: verify ethernet cable connected, and `ip r` shows `default via <gateway IP, such as 192.168.144.1>`.
+Common causes:
+- vmbr0 bridge is down: run `ifup vmbr0` to bring it up.
+- Physical NIC not bound: verify `bridge-ports eno1` (or your NIC name) exists in `/etc/network/interfaces`.
+- Gateway unreachable: verify ethernet cable connected, and `ip r` shows `default via <gateway IP, such as 192.168.144.1>`.
 
-- Problem: `ip a` shows all interfaces down except the default route is correct, and the gateway is still unreachable.
-  - Solution: the bridge or physical NIC is not actually up yet, even though the route is correct.
-    1. Bring up the physical NIC first, for example: `ifup eno1`.
-    2. Then bring up the bridge: `ifup vmbr0`.
-    3. Verify both are up: `ip a` should show `UP` on the NIC and `vmbr0`.
-    4. Test the gateway again: `ping -c 3 192.168.144.1`.
-    5. If it still fails, restart networking: `systemctl restart networking`, then recheck `ip a` and `ip r`.
+#### `ip a` shows all interfaces down, default route is correct, but gateway is still unreachable
 
-- Problem: After reconfiguring `/etc/network/interfaces`, `systemctl status networking` shows error like `does not appear to be an IPv4 or IPv6 address`.
-  - Cause: typo in IP address (extra character, malformed CIDR, etc.).
-  - Solution:
-    1. Check the exact error message.
-    2. Edit the file: `nano /etc/network/interfaces`
-    3. Verify the `address` line is exactly: `address 192.168.151.200/20` (no extra characters like `X`).
-    4. Save, exit, then restart: `systemctl restart networking`
-    5. Verify bridge is up: `ip a` should show `vmbr0` with the correct IP.
+The bridge or physical NIC is not actually up yet, even though the route is correct.
+
+1. Bring up the physical NIC first, for example: `ifup eno1`.
+2. Then bring up the bridge: `ifup vmbr0`.
+3. Verify both are up: `ip a` should show `UP` on the NIC and `vmbr0`.
+4. Test the gateway again: `ping -c 3 192.168.144.1`.
+5. If it still fails, restart networking: `systemctl restart networking`, then recheck `ip a` and `ip r`.
+
+#### `systemctl status networking` shows "does not appear to be an IPv4 or IPv6 address" after reconfiguring `/etc/network/interfaces`
+
+**Cause:** typo in IP address (extra character, malformed CIDR, etc.).
+
+1. Check the exact error message.
+2. Edit the file: `nano /etc/network/interfaces`
+3. Verify the `address` line is exactly: `address 192.168.151.200/20` (no extra characters like `X`).
+4. Save, exit, then restart: `systemctl restart networking`
+5. Verify bridge is up: `ip a` should show `vmbr0` with the correct IP.
 
 ### Performance Issues
 
-- Problem: Node feels slow.
-  - Solution: check thermal throttling, disk health, and running services (`htop`, `iostat`, `dmesg`).
+#### Node feels slow
+
+Check thermal throttling, disk health, and running services (`htop`, `iostat`, `dmesg`).
 
 ---
 
