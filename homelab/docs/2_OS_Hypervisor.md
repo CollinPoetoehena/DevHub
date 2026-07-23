@@ -93,21 +93,24 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 - [ ] Planned static management IP, gateway, and DNS
 - [ ] Planned hostname (example: `pve1.homelab.local`)
 
-### Install Proxmox VE
+### Install Proxmox VE & Configure Host Machine
 
-1. Boot target machine from the Proxmox USB.
-2. Select `Install Proxmox VE` in the boot menu.
-3. Accept license and choose target disk.
-4. Select filesystem (default `ext4` is fine to start; ZFS is optional if planned).
-5. Configure locale, timezone, and keyboard.
-6. Set a strong `root` password and admin email.
-7. Configure management network (VERY IMPORTANT to configure this correctly, otherwise you may not have correct connectivity to the Proxmox web interface after install):
-  - Assign static IP/CIDR: pick an unused IP in your management subnet and enter it with prefix, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve this IP in DHCP so it is never assigned to another device.
-  - Set gateway: enter your router/firewall LAN IP on the same subnet (e.g. `192.168.1.1`). To determine it, check your router admin page, or on an already connected Linux machine run `ip r` and use the `default via ...` address.
-  - Set DNS server: use a reachable resolver such as your router DNS, local DNS (e.g. Pi-hole/AdGuard), or public DNS (`1.1.1.1`, `8.8.8.8`). To determine your current DNS, check router DHCP/DNS settings, or on Linux run `resolvectl status` (or `cat /etc/resolv.conf`) on a working device in the same network.
-  - Set FQDN hostname: use full name format `hostname.domain`, for example `pve1.homelab.local`; determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
+1. Boot target machine from the Proxmox USB. Then select `Install Proxmox VE` in the boot menu.
+2. Now you can configure the host machine by following the [Proxmox VE Installation Guide](https://pve.proxmox.com/wiki/Installation) and the [Proxmox VE Configuration Guide](https://pve.proxmox.com/pve-docs/chapter-sysadmin.html). Some tips and notes for myself regarding the installation and configuration are added below (e.g. Network tips).
+3. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
+4. Remove USB and reboot.
 
-  Example: derive values from a working laptop in the same network before starting Proxmox install.
+#### Network Configuration Notes
+See [Proxmox VE Network Configuration](https://pve.proxmox.com/wiki/Network_Configuration) for details. The following contains notes for my home lab setup.
+
+Configure management network (VERY IMPORTANT to configure this correctly, otherwise you may not have correct connectivity to the Proxmox web interface after install):
+- Make sure a network cable is connected to the Proxmox host and the LAN router.
+- Assign static IP/CIDR: pick an unused IP in your management subnet and enter it with prefix, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve this IP in DHCP so it is never assigned to another device.
+- Set gateway: enter your router/firewall LAN IP on the same subnet (e.g. `192.168.1.1`). To determine it, check your router admin page, or on an already connected Linux machine run `ip r` and use the `default via ...` address.
+- Set DNS server: use a reachable resolver such as your router DNS, local DNS (e.g. Pi-hole/AdGuard), or public DNS (`1.1.1.1`, `8.8.8.8`). To determine your current DNS, check router DHCP/DNS settings, or on Linux run `resolvectl status` (or `cat /etc/resolv.conf`) on a working device in the same network.
+- Set FQDN hostname: use full name format `hostname.domain`, for example `pve1.homelab.local`; determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
+
+Example: derive values from a working laptop in the same network before starting Proxmox install.
 ```sh
 $ ip r
 default via 192.168.144.1 dev eth0 proto kernel 
@@ -133,20 +136,20 @@ Link 3 (br-4c412f4ff897)
 
 Link 4 (docker0)
 ```
-  What to enter in Proxmox installer from this example:
-  - Static IP/CIDR: `192.168.151.200/20` (same `/20` subnet as existing LAN, and `192.168.151.200` is an example unused host IP in that subnet).
-  - Gateway: `192.168.144.1` (taken from `default via ...`; this is the route out of the local network).
-  - DNS server: `192.168.144.1` (router DNS from `resolvectl`; add public DNS later as fallback if needed).
-  - FQDN hostname: `pve1.homelab.local` (role-based host `pve1` + local domain `local` from DNS domain/search domain).
+What to enter in Proxmox installer from this example:
+- Static IP/CIDR: `192.168.151.200/20` (same `/20` subnet as existing LAN, and `192.168.151.200` is an example unused host IP in that subnet).
+- Gateway: `192.168.144.1` (taken from `default via ...`; this is the route out of the local network).
+- DNS server: `192.168.144.1` (router DNS from `resolvectl`; add public DNS later as fallback if needed).
+- FQDN hostname: `pve1.homelab.local` (role-based host `pve1` + local domain `local` from DNS domain/search domain).
   
-  Basic connectivity test: after install, from Proxmox console run:
+Basic connectivity test: after install, from Proxmox console run:
 ```sh
 ping -c 3 <gateway-ip>   # Test connectivity to gateway (LAN router)
 ping -c 3 1.1.1.1        # Test basic outbound network connectivity (no DNS required)
 ping -c 3 google.com     # Test connectivity plus DNS name resolution
 ```
   
-  If you need to reconfigure, you can follow these steps in the running Proxmox console:
+If you need to reconfigure, you can follow these steps in the running Proxmox console:
 ```sh
 # 1) Log in on Proxmox local console as root, then back up current config
 cp /etc/network/interfaces /etc/network/interfaces.bak
@@ -190,9 +193,7 @@ ip a
 ip r
 cat /etc/resolv.conf
 ```
-  Use these values because they match the detected LAN route (`192.168.144.0/20`), use a valid host IP in that range, and keep gateway/DNS reachable from the same network.
-8. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
-9. Remove USB and reboot.
+The `ip r` command should show for the physical NIC TODO: UP for all and LOWER_UP for the network cable.
 
 ### First Login and Baseline Setup
 
