@@ -100,100 +100,123 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 3. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
 4. Remove USB and reboot.
 
+TODO: add in separate network config and now use a router in between from now on from my Raspberry Pi to avoid conflicts.
+TODO: make it 2_Host_Network_Config as a folder and add a README.md, then 3_Cluster
+TODO: add problems: Home network some devices cannot connect to internet. In this case, I had quite a couple devices that had this such as my phone, a TV, and a printer (connected wiht Ethernet). Likely because Proxmox VE on the main network did some things, TODO: let AI do what it might have done, causing IP conflicts likely which is why there were such problems for some devices, but not all. TODO: add additional troubleshooting here is logging into your ISPs modem, which I did in this case and saw some IP conflicts. Solutions: TODO: with AI in general you can reserve static IPs and internal bridge, etc., but that does not provide full safety, a better solution is a dedicated router for the homelab, which provides a full isolated network for the homelab where Proxmox and all other things in the dedicated homelab network cannot interfere (and with that break) the home network. This is the choice I made because it provides full safety to avoid breaking the home network, and because it is very fun to learn more about networking and create my own router, etc.
+TODO: in the meantime when I set up this router, I shutdown the Proxmox VE host and add Linux on it in the meantime via the bootable USB with Ubuntu Desktop (see steps in the documentation in this repository for how to do that) to avoid Proxmox VE on that host continuing to interfering with the network each time I start the host while I was still able to use that machine (now with Ubuntu Desktop on it). Then when the router is ready, I can reinstall Proxmox VE on the host again.
+
+TODO: router inloggen ook om IP Static toe te wijzen aan de home lab router! Dit doe je door in te loggen op je ISPs modem.
+TODO: network doc updaten met eigen router maken, zoals een Raspberry Pi, etc. En dan met Ansible.
+
 #### Network Configuration Notes
-See [Proxmox VE Network Configuration](https://pve.proxmox.com/wiki/Network_Configuration) for details. The following contains notes for my home lab setup.
-
-Configure management network (VERY IMPORTANT to configure this correctly, otherwise you may not have correct connectivity to the Proxmox web interface after install):
-- Make sure a network cable is connected to the Proxmox host and the LAN router.
-- Assign static IP/CIDR: pick an unused IP in your management subnet and enter it with prefix, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve this IP in DHCP so it is never assigned to another device.
-- Set gateway: enter your router/firewall LAN IP on the same subnet (e.g. `192.168.1.1`). To determine it, check your router admin page, or on an already connected Linux machine run `ip r` and use the `default via ...` address.
-- Set DNS server: use a reachable resolver such as your router DNS, local DNS (e.g. Pi-hole/AdGuard), or public DNS (`1.1.1.1`, `8.8.8.8`). To determine your current DNS, check router DHCP/DNS settings, or on Linux run `resolvectl status` (or `cat /etc/resolv.conf`) on a working device in the same network.
-- Set FQDN hostname: use full name format `hostname.domain`, for example `pve1.homelab.local`; determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
-
-Example: derive values from a working laptop in the same network before starting Proxmox install.
+See [Proxmox VE Network Configuration](https://pve.proxmox.com/wiki/Network_Configuration) for details. The following contains notes for my home lab setup. See steps below, using subsections because of the longer instructions.
+##### 1. Network Planning
+Determine the network settings **before** installing Proxmox VE.
+  - Make sure a network cable is connected from the Proxmox host to your LAN/router.
+   - Collect gateway and DNS values from your **primary host OS network stack** (the real OS interface connected to LAN), not from a secondary/virtualized stack such as WSL on Windows, Docker bridge, VPN tunnel, or VM guest interface.
+    - Why: secondary stacks often show virtual values that are not valid for bare-metal Proxmox management setup. This is the mistake I made the first time I tried, leading to a Proxmox host with no network connectivity because I used the virtual values from WSL instead of the real LAN gateway/DNS from the host OS.
+    - Example of misleading virtualized values:
+      - WSL often shows a NAT gateway like `172.x.x.1` in `/etc/resolv.conf` and `ip r`.
+      - Docker bridges may show routes like `172.17.0.0/16`.
+      - These are internal overlay/NAT networks, not your physical LAN gateway/DNS.
+   - On the host connected to the same LAN, gather values with:
+TODO: in network config kan ik dit gebruiken alsnog, ookal doe ik niet dit meer direct, zo kan ik bijvoorbeeld achterhalen van router IP.
 ```sh
+# ====================================== Linux host: ======================================
+ip r                # Shows default gateway (default via <gateway-ip> dev <interface>)
+resolvectl status   # Shows DNS servers and search domain
+# Example output (only showing relevant information, skipping the rest of the output):
 $ ip r
-default via 192.168.144.1 dev eth0 proto kernel 
-172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
-192.168.49.0/24 dev br-4c412f4ff897 proto kernel scope link src 192.168.49.1 linkdown 
-192.168.144.0/20 dev eth0 proto kernel scope link src 192.168.151.174
+default via <gateway-ip> dev <interface>
+$ cat /etc/resolv.conf
+nameserver <dns-server-ip>
 
-$ resolvectl status
-Global
-         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-  resolv.conf mode: foreign
-Current DNS Server: 10.255.255.254
-       DNS Servers: 10.255.255.254
-        DNS Domain: home
-
-Link 2 (eth0)
-    Current Scopes: none
-         Protocols: -DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-
-Link 3 (br-4c412f4ff897)
-    Current Scopes: none
-         Protocols: -DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-
-Link 4 (docker0)
+# ====================================== Windows host: ======================================
+ipconfig /all       # Shows all network information including gateway, DNS servers, etc.
+# Example output (only showing relevant information, skipping the rest of the output):
+$ ipconfig /all
+IPv4 Address. . . . . . . . . . . : <host-ip>
+Subnet Mask . . . . . . . . . . . : <subnet-mask>
+Default Gateway . . . . . . . . . : <gateway-ipv6>
+                                    <gateway-ipv4>
+DHCP Server . . . . . . . . . . . : <dhcp-server-ip>
+DNS Servers . . . . . . . . . . . : <dns-server-ipv6>
+                                    <dns-server-ipv4>
 ```
-What to enter in Proxmox installer from this example:
-- Static IP/CIDR: `192.168.151.200/20` (same `/20` subnet as existing LAN, and `192.168.151.200` is an example unused host IP in that subnet).
-- Gateway: `192.168.144.1` (taken from `default via ...`; this is the route out of the local network).
-- DNS server: `192.168.144.1` (router DNS from `resolvectl`; add public DNS later as fallback if needed).
-- FQDN hostname: `pve1.homelab.local` (role-based host `pve1` + local domain `local` from DNS domain/search domain).
-  
-Basic connectivity test: after install, from Proxmox console run:
+   - Set installer values:
+     - Static IP/CIDR: pick an unused IP in your management subnet, for example `192.168.1.10/24` (`/24` = subnet mask `255.255.255.0`, typically range `192.168.1.1` to `192.168.1.254`). Reserve it in DHCP so no other device gets it.
+     - Gateway: use the LAN router/firewall IP from the above commands, shows in Linux as `default via <gateway-ip> dev <interface>` and in Windows as `Default Gateway` (example: `192.168.2.254`).
+     - DNS server: use reachable DNS on the same LAN path (e.g. router DNS, Pi-hole/AdGuard, or other local resolver).
+     - FQDN hostname: use stable format `<hostname>.<domain>`, such as `pve1.homelab.local`. Determine it by choosing (1) a short host name that is unique and role-based (`pve1`, `pve2`, `pve3`) and (2) a domain suffix from your DNS/router search domain (`homelab.local`, `lan`, or your own internal domain). Keep this value stable because certificates and cluster configuration depend on it; before installing, verify naming consistency by checking that your DNS (or router host overrides) will resolve the same name to the static IP you assigned.
+
+
+Verify networking immediately after Proxmox installation.
+
 ```sh
-ping -c 3 <gateway-ip>   # Test connectivity to gateway (LAN router)
-ping -c 3 1.1.1.1        # Test basic outbound network connectivity (no DNS required)
-ping -c 3 google.com     # Test connectivity plus DNS name resolution
+# Check interface state and addresses
+ip a
+
+# Check routes (default gateway must exist)
+ip r
+
+# Check DNS resolver currently configured
+cat /etc/resolv.conf
+
+# Connectivity checks
+ping -c 3 <gateway-ip>      # Test gateway reachability
+ping -c 3 8.8.8.8           # Test basic outbound connectivity by pinging Google's DNS server (no DNS required)
+ping -c 3 google.com        # Test connectivity plus DNS name resolution
 ```
-  
-If you need to reconfigure, you can follow these steps in the running Proxmox console:
+
+   - What you should see:
+     - Physical NIC (for example `eno1`/`enp3s0`/`nic0`) should be `UP`.
+     - Physical NIC should show `LOWER_UP` when ethernet cable/link is active. For me `nic0` was the physical NIC, and `vmbr0` was the bridge.
+     - Bridge `vmbr0` should have the static management IP.
+     - `ip r` should include `default via <gateway-ip> dev vmbr0`.
+     - `ping <gateway-ip>` should succeed; if `ping 1.1.1.1` works but `ping google.com` fails, this indicates a DNS issue.
+
+3. If needed, apply network changes after Proxmox is installed (e.g. if you find out the static IP, gateway, or DNS was incorrect). This step is added here because the Proxmox installer sometimes does not allow you to set the correct values, or you may have misconfigured them. You can fix it after install by editing `/etc/network/interfaces` and `/etc/resolv.conf` directly. 
 ```sh
-# 1) Log in on Proxmox local console as root, then back up current config
+# 1) Log in on Proxmox local console as root and back up config
 cp /etc/network/interfaces /etc/network/interfaces.bak
 
-# 2) Identify physical NIC name (example: eno1, enp3s0)
+# 2) Identify NIC names
 ip -br link
 
-# 3) Edit Proxmox network config
+# 3) Edit network config
 nano /etc/network/interfaces
 
-# 4) Example config (replace eno1 and IPs for your LAN)
+# 4) Example (replace nic0 + IP values with your LAN values)
 cat <<'EOF'
 auto lo
 iface lo inet loopback
 
-iface eno1 inet manual
+iface nic0 inet manual
 
 auto vmbr0
 iface vmbr0 inet static
-    address 192.168.151.200/20
+    address 192.168.2.200/24
     gateway 192.168.144.1
-    bridge-ports eno1
+    bridge-ports nic0
     bridge-stp off
     bridge-fd 0
 EOF
 
-# NOTE: Make sure the 'address' line has no typos, extra characters, or spaces. 
-# The format is exactly: 'address <IP>/<CIDR>'
+# NOTE: 'address' must be exactly: address <IP>/<CIDR>
 
-# 5) Optionally update DNS server in /etc/resolv.conf (or use resolvconf if installed)
+# 5) Update DNS if required
 nano /etc/resolv.conf
-# Example resolv.conf content:
+# Example:
 search homelab.local
 nameserver 192.168.144.1
 
-# 6) Apply by rebooting (safest during initial setup)
+# 6) Apply changes (reboot is safest during initial setup)
 reboot
 
-# 7) After reboot, verify from Proxmox console
-ip a
-ip r
-cat /etc/resolv.conf
+# 7) Re-verify after reboot: See verify networking immediately after Proxmox installation section above.
 ```
-The `ip r` command should show for the physical NIC TODO: UP for all and LOWER_UP for the network cable.
+
+If interface states are still wrong after reboot (`DOWN` or missing `LOWER_UP`), check cable/port first, then verify the NIC name in `bridge-ports` exactly matches `ip -br link` output.
 
 ### First Login and Baseline Setup
 

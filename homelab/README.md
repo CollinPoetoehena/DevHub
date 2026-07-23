@@ -61,3 +61,5 @@ This section documents the step-by-step process for building this home lab from 
 | 4 | [Core Services & Monitoring](docs/4_Core_Services_Monitoring.md) | Deploy the core stack — container runtime, GitHub Runners, monitoring (Prometheus + Grafana), and logging, etc. |
 | 5 | [Storage & Backups](docs/5_Storage_Backups.md) | Storage and backup strategy — why cloud-based backups fit this lab's goals, and when NAS/RAID makes sense. |
 | 6 | [Experiment](docs/6_Experiment.md) | The ongoing phase — experiment, break things, and learn. |
+
+TODO: update with latest documentation setup at the end.

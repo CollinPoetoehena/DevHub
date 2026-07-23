@@ -1,3 +1,5 @@
+# TODO: this is after everything with the hosts and network, so now everything is in place to functtionally use such as creating VMs, services on it, etc.
+
 # TODO: Fill this in when I start on the actual home lab and get to this point, etc.
 
 TODO: install core services: Start running the tools that make your home lab useful.
