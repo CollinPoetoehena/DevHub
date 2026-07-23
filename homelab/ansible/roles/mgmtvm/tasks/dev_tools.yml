@@ -1,0 +1,8 @@
+---
+# Development and debugging tool installation for mgmtvm
+# NOTE: jq and htop require EPEL to be enabled on the target host.
+
+- name: Install development and debugging packages
+  ansible.builtin.dnf:
+    name: "{{ mgmtvm_dev_packages }}"
+    state: present

@@ -1,0 +1,29 @@
+---
+# K8s variables for ALL hosts in the infrastructure. 
+# These are general variables that apply to all Kubernetes nodes (control plane and workers) and are used by the 
+# various roles to configure the cluster consistently. Specific role variables can override these if needed, 
+# but these provide a common baseline for Kubernetes configuration across the entire infrastructure.
+
+# Kubernetes tools versions
+kubectl_version: "1.28.0"
+helm_version: "3.13.0"
+kubeadm_version: "1.28.0"
+
+# kubectl configuration
+k8s_api_server: "https://10.0.2.11:6443"
+# Kubeconfig location
+kubeconfig_path: "~/.kube/config"
+kubeconfig_dir: "~/.kube"
+
+# Cluster configuration
+cluster_name: "transacflow-cluster"
+
+# Network configuration
+pod_network_cidr: "10.244.0.0/16"
+service_cidr: "10.96.0.0/12"
+
+# Control plane endpoint (for HA)
+control_plane_endpoint: "k8s-api.transacflow.local:6443"
+
+# Certificate configuration
+cert_validity_days: 365

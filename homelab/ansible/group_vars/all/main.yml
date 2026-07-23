@@ -1,0 +1,5 @@
+---
+# Generic variables not in specific files (e.g. users.yml, k8s.yml, etc.) for ALL hosts in the infrastructure.
+
+# Utility var to extract server name from inventory_hostname (e.g. jumphost, k8s-control-plane-1, etc.) for use in templates where necessary, etc.
+server_name: "{{ inventory_hostname.split('.')[0] }}"

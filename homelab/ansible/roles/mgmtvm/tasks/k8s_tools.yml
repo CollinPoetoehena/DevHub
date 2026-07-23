@@ -1,0 +1,42 @@
+---
+# Kubernetes tooling installation for mgmtvm (kubectl, kubeadm, helm)
+
+# ==================== kubectl + kubeadm ====================
+# kubectl and kubeadm are not available in the default EL repos or EPEL.
+# They must be sourced from the official Kubernetes package repository (pkgs.k8s.io),
+# so we register that repo first before installing.
+
+- name: Add Kubernetes yum repository
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: "Kubernetes stable v{{ kubectl_version }}"
+    baseurl: "https://pkgs.k8s.io/core:/stable:/v{{ kubectl_version }}/rpm/"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "https://pkgs.k8s.io/core:/stable:/v{{ kubectl_version }}/rpm/repodata/repomd.xml.key"
+    # Exclude Kubernetes packages from being auto-upgraded by a plain `dnf update`.
+    # Kubernetes components must be upgraded deliberately and in a controlled order
+    # (drain node → upgrade control plane → upgrade workers) to avoid cluster breakage.
+    # The disable_excludes on the install task below lifts this exclusion only for
+    # explicit install/upgrade operations targeting the kubernetes repo.
+    exclude: "kubelet kubeadm kubectl cri-tools kubernetes-cni"
+
+- name: Install kubectl and kubeadm
+  ansible.builtin.dnf:
+    name:
+      - kubectl
+      - kubeadm
+    state: present
+    # Temporarily lift the exclude list defined on the kubernetes repo above so that
+    # dnf can actually resolve and install these packages in this task.
+    disable_excludes: kubernetes
+
+# ==================== helm ====================
+# Helm ships in the Fedora package repos and flows into EPEL, which is already
+# enabled via mgmtvm_common_prereqs. No separate repo registration is needed.
+# See: https://helm.sh/docs/intro/install/#from-dnfyum-fedora
+
+- name: Install Helm
+  ansible.builtin.dnf:
+    name: "{{ 'helm-' + helm_version if helm_version else 'helm' }}"
+    state: present

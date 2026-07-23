@@ -1,0 +1,3 @@
+---
+# The jump host inherits users_groups and users_list from group_vars/all/users.yml.
+# No host-specific users needed — the groups and users from group_vars/all/users.yml are sufficient.

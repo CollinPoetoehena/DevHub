@@ -1,0 +1,83 @@
+---
+# OS users and groups applied to ALL hosts in the infrastructure.
+# Applied by the "Bootstrap OS users on all VMs" play in site.yml.
+#
+# HOW merging works:
+#   Ansible does NOT merge list variables natively, but this file uses a
+#   base + extra pattern to achieve it:
+#   - _users_list_base  : the ansibleremote user, present on every host.
+#   - _users_list_extra : empty by default; override in group_vars/<group>/users.yml
+#                         to add host-specific users (e.g. poetoec on mgmtvm).
+#   - users_list        : the variable the users role reads — combines base + extra.
+#   The same pattern applies to users_groups.
+#   Scalar variables (e.g. ssh_private_key_src_ansibleremote) can be overridden directly in group_vars/<group>/users.yml 
+#   for hosts that need them (e.g. mgmtvm), and left as defaults for hosts that do not (e.g. jumphost, cluster nodes, etc.).
+#
+# WHY ansibleremote? Best practice: use a dedicated service account instead of:
+#   - root            — violates least-privilege; every task runs with full system
+#                       access, so a misconfigured task can cause irreversible damage.
+#   - Cloud defaults  — (azureuser, ubuntu, ec2-user) are generic accounts not scoped
+#                       to automation; disabling them (common hardening) silently breaks
+#                       all playbooks.
+#   - Personal accounts — ties automation to an individual; pipelines break when people
+#                       leave and personal key management is out of scope for CI/CD.
+# ansibleremote is:
+#   - Granted passwordless sudo via /etc/sudoers.d/ so "become: true" works without prompts.
+#   - Authorised by a dedicated SSH key (id_k8slab), separate from personal keys so
+#     access can be rotated or revoked independently without affecting human operators.
+#   - The only SSH identity used by the Ansible controller and CI/CD pipelines, giving a
+#     clear audit trail of what automation touched vs. what human operators changed.
+
+# ---------------------------------------------------------------------------
+# General user variables
+# ---------------------------------------------------------------------------
+# Utility variables for the path of the key files for ansibleremote (private key only used if ansibleremote_ssh_private_keys
+# is overridden in group_vars/<group>/users.yml for hosts that need it, e.g. mgmtvm, hosts that do not need it get no private key).
+# These defaults are defined here so that ansibleremote has consistent handling for all hosts
+ssh_private_key_src_ansibleremote: "{{ vault_ssh_private_key_src_ansibleremote }}"
+ssh_public_key_src_ansibleremote: "{{ vault_ssh_private_key_src_ansibleremote }}.pub" # Use the same base path as the private key for consistency, just with .pub extension
+ssh_private_key_dest_ansibleremote: "id_ansibleremote"
+
+# Empty by default — overridden in group_vars/<group>/users.yml for hosts that
+# need ansibleremote to SSH outbound to other VMs (e.g. mgmtvm → cluster nodes). For hosts that
+# do not need it, it remains empty (if the private key is not needed it should not be added for security reasons!).
+# NOTE: This should still follow the input format expected in the users role (see role/users README).
+ssh_private_keys_ansibleremote: []
+
+# ---------------------------------------------------------------------------
+# Groups
+# ---------------------------------------------------------------------------
+_users_groups_base:
+  # Shared admin group — sudo at group level so all members inherit it without
+  # needing individual /etc/sudoers.d/ files (see users role README: Sudo behaviour).
+  - groupname: as-admin
+    use_sudo: true
+
+# Override in group_vars/<group>/users.yml to add host-specific extra groups.
+_users_groups_extra: []
+
+# Variable consumed by the users role (avoids duplication by combining base + extra)
+users_groups: "{{ _users_groups_base + _users_groups_extra }}"
+
+# ---------------------------------------------------------------------------
+# Users
+# ---------------------------------------------------------------------------
+_users_list_base:
+  - username: ansibleremote
+    desc: "Ansible service account"
+    group: ansibleremote # Own primary group so sudo is scoped to this account only
+    use_sudo: true
+    # Deployed only on hosts where ssh_private_keys_ansibleremote is overridden
+    # (non-empty). Defaults to [] — no private key deployed on other hosts (if the private key 
+    # is not needed it should not be added for security reasons!).
+    ssh_private_keys: "{{ ssh_private_keys_ansibleremote }}"
+    # Always add public key so that the account is accessible via SSH with the corresponding private key
+    ssh_public_keys:
+      - key: "{{ ssh_public_key_src_ansibleremote }}"
+        comment: "Ansible controller key"
+
+# Override in group_vars/<group>/users.yml to add host-specific extra users.
+_users_list_extra: []
+
+# Variable consumed by the users role (avoids duplication by combining base + extra)
+users_list: "{{ _users_list_base + _users_list_extra }}"

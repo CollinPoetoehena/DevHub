@@ -1,0 +1,22 @@
+---
+# Azure CLI installation for mgmtvm
+# Uses the official Microsoft RPM repository.
+
+- name: Import Microsoft RPM signing key
+  ansible.builtin.rpm_key:
+    key: https://packages.microsoft.com/keys/microsoft.asc
+    state: present
+
+- name: Add Azure CLI yum repository
+  ansible.builtin.yum_repository:
+    name: azure-cli
+    description: Azure CLI
+    baseurl: https://packages.microsoft.com/yumrepos/azure-cli
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+
+- name: Install Azure CLI
+  ansible.builtin.dnf:
+    name: "{{ 'azure-cli-' + azure_cli_version if azure_cli_version else 'azure-cli' }}"
+    state: present

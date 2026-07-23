@@ -1,0 +1,15 @@
+---
+roles:
+  # TODO: these roles I want to keep, such as users to create users on all hosts, jumphost and mgmtvm to interact with all the clusters (e.g. with the monitoring VMs, run Ansible, etc.)
+  - name: users
+    src: https://github.com/CollinPoetoehena/ansible-role-users.git
+    scm: git
+    version: 1.0.0
+  - name: jumphost
+    src: https://github.com/CollinPoetoehena/ansible-role-jumphost.git
+    scm: git
+    version: 1.0.0
+  - name: mgmtvm
+    src: https://github.com/CollinPoetoehena/ansible-role-mgmtvm.git
+    scm: git
+    version: 1.0.0

@@ -1,0 +1,30 @@
+---
+# Python virtual environment, Ansible, and pip dependency installation for mgmtvm
+
+- name: Ensure Python 3 and pip are present
+  ansible.builtin.dnf:
+    name:
+      - python3
+      - python3-pip
+    state: present
+
+- name: Create Python virtual environment
+  ansible.builtin.pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ mgmtvm_venv_path }}"
+    virtualenv_command: python3 -m venv
+
+- name: Install Ansible in virtual environment
+  ansible.builtin.pip:
+    name: "{{ 'ansible==' + ansible_version if ansible_version else 'ansible' }}"
+    state: present
+    virtualenv: "{{ mgmtvm_venv_path }}"
+  when: install_ansible | bool
+
+- name: Install additional pip packages in virtual environment
+  ansible.builtin.pip:
+    name: "{{ mgmtvm_pip_packages }}"
+    state: present
+    virtualenv: "{{ mgmtvm_venv_path }}"
+  when: mgmtvm_pip_packages | length > 0

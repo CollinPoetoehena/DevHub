@@ -1,0 +1,455 @@
+---
+# TODO: update below with HomeLab, this is all copied from k8s-lab repo.
+
+
+
+################################################################################
+# TransacFlow Infrastructure Playbook (Remote/Production & DTA Environments)
+# See /docs/design/Environments.md for details on different environments
+# local.yml sets up local development environment
+################################################################################
+# This is the main playbook for configuring the TransacFlow Kubernetes cluster
+# infrastructure on Azure. It orchestrates the deployment of:
+#   - Jump host (bastion) for secure cluster access
+#   - Management VM with all tooling (kubectl, helm, az cli, ansible, etc.)
+#   - Kubernetes control plane nodes using Kubeadm
+#   - Kubernetes worker nodes
+#   - Container runtime (containerd/CRI-O)
+#   - CNI networking plugin (Calico/Cilium/Flannel)
+#
+# See README.md for detailed instructions on running this playbook and the role of each component.
+#
+################################################################################
+
+################################################################################
+# PLAY 0: Bootstrap OS Users (run once after initial VM provisioning)
+################################################################################
+# Azure provisions VMs with a default user (azureuser). These plays use that
+# account for the very first connection to create the dedicated Ansible service
+# account (ansibleremote) and any personal accounts on all hosts.
+#
+# Run once at initial setup (before anything else):
+#   ansible-playbook site.yml --tags users -u azureuser
+#
+# WHY a separate bootstrap play with remote_user: azureuser?
+#   After terraform apply the only available SSH identity is azureuser.
+#   Once these plays complete, ansibleremote exists on every host and all
+#   subsequent plays connect as ansibleremote (set explicitly per play and
+#   as the default in ansible.cfg).
+#
+# WHY ansibleremote? See group_vars/all/users.yml for the full explanation.
+################################################################################
+
+# TODO: add mgmtvm to the inventory (hosts file) once it is provisioned via terraform.
+- name: Bootstrap OS users on all VMs
+  hosts: all # Apply to all hosts to ensure ansibleremote (and optional other users per host) are created everywhere for consistent access in future plays.
+  become: true
+  gather_facts: false
+  # azureuser is the Azure-provisioned default; only needed for this first run.
+  # After this play, ansibleremote is available and used for all subsequent plays.
+  remote_user: azureuser
+  tags:
+    - users
+  # Use the users role to create and configure the users and groups 
+  # User definitions (vars input for the users role) live in group_vars — no vars block needed here:
+  #   group_vars/all/users.yml: applied to every host
+  #   group_vars/mgmtvm/users.yml — overrides specific for mgmtvm
+  roles:
+    - role: users
+  post_tasks:
+    - name: Confirm users are bootstrapped
+      ansible.builtin.debug:
+        msg: "Users bootstrapped on {{ inventory_hostname }} — future runs no longer need -u azureuser"
+
+# TODO: this below is for testing, see comment later below.
+# TODO: all roles in roles folder should be removed later, these should be split into separate repos later, see Issues in Git.
+################################################################################
+# PLAY 1: Configure Jump Host (Bastion)
+################################################################################
+# The jump host is configured FIRST as it serves as:
+#   - Secure entry point (bastion) to the private cluster network
+#   - SSH gateway for accessing internal cluster nodes
+#   - Network-level access control point
+#
+# This play installs:
+#   - SSH hardening and key management
+#   - Basic security tooling
+#   - Network access controls
+#
+# The jump host can be accessed directly from the internet (via public IP or VPN)
+# and provides the secure gateway to access the internal infrastructure.
+################################################################################
+- name: Configure Jump Host (Bastion)
+  hosts: jumphost
+  become: true # Use privilege escalation to become root to be able to perform this task
+  gather_facts: true
+  # Explicitly set to ansibleremote — created by the Bootstrap OS Users play above (see group_vars/all/users.yml for explanation on usage of ansibleremote and why this is best practice).
+  remote_user: ansibleremote
+  tags:
+    - jumphost
+  roles:
+    # Jump host role: Configure bastion access and SSH forwarding, etc.
+    - role: jumphost
+  post_tasks:
+    - name: Display jump host information
+      ansible.builtin.debug:
+        msg:
+          - "Jump host (bastion) configuration completed successfully"
+          - "SSH access gateway is ready"
+          - "Use this host to securely access the mgmtvm"
+# TODO: all of below is commented, but this is the main structure that should be used, above it just for testing purposes,
+# TODO: update below later with the final content and roles, etc.
+# TODO: in README.md create a section listing all possible tags and what they do to make a clear overview for it, etc.!
+# ################################################################################
+# # PLAY 1: Configure Jump Host (Bastion)
+# ################################################################################
+# # The jump host is configured FIRST as it serves as:
+# #   - Secure entry point (bastion) to the private cluster network
+# #   - SSH gateway for accessing internal cluster nodes
+# #   - Network-level access control point
+# #
+# # This play installs:
+# #   - SSH hardening and key management
+# #   - Basic security tooling
+# #   - Network access controls
+# #
+# # The jump host can be accessed directly from the internet (via public IP or VPN)
+# # and provides the secure gateway to access the internal infrastructure.
+# ################################################################################
+# - name: Configure Jump Host (Bastion)
+#   hosts: jump_host
+#   become: true
+#   gather_facts: true
+#   tags:
+#     - jump_host
+#   roles:
+#     # Common role: Base system configuration (SSH, firewall, packages, time sync)
+#     - role: common
+#       tags: common
+#     # Jump host role: Configure bastion access and SSH forwarding
+#     - role: jump_host
+#       tags: jump_host
+#   post_tasks:
+#     - name: Display jump host information
+#       ansible.builtin.debug:
+#         msg:
+#           - "Jump host (bastion) configuration completed successfully"
+#           - "SSH access gateway is ready"
+#           - "Use this host to securely access cluster nodes"
+
+# ################################################################################
+# # PLAY 2: Configure Management VM (Tooling)
+# ################################################################################
+# # The management VM is the operational control center that contains all
+# # management tools and automation for the infrastructure.
+# #
+# # This play installs:
+# #   - Kubernetes CLI tools (kubectl, kubeadm, helm)
+# #   - Azure CLI for cloud resource management
+# #   - Ansible for ongoing automation
+# #   - Git and development tools
+# #   - Monitoring and debugging utilities
+# #   - Location where kubeconfig will be copied for cluster access
+# #
+# # The management VM is accessed through the jump host (bastion) and provides
+# # the tooling necessary to manage the Kubernetes cluster and Azure resources.
+# ################################################################################
+# - name: Configure Management VM
+#   hosts: mgmt_vm
+#   become: true
+#   gather_facts: true
+#   tags:
+#     - mgmt_vm
+#   roles:
+#     # Common role: Base system configuration (SSH, firewall, packages, time sync)
+#     - role: common
+#       tags: common
+#     # Management VM role: Install all management and automation tooling
+#     - role: mgmt_vm
+#       tags: mgmt_vm
+#   post_tasks:
+#     - name: Display management VM information
+#       ansible.builtin.debug:
+#         msg:
+#           - "Management VM configuration completed successfully"
+#           - "Access via jump host and use kubectl to manage the cluster"
+#           - "Kubeconfig will be copied here after control plane initialization"
+#           - "All management tools (kubectl, helm, az cli, ansible) are ready"
+
+# ################################################################################
+# # PLAY 3: Configure All Kubernetes Cluster Nodes (Control Plane + Workers)
+# ################################################################################
+# # This play applies common baseline configuration to ALL cluster nodes.
+# # It ensures consistent settings across the infrastructure.
+# #
+# # This runs on both control plane and worker nodes before any Kubernetes
+# # components are installed, establishing a secure and consistent foundation.
+# ################################################################################
+# - name: Configure Common Settings on All Cluster Nodes
+#   hosts: control_plane,workers
+#   become: true
+#   gather_facts: true
+#   tags:
+#     - common
+#     - cluster
+#   roles:
+#     # Common role: Baseline configuration for all nodes
+#     - role: common
+#       tags: common
+#   post_tasks:
+#     - name: Verify common configuration
+#       ansible.builtin.debug:
+#         msg: "Common configuration applied to {{ inventory_hostname }}"
+
+# ################################################################################
+# # PLAY 4: Install Container Runtime on Cluster Nodes
+# ################################################################################
+# # Kubernetes requires a container runtime to execute containers.
+# # This play installs and configures containerd (or CRI-O) on all nodes that
+# # will run Kubernetes components (control plane and workers).
+# #
+# # The container runtime:
+# #   - Provides the Container Runtime Interface (CRI) for kubelet
+# #   - Manages container lifecycle (create, start, stop, delete)
+# #   - Handles image pulling from registries
+# #   - Configures cgroup driver for resource management
+# #
+# # This MUST be completed before Kubernetes installation as kubelet depends on it.
+# ################################################################################
+# - name: Install Container Runtime
+#   hosts: control_plane,workers
+#   become: true
+#   gather_facts: true
+#   tags:
+#     - container_runtime
+#     - cluster
+#   roles:
+#     # Container runtime role: Install containerd/CRI-O with proper CRI configuration
+#     - role: container_runtime
+#       tags: container_runtime
+#   post_tasks:
+#     # TODO: this is containerd likely, so change this when testing
+#     - name: Verify container runtime
+#       ansible.builtin.command: crictl version
+#       register: crictl_output
+#       changed_when: false
+
+#     - name: Display container runtime version
+#       ansible.builtin.debug:
+#         var: crictl_output.stdout_lines
+
+# ################################################################################
+# # PLAY 5: Initialize Kubernetes Control Plane
+# ################################################################################
+# # This play bootstraps the Kubernetes cluster by initializing the control plane.
+# # It runs sequentially (serial: 1) to ensure:
+# #   1. First control plane node initializes the cluster
+# #   2. Subsequent control plane nodes join using the certificate key
+# #
+# # The control plane consists of:
+# #   - kube-apiserver: Cluster API endpoint
+# #   - kube-controller-manager: Runs controller loops
+# #   - kube-scheduler: Schedules pods to nodes
+# #   - etcd: Distributed key-value store for cluster state
+# #
+# # After initialization:
+# #   - Admin kubeconfig is generated
+# #   - Join tokens are created for workers
+# #   - Control plane is ready to accept workloads (after CNI installation)
+# #
+# # For High Availability (HA):
+# #   - Multiple control plane nodes provide redundancy
+# #   - Load balancer distributes API requests
+# #   - etcd cluster ensures state consistency
+# ################################################################################
+# - name: Initialize Kubernetes Control Plane
+#   hosts: control_plane
+#   become: true
+#   gather_facts: true
+#   serial: 1 # Initialize control plane nodes one at a time
+#   tags:
+#     - control_plane
+#     - cluster
+#   roles:
+#     # Control plane role: Run kubeadm init/join for control plane nodes
+#     - role: k8s_control_plane
+#       tags: k8s_control_plane
+#   post_tasks:
+#     # TODO: finetune this post task, does it work properly and provide a good validation?
+#     - name: Wait for control plane pods to be ready
+#       ansible.builtin.command: >
+#         kubectl --kubeconfig=/etc/kubernetes/admin.conf get pods
+#         -n kube-system -o json
+#       register: control_plane_pods
+#       until: control_plane_pods.stdout | from_json | json_query('items[*].status.phase') | unique == ["Running"]
+#       retries: 30
+#       delay: 10
+#       changed_when: false
+#       when: inventory_hostname == groups['control_plane'][0]
+
+#     - name: Display control plane status
+#       ansible.builtin.debug:
+#         msg:
+#           - "Control plane initialization completed on {{ inventory_hostname }}"
+#           - "Cluster is ready for CNI plugin installation"
+
+# ################################################################################
+# # PLAY 6: Install CNI Networking Plugin
+# ################################################################################
+# # Container Network Interface (CNI) plugin provides pod networking.
+# # Without CNI, pods cannot communicate across nodes and nodes stay NotReady.
+# #
+# # This play installs ONE of the following CNI solutions:
+# #   - Calico: Full-featured with network policy support
+# #   - Cilium: eBPF-based with advanced features (service mesh, observability)
+# #   - Flannel: Simple and lightweight overlay network
+# #
+# # The CNI plugin:
+# #   - Assigns IP addresses to pods
+# #   - Creates network routes between nodes
+# #   - Enables pod-to-pod communication
+# #   - Enforces network policies (security)
+# #   - Provides service load balancing (with kube-proxy or replacement)
+# #
+# # This runs ONLY on the FIRST control plane node as CNI components are
+# # deployed as Kubernetes resources (DaemonSets) that automatically spread
+# # across all cluster nodes.
+# ################################################################################
+# - name: Install CNI Networking Plugin
+#   hosts: control_plane[0] # Only run on first control plane node
+#   become: true
+#   gather_facts: true
+#   tags:
+#     - networking
+#     - cluster
+
+#   roles:
+#     # Networking role: Deploy CNI plugin (Calico/Cilium/Flannel)
+#     - role: networking
+#       tags: networking
+
+#   post_tasks:
+#     - name: Wait for all nodes to be Ready
+#       ansible.builtin.command: >
+#         kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes
+#         -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}'
+#       register: node_status
+#       until: node_status.stdout.split() | unique == ["True"]
+#       retries: 30
+#       delay: 10
+#       changed_when: false
+
+#     - name: Display networking status
+#       ansible.builtin.debug:
+#         msg:
+#           - "CNI plugin installed successfully"
+#           - "All nodes should now be in Ready state"
+#           - "Pod networking is enabled across the cluster"
+
+# ################################################################################
+# # PLAY 7: Join Worker Nodes to Cluster
+# ################################################################################
+# # This play adds worker nodes to the Kubernetes cluster.
+# # Workers are the computational backbone where application workloads run.
+# #
+# # Each worker node runs:
+# #   - kubelet: Node agent that manages pods
+# #   - kube-proxy: Network proxy for service routing (unless using Cilium replacement)
+# #   - Container runtime: Executes containers
+# #   - CNI plugin: Provides pod networking
+# #
+# # The join process:
+# #   1. Fetches join token from control plane
+# #   2. Runs kubeadm join with the token
+# #   3. Establishes TLS connection to API server
+# #   4. Registers node with the cluster
+# #   5. Starts kubelet to accept pod scheduling
+# #
+# # Worker nodes can be:
+# #   - Added dynamically by running this playbook with --limit
+# #   - Labeled for specific workload types
+# #   - Tainted to restrict pod scheduling
+# #   - Scaled horizontally as needed
+# ################################################################################
+# - name: Join Worker Nodes to Cluster
+#   hosts: workers
+#   become: true
+#   gather_facts: true
+#   tags:
+#     - workers
+#     - cluster
+
+#   roles:
+#     # Worker role: Join workers to cluster and configure node settings
+#     - role: k8s_worker
+#       tags: k8s_worker
+
+#   post_tasks:
+#     - name: Verify worker node joined cluster
+#       ansible.builtin.command: systemctl is-active kubelet
+#       register: kubelet_status
+#       changed_when: false
+
+#     - name: Display worker status
+#       ansible.builtin.debug:
+#         msg:
+#           - "Worker node {{ inventory_hostname }} joined cluster successfully"
+#           - "Kubelet service is {{ kubelet_status.stdout }}"
+#           - "Node is ready to schedule application workloads"
+
+# ################################################################################
+# # PLAY 8: Post-Deployment Validation
+# ################################################################################
+# # Final validation play that runs on the first control plane node to verify
+# # the entire cluster is operational and ready for application deployment.
+# #
+# # This checks:
+# #   - All nodes are in Ready state
+# #   - All system pods are running
+# #   - DNS is functioning (CoreDNS)
+# #   - API server is responsive
+# #   - Cluster info is accessible
+# ################################################################################
+# - name: Post-Deployment Cluster Validation
+#   hosts: control_plane[0]
+#   become: true
+#   gather_facts: false
+#   tags:
+#     - verify
+#     - cluster
+
+#   tasks:
+#     - name: Get cluster nodes
+#       ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes -o wide
+#       register: cluster_nodes
+#       changed_when: false
+
+#     - name: Get system pods
+#       ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get pods -n kube-system
+#       register: system_pods
+#       changed_when: false
+
+#     - name: Get cluster info
+#       ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf cluster-info
+#       register: cluster_info
+#       changed_when: false
+
+#     - name: Display cluster status
+#       ansible.builtin.debug:
+#         msg:
+#           - "==================== CLUSTER VALIDATION ===================="
+#           - "{{ cluster_nodes.stdout_lines }}"
+#           - ""
+#           - "==================== SYSTEM PODS ===================="
+#           - "{{ system_pods.stdout_lines }}"
+#           - ""
+#           - "==================== CLUSTER INFO ===================="
+#           - "{{ cluster_info.stdout_lines }}"
+#           - ""
+#           - "=========================================================="
+#           - "Cluster deployment completed successfully!"
+#           - "Copy /etc/kubernetes/admin.conf to management VM for kubectl access"
+#           - "=========================================================="
+# ################################################################################
+# # End of site.yml
+# ################################################################################

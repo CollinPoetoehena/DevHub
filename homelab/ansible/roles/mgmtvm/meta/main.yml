@@ -1,0 +1,6 @@
+galaxy_info:
+  author: CollinPoetoehena
+  description: Mgmt VM Ansible role for configuring management VMs with common settings and tools.
+  min_ansible_version: 2.9
+  platforms:
+    - name: EL # EL for Enterprise Linux (RHEL, CentOS, AlmaLinux, Rocky Linux, etc., but mainly RHEL)

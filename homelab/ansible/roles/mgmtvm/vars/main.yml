@@ -1,0 +1,29 @@
+---
+# vars file for mgmtvm – internal variables not intended to be overridden
+
+# Common prerequisites for repository setup on EL.
+# Installed unconditionally before any other tasks run.
+mgmtvm_common_prereqs:
+  - epel-release # enables the EPEL repository (needed for jq, htop, and potentially some others)
+  - ca-certificates # required for TLS verification when adding remote repos
+  - gnupg2 # required to import and verify RPM signing keys
+
+# Development and debugging packages installed when install_dev_tools is true.
+mgmtvm_dev_packages:
+  - curl
+  - git
+  - vim-enhanced
+  - wget
+  - jq
+  - unzip
+  - tar
+  - net-tools
+  - tcpdump
+  - bind-utils
+  - iputils
+  - bash-completion
+  - htop
+  - tmux
+  - python3
+  - python3-pip
+  - openssh-clients

@@ -1,0 +1,30 @@
+---
+# tasks file for mgmtvm
+
+- name: Install common prerequisites
+  ansible.builtin.dnf:
+    name: "{{ mgmtvm_common_prereqs }}"
+    state: present
+  # "always" tag in Ansible means this task runs regardless of other tags specified at runtime.
+  # This ensures prerequisites are always installed before any tagged tasks that depend on them.
+  tags: [always]
+
+- name: Install development and debugging tools
+  ansible.builtin.import_tasks: dev_tools.yml
+  when: install_dev_tools | bool
+  tags: [packages, dev-tools]
+
+- name: Install Azure CLI
+  ansible.builtin.import_tasks: azure_cli.yml
+  when: install_azure_cli | bool
+  tags: [packages, azure-cli]
+
+- name: Install Kubernetes tools (kubectl, kubeadm, helm)
+  ansible.builtin.import_tasks: k8s_tools.yml
+  when: install_k8s_tools | bool
+  tags: [packages, k8s-tools]
+
+- name: Configure Python virtual environment and dependencies
+  ansible.builtin.import_tasks: python_ansible.yml
+  when: install_python_venv | bool
+  tags: [packages, python, ansible]

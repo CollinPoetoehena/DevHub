@@ -1,0 +1,53 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+.idea
+out
+logs
+*.log
+node_modules
+.env
+*.bkp
+
+# Normally, all content of .vscode would be added to .gitignore, but this is a 
+# special case becaus I want to include the launch.json. This file contains an example 
+# I can use for running SpringBoot applications in VSCode.
+.vscode/*
+# Exclude ignoring launch.json
+!.vscode/launch.json
+
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Helm
+*.tgz
+*.tar.gz
+*.lock
+
+# Terraform
+# Local .terraform directories
+**/.terraform/*
+# .tfstate files
+*.tfstate
+*.tfstate.*
+# Crash log files
+crash.log
+crash.*.log
+# Ignore override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+# Lock file
+.terraform.lock.hcl
+# Sensitive file (e.g. contains my public IP for SSH access, and Azure credentials, etc.)
+terraform.tfvars
+
+# Ansible
+.facts
+# Vault file containing the sensitive information (although it is encrypted, it is still best practice to not include it in GitHub to avoid accidental exposure of the vault password or other sensitive information if the vault file is decrypted locally)
+*vault.yml

@@ -1,0 +1,33 @@
+---
+# defaults file for mgmtvm
+
+# ==================== Tool installation flags ====================
+install_azure_cli: true
+install_k8s_tools: true # kubectl, kubeadm, helm
+install_python_venv: true
+install_ansible: true # installs Ansible inside the Python venv (requires install_python_venv: true)
+install_dev_tools: true # git, vim, jq, curl, net-tools, etc.
+
+# ==================== Kubernetes tool versions ====================
+# Major.minor only; the patch version is resolved by the pkgs.k8s.io repository.
+# Applies to both kubectl and kubeadm (they share the same versioned repo).
+kubectl_version: "1.29"
+
+# ==================== Helm version ====================
+# Helm is installed from EPEL via dnf. Leave empty to install the latest
+# available version, or pin to a specific version (e.g. "3.14.0").
+helm_version: ""
+
+# ==================== Azure CLI version ====================
+# Azure CLI is installed from the Microsoft RPM repo. Leave empty to install
+# the latest available version, or pin to a specific version (e.g. "2.60.0").
+azure_cli_version: ""
+
+# ==================== Python / Ansible ====================
+mgmtvm_venv_path: "/opt/venv"
+# Additional pip packages to install in the virtual environment.
+mgmtvm_pip_packages: []
+
+# Ansible version to install inside the virtual environment. Leave empty to
+# install the latest available version, or pin to a specific version (e.g. "9.5.1").
+ansible_version: ""
