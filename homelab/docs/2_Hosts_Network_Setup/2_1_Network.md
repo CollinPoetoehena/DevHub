@@ -38,6 +38,10 @@ A subnet is a range of IP addresses that form one logical network. For example, 
 
 The protocol that automatically assigns IP addresses to devices when they join a network. If two DHCP servers run on the same subnet, they hand out conflicting IPs, causing connectivity failures for affected devices.
 
+### Raspberry Pi
+
+A Raspberry Pi is a small, low-cost single-board computer. It runs a full Linux OS, has USB ports, HDMI, GPIO pins, and built-in Ethernet. It uses an ARM architecture (64-bit ARMv8 on the Pi 4), which differs from the x86-64 architecture used by most desktop and server hardware — keep this in mind when installing software or compiling binaries. It draws very little power (typically 3–7W) and is well-suited for running as a dedicated appliance such as a router, DNS server, or monitoring node. The Pi 4 and later models are capable enough to handle routing, DHCP, NAT, and firewalling for a small homelab.
+
 ---
 
 ## Network Setup Options
@@ -147,6 +151,23 @@ The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's
 Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
 
 ### Step 2: Configure the Pi as a Router
+
+#### Step 2.1: Assemble and Set up the Pi
+
+1. Assemble the Raspberry Pi: fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). Possible accessories (including link to set them up/configure them):
+    - [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
+    - [power supply](https://www.raspberrypi.com/products/power-supply/)
+    - [case fan](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/)
+    - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as a second network interface (e.g. `eth1`) — no manual driver installation needed. Verify with `ip link` after booting.
+2. Flash Raspberry Pi OS Lite (64-bit) to the SD card using Raspberry Pi Imager.
+3. Insert the SD card, connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch (or directly to a lab device).
+4. Boot the Pi and SSH into it.
+TODO: from this onwards it can be left to Ansible
+5. Set a static IP on `eth1` (LAN side).
+6. Enable IP forwarding.
+7. Install and configure `dnsmasq` to serve DHCP on the lab network.
+8. Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
+9. Verify connectivity from a lab device and from the Pi itself.
 
 TODO: I want to do this via Ansible, use Ansible to configure all of this and add code in this repo!
 TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
