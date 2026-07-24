@@ -117,7 +117,7 @@ Determine the network settings **before** installing Proxmox VE.
       - Docker bridges may show routes like `172.17.0.0/16`.
       - These are internal overlay/NAT networks, not your physical LAN gateway/DNS.
    - On the host connected to the same LAN, gather values with:
-TODO: in network config kan ik dit gebruiken alsnog, ookal doe ik niet dit meer direct, zo kan ik bijvoorbeeld achterhalen van router IP.
+TODO: verplaats dit naar network stukje en dan kan ik hier eventueel daarnaar verwijzen voor dezelfde commands: in network config kan ik dit gebruiken alsnog, ookal doe ik niet dit meer direct, zo kan ik bijvoorbeeld achterhalen van router IP.
 ```sh
 # ====================================== Linux host: ======================================
 ip r                # Shows default gateway (default via <gateway-ip> dev <interface>)

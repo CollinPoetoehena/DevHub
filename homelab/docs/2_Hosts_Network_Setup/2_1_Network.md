@@ -157,15 +157,59 @@ Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a stati
 
 ### Step 2: Configure the Pi as a Router
 #### Step 2.1: Assemble and Set up the Pi
-1. Assemble the Raspberry Pi: fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). Possible accessories (including link to set them up/configure them):
+1. Assemble the Raspberry Pi: fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). See the steps below for how to configure the Pi and setup SSH, etc. Possible accessories (including link to set them up/configure them):
     - [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
     - [power supply](https://www.raspberrypi.com/products/power-supply/)
     - [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
-    - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case)
+    - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
     - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as a second network interface (e.g. `eth1`) — no manual driver installation needed. Verify with `ip link` after booting.
-2. Flash Raspberry Pi OS Lite (64-bit) to the SD card using Raspberry Pi Imager.
-3. Insert the SD card, connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch (or directly to a lab device).
-4. Boot the Pi and SSH into it.
+2. Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
+3. Boot the Pi and perform the first setup. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). 
+4. Enable SSH manually via terminal (required before you can access it from another device!): SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
+```bash
+# Ensure the Pi is up-to-date:
+sudo apt update && sudo apt full-upgrade -y
+sudo reboot
+
+# Check if SSH is already enabled:
+sudo systemctl status ssh
+# If you see "Active: active (running)", SSH is already enabled.
+
+# If not, enable and start it:
+sudo systemctl enable ssh
+sudo systemctl start ssh
+sudo systemctl status ssh   # Verify: should show "Active: active (running)"
+
+# Confirm SSH is listening on port 22 (sudo ensures the process list is complete):
+sudo ss -tulnp | grep ssh
+# Should show: LISTEN 0 128 0.0.0.0:22
+
+# Find the Pi's IP address:
+hostname -I
+# Example output: 192.168.1.123
+# Or use the hostname command to get the Pi's hostname:
+hostname
+# Example output: raspberrypi
+
+# Connect from your laptop:
+ssh <username>@<pi-ip>
+# Example: ssh pi@192.168.1.123
+# Use the username you set during Raspberry Pi OS setup (default is "pi").
+# On first connect you'll be asked to confirm the host fingerprint — type "yes".
+
+# Alternatively, connect by hostname (no need to look up the IP):
+ssh <username>@raspberrypi.local
+# "raspberrypi" is the default hostname; check yours with: hostname
+```
+From this step onwards you can use another device to SSH into the Pi.
+6. Configuring the case fan to run quietly and only when a certain temperature is reached is recommended to avoid it running the loud fan all the time. See the [Raspberry Pi 4 Case Fan product page](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) for instructions on how to set this up. Follow these steps:
+```bash
+# Open the Pi configuration tool:
+sudo raspi-config
+# Under "Performance Options" → "Fan", you can set the fan to turn on at a specific temperature (e.g., 60°C) and adjust the fan speed. This will help keep the Pi cool while minimizing noise.
+# After configuring, reboot the Pi to apply changes:
+sudo reboot
+```
 TODO: from this onwards it can be left to Ansible
 5. Set a static IP on `eth1` (LAN side).
 6. Enable IP forwarding.
@@ -173,12 +217,17 @@ TODO: from this onwards it can be left to Ansible
 8. Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
 9. Verify connectivity from a lab device and from the Pi itself.
 
+TODO: check how to set case fan to quite and only when a certain temperature is reached to avoid it running the loud fan all the time: https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/
+
 TODO: I want to do this via Ansible, use Ansible to configure all of this and add code in this repo!
 TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
 TODO: add detailed comments everywhere in the Ansible code what everything does, why it is needed, etc., so I can understand it well and always go back to it later and easily read it, etc.
 #### Step 2.2: Configure the Pi as a Router
 TODO: here use Ansible, below can all move to Ansible and here only the run for the Ansible playbook.
 **TODO: VERY IMPORTANT:** Also add firewalling with the lab router to block access to the home network from the lab network, an extra safety measure to prevent lab devices from accidentally reaching the home network. This is important because if a lab device is compromised, it should not be able to access the home network. Add firewall rules to block traffic from the lab subnet reaching the home network in the router configuration (TODO: add in Ansible variables files the home network subnet).
+
+TODO: add this into a split with the WAN side you can choose to do the ethernet setup `eth0`, or with the WiFi setup `wlan0` (if you want to use WiFi instead of Ethernet for the WAN side). Add this as a variable in the Ansible role so you can choose which one to use. For now, I will use WiFi because I cannot access the physcial ISP modem part and have the Raspberry Pi back in my room where I can add the nodes on my desk!
+
 **2a. Set a static IP on the LAN interface (`eth1`):**
 
 Edit `/etc/dhcpcd.conf`:
@@ -232,7 +281,26 @@ sudo netfilter-persistent save
 Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached to `eth1`. Devices will receive IPs in `10.42.0.0/20` from the Pi's DHCP server and route internet traffic through the Pi Router.
 
 ### Step 4: Verify
+#### Pi Connectivity
+From the Pi:
 
+```bash
+# ========================== General connectivity checks ==========================
+ip a                        # eth0: ISP-assigned IP, eth1: 10.42.0.1
+                            # Determine own IP (assuming eth0 is the interface connected to the home network): ip addr show eth0 | grep 'inet '
+ip r                        # Should show default via eth0 (ISP modem)
+ping -c 3 192.168.2.1       # Test ISP modem reachability
+ping -c 3 8.8.8.8           # Test internet from Pi
+
+# ========================== More advanced checks ==========================
+ip neigh                    # View the neighbor/ARP table (shows which IPs are reachable and their MAC addresses)
+# Should say something like: <modem-IP> dev eth0 lladdr <mac-address> REACHABLE
+# If it says something like "FAILED" or "STALE", the Pi cannot reach the modem and there is a connectivity issue.
+
+arp -n                      # View the ARP table (similar to ip neigh, shows IP-to-MAC mappings), which shows devices on the same subnet that the Pi can reach
+```
+TODO: add here a result of the setup (ip r) and explain with AI per line exactly what it does so I can understand it, etc.!
+#### Lab Device Connectivity
 From a lab device:
 
 ```bash
@@ -241,14 +309,6 @@ ip r                        # Should show default via 10.42.0.1
 ping -c 3 10.42.0.1         # Test gateway (Pi) reachability
 ping -c 3 8.8.8.8           # Test internet connectivity
 ping -c 3 google.com        # Test DNS resolution
-```
-
-From the Pi:
-
-```bash
-ip a                        # eth0: ISP-assigned IP, eth1: 10.42.0.1
-ping -c 3 192.168.2.1       # Test ISP modem reachability
-ping -c 3 8.8.8.8           # Test internet from Pi
 ```
 
 ---
