@@ -34,6 +34,55 @@ A switch connects multiple devices within the same network. It does not create a
 
 A subnet is a range of IP addresses that form one logical network. For example, `192.168.10.0/24` covers addresses `192.168.10.1` to `192.168.10.254`. Devices on different subnets cannot communicate directly — they need a router in between. This separation is what provides network isolation.
 
+- **Subnet mask:** A 32-bit number that defines which part of an IP address is the *network* portion and which part is the *host* portion. Written either in dotted-decimal (e.g. `255.255.255.0`) or CIDR prefix notation (e.g. `/24`). The network portion is the same for all devices in the subnet; the host portion is what makes each device's address unique within that subnet. In binary, the mask is a block of `1`s (network bits) followed by `0`s (host bits):
+    ```
+    255.255.255.0    =  11111111.11111111.11111111.00000000  (/24 — 24 network bits,  8 host bits)
+    255.255.0.0      =  11111111.11111111.00000000.00000000  (/16 — 16 network bits, 16 host bits)
+    255.255.240.0    =  11111111.11111111.11110000.00000000  (/20 — 20 network bits, 12 host bits)
+    255.255.252.0    =  11111111.11111111.11111100.00000000  (/22 — 22 network bits, 10 host bits)
+    255.255.255.192  =  11111111.11111111.11111111.11000000  (/26 — 26 network bits,  6 host bits)
+    ```
+    Note how the boundary can fall anywhere inside an octet (e.g. `/22` splits the third octet: `11111100` — 6 bits network, 2 bits host; `/26` splits the fourth octet: `11000000` — 2 bits network, 6 bits host). This is what makes CIDR "classless" — there is no requirement for the boundary to fall on an octet boundary.
+- **CIDR notation (Classless Inter-Domain Routing):** A compact way of writing an IP address together with its subnet mask as a single string: `<network-address>/<prefix-length>`. The prefix length (the number after the `/`) is simply the count of `1` bits in the subnet mask. CIDR replaced the old class-based system (Class A/B/C) and allows subnets of any size.
+- **How to read CIDR — key numbers:**
+    | CIDR  | Subnet Mask       | Usable Hosts | Host Range (example)                    | Notes                                              |
+    |-------|-------------------|--------------|-----------------------------------------|----------------------------------------------------|
+    | `/8`  | `255.0.0.0`       | 16,777,214   | `10.0.0.1` – `10.255.255.254`           | Very large; private `10.x.x.x` space               |
+    | `/16` | `255.255.0.0`     | 65,534       | `192.168.0.1` – `192.168.255.254`       | Large; private `192.168.x.x` space                 |
+    | `/20` | `255.255.240.0`   | 4,094        | `10.42.0.1` – `10.42.15.254`            | Used for this homelab lab network                  |
+    | `/22` | `255.255.252.0`   | 1,022        | `10.42.8.1` – `10.42.11.254`            | Spans 4 "class C" blocks; used for medium LANs     |
+    | `/24` | `255.255.255.0`   | 254          | `192.168.2.1` – `192.168.2.254`         | Most common home/office subnet                     |
+    | `/26` | `255.255.255.192` | 62           | `10.42.10.1` – `10.42.10.62`            | Quarter of a /24; used to carve up a single block  |
+    | `/30` | `255.255.255.252` | 2            | `10.0.0.1` – `10.0.0.2`                 | Point-to-point links (e.g. router–router)          |
+    | `/32` | `255.255.255.255` | 0 (1 host)   | just that one IP                        | Single host route                                  |
+
+    Formula: usable hosts = $2^{(32 - \text{prefix})} - 2$ (subtract 2: one for the network address, one for the broadcast address).
+- **Network address and broadcast address:** For any subnet, the first address is the *network address* (identifies the subnet itself, not assignable to a host) and the last address is the *broadcast address* (sends to all hosts in the subnet, not assignable). Everything in between is usable.
+    ```
+    Subnet:    10.42.0.0/20
+    Network:   10.42.0.0       ← first address, not assignable
+    Hosts:     10.42.0.1  –  10.42.15.254   ← 4,094 usable addresses
+    Broadcast: 10.42.15.255    ← last address, not assignable
+
+    Subnet:    10.42.8.0/22
+    Network:   10.42.8.0       ← first address, not assignable
+    Hosts:     10.42.8.1  –  10.42.11.254   ← 1,022 usable addresses (spans .8, .9, .10, .11 in the third octet)
+    Broadcast: 10.42.11.255    ← last address, not assignable
+
+    Subnet:    10.42.10.0/26
+    Network:   10.42.10.0      ← first address, not assignable
+    Hosts:     10.42.10.1  –  10.42.10.62   ← 62 usable addresses (only the first quarter of the .10 block)
+    Broadcast: 10.42.10.63     ← last address, not assignable
+    ```
+- **Worked examples:**
+    - `192.168.2.59/24` → network `192.168.2.0`, hosts `.1`–`.254`, broadcast `.255`. The Pi's `eth0` address on the home network.
+    - `10.42.0.1/20` → network `10.42.0.0`, hosts `10.42.0.1`–`10.42.15.254`, broadcast `10.42.15.255`. The Pi's `eth1` address; the entire lab network fits inside this `/20`.
+    - `127.0.0.1/8` → the loopback subnet; all of `127.x.x.x` is local to the machine.
+    - `10.42.8.50/22` → network `10.42.8.0`, hosts `10.42.8.1`–`10.42.11.254`, broadcast `10.42.11.255`. A `/22` spans four consecutive `/24` blocks (`.8`, `.9`, `.10`, `.11`). A host at `.50` in the third octet is well within the range — the boundary is at `.11.255`, not at `.8.255`.
+    - `10.42.10.33/26` → network `10.42.10.0`, hosts `10.42.10.1`–`10.42.10.62`, broadcast `10.42.10.63`. This is the first `/26` carved out of `10.42.10.0/24`. The second `/26` would be `10.42.10.64/26` (hosts `.65`–`.126`), the third `.128/26`, the fourth `.192/26` — four equal quarters of the same `/24`.
+
+> **Note:** You do not need to calculate all of this by hand. Know the basics (what CIDR means, how to read a subnet mask, roughly how many hosts a prefix gives you), but for anything more precise use an online subnet calculator: [calculator.net](https://www.calculator.net/ip-subnet-calculator.html), [subnet-calculator.com](https://www.subnet-calculator.com/), or [subnet-calculator.nl](https://subnet-calculator.nl/).
+
 ### DHCP
 
 The protocol that automatically assigns IP addresses to devices when they join a network. If two DHCP servers run on the same subnet, they hand out conflicting IPs, causing connectivity failures for affected devices.
@@ -101,7 +150,7 @@ ISP Modem/Router
     │
     ├── Home devices
     │
-    └── Raspberry Pi Router (Homelab Network: 10.42.0.0/20)
+    └── Raspberry Pi Router (Homelab Network: 10.42.0.0/20) `eth0` (WAN; connected to ISP Modem) → `eth1` (LAN; connected to switch)
             │
       Managed Switch (simply expands the number of available LAN ports (router typically does not have enough ports for all physical lab devices below))
             ├─ VLAN 10 Management    (10.42.10.0/24)
@@ -143,7 +192,7 @@ The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's
 - **built-in Ethernet (`eth0`):** Connects to the ISP modem (WAN side).
     - **How to get from the ISP modem to another floor in the house?** Use a long Ethernet cable (e.g. 10 m) to reach the Pi from the modem. If you need to go through walls or floors, consider using a flat Ethernet cable or running it through a conduit.
     - **Avoid WiFi for the WAN side:** The Pi does have a WiFi interface (`wlan0`), which could be used for the WAN side instead of `eth0`. However, WiFi is less stable than wired Ethernet, and I want to avoid potential connectivity issues in my lab. For example, in an earlier version I tested with WiFi, which resulted in an unstable and very slow connection where you could basically do almost nothing (I could not even connect to the Pi via SSH, while all other devices (e.g. my laptop) had perfectly fine WiFi connections). Therefore, I use the built-in Ethernet port for the WAN side and a USB-to-Ethernet adapter for the LAN side, and do not recommend using WiFi for the WAN side.
-- **USB-to-Ethernet adapter (`eth1`):** Connects to the lab switch to provide the LAN side (I bought the "TP-LINK UE300C" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reputable brand and it is cheap; perfect for my homelab use case). Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as `eth1` — no manual driver installation needed. Verify with `ip link` after booting.
+- **USB-to-Ethernet adapter (`eth1`):** Connects to the lab switch to provide the LAN side (I bought the "TP-LINK UE306" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reputable brand and it is cheap; perfect for my homelab use case (do not buy the "TP-LINK UE300C" because it has is USB-C, which the Raspberry Pi model 4 does not have!)). Plug it into a USB-A port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as `eth1` — no manual driver installation needed. Verify with `ip link` after booting.
 #### Managed Switch
 Expands the number of available LAN ports (the Pi's `eth1` is a single port, so without a switch you can only connect one device directly). A managed switch additionally allows you to create VLANs, monitor traffic, and configure port settings via a web interface — an unmanaged switch only gives you more ports with no configuration options. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt (the "TP-LINK TL-SG105E" is a good alternative).
 #### Ethernet Cables
@@ -232,17 +281,25 @@ sudo reboot
 echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C" # Check the current CPU temperature in Celsius.
 vcgencmd measure_temp # Check the current CPU temperature using the vcgencmd command (alternative method to above).
 ```
-TODO: from this onwards it can be left to Ansible
-5. Set a static IP on `eth1` (LAN side).
-6. Enable IP forwarding.
-7. Install and configure `dnsmasq` to serve DHCP on the lab network.
-8. Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
-9. Verify connectivity from a lab device and from the Pi itself.
+7. TODO: Config with Ansible: TODO: from this point you need to configure the rest with Ansible.
+    - Set a static IP on `eth1` (LAN side).
+    - Enable IP forwarding.
+    - Install and configure `dnsmasq` to serve DHCP on the lab network.
+    - Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
+    - Verify connectivity from a lab device and from the Pi itself.
+8. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
+```bash
+sudo shutdown -h now
+# Then after a few seconds when the lights on the Pi stop blinking, you can safely unplug the power supply.
+
+# Power on again by plugging the power supply back in. The Pi will boot automatically.
+```
 
 
 TODO: I want to do this via Ansible, use Ansible to configure all of this and add code in this repo!
 TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
 TODO: add detailed comments everywhere in the Ansible code what everything does, why it is needed, etc., so I can understand it well and always go back to it later and easily read it, etc.
+
 #### Step 2.2: Configure the Pi as a Router
 TODO: here use Ansible, below can all move to Ansible and here only the run for the Ansible playbook.
 **TODO: VERY IMPORTANT:** Also add firewalling with the lab router to block access to the home network from the lab network, an extra safety measure to prevent lab devices from accidentally reaching the home network. This is important because if a lab device is compromised, it should not be able to access the home network. Add firewall rules to block traffic from the lab subnet reaching the home network in the router configuration (TODO: add in Ansible variables files the home network subnet).
@@ -303,27 +360,192 @@ Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached 
 ### Step 4: Verify
 #### Pi Connectivity
 From the Pi:
-
+> **NOTE:** The commands contain extensive comments explaining the output and what to look for. This is important for understanding the network setup and troubleshooting!
 ```bash
 # ========================== General connectivity checks ==========================
-nmcli connection show       # Check network connections and their status (assuming Linux uses NetworkManager), should show eth0 and eth1 as connected
-ip a                        # eth0: ISP-assigned IP (should be in the same subnet as your home network (e.g. if the modem has IP 192.168.2.1, eth0 might have 192.168.2.x)), eth1: 10.42.0.1
-                            # Determine own IP (assuming eth0 is the interface connected to the home network): ip addr show eth0 | grep 'inet '
-ip r                        # Should show default via eth0 (ISP modem)
+# -------- nmcli connection show: list all network connections managed by NetworkManager --------
+# General format of each row:
+#   NAME                UUID                                  TYPE      DEVICE
+#
+#   NAME   : human-readable connection profile name (can be anything; set when the connection was created)
+#   UUID   : unique identifier for the connection profile (used internally by NetworkManager)
+#   TYPE   : connection type (ethernet, wifi, loopback, bridge, etc.)
+#   DEVICE : the network interface this connection is currently active on (blank = not connected)
+#
+# What to look for: eth0 and eth1 should both appear with a DEVICE assigned,
+# confirming NetworkManager has active connections on both interfaces.
+nmcli connection show
+# Example output and explanation:
+NAME                UUID                                  TYPE      DEVICE
+# "Wired connection 1" = auto-created profile for the first Ethernet interface.
+# TYPE=ethernet, DEVICE=eth0 → active on the WAN interface (connected to ISP modem).
+Wired connection 1  f4de99e2-ffb3-3c23-9bce-7003ba21786a  ethernet  eth0
+# "lo" = the loopback connection profile. TYPE=loopback, DEVICE=lo → always present, always active.
+lo                  57b46a79-d752-41c4-bac9-0cd0e0a5591c  loopback  lo
+# If a connection has no DEVICE shown, it means the profile exists but is not currently active.
+# TODO: the eth1 line needs to be added here later 
+
+# -------- ip a: show all network interfaces and their IP addresses --------
+# General format of each interface block:
+#   <index>: <name>: <flags> mtu <mtu> ...
+#       link/<type> <mac-address> brd <broadcast-mac>
+#       inet <ipv4-address>/<prefix> brd <broadcast-ip> scope <scope> ...
+#       inet6 <ipv6-address>/<prefix> scope <scope> ...
+#
+#   <index>     : sequential number assigned by the kernel (1, 2, 3, ...)
+#   <name>      : interface name (lo = loopback, eth0 = first Ethernet, eth1 = second, wlan0 = WiFi)
+#                   lo (loopback) : a virtual interface the OS uses to communicate with itself — packets sent here never leave the machine. Always present, always 127.0.0.1 (localhost). Not a real network card.
+#   <flags>     : comma-separated state flags in angle brackets:
+#                   UP           = interface is administratively enabled
+#                   LOWER_UP     = physical link is up (cable connected / signal present)
+#                   NO-CARRIER   = no physical link (cable unplugged)
+#                   BROADCAST    = supports broadcast (normal for Ethernet)
+#                   MULTICAST    = supports multicast
+#                   LOOPBACK     = loopback interface (lo only)
+#   mtu         : Maximum Transmission Unit — largest packet size in bytes (1500 = standard Ethernet)
+#   link/       : Layer 2 info — MAC address and broadcast MAC (ff:ff:ff:ff:ff:ff = send to everyone on the LAN)
+#   inet        : IPv4 address with CIDR prefix length (e.g. /24 = 255.255.255.0)
+#   brd         : IPv4 broadcast address for the subnet
+#   scope       : where the address is reachable: "global" = routable on a network, "host" = local only, "link" = same link only
+#   valid_lft   : how long the address lease is valid ("forever" = static/permanent, seconds = DHCP lease remaining time)
+#   preferred_lft: how long the address is preferred for new connections (can expire before valid_lft for DHCP graceful renewal)
+#   inet6       : IPv6 address — "fe80::" addresses are link-local (not routable, used for neighbour discovery on the same link)
+ip a
+# Example output and explanation:
+poetoec@raspberrypi:~ $ ip a
+# Interface 1: lo (loopback) — see above explanation comment for what this interface is.
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo        # 127.0.0.1 = localhost; /8 means the entire 127.x.x.x range is local
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute # IPv6 loopback address (equivalent of 127.0.0.1)
+       valid_lft forever preferred_lft forever
+# Interface 2: eth0 (WAN — built-in Ethernet, connected to ISP modem)
+# UP + LOWER_UP = enabled and cable is physically connected.
+# Got IP 192.168.2.59 from the ISP modem's DHCP server (home network subnet 192.168.2.0/24).
+# valid_lft 86165sec = DHCP lease expires in ~24h; preferred_lft 86165sec = same.
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 88:a2:9e:98:97:1e brd ff:ff:ff:ff:ff:ff  # Pi's MAC address on eth0
+    inet 192.168.2.59/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
+       valid_lft 86165sec preferred_lft 86165sec          # DHCP lease — not static
+    inet6 fe80::1d9f:d306:dbe6:f1db/64 scope link noprefixroute  # link-local IPv6, auto-generated from MAC
+       valid_lft forever preferred_lft forever
+# Interface 3: eth1 (LAN — USB-to-Ethernet adapter, connected to lab switch)
+# UP + LOWER_UP = enabled and cable is physically connected.
+# Has static IP 10.42.0.1/20 — this is the gateway address for the entire lab network.
+# valid_lft forever = static address (not from DHCP).
+# brd 10.42.15.255 = broadcast address for 10.42.0.0/20 (covers 10.42.0.0–10.42.15.255).
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether aa:bb:cc:dd:ee:ff brd ff:ff:ff:ff:ff:ff  # USB adapter's MAC address
+    inet 10.42.0.1/20 brd 10.42.15.255 scope global eth1
+       valid_lft forever preferred_lft forever            # Static — no DHCP lease
+    inet6 fe80::a8bb:ccff:fedd:eeff/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+# Interface 4: wlan0 (built-in WiFi — not used, no cable/signal)
+# NO-CARRIER = no WiFi signal associated. state DOWN = not active.
+# No inet line = no IP address assigned (not connected to any network).
+4: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN group default qlen 1000
+    link/ether 88:a2:9e:98:97:1f brd ff:ff:ff:ff:ff:ff
+# TODO: the eth1 line was pasted by copilot, check what the actual output is later and update above
+
+# -------- ip r: show the routing table (how the Pi decides where to send packets) --------
+# General format of each route:
+#   <destination> via <gateway> dev <interface> proto <source> [scope <scope>] src <preferred-src> metric <metric>
+#
+#   <destination> : the target network or "default" (= 0.0.0.0/0, matches everything not matched by a more specific route)
+#   via <gateway> : next-hop IP to forward packets to (only present when the destination is not directly connected)
+#   dev <iface>   : which network interface to send out of
+#   proto         : who installed this route:
+#                     kernel = auto-created by the kernel when you assign an IP to an interface
+#                     dhcp   = created by the DHCP client (received from DHCP server)
+#                     static = manually configured
+#   scope link    : destination is directly reachable on the link (no gateway needed; same subnet)
+#   src           : preferred source IP to use when sending packets on this route
+#   metric        : route priority — lower number wins if multiple routes match the same destination
+ip r
+# Example output and explanation:
+poetoec@raspberrypi:~ $ ip r
+# Route 1: default route (for all traffic not matched by a more specific route)
+# "default" = 0.0.0.0/0 — catch-all. Any packet going to the internet or an unknown destination hits this.
+# "via 192.168.2.254" = send to the ISP modem (gateway) first; it will forward it onward.
+# "dev eth0" = send it out the WAN interface.
+# "proto dhcp" = this route was learned from the DHCP server (ISP modem told us to use 192.168.2.254 as gateway).
+# "src 192.168.2.59" = use this IP as the source address when sending packets via this route.
+# "metric 100" = priority (lower wins; if there were another default route with metric 50, that would be preferred).
+default via 192.168.2.254 dev eth0 proto dhcp src 192.168.2.59 metric 100
+# Route 2: home network subnet (directly connected via eth0)
+# "192.168.2.0/24" = packets destined for anything in 192.168.2.x go directly out eth0 — no gateway needed.
+# "proto kernel" = the kernel created this route automatically when eth0 got its IP (192.168.2.59).
+# "scope link" = the destination is on the same physical link (no routing needed, just ARP + send).
+# "src 192.168.2.59" = use this as the source IP for packets sent to the home network.
+# No "via" = no gateway; send directly (the host is on the same subnet).
+192.168.2.0/24 dev eth0 proto kernel scope link src 192.168.2.59 metric 100
+# Route 3: lab network subnet (directly connected via eth1)
+# "10.42.0.0/20" = packets for any lab device (10.42.0.x–10.42.15.x) go out eth1 — no gateway needed.
+# "proto kernel" = auto-created when eth1 was assigned 10.42.0.1/20.
+# "scope link" = directly reachable on eth1.
+# "src 10.42.0.1" = use the Pi's LAN IP as the source when sending packets to lab devices.
+10.42.0.0/20 dev eth1 proto kernel scope link src 10.42.0.1 metric 100
+# TODO: the last line was pasted by copilot, check what the actual output is later and update above
+
+# -------- Check Connectivity --------
 ping -c 3 192.168.2.1       # Test ISP modem reachability
 ping -c 3 8.8.8.8           # Test internet from Pi
 
 # ========================== More advanced checks ==========================
-ip neigh                    # View the neighbor/ARP table (shows which IPs are reachable and their MAC addresses)
-# Should say something like: <modem-IP> dev eth0 lladdr <mac-address> REACHABLE
-# If it says something like "FAILED" or "STALE", the Pi cannot reach the modem and there is a connectivity issue.
 
-arp -n                      # View the ARP table (similar to ip neigh, shows IP-to-MAC mappings), which shows devices on the same subnet that the Pi can reach
+# -------- ip neigh: show the neighbour/ARP table (Layer 2 — who is on the same link) --------
+# ARP (Address Resolution Protocol) maps IP addresses to MAC addresses on the same subnet.
+# When the Pi wants to send a packet to an IP on the same link, it first needs the MAC address.
+# It sends an ARP request ("who has 192.168.2.254?"), the target replies with its MAC, and the Pi caches it here.
+#
+# General format of each entry:
+#   <ip-address> dev <interface> lladdr <mac-address> <state>
+#
+#   <ip-address> : the neighbour's IP address
+#   dev          : which interface the neighbour was seen on
+#   lladdr       : Link Layer address = MAC address of that device
+#   <state>      : freshness of the ARP entry:
+#                    REACHABLE = recently confirmed reachable (within the reachability timeout, typically ~30s)
+#                    STALE     = entry exists but hasn't been confirmed recently; will be re-probed on next use
+#                    DELAY     = waiting to confirm reachability after a packet was sent
+#                    FAILED    = ARP probe sent but no reply received — device is unreachable or gone
+#                    PERMANENT = statically configured, never expires
+
+ip neigh
+# Example output and explanation:
+# The ISP modem (192.168.2.254) is reachable on eth0 — its MAC address was resolved via ARP.
+# REACHABLE = recently confirmed; the Pi successfully received an ARP reply from this device.
+192.168.2.254 dev eth0 lladdr a4:91:b1:xx:xx:xx REACHABLE
+# A lab device (10.42.0.100) received an IP from the Pi's DHCP server and is reachable on eth1.
+10.42.0.100 dev eth1 lladdr b8:27:eb:xx:xx:xx REACHABLE
+# If you see FAILED instead of REACHABLE, the Pi sent an ARP request but got no reply —
+# the device is either off, not connected, or there is a cabling/VLAN issue.
+
+# -------- arp -n: show the ARP table (older tool, similar to ip neigh) --------
+# arp -n shows the same IP-to-MAC mappings but in the older arp(8) format.
+# "-n" = numeric output (do not resolve IPs to hostnames, faster and unambiguous).
+#
+# General format of each entry:
+#   <ip-address>   <hw-type>   <mac-address>   <flags>   <interface>
+#
+#   <ip-address>  : neighbour's IP
+#   <hw-type>     : hardware type (ether = Ethernet)
+#   <mac-address> : neighbour's MAC address
+#   <flags>       : C = complete (MAC resolved), M = permanent/static, P = published
+#   <interface>   : which interface the neighbour is reachable on
+
+arp -n
+# Example output and explanation:
+Address         HWtype  HWaddress           Flags Iface
+# ISP modem reachable on WAN interface (eth0). Flags=C means ARP is complete (MAC resolved successfully).
+192.168.2.254   ether   a4:91:b1:xx:xx:xx   C     eth0
+# Lab device reachable on LAN interface (eth1). Got its IP from the Pi's dnsmasq DHCP server.
+10.42.0.100     ether   b8:27:eb:xx:xx:xx   C     eth1
 ```
-TODO: add here a result of the setup (ip r) and explain with AI per line exactly what it does so I can understand it, etc.!
 #### Lab Device Connectivity
 From a lab device:
-
+> **Note:** See the extensive comments in the Pi connectivity section above for explanations of the commands and their output.
 ```bash
 ip a                        # Should show 10.42.0.x
 ip r                        # Should show default via 10.42.0.1
