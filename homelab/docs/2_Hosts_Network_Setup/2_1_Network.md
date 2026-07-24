@@ -92,11 +92,12 @@ ISP Modem (192.168.2.0/24) → Lab Router → Lab Devices (10.42.0.0/20)
 
 A Raspberry Pi is used as the dedicated lab router. It is cost-effective, educational, and provides full control over routing, DHCP, firewall rules, and future VLANs.
 
+Full network setup (in .md diagram format to save space (no image file needed for this setup)):
 ```
 Internet
     │
 ISP Modem/Router
-(192.168.1.0/24)
+(192.168.2.0/24)
     │
     ├── Home devices
     │
@@ -139,7 +140,9 @@ ISP Modem LAN port → Pi eth0 (WAN side)
 Pi eth1 (LAN side) → Lab switch or directly to lab devices
 ```
 The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's `eth1` is the gateway for the lab network (e.g. `10.42.0.1`).
-- **built-in Ethernet (`eth0`):** Connects to the ISP modem (WAN side)
+- **built-in Ethernet (`eth0`):** Connects to the ISP modem (WAN side).
+    - **How to get from the ISP modem to another floor in the house?** Use a long Ethernet cable (e.g. 10 m) to reach the Pi from the modem. If you need to go through walls or floors, consider using a flat Ethernet cable or running it through a conduit.
+    - **Avoid WiFi for the WAN side:** The Pi does have a WiFi interface (`wlan0`), which could be used for the WAN side instead of `eth0`. However, WiFi is less stable than wired Ethernet, and I want to avoid potential connectivity issues in my lab. For example, in an earlier version I tested with WiFi, which resulted in an unstable and very slow connection where you could basically do almost nothing (I could not even connect to the Pi via SSH, while all other devices (e.g. my laptop) had perfectly fine WiFi connections). Therefore, I use the built-in Ethernet port for the WAN side and a USB-to-Ethernet adapter for the LAN side, and do not recommend using WiFi for the WAN side.
 - **USB-to-Ethernet adapter (`eth1`):** Connects to the lab switch to provide the LAN side (I bought the "TP-LINK UE300C" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reputable brand and it is cheap; perfect for my homelab use case). Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as `eth1` — no manual driver installation needed. Verify with `ip link` after booting.
 #### Managed Switch
 Expands the number of available LAN ports (the Pi's `eth1` is a single port, so without a switch you can only connect one device directly). A managed switch additionally allows you to create VLANs, monitor traffic, and configure port settings via a web interface — an unmanaged switch only gives you more ports with no configuration options. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt (the "TP-LINK TL-SG105E" is a good alternative).
@@ -162,15 +165,16 @@ Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a stati
     - [power supply](https://www.raspberrypi.com/products/power-supply/)
     - [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
     - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
-    - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as a second network interface (e.g. `eth1`) — no manual driver installation needed. Verify with `ip link` after booting.
+    - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
 2. Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
 3. Boot the Pi and perform the first setup. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). 
 4. Enable SSH manually via terminal (required before you can access it from another device!): SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
 ```bash
-# Ensure the Pi is up-to-date:
+# ========================== Ensure the Pi is up-to-date: ==========================
 sudo apt update && sudo apt full-upgrade -y
 sudo reboot
 
+# ========================== Enable SSH: ==========================
 # Check if SSH is already enabled:
 sudo systemctl status ssh
 # If you see "Active: active (running)", SSH is already enabled.
@@ -184,23 +188,37 @@ sudo systemctl status ssh   # Verify: should show "Active: active (running)"
 sudo ss -tulnp | grep ssh
 # Should show: LISTEN 0 128 0.0.0.0:22
 
-# Find the Pi's IP address:
+# ========================== Find the Pi's IP address and hostname: ==========================
+# Find the Pi's IP address from the Pi itself:
 hostname -I
-# Example output: 192.168.1.123
+# Example output: 192.168.2.123
+# Or from the network interfaces on the Pi itself (assuming eth0 is the interface connected to the home network):
+ip addr show eth0 | grep 'inet '
+# Example output: inet 192.168.2.123/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
+# Or from another device on the same network (e.g., your laptop)
+arp -a
+# NOTE: This outputs all devices on the same subnet that your laptop can see. Look for the Pi's MAC address (printed on the Pi board) to find its IP address.
+
 # Or use the hostname command to get the Pi's hostname:
 hostname
 # Example output: raspberrypi
 
+# ========================== Connect from another device (e.g. your laptop): ==========================
+# Optionally check if the Pi is reachable from your laptop:
+ping <pi-ip>
+# If not reachable, make sure the Pi is connected to the ISP modem and that your laptop is on the same network (e.g., connected to the same WiFi or LAN (e.g. if the ISP modem has IP 192.168.2.1, your laptop and the Pi should have an IP in the same subnet: 192.168.2.x)).
+
 # Connect from your laptop:
 ssh <username>@<pi-ip>
-# Example: ssh pi@192.168.1.123
+# Example: ssh pi@192.168.2.123
 # Use the username you set during Raspberry Pi OS setup (default is "pi").
 # On first connect you'll be asked to confirm the host fingerprint — type "yes".
 
 # Alternatively, connect by hostname (no need to look up the IP):
 ssh <username>@raspberrypi.local
-# "raspberrypi" is the default hostname; check yours with: hostname
+# NOTE: This only works from the primary OS on your laptop (e.g., Windows, macOS, Linux) if it supports mDNS/Bonjour. If it doesn't work, use the IP address instead. For example, this does not work from WSL because WSL doesn't automatically participate in your local network's mDNS/Bonjour (Multicast DNS, Apple's Bonjour service for resolving names like raspberrypi.local without a DNS server) name resolution, so a hostname like raspberrypi.local often cannot be resolved inside WSL even though it may work from Windows itself.
 ```
+TODO: SSH not yet working, laptop cannot see Pi, brainstorm with AI and fix
 From this step onwards you can use another device to SSH into the Pi.
 6. Configuring the case fan to run quietly and only when a certain temperature is reached is recommended to avoid it running the loud fan all the time. See the [Raspberry Pi 4 Case Fan product page](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) for instructions on how to set this up. Follow these steps:
 ```bash
@@ -209,6 +227,10 @@ sudo raspi-config
 # Under "Performance Options" → "Fan", you can set the fan to turn on at a specific temperature (e.g., 60°C) and adjust the fan speed. This will help keep the Pi cool while minimizing noise.
 # After configuring, reboot the Pi to apply changes:
 sudo reboot
+
+# Some useful commands:
+echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C" # Check the current CPU temperature in Celsius.
+vcgencmd measure_temp # Check the current CPU temperature using the vcgencmd command (alternative method to above).
 ```
 TODO: from this onwards it can be left to Ansible
 5. Set a static IP on `eth1` (LAN side).
@@ -217,7 +239,6 @@ TODO: from this onwards it can be left to Ansible
 8. Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
 9. Verify connectivity from a lab device and from the Pi itself.
 
-TODO: check how to set case fan to quite and only when a certain temperature is reached to avoid it running the loud fan all the time: https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/
 
 TODO: I want to do this via Ansible, use Ansible to configure all of this and add code in this repo!
 TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
@@ -226,7 +247,6 @@ TODO: add detailed comments everywhere in the Ansible code what everything does,
 TODO: here use Ansible, below can all move to Ansible and here only the run for the Ansible playbook.
 **TODO: VERY IMPORTANT:** Also add firewalling with the lab router to block access to the home network from the lab network, an extra safety measure to prevent lab devices from accidentally reaching the home network. This is important because if a lab device is compromised, it should not be able to access the home network. Add firewall rules to block traffic from the lab subnet reaching the home network in the router configuration (TODO: add in Ansible variables files the home network subnet).
 
-TODO: add this into a split with the WAN side you can choose to do the ethernet setup `eth0`, or with the WiFi setup `wlan0` (if you want to use WiFi instead of Ethernet for the WAN side). Add this as a variable in the Ansible role so you can choose which one to use. For now, I will use WiFi because I cannot access the physcial ISP modem part and have the Raspberry Pi back in my room where I can add the nodes on my desk!
 
 **2a. Set a static IP on the LAN interface (`eth1`):**
 
@@ -286,7 +306,8 @@ From the Pi:
 
 ```bash
 # ========================== General connectivity checks ==========================
-ip a                        # eth0: ISP-assigned IP, eth1: 10.42.0.1
+nmcli connection show       # Check network connections and their status (assuming Linux uses NetworkManager), should show eth0 and eth1 as connected
+ip a                        # eth0: ISP-assigned IP (should be in the same subnet as your home network (e.g. if the modem has IP 192.168.2.1, eth0 might have 192.168.2.x)), eth1: 10.42.0.1
                             # Determine own IP (assuming eth0 is the interface connected to the home network): ip addr show eth0 | grep 'inet '
 ip r                        # Should show default via eth0 (ISP modem)
 ping -c 3 192.168.2.1       # Test ISP modem reachability
