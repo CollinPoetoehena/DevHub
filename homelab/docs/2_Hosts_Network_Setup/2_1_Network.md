@@ -38,10 +38,6 @@ A subnet is a range of IP addresses that form one logical network. For example, 
 
 The protocol that automatically assigns IP addresses to devices when they join a network. If two DHCP servers run on the same subnet, they hand out conflicting IPs, causing connectivity failures for affected devices.
 
-### Raspberry Pi
-
-A Raspberry Pi is a small, low-cost single-board computer. It runs a full Linux OS, has USB ports, HDMI, GPIO pins, and built-in Ethernet. It uses an ARM architecture (64-bit ARMv8 on the Pi 4), which differs from the x86-64 architecture used by most desktop and server hardware — keep this in mind when installing software or compiling binaries. It draws very little power (typically 3–7W) and is well-suited for running as a dedicated appliance such as a router, DNS server, or monitoring node. The Pi 4 and later models are capable enough to handle routing, DHCP, NAT, and firewalling for a small homelab.
-
 ---
 
 ## Network Setup Options
@@ -125,39 +121,41 @@ ISP Modem/Router
                  └─ 10.42.30.14  k8s-worker-3 (VM; runs on PVE3, part of Kubernetes cluster)
 ```
 
-### Prerequisites
-
-- Raspberry Pi 4 or later
-- SD card with Raspberry Pi OS Lite (64-bit)
-- Two network interfaces: 
-    - built-in Ethernet (`eth0`)
-    - USB-to-Ethernet adapter (`eth1`): I bought the "TP-LINK UE300C" for 12.99 EUR at MediaMarkt
-- Managed switch (for VLAN support and multiple lab devices): I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt (the "TP-LINK TL-SG105E" is a good alternative)
-    - Difference between managed and unmanaged switch: A managed switch allows you to create VLANs, monitor traffic, and configure port settings (e.g. via a web interface). An unmanaged switch simply expands the number of available LAN ports without any configuration options.
-- Ethernet cables
-- Access to the ISP modem admin page
-
-### Physical Connection
-
-```
+### Prerequisites (including background knowledge for the setup)
+#### Compute: Raspberry Pi 4 or later
+The compute unit — the actual computer that runs the router software. It runs the Linux OS, IP forwarding, DHCP server, NAT, firewall rules, etc. that make it function as a router. A Raspberry Pi is a small, low-cost single-board computer. It runs a full Linux OS, has USB ports, HDMI, GPIO pins, and built-in Ethernet. It uses an ARM architecture (64-bit ARMv8 on the Pi 4), which differs from the x86-64 architecture used by most desktop and server hardware — keep this in mind when installing software or compiling binaries. It draws very little power (typically 3–7W) and is well-suited for running as a dedicated appliance such as a router, DNS server, or monitoring node. The Pi 4 and later models are capable enough to handle routing, DHCP, NAT, and firewalling for a small homelab. It is generally cheaper than a mini PC or dedicated router appliance for small applications like a router, and it is a great learning tool for Linux networking.
+#### Storage: SD Card with Raspberry Pi OS Lite (64-bit)
+An SD card (Secure Digital card) is a small, removable flash storage card. The Raspberry Pi has no built-in storage (no hard drive or SSD); the SD card is its primary storage device — it holds the operating system, all configuration files, and any data the Pi writes. The Pi boots directly from it. Raspberry Pi OS Lite is a minimal, headless (no desktop environment) version of the OS based on Debian, optimised for server and appliance use cases. "64-bit" refers to the ARM64 (AArch64) instruction set, which allows the OS to use more than 4 GB of RAM and run 64-bit software. You flash the OS image onto the SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/) from a desktop or laptop, then insert the card into the Pi — it boots from it automatically. Most laptops do not have a built-in SD card reader (and even those that do often only accept full-size SD, not microSD). In that case, use a USB SD card reader/adapter (a small dongle that accepts a microSD card and plugs into a USB port (I bought the "ISY ICR-120 USB 2.0-kaartlezer USB 2.0" for 6.99 EUR at MediaMarkt because "ISY" is a reputable brand and cheap (it is MediaMarkt's store brand))). Plug it into your laptop, insert the microSD card, and it appears as a removable drive that Raspberry Pi Imager can write to.
+#### Network Interfaces (two required)
+A router needs two separate network interfaces: one facing the upstream network (WAN) and one facing the lab devices (LAN). The Pi's built-in Ethernet port serves as the WAN side; a USB-to-Ethernet adapter adds the LAN side.
+```text
 ISP Modem LAN port → Pi eth0 (WAN side)
 Pi eth1 (LAN side) → Lab switch or directly to lab devices
 ```
-
 The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's `eth1` is the gateway for the lab network (e.g. `10.42.0.1`).
+- **built-in Ethernet (`eth0`):** Connects to the ISP modem (WAN side)
+- **USB-to-Ethernet adapter (`eth1`):** Connects to the lab switch to provide the LAN side (I bought the "TP-LINK UE300C" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reputable brand and it is cheap; perfect for my homelab use case). Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as `eth1` — no manual driver installation needed. Verify with `ip link` after booting.
+#### Managed Switch
+Expands the number of available LAN ports (the Pi's `eth1` is a single port, so without a switch you can only connect one device directly). A managed switch additionally allows you to create VLANs, monitor traffic, and configure port settings via a web interface — an unmanaged switch only gives you more ports with no configuration options. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt (the "TP-LINK TL-SG105E" is a good alternative).
+#### Ethernet Cables
+Used to connect the Pi to the ISP modem, the Pi to the lab switch, and each lab device to the switch. Preferably Cat6 or better for gigabit speeds.
+- **ISP modem → lab router:** 1 cable (3 m; slightly longer than the other cables to accommodate placement). I bought the "ISY IPC-6030-1-GB Netwerkkabel 3 m Wit" at MediaMarkt for 12.99 EUR because "ISY" is a reputable brand and cheap (other slightly cheaper brands like "LINDY 47176 Netwerkkabel 3 m Zwart" are also possible, but in this case I chose the cable above since it is slightly more reliable and of higher quality). Avoid very cheap cables that may not support gigabit speeds or may have poor shielding, which can cause connectivity issues and unstable connections.
+- **Lab router → lab switch:** 1 cable (0.75 m). I bought the "ISY IPC-1012 CAT6A U/UTP Slim Netwerkkabel 0,75 m Wit" at MediaMarkt for 9.99 EUR (same reasoning as above).
+- **Lab switch → lab devices:** 1 cable per device (same model as above).
+#### Access to the ISP Modem Admin Page
+Used to reserve a static IP for the Pi's WAN interface (`eth0`) by MAC address, and to check for IP conflicts.
 
 ### Step 1: Reserve a Static IP for the Pi on the ISP Modem
 
 Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
 
 ### Step 2: Configure the Pi as a Router
-
 #### Step 2.1: Assemble and Set up the Pi
-
 1. Assemble the Raspberry Pi: fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). Possible accessories (including link to set them up/configure them):
     - [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
     - [power supply](https://www.raspberrypi.com/products/power-supply/)
-    - [case fan](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/)
+    - [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
+    - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case)
     - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically and appears as a second network interface (e.g. `eth1`) — no manual driver installation needed. Verify with `ip link` after booting.
 2. Flash Raspberry Pi OS Lite (64-bit) to the SD card using Raspberry Pi Imager.
 3. Insert the SD card, connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch (or directly to a lab device).
@@ -173,7 +171,9 @@ TODO: I want to do this via Ansible, use Ansible to configure all of this and ad
 TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
 TODO: add detailed comments everywhere in the Ansible code what everything does, why it is needed, etc., so I can understand it well and always go back to it later and easily read it, etc.
 TODO: add a NOTE here later can use for example OpenWRT or pfSense on the Pi, but for now I configure it myself entirely because I want to learn Linux networking and understand it, you learn a lot more by doing everything yourself without a ready-made solution like OpenWRT or pfSense. I can always later on do it that way anyway.
-
+#### Step 2.2: Configure the Pi as a Router
+TODO: here use Ansible, below can all move to Ansible and here only the run for the Ansible playbook.
+**TODO: VERY IMPORTANT:** Also add firewalling with the lab router to block access to the home network from the lab network, an extra safety measure to prevent lab devices from accidentally reaching the home network. This is important because if a lab device is compromised, it should not be able to access the home network. Add firewall rules to block traffic from the lab subnet reaching the home network in the router configuration (TODO: add in Ansible variables files the home network subnet).
 **2a. Set a static IP on the LAN interface (`eth1`):**
 
 Edit `/etc/dhcpcd.conf`:
@@ -224,7 +224,7 @@ sudo netfilter-persistent save
 
 ### Step 3: Connect Lab Devices
 
-Connect all lab devices to the Pi's LAN side (`eth1`), either directly or through a switch attached to `eth1`. Devices will receive IPs in `10.42.0.0/20` from the Pi's DHCP server and route internet traffic through the Pi Router.
+Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached to `eth1`. Devices will receive IPs in `10.42.0.0/20` from the Pi's DHCP server and route internet traffic through the Pi Router.
 
 ### Step 4: Verify
 
@@ -245,6 +245,11 @@ ip a                        # eth0: ISP-assigned IP, eth1: 10.42.0.1
 ping -c 3 192.168.2.1       # Test ISP modem reachability
 ping -c 3 8.8.8.8           # Test internet from Pi
 ```
+
+---
+
+## Setup: TODO: other network setup
+TODO: here add things like VLANs on the managed switch, and any other networking setup that may be required outside of the lab router, etc.
 
 ---
 
