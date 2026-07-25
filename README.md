@@ -23,6 +23,6 @@ DevHub is my central development hub — bringing together my personal home lab,
 
 Each part of DevHub lives in its own top-level folder (e.g. `homelab/`, `packages/`) and is treated as a self-contained unit with its own documentation and code. This keeps concerns separated — the home lab setup has nothing to do with the Terraform module publishing logic, for example — while still being part of the larger DevHub project. The root `README.md` (this file) acts as the single entry point and index, making it easy to navigate to the right part without everything being mixed together.
 
-The documentation in `DevHub` is intentionally kept minimal, with the main documentation for `DevHub` in general limited to this README.md file and further documentation provided by each part of the project (e.g. `homelab`, `packages` all have their own documentation (see [DevHub Design](#devhub-design) below)).
+The documentation in `DevHub` is intentionally kept minimal, with the main documentation for `DevHub` in general limited to this README.md file and further documentation provided by each part of the project (e.g. `homelab`, `packages` all have their own documentation, as explained above).
 
 --- 

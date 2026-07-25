@@ -1,0 +1,328 @@
+# Network Setup
+
+A stable network is the foundation of a reliable homelab. This document covers the setup options available, why a dedicated lab router behind the ISP modem is the right choice, and the specific steps to set it up using a Raspberry Pi as the lab router.
+
+> See [Network Background & Commands](./2_1_Network_Background_Commands.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
+
+---
+
+## Network Setup Options
+
+### Option 1: Lab devices directly on the home network
+
+Connect lab devices (Proxmox hosts, worker nodes) directly to the ISP modem or home switch.
+
+```
+ISP Modem → Home Switch → Lab Devices + Home Devices (same network)
+```
+
+**Why not:** Lab mistakes — DHCP conflicts, Proxmox bridge misconfiguration, routing loops — directly affect the home network. This is what caused home devices (phone, TV, printer) to lose internet access when Proxmox was first connected: its `vmbr0` bridge interfered with the home LAN's DHCP, creating IP conflicts that were visible in the ISP modem's admin page.
+
+### Option 2: VLANs on the ISP modem
+
+Segment the network using VLANs configured on the ISP modem itself.
+
+**Why not:** Most ISP modems have very limited or no VLAN support. A misconfiguration can break the entire home network. Not practical.
+
+### Option 3: Dedicated router behind the ISP modem (chosen approach)
+
+Place a dedicated lab router between the ISP modem and all lab devices. The lab runs on its own subnet, fully isolated from the home network.
+
+```
+ISP Modem (192.168.2.0/24) → Lab Router → Lab Devices (10.42.0.0/20)
+```
+
+---
+
+## Why a Dedicated Router Behind the ISP Modem
+
+**Full isolation (maintaining home network is not in my homelab's scope):** The lab runs on its own subnet with its own DHCP and firewall. Lab mistakes — DHCP conflicts, Proxmox bridge issues, Kubernetes networking — are contained within the lab network and never reach home devices. Avoid changing the ISP Modem's core configuration when others in the house depend on it for internet access. Changing the home network configuration can break connectivity for everyone, so it’s best to leave it as-is and put your own router behind it for the lab. Furthermore, the ISP modem may have limited or no VLAN support, making it unsuitable for isolating your lab network. Finally, it is not in my homelab's scope to maintain the home network, so I want to keep it untouched and let the ISP modem handle the home network while I experiment freely in my lab network.
+
+**Keeps the ISP modem intact:** Other people in the house depend on the ISP modem for WiFi and internet. Replacing it or changing its configuration would mean taking ownership of the entire home network. Keeping it untouched means home connectivity stays stable regardless of what happens in the lab.
+
+**Learn networking:** Building and running your own router is a hands-on way to learn subnetting, routing, DHCP, firewall rules, and VLANs in a real environment.
+
+**It is fun:** Designing and configuring your own network infrastructure is genuinely enjoyable.
+
+**Classic mistakes that break home networks (avoid these):**
+
+- Running a DHCP server on the same subnet as home devices
+- Changing DNS settings on the ISP modem
+- Connecting Proxmox or Kubernetes nodes directly to the home network
+- Misconfiguring Proxmox bridges (can cause broadcast loops)
+- Running firewall experiments on the home LAN
+
+---
+
+## Setup: Lab Router on a Raspberry Pi
+
+A Raspberry Pi is used as the dedicated lab router. It is cost-effective, educational, and provides full control over routing, DHCP, firewall rules, and future VLANs.
+
+Full network setup (in .md diagram format to save space (no image file needed for this setup)):
+```
+Internet
+    │
+ISP Modem/Router
+(192.168.2.0/24)
+    │
+    ├── Home devices
+    │
+    └── Raspberry Pi Router (Homelab Network: 10.42.0.0/20) `eth0` (WAN; connected to ISP Modem) → `eth1` (LAN; connected to switch)
+            │
+      Managed Switch (simply expands the number of available LAN ports (router typically does not have enough ports for all physical lab devices below))
+            ├─ VLAN 10 Management    (10.42.10.0/24)
+            │    ├─ 10.42.10.10  PVE1 (phycial machine: Proxmox VE host 1)
+            │    ├─ 10.42.10.11  PVE2 (physical machine: Proxmox VE host 2)
+            │    ├─ 10.42.10.12  PVE3 (physical machine: Proxmox VE host 3)
+            │    ├─ 10.42.10.20  Router (physical machine: Raspberry Pi Router)
+            │    └─ 10.42.10.30  Switch (physical machine: Managed Switch)
+            ├─ VLAN 20 Monitoring    (10.42.20.0/24)
+            │    ├─ 10.42.20.10  Monitoring VM1 (runs on PVE1, such as Prometheus, Grafana, etc.)
+            │    ├─ 10.42.20.11  Monitoring VM2 (same as above, runs on PVE2)
+            │    └─ 10.42.20.12  Monitoring VM3 (same as above, runs on PVE3)
+            └─ VLAN 30 Kubernetes    (10.42.30.0/24)
+                 ├─ 10.42.30.10  k8s-control-plane-1 (VM; runs on PVE1, part of Kubernetes cluster)
+                 ├─ 10.42.30.11  k8s-control-plane-2 (VM; runs on PVE2, part of Kubernetes cluster)
+                 ├─ 10.42.30.12  k8s-worker-1 (VM; runs on PVE1, part of Kubernetes cluster)
+                 ├─ 10.42.30.13  k8s-worker-2 (VM; runs on PVE2, part of Kubernetes cluster)
+                 └─ 10.42.30.14  k8s-worker-3 (VM; runs on PVE3, part of Kubernetes cluster)
+```
+
+### Background Knowledge: Raspberry Pi and Related Concepts
+
+#### Raspberry Pi
+A small, low-cost single-board computer that runs a full Linux OS. It has USB ports, HDMI, GPIO pins, and built-in Ethernet. It uses an ARM architecture (64-bit ARMv8 on the Pi 4), which differs from the x86-64 architecture used by most desktop and server hardware — keep this in mind when installing software or compiling binaries. It draws very little power (typically 3–7W) and is well-suited for running as a dedicated appliance such as a router, DNS server, or monitoring node. The Pi 4 and later models are capable enough to handle routing, DHCP, NAT, and firewalling for a small homelab. It is generally cheaper than a mini PC or dedicated router appliance for small applications like a router, and it is a great learning tool for Linux networking.
+#### SD Card
+A small, removable flash storage card (Secure Digital). The Raspberry Pi has no built-in storage (no hard drive or SSD) — the SD card is its primary storage device. It holds the operating system, all configuration files, and any data the Pi writes. The Pi boots directly from it.
+#### Operating System (OS)
+The software that manages the hardware and provides a foundation for running programs. Without an OS, the Pi is just bare hardware. For a router, the OS runs the kernel that handles networking, the DHCP server, the firewall, etc.
+
+**What does "64-bit" mean?** It refers to the ARM64 (AArch64) instruction set. The Pi 4's CPU supports 64-bit, which allows the OS to use more than 4 GB of RAM and run 64-bit software. Use the 64-bit version.
+
+#### Flashing the OS onto the SD Card
+
+"Flashing" means writing a disk image byte-for-byte onto storage media. The term comes from the underlying technology: SD cards use flash memory (non-volatile storage that retains data without power). A disk image is a complete binary snapshot of an entire filesystem — every byte, partition table, bootloader, and file — packaged into a single `.img` file. Writing it to the SD card produces a fully bootable system; the Pi can boot directly from it without any installation steps.
+
+#### Network Interfaces
+
+> See [Network Background & Commands — Network Interface](./2_1_Network_Background_Commands.md#network-interface) for background on what a network interface is.
+
+A router needs two separate network interfaces: one facing the upstream network (WAN) and one facing the lab devices (LAN). The Pi's built-in Ethernet port serves as the WAN side; a USB-to-Ethernet adapter adds the LAN side.
+
+```text
+ISP Modem LAN port → Pi eth0 (WAN side)
+Pi eth1 (LAN side) → Lab switch or directly to lab devices
+```
+
+The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's `eth1` is the gateway for the lab network (e.g. `10.42.0.1`).
+
+**Avoid WiFi for the WAN side:** The Pi does have a WiFi interface (`wlan0`), which could be used for the WAN side instead of `eth0`. However, WiFi is less stable than wired Ethernet, and I want to avoid potential connectivity issues in my lab. For example, in an earlier version I tested with WiFi, which resulted in an unstable and very slow connection where you could basically do almost nothing (I could not even connect to the Pi via SSH, while all other devices (e.g. my laptop) had perfectly fine WiFi connections). Therefore, I use the built-in Ethernet port for the WAN side and a USB-to-Ethernet adapter for the LAN side, and do not recommend using WiFi for the WAN side.
+
+### Prerequisites
+
+- **Raspberry Pi 4 or later** — the compute unit running the router software.
+- **SD card with Raspberry Pi OS Lite (64-bit) flashed** — primary storage. Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) — a free tool from the Raspberry Pi Foundation. Download and install it on your laptop, select the OS image and your SD card as the target, and click Write. It downloads the image, writes it, and verifies it. Then insert the SD card into the Pi and it boots from it automatically.
+    - **No SD card reader on your laptop?** Most laptops do not have a built-in SD card reader (and even those that do often only accept full-size SD, not microSD). Use a USB SD card reader/adapter — a small dongle that accepts a microSD card and plugs into a USB port. I bought the "ISY ICR-120 USB 2.0-kaartlezer USB 2.0" for 6.99 EUR at MediaMarkt (ISY is MediaMarkt's store brand, it is a reputable and affordable brand). Plug it into your laptop, insert the microSD card, and it appears as a removable drive that Raspberry Pi Imager can write to.
+    - **Why Raspberry Pi OS Lite (and not Ubuntu Server or others)?** Raspberry Pi OS is the officially supported OS for the Pi, maintained by the Raspberry Pi Foundation. It is based on Debian, well-tested on Pi hardware, and includes Pi-specific optimisations and drivers out of the box (e.g. the `r8152` USB-Ethernet driver, GPU memory split, hardware interfaces). "Lite" means no desktop environment — just a minimal command-line system, which is exactly what you want for a headless appliance like a router. Ubuntu Server also works on the Pi, but it requires more manual configuration for Pi-specific hardware, has a larger footprint, and offers no real advantage for this use case. Stick with Raspberry Pi OS Lite.
+    - > **Note — OS alternatives:** You could run OpenWRT or pfSense on the Pi instead. Both are purpose-built router/firewall OSes with polished web UIs and pre-configured networking stacks. However, the goal of my homelab ([see personal goal](../1_Goals_Hardware.md)) is to learn Linux networking by doing it yourself — configuring IP forwarding, DHCP, NAT, and firewall rules manually gives you a much deeper understanding than clicking through a GUI. You can always switch to OpenWRT or pfSense later once you understand what they are doing under the hood.
+- **USB-to-Ethernet adapter (`eth1`)** — adds the LAN interface. I bought the "TP-LINK UE306" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reliable brand and affordable (do not buy the "TP-LINK UE300C" — it is USB-C, which the Pi 4 does not have). Plug into a USB-A port; Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically as `eth1`.
+- **Managed switch** — expands LAN ports and enables VLANs. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt because "NETGEAR" is a reputable brand and affordable (the "TP-LINK TL-SG105E" is a good alternative).
+- **Ethernet cables** (Cat6 or better for gigabit speeds):
+    - **Long Ethernet cable for WAN (ISP modem → lab router)** 1 cable (10 m (ensures it can reach the router, such as if it needs to go through the wall or a conduit to a different floor (e.g. your work room), etc.)). I bought the "ISY IPC-6100-1-GB Netwerkkabel 10 m Wit" at MediaMarkt for 18.99 EUR because "ISY" (MediaMarkt's own store brand) is a reputable brand and affordable.
+    - **Lab router → lab switch:** 1 cable (0.75 m). I bought the "ISY IPC-1012 CAT6A U/UTP Slim Netwerkkabel 0,75 m Wit" at MediaMarkt for 9.99 EUR (same reasoning for this brand as above).
+    - **Lab switch → lab devices:** 1 cable per device (same model as above).
+- **Access to the ISP modem admin page** — to reserve a static IP for the Pi's `eth0` by MAC address and check for IP conflicts. Typically at `192.168.2.1` or `192.168.1.1`.
+
+### Full Setup Steps
+#### Step 1: Reserve a Static IP for the Pi on the ISP Modem
+
+Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
+
+#### Step 2: Configure the Pi as a Router
+1. Assemble the Raspberry Pi: fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). See the steps below for how to configure the Pi and setup SSH, etc. Possible accessories (including link to set them up/configure them):
+    - [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
+    - [power supply](https://www.raspberrypi.com/products/power-supply/)
+    - [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
+    - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
+    - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
+2. Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
+3. Boot the Pi and perform the first setup. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). 
+4. Enable SSH manually via terminal (required before you can access it from another device!): SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
+```bash
+# ========================== Ensure the Pi is up-to-date: ==========================
+sudo apt update && sudo apt full-upgrade -y
+sudo reboot
+
+# ========================== Enable SSH: ==========================
+# Check if SSH is already enabled:
+sudo systemctl status ssh
+# If you see "Active: active (running)", SSH is already enabled.
+
+# If not, enable and start it:
+sudo systemctl enable ssh
+sudo systemctl start ssh
+sudo systemctl status ssh   # Verify: should show "Active: active (running)"
+
+# Confirm SSH is listening on port 22 (sudo ensures the process list is complete):
+sudo ss -tulnp | grep ssh
+# Should show: LISTEN 0 128 0.0.0.0:22
+
+# ========================== Find the Pi's IP address and hostname: ==========================
+# Find the Pi's IP address from the Pi itself:
+hostname -I
+# Example output: 192.168.2.123
+# Or from the network interfaces on the Pi itself (assuming eth0 is the interface connected to the home network):
+ip addr show eth0 | grep 'inet '
+# Example output: inet 192.168.2.123/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
+# Or from another device on the same network (e.g., your laptop)
+arp -a
+# NOTE: This outputs all devices on the same subnet that your laptop can see. Look for the Pi's MAC address (printed on the Pi board) to find its IP address.
+
+# Or use the hostname command to get the Pi's hostname:
+hostname
+# Example output: raspberrypi
+
+# ========================== Connect from another device (e.g. your laptop): ==========================
+# Optionally check if the Pi is reachable from your laptop:
+ping <pi-ip>
+# If not reachable, make sure the Pi is connected to the ISP modem and that your laptop is on the same network (e.g., connected to the same WiFi or LAN (e.g. if the ISP modem has IP 192.168.2.1, your laptop and the Pi should have an IP in the same subnet: 192.168.2.x)).
+
+# Connect from your laptop:
+ssh <username>@<pi-ip>
+# Example: ssh pi@192.168.2.123
+# Use the username you set during Raspberry Pi OS setup (default is "pi").
+# On first connect you'll be asked to confirm the host fingerprint — type "yes".
+
+# Alternatively, connect by hostname (no need to look up the IP):
+ssh <username>@raspberrypi.local
+# NOTE: This only works from the primary OS on your laptop (e.g., Windows, macOS, Linux) if it supports mDNS/Bonjour. If it doesn't work, use the IP address instead. For example, this does not work from WSL because WSL doesn't automatically participate in your local network's mDNS/Bonjour (Multicast DNS, Apple's Bonjour service for resolving names like raspberrypi.local without a DNS server) name resolution, so a hostname like raspberrypi.local often cannot be resolved inside WSL even though it may work from Windows itself.
+```
+From this step onwards you can use another device to SSH into the Pi.
+6. Configuring the case fan to run quietly and only when a certain temperature is reached is recommended to avoid it running the loud fan all the time. See the [Raspberry Pi 4 Case Fan product page](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) for instructions on how to set this up. Follow these steps:
+```bash
+# Open the Pi configuration tool:
+sudo raspi-config
+# Under "Performance Options" → "Fan", you can set the fan to turn on at a specific temperature (e.g., 60°C) and adjust the fan speed. This will help keep the Pi cool while minimizing noise.
+# After configuring, reboot the Pi to apply changes:
+sudo reboot
+
+# Some useful commands:
+echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C" # Check the current CPU temperature in Celsius.
+vcgencmd measure_temp # Check the current CPU temperature using the vcgencmd command (alternative method to above).
+```
+7. TODO: Config with Ansible: TODO: from this point you need to configure the rest with Ansible.
+    - Set a static IP on `eth1` (LAN side).
+    - Enable IP forwarding.
+    - Install and configure `dnsmasq` to serve DHCP on the lab network.
+    - Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
+    - Verify connectivity from a lab device and from the Pi itself.
+8. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
+```bash
+sudo shutdown -h now
+# Then after a few seconds when the lights on the Pi stop blinking, you can safely unplug the power supply.
+
+# Power on again by plugging the power supply back in. The Pi will boot automatically.
+```
+
+
+TODO: I want to do this via Ansible, use Ansible to configure all of this and add code in this repo!
+TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
+TODO: add detailed comments everywhere in the Ansible code what everything does, why it is needed, etc., so I can understand it well and always go back to it later and easily read it, etc.
+
+TODO: here use Ansible, below can all move to Ansible and here only the run for the Ansible playbook.
+**TODO: VERY IMPORTANT:** Also add firewalling with the lab router to block access to the home network from the lab network, an extra safety measure to prevent lab devices from accidentally reaching the home network. This is important because if a lab device is compromised, it should not be able to access the home network. Add firewall rules to block traffic from the lab subnet reaching the home network in the router configuration (TODO: add in Ansible variables files the home network subnet).
+
+
+**2a. Set a static IP on the LAN interface (`eth1`):**
+
+Edit `/etc/dhcpcd.conf`:
+
+```
+interface eth1
+static ip_address=10.42.0.1/20
+```
+
+**2b. Enable IP forwarding:**
+
+```bash
+echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+**2c. Install and configure `dnsmasq` for DHCP on the lab network:**
+
+```bash
+sudo apt install dnsmasq
+```
+
+Edit `/etc/dnsmasq.conf`:
+
+```
+interface=eth1
+dhcp-range=10.42.0.100,10.42.0.200,255.255.240.0,24h
+```
+
+Apply and enable:
+
+```bash
+sudo systemctl restart dnsmasq
+sudo systemctl enable dnsmasq
+```
+
+**2d. Configure NAT so lab devices can reach the internet:**
+
+```bash
+sudo apt install iptables iptables-persistent
+
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+sudo netfilter-persistent save
+```
+
+TODO: Block lab → home:
+```bash
+sudo iptables -A FORWARD -i eth1 -o eth0 -m state --state NEW -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o eth1 -j DROP
+```
+This allows lab → internet but blocks home → lab.
+
+#### Step 3: Connect Lab Devices
+
+Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached to `eth1`. Devices will receive IPs in `10.42.0.0/20` from the Pi's DHCP server and route internet traffic through the Pi Router.
+
+#### Step 4: Verify
+
+See [Network Background & Commands — Network Verification](2_1_Network_Background_Commands.md#commands-network-verification) for detailed explanations of each command and its output used below. The following commands are used for verification, specifying only the expected outputs, the commands themselves are explained in the document above.
+
+#### Pi Connectivity
+
+From the Pi:
+
+```bash
+nmcli connection show   # eth0, eth1, and lo should each show a DEVICE assigned
+ip a                    # eth0: 192.168.2.x/24 (DHCP from ISP modem); eth1: 10.42.0.1/20 (static)
+ip r                    # default via 192.168.2.254 dev eth0; 10.42.0.0/20 dev eth1
+ping -c 3 192.168.2.1   # Test ISP modem reachability
+ping -c 3 8.8.8.8       # Test internet from Pi
+ip neigh                # 192.168.2.254 on eth0 REACHABLE; lab devices on eth1 REACHABLE
+arp -n                  # Same information as ip neigh, in older format
+```
+
+#### Lab Device Connectivity
+
+From a lab device:
+
+```bash
+ip a                    # Should show an IP in 10.42.0.x
+ip r                    # Should show: default via 10.42.0.1
+ping -c 3 10.42.0.1     # Test gateway (Pi) reachability
+ping -c 3 8.8.8.8       # Test internet connectivity
+ping -c 3 google.com    # Test DNS resolution
+```
+
+---
+
+## Setup: TODO: other network setup
+TODO: here add things like VLANs on the managed switch, and any other networking setup that may be required outside of the lab router, etc.
