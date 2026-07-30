@@ -146,13 +146,64 @@ Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a stati
     - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
     - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
 2. Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
-3. Boot the Pi and perform the first setup. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). 
-4. Enable SSH manually via terminal (required before you can access it from another device!): SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
+3. Boot the Pi and perform the first setup configuration. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). Some important first startup settings in the Raspberry Pi OS configuration tool (`raspi-config`):
 ```bash
-# ========================== Ensure the Pi is up-to-date: ==========================
+# Ensure the Pi is up-to-date:
 sudo apt update && sudo apt full-upgrade -y
 sudo reboot
 
+# Open the Raspberry Pi OS configuration tool:
+sudo raspi-config
+# The following settings are recommended to configure on first boot:
+#
+# -- Localisation Options ----------------------------------------------------
+# → "Locale"
+#   Select your locale (e.g., "en_GB.UTF-8 UTF-8" for British English, or
+#   "en_US.UTF-8 UTF-8" for American English). This controls the language,
+#   character encoding, and formatting (dates, numbers, currency) system-wide.
+#   Without the correct locale set, some tools emit "locale" warnings/errors.
+#   I chose "en_US.UTF-8 UTF-8" because American is the default locale for so many tools and applications.
+#
+# → "Timezone"
+#   Set your timezone (e.g., "Europe/Amsterdam"). This ensures system clocks,
+#   log timestamps, and cron jobs use the correct local time. Raspberry Pi OS
+#   Lite defaults to "Europe/London" (UTC in winter, BST in summer).
+#
+# → "Keyboard"  (navigate to "Layout")
+#   Select the correct keyboard layout (e.g., "Generic 105-key PC (intl.)"
+#   for a standard international keyboard) → Other → English (US) → Default options for the rest. 
+#   Without this, special characters map to wrong keys — for example, \ types as # on a UK layout.
+#
+# → "WLAN Country"
+#   Set your country (e.g., "NL" for the Netherlands). This is required for
+#   the built-in WiFi to comply with local radio regulations (allowed channels
+#   and power levels). Even if you are not using WiFi, setting this avoids a
+#   warning in raspi-config and ensures the radio is not left unconfigured.
+#
+# -- System Options -----------------------------------------------------------
+# → "Hostname"
+#   Change the hostname from the default "raspberrypi" to something meaningful
+#   (e.g., "lab-router"). The hostname identifies the device on the network
+#   and appears in SSH prompts and log messages.
+#
+# -- Performance Options ------------------------------------------------------
+# → "Fan"
+#   Set the fan to turn on only at a specific temperature (e.g., 60°C) rather
+#   than running at full speed all the time. See the
+#   https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/ for
+#   assembly and configuration instructions.
+#   Without this, the fan runs continuously at full speed — noticeably loud.
+#
+# After making all changes, select "Finish" and reboot to apply them:
+sudo reboot
+# Verify the locale is set correctly:
+localectl status
+# Check the current CPU temperature to confirm thermal monitoring works:
+echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C"
+vcgencmd measure_temp  # Alternative method
+```
+4. Enable SSH manually via terminal (required before you can access it from another device!): SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
+```bash
 # ========================== Enable SSH: ==========================
 # Check if SSH is already enabled:
 sudo systemctl status ssh
@@ -164,7 +215,7 @@ sudo systemctl start ssh
 sudo systemctl status ssh   # Verify: should show "Active: active (running)"
 
 # Confirm SSH is listening on port 22 (sudo ensures the process list is complete):
-sudo ss -tulnp | grep ssh
+sudo ss -tulpn | grep ssh
 # Should show: LISTEN 0 128 0.0.0.0:22
 
 # ========================== Find the Pi's IP address and hostname: ==========================
@@ -172,19 +223,21 @@ sudo ss -tulnp | grep ssh
 hostname -I
 # Example output: 192.168.2.123
 # Or from the network interfaces on the Pi itself (assuming eth0 is the interface connected to the home network):
-ip addr show eth0 | grep 'inet '
+ip a show eth0 | grep 'inet '
 # Example output: inet 192.168.2.123/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
-# Or from another device on the same network (e.g., your laptop)
-arp -a
+# Or from another device on the same network (e.g., your laptop) one of these commands
+ip neigh # New version
+arp -a # Old version
 # NOTE: This outputs all devices on the same subnet that your laptop can see. Look for the Pi's MAC address (printed on the Pi board) to find its IP address.
 
 # Or use the hostname command to get the Pi's hostname:
 hostname
-# Example output: raspberrypi
+# Example output: lab-router (if changed; default is raspberrypi)
 
 # ========================== Connect from another device (e.g. your laptop): ==========================
 # Optionally check if the Pi is reachable from your laptop:
 ping <pi-ip>
+ping <pi-hostname>.local
 # If not reachable, make sure the Pi is connected to the ISP modem and that your laptop is on the same network (e.g., connected to the same WiFi or LAN (e.g. if the ISP modem has IP 192.168.2.1, your laptop and the Pi should have an IP in the same subnet: 192.168.2.x)).
 
 # Connect from your laptop:
@@ -194,29 +247,67 @@ ssh <username>@<pi-ip>
 # On first connect you'll be asked to confirm the host fingerprint — type "yes".
 
 # Alternatively, connect by hostname (no need to look up the IP):
-ssh <username>@raspberrypi.local
-# NOTE: This only works from the primary OS on your laptop (e.g., Windows, macOS, Linux) if it supports mDNS/Bonjour. If it doesn't work, use the IP address instead. For example, this does not work from WSL because WSL doesn't automatically participate in your local network's mDNS/Bonjour (Multicast DNS, Apple's Bonjour service for resolving names like raspberrypi.local without a DNS server) name resolution, so a hostname like raspberrypi.local often cannot be resolved inside WSL even though it may work from Windows itself.
+ssh <username>@lab-router.local
+# NOTE: This only works from the primary OS on your laptop (e.g., Windows, macOS, Linux) if it supports mDNS/Bonjour. If it doesn't work, use the IP address instead. For example, this does not work from WSL because WSL doesn't automatically participate in your local network's mDNS/Bonjour (Multicast DNS, Apple's Bonjour service for resolving names like lab-router.local without a DNS server) name resolution, so a hostname like lab-router.local often cannot be resolved inside WSL even though it may work from Windows itself.
 ```
-From this step onwards you can use another device to SSH into the Pi.
-6. Configuring the case fan to run quietly and only when a certain temperature is reached is recommended to avoid it running the loud fan all the time. See the [Raspberry Pi 4 Case Fan product page](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) for instructions on how to set this up. Follow these steps:
+5. Set up SSH key-based authentication and disable password login for security purposes (even though it is your homelab, you should still make it secure!). Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 ```bash
-# Open the Pi configuration tool:
-sudo raspi-config
-# Under "Performance Options" → "Fan", you can set the fan to turn on at a specific temperature (e.g., 60°C) and adjust the fan speed. This will help keep the Pi cool while minimizing noise.
-# After configuring, reboot the Pi to apply changes:
-sudo reboot
+# ========================== On your LAPTOP: generate an SSH key pair ==========================
+# Generate a new Ed25519 key (modern, compact, fast; recommended over RSA):
+ssh-keygen -t ed25519 -C "your-email@example.com"
+# Save with appropriate name (e.g., ~/.ssh/id_homelab, NOTE: you cannot fill in "~", so use type out your full home path, such as /home/pi).
+# Enter a passphrase (strongly recommended — protects the key if your laptop is stolen).
+# This creates two files:
+#   ~/.ssh/id_homelab       — private key (never share this)
+#   ~/.ssh/id_homelab.pub   — public key  (safe to share; goes on the Pi)
+# Make sure to save these files and the passphrase securely (e.g., in a password manager like KeePassXC). If you lose the private key, you cannot log in to the Pi.
 
-# Some useful commands:
-echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C" # Check the current CPU temperature in Celsius.
-vcgencmd measure_temp # Check the current CPU temperature using the vcgencmd command (alternative method to above).
+# ========================== Copy your public key to the Pi ==========================
+# ssh-copy-id is the simplest method — it appends your public key to ~/.ssh/authorized_keys on the Pi:
+ssh-copy-id <username>@<pi-ip>
+# Example: ssh-copy-id pi@192.168.2.123
+# You will be prompted for the Pi user's password one last time.
+
+# If ssh-copy-id is not available (e.g. on Windows without Git Bash), do it manually:
+cat ~/.ssh/id_homelab.pub | ssh <username>@<pi-ip> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+
+# ========================== Verify key login works BEFORE disabling passwords ==========================
+# Open a NEW terminal and test key login (do NOT close the current session yet!):
+ssh <username>@<pi-ip>
+# If you log in without being asked for a password (or only asked for your key passphrase), key auth works.
+# Only proceed to disable passwords once this succeeds.
+
+# ========================== On the Pi: disable password authentication ==========================
+# Edit the SSH daemon configuration:
+sudo nano /etc/ssh/sshd_config
+
+# Find and set (or add) these lines:
+#   PasswordAuthentication no
+#   ChallengeResponseAuthentication no
+#   UsePAM no
+# Save and exit (Ctrl+O, Enter, Ctrl+X in nano).
+
+# Apply the new config by restarting SSH:
+sudo systemctl restart ssh
+
+# ========================== Verify from your laptop ==========================
+# From a new terminal, confirm key login still works:
+ssh <username>@<pi-ip>
+# Should log in using your key without prompting for a password.
+
+# Confirm password login is rejected (optional — use a different user or try explicitly):
+ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <username>@<pi-ip>
+# Should print: "Permission denied (publickey)." — password login is disabled.
 ```
-7. TODO: Config with Ansible: TODO: from this point you need to configure the rest with Ansible.
+
+From this step onwards you can use another device to SSH into the Pi.
+6. TODO: Config with Ansible: TODO: from this point you need to configure the rest with Ansible.
     - Set a static IP on `eth1` (LAN side).
     - Enable IP forwarding.
     - Install and configure `dnsmasq` to serve DHCP on the lab network.
     - Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
     - Verify connectivity from a lab device and from the Pi itself.
-8. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
+7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
 ```bash
 sudo shutdown -h now
 # Then after a few seconds when the lights on the Pi stop blinking, you can safely unplug the power supply.
