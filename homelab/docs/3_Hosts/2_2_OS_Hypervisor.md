@@ -12,7 +12,7 @@ Use this as the baseline process for preparing homelab nodes.
 
 ## Chapter 1: Bootable USB (General)
 
-A bootable USB is a USB drive prepared with an installer image (ISO) so a machine can start directly from it and run an OS or hypervisor installation.
+A bootable USB is a USB drive prepared with an installer image (ISO) so a machine can start directly from it and run an OS or hypervisor installation. This is also called `flashing` an OS onto a storage device (in this case a USB drive), making it a `boot device`.
 
 ### Prerequisites
 

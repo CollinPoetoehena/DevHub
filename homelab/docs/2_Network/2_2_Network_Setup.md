@@ -101,7 +101,7 @@ The software that manages the hardware and provides a foundation for running pro
 
 #### Flashing the OS onto the SD Card
 
-"Flashing" means writing a disk image byte-for-byte onto storage media. The term comes from the underlying technology: SD cards use flash memory (non-volatile storage that retains data without power). A disk image is a complete binary snapshot of an entire filesystem — every byte, partition table, bootloader, and file — packaged into a single `.img` file. Writing it to the SD card produces a fully bootable system; the Pi can boot directly from it without any installation steps.
+"Flashing" means writing a disk image byte-for-byte onto storage media. The term comes from the underlying technology: SD cards use flash memory (non-volatile storage that retains data without power). A disk image is a complete binary snapshot of an entire filesystem — every byte, partition table, bootloader, and file — packaged into a single `.img` file. Writing it to the SD card produces a fully bootable system (a `boot device`); the Pi can boot directly from it without any installation steps.
 
 #### Network Interfaces
 
