@@ -1,0 +1,106 @@
+# {{ ansible_managed }}
+#
+# dnsmasq configuration for the lab router.
+# This file is managed by Ansible — do not edit manually.
+#
+# dnsmasq provides two services on the lab network:
+#   1. DHCP server: automatically assigns IP addresses to lab devices
+#   2. DNS server: resolves domain names for lab devices (forwarding to upstream
+#      DNS for internet domains, and resolving local hostnames from DHCP leases)
+
+################################################################################
+# Interface binding
+################################################################################
+# Only listen on the LAN interface (eth1). NEVER serve DHCP or DNS on the WAN
+# interface (eth0) — doing so would conflict with the ISP modem and break the
+# home network for everyone in the house.
+interface={{ router_lan_interface }}
+
+# Do not listen on the WAN interface. This is an extra safety measure in addition
+# to the "interface" directive above. bind-interfaces ensures dnsmasq only binds
+# to the specified interface, not all interfaces.
+bind-interfaces
+
+# Do not read /etc/resolv.conf for upstream DNS servers.
+# We explicitly define them below so the configuration is fully self-contained
+# and not affected by DHCP-provided DNS from the ISP modem.
+no-resolv
+
+################################################################################
+# Upstream DNS servers
+################################################################################
+# These are the DNS servers that dnsmasq forwards queries to when it cannot
+# resolve a name locally (i.e. for internet domain names like google.com).
+# dnsmasq queries them in order and uses whichever responds fastest.
+{% for dns_server in router_dns_upstream_servers %}
+server={{ dns_server }}
+{% endfor %}
+
+################################################################################
+# DNS settings
+################################################################################
+# Cache DNS responses to speed up repeated lookups. A cache size of
+# {{ router_dns_cache_size }} entries is plenty for a small homelab.
+cache-size={{ router_dns_cache_size }}
+
+# Domain for the lab network. DHCP clients are given this as their search domain,
+# so "ping pve1" resolves to "pve1.{{ router_dhcp_domain }}".
+domain={{ router_dhcp_domain }}
+
+# Automatically add the domain to simple hostnames from DHCP.
+# When a device named "pve1" gets a DHCP lease, dnsmasq creates a DNS entry
+# for both "pve1" and "pve1.{{ router_dhcp_domain }}".
+expand-hosts
+
+################################################################################
+# DHCP configuration
+################################################################################
+# Define the DHCP range: the pool of IP addresses that dnsmasq hands out to
+# lab devices that connect and request an address.
+#
+# Format: dhcp-range=<start>,<end>,<netmask>,<lease-time>
+#   - start/end: the IP range available for dynamic assignment
+#   - netmask: subnet mask given to clients (must match the /{{ router_lan_cidr }} CIDR)
+#   - lease-time: how long a client keeps its assigned IP before it must renew
+#
+# Addresses outside this range (e.g. 10.42.0.1–10.42.0.99) are reserved for
+# static assignments (the router itself, switches, servers with fixed IPs).
+dhcp-range={{ router_dhcp_range_start }},{{ router_dhcp_range_end }},{{ router_dhcp_netmask }},{{ router_dhcp_lease_time }}
+
+# Tell DHCP clients to use this router (the Pi) as their default gateway.
+# Option 3 = router/gateway in DHCP options.
+dhcp-option=3,{{ router_lan_ip }}
+
+# Tell DHCP clients to use this router as their DNS server.
+# Option 6 = DNS server in DHCP options.
+# Lab devices will send DNS queries to the Pi, and dnsmasq handles them
+# (either from cache, local hostnames, or forwarded to upstream DNS).
+dhcp-option=6,{{ router_lan_ip }}
+
+################################################################################
+# Static DHCP leases (MAC → IP reservations)
+################################################################################
+# Devices that need a fixed IP address regardless of DHCP order.
+# Useful for servers (Proxmox hosts, k8s nodes) that other devices need to
+# reach at a known address.
+{% if router_static_leases | length > 0 %}
+{% for lease in router_static_leases %}
+# {{ lease.hostname }}
+dhcp-host={{ lease.mac }},{{ lease.ip }},{{ lease.hostname }}
+{% endfor %}
+{% else %}
+# No static leases defined. Add them in router_static_leases variable:
+#   router_static_leases:
+#     - { mac: "aa:bb:cc:dd:ee:f1", ip: "10.42.10.10", hostname: "pve1" }
+{% endif %}
+
+################################################################################
+# Logging
+################################################################################
+# Log DHCP transactions (leases, renewals, releases) for troubleshooting.
+# Logs go to syslog (/var/log/syslog on Raspberry Pi OS) by default.
+log-dhcp
+
+# Log DNS queries (useful for debugging but can be verbose in production).
+# Uncomment the line below if you need to debug DNS resolution issues:
+# log-queries

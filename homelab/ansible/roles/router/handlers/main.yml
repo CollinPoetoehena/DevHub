@@ -1,2 +1,29 @@
 ---
 # handlers file for router
+#
+# Handlers are triggered by "notify" in tasks and run once at the end of the play
+# (or when explicitly flushed). They ensure services are restarted/reloaded only
+# when their configuration has actually changed, avoiding unnecessary restarts.
+
+# Restart dhcpcd when the static IP configuration changes.
+# dhcpcd manages network interface configuration on Raspberry Pi OS.
+# A restart is needed for it to pick up the new static IP on eth1.
+- name: Restart dhcpcd
+  ansible.builtin.service:
+    name: dhcpcd
+    state: restarted
+
+# Restart dnsmasq when its configuration file changes.
+# This applies new DHCP ranges, DNS settings, static leases, etc.
+- name: Restart dnsmasq
+  ansible.builtin.service:
+    name: dnsmasq
+    state: restarted
+
+# Save iptables rules to disk so they persist across reboots.
+# Without this, any rule changes would be lost on the next reboot.
+# netfilter-persistent saves to /etc/iptables/rules.v4 (and rules.v6).
+- name: Save iptables rules
+  ansible.builtin.command:
+    cmd: netfilter-persistent save
+  changed_when: true

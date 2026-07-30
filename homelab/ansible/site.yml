@@ -1,8 +1,6 @@
 ---
 # TODO: update below with HomeLab, this is all copied from k8s-lab repo.
 
-
-
 ################################################################################
 # TransacFlow Infrastructure Playbook (Remote/Production & DTA Environments)
 # See /docs/design/Environments.md for details on different environments
@@ -24,6 +22,7 @@
 ################################################################################
 # PLAY 0: Bootstrap OS Users (run once after initial VM provisioning)
 ################################################################################
+# TODO: this needs to be changed to just normal, NOT Azure specific anymore. It should create these users on all.
 # Azure provisions VMs with a default user (azureuser). These plays use that
 # account for the very first connection to create the dedicated Ansible service
 # account (ansibleremote) and any personal accounts on all hosts.
@@ -50,7 +49,7 @@
   remote_user: azureuser
   tags:
     - users
-  # Use the users role to create and configure the users and groups 
+  # Use the users role to create and configure the users and groups
   # User definitions (vars input for the users role) live in group_vars — no vars block needed here:
   #   group_vars/all/users.yml: applied to every host
   #   group_vars/mgmtvm/users.yml — overrides specific for mgmtvm
@@ -61,10 +60,54 @@
       ansible.builtin.debug:
         msg: "Users bootstrapped on {{ inventory_hostname }} — future runs no longer need -u azureuser"
 
+# TODO: this router play is done and should be tested now:
+################################################################################
+# PLAY 1: Configure Lab Router (Raspberry Pi)
+################################################################################
+# The lab router is the network foundation for the entire homelab. It provides:
+#   - Network isolation: lab runs on its own subnet (10.42.0.0/20), fully
+#     separated from the home network (192.168.2.0/24)
+#   - DHCP: automatically assigns IP addresses to lab devices
+#   - DNS: resolves domain names for lab devices (local + internet)
+#   - NAT: allows lab devices to access the internet through the ISP modem
+#   - Firewall: blocks lab → home network traffic for security
+#
+# The router is a Raspberry Pi with two Ethernet interfaces:
+#   - eth0 (WAN): connected to the ISP modem, gets IP via DHCP
+#   - eth1 (LAN): connected to the lab switch, static IP 10.42.0.1
+#
+# Prerequisites before running this play:
+#   - Raspberry Pi OS Lite (64-bit) flashed and booted
+#   - SSH enabled and key-based auth configured
+#   - eth0 connected to ISP modem, eth1 (USB adapter) connected to lab switch
+#   - ansibleremote user created (by the Bootstrap OS Users play above)
+#
+# Run: ansible-playbook site.yml --tags router
+################################################################################
+- name: Configure Lab Router (Raspberry Pi)
+  hosts: router
+  become: true
+  gather_facts: true
+  remote_user: ansibleremote
+  tags:
+    - router
+  roles:
+    - role: router
+  post_tasks:
+    - name: Display router information
+      ansible.builtin.debug:
+        msg:
+          - "Lab router configuration completed successfully"
+          - "WAN interface ({{ router_wan_interface }}): connected to ISP modem"
+          - "LAN interface ({{ router_lan_interface }}): serving lab network at {{ router_lan_ip }}/{{ router_lan_cidr }}"
+          - "DHCP range: {{ router_dhcp_range_start }} - {{ router_dhcp_range_end }}"
+          - "Lab devices can now get IPs and reach the internet through this router"
+
+
 # TODO: this below is for testing, see comment later below.
 # TODO: all roles in roles folder should be removed later, these should be split into separate repos later, see Issues in Git.
 ################################################################################
-# PLAY 1: Configure Jump Host (Bastion)
+# PLAY 2: Configure Jump Host (Bastion)
 ################################################################################
 # The jump host is configured FIRST as it serves as:
 #   - Secure entry point (bastion) to the private cluster network
@@ -97,6 +140,8 @@
           - "Jump host (bastion) configuration completed successfully"
           - "SSH access gateway is ready"
           - "Use this host to securely access the mgmtvm"
+
+
 # TODO: all of below is commented, but this is the main structure that should be used, above it just for testing purposes,
 # TODO: update below later with the final content and roles, etc.
 # TODO: in README.md create a section listing all possible tags and what they do to make a clear overview for it, etc.!

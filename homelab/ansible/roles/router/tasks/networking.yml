@@ -1,0 +1,56 @@
+---
+# networking.yml — Configure the Pi's network interfaces and IP forwarding.
+#
+# This task file handles the foundational networking setup that turns the Pi
+# into a router:
+#   1. Assign a static IP to the LAN interface (eth1) so lab devices have a
+#      predictable gateway address.
+#   2. Enable IPv4 forwarding in the kernel so packets can flow between the
+#      WAN (eth0) and LAN (eth1) interfaces.
+#
+# Without these two steps, the Pi is just a regular host — it cannot route
+# traffic between two subnets.
+
+################################################################################
+# Static IP on LAN Interface (eth1)
+################################################################################
+# dhcpcd is the default network configuration daemon on Raspberry Pi OS.
+# We configure it to assign a static IP to the LAN interface (eth1) so that:
+#   - Lab devices always know the gateway is at router_lan_ip (e.g. 10.42.0.1)
+#   - The DHCP server (dnsmasq) can bind to a known address
+#   - Firewall rules can reference a stable IP
+#
+# The WAN interface (eth0) is left as DHCP — it gets its IP from the ISP modem.
+
+- name: Configure static IP on LAN interface (eth1) via dhcpcd
+  ansible.builtin.blockinfile:
+    path: /etc/dhcpcd.conf
+    marker: "# {mark} ANSIBLE MANAGED - Lab Router LAN interface"
+    block: |
+      # Static IP for the lab network LAN interface.
+      # This makes the Pi the gateway at {{ router_lan_ip }} for all lab devices.
+      interface {{ router_lan_interface }}
+      static ip_address={{ router_lan_ip }}/{{ router_lan_cidr }}
+      # No default gateway on LAN side — the Pi routes outbound traffic via eth0.
+      # No DNS servers on LAN side — the Pi itself provides DNS via dnsmasq.
+    state: present
+  notify: Restart dhcpcd
+
+################################################################################
+# IP Forwarding
+################################################################################
+# By default, the Linux kernel does NOT forward packets between interfaces.
+# Enabling ip_forward tells the kernel to act as a router: packets arriving on
+# one interface (e.g. eth1 from a lab device) can be forwarded out another
+# interface (e.g. eth0 towards the internet), and vice versa.
+#
+# Without this, lab devices can reach the Pi itself but cannot get to the
+# internet or any other network — their packets just stop at the Pi.
+
+- name: Enable IPv4 forwarding (persist across reboots)
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: true

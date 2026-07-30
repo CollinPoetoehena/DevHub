@@ -1,1 +1,85 @@
-TODO: add here hosts, see k8s-lab as example.
+# Ansible Inventory File (INI format)
+# ===========================================================================
+# This file defines all hosts in the homelab infrastructure grouped by role.
+# Ansible uses these groups to target specific plays in site.yml.
+#
+# ALL INFORMATION BELOW COMES FROM homelab/docs/2_Network/2_2_Network_Setup.md
+#
+# How to find a host's IP:
+#   - Router (Pi): check ISP modem admin page or run `hostname -I` on the Pi
+#   - Lab devices: check the router's DHCP leases or run `ip a` on the device
+#
+# After VLANs are configured, update IPs to match the VLAN subnets:
+#   VLAN 10 Management:  10.42.10.0/24
+#   VLAN 20 Monitoring:  10.42.20.0/24
+#   VLAN 30 Kubernetes:  10.42.30.0/24
+#
+# SSH key: all hosts use the ansibleremote user (created by the bootstrap play)
+# with the key specified in group_vars/all/users.yml.
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Lab Router (Raspberry Pi)
+# ---------------------------------------------------------------------------
+# The Pi has two interfaces:
+#   eth0 (WAN): 192.168.2.x — on the home network (DHCP from ISP modem)
+#   eth1 (LAN): 10.42.0.1   — gateway for the lab network (static)
+#
+# We connect to the Pi via its WAN IP (eth0) from the home network since
+# the Ansible controller (your laptop) sits on the home network alongside
+# the ISP modem. Once VLANs are set up, the management VLAN IP can be used.
+[router]
+lab-router    ansible_host=192.168.2.59
+
+# ---------------------------------------------------------------------------
+# Jump Host (Bastion)
+# ---------------------------------------------------------------------------
+# Secure entry point for accessing internal lab infrastructure.
+# TODO: update ansible_host once the jump host is provisioned.
+[jumphost]
+# jumphost    ansible_host=10.42.10.x
+
+# ---------------------------------------------------------------------------
+# Management VM
+# ---------------------------------------------------------------------------
+# Contains all management tooling (kubectl, helm, az cli, ansible, etc.)
+# Accessed through the jump host.
+# TODO: add mgmtvm once it is provisioned.
+[mgmtvm]
+# mgmtvm     ansible_host=10.42.10.x
+
+# ---------------------------------------------------------------------------
+# Proxmox VE Hosts (Hypervisors)
+# ---------------------------------------------------------------------------
+# Physical machines running Proxmox VE that host all VMs.
+# TODO: add once Proxmox hosts are set up.
+# [proxmox]
+# pve1        ansible_host=10.42.10.10
+# pve2        ansible_host=10.42.10.11
+# pve3        ansible_host=10.42.10.12
+
+# ---------------------------------------------------------------------------
+# Kubernetes Control Plane Nodes
+# ---------------------------------------------------------------------------
+# TODO: add once k8s control plane VMs are provisioned.
+# [control_plane]
+# k8s-cp-1    ansible_host=10.42.30.10
+# k8s-cp-2    ansible_host=10.42.30.11
+
+# ---------------------------------------------------------------------------
+# Kubernetes Worker Nodes
+# ---------------------------------------------------------------------------
+# TODO: add once k8s worker VMs are provisioned.
+# [workers]
+# k8s-w-1     ansible_host=10.42.30.12
+# k8s-w-2     ansible_host=10.42.30.13
+# k8s-w-3     ansible_host=10.42.30.14
+
+# ===========================================================================
+# Group hierarchy — logical groupings for shared variables and targeting
+# ===========================================================================
+
+# All Kubernetes nodes (control plane + workers) for plays that apply to both.
+# [k8s:children]
+# control_plane
+# workers

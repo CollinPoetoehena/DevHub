@@ -1,38 +1,63 @@
-Role Name
-=========
+# Router Role
 
-A brief description of the role goes here.
+Configures a Raspberry Pi as a dedicated lab router providing network isolation, DHCP, DNS, NAT, and firewall rules for the homelab.
 
-Requirements
-------------
+## What This Role Does
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+| Task File | Purpose |
+|-----------|---------|
+| `networking.yml` | Static IP on LAN interface (`eth1`), enable IPv4 forwarding |
+| `dhcp_dns.yml` | Install and configure `dnsmasq` for DHCP + DNS on the lab network |
+| `firewall.yml` | NAT (masquerading), forwarding rules, lab→home blocking, INPUT protection |
 
-Role Variables
---------------
+## Network Topology
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+```
+ISP Modem (192.168.2.0/24)
+    │
+    └── eth0 (WAN) ─── Raspberry Pi Router ─── eth1 (LAN) → Lab Switch
+                         10.42.0.1/20                        │
+                                                             ├── Lab devices
+                                                             └── (get DHCP from Pi)
+```
 
-Dependencies
-------------
+## Requirements
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+- Raspberry Pi 4 (or later) with Raspberry Pi OS Lite (64-bit)
+- Two Ethernet interfaces: built-in (`eth0`) + USB adapter (`eth1`)
+- SSH enabled and `ansibleremote` user created (via the users bootstrap play)
+- `eth0` connected to ISP modem, `eth1` connected to lab switch
 
-Example Playbook
-----------------
+## Key Variables (defaults/main.yml)
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `router_wan_interface` | `eth0` | WAN interface (ISP modem side) |
+| `router_lan_interface` | `eth1` | LAN interface (lab switch side) |
+| `router_lan_ip` | `10.42.0.1` | Gateway IP for the lab network |
+| `router_lan_cidr` | `20` | Subnet mask (4094 usable IPs) |
+| `router_home_subnet` | `192.168.2.0/24` | Home network to block from lab |
+| `router_dhcp_range_start` | `10.42.0.100` | DHCP pool start |
+| `router_dhcp_range_end` | `10.42.0.200` | DHCP pool end |
+| `router_dhcp_lease_time` | `24h` | DHCP lease duration |
+| `router_static_leases` | `[]` | Static MAC→IP reservations |
+| `router_block_lab_to_home` | `true` | Firewall: block lab→home traffic |
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Usage
 
-License
--------
+```bash
+# Run only the router role:
+ansible-playbook site.yml --tags router
 
-BSD
+# Run a specific part:
+ansible-playbook site.yml --tags firewall
+ansible-playbook site.yml --tags dhcp
+ansible-playbook site.yml --tags networking
+```
 
-Author Information
-------------------
+## Tags
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+- `router` — all router tasks
+- `networking` — static IP and IP forwarding
+- `dhcp`, `dns`, `dnsmasq` — DHCP/DNS configuration
+- `firewall`, `nat` — iptables rules

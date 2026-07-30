@@ -1,2 +1,94 @@
 ---
 # defaults file for router
+# These are the default variables for the router role. Override them in
+# group_vars/router/ or host_vars/ as needed.
+
+################################################################################
+# Network Interfaces
+################################################################################
+# WAN interface: connects to the ISP modem (upstream/home network).
+# The Pi's built-in Ethernet port is used for the WAN side.
+router_wan_interface: "eth0"
+
+# LAN interface: connects to the lab switch (downstream/lab network).
+# A USB-to-Ethernet adapter provides the LAN interface.
+router_lan_interface: "eth1"
+
+################################################################################
+# LAN Network Configuration (Lab Network)
+################################################################################
+# Static IP address assigned to the LAN interface (eth1).
+# This becomes the default gateway for all lab devices.
+router_lan_ip: "10.42.0.1"
+
+# Subnet mask in CIDR notation for the lab network.
+# /20 gives 4094 usable host addresses (10.42.0.1 – 10.42.15.254).
+router_lan_cidr: "20"
+
+# Full CIDR notation for the lab subnet (used in firewall rules, etc.)
+router_lan_subnet: "10.42.0.0/20"
+
+################################################################################
+# Home Network (for firewall blocking rules)
+################################################################################
+# The home network subnet. Used to create firewall rules that prevent lab
+# devices from reaching home devices (security isolation).
+router_home_subnet: "192.168.2.0/24"
+
+################################################################################
+# DHCP Configuration (dnsmasq)
+################################################################################
+# Start of the DHCP range. Addresses below this are reserved for static leases.
+router_dhcp_range_start: "10.42.0.100"
+
+# End of the DHCP range.
+router_dhcp_range_end: "10.42.0.200"
+
+# Subnet mask handed out to DHCP clients (must match the /20 CIDR above).
+router_dhcp_netmask: "255.255.240.0"
+
+# DHCP lease duration. How long a client keeps its assigned IP before renewing.
+router_dhcp_lease_time: "24h"
+
+# Domain name for the lab network (optional, used for local DNS resolution).
+router_dhcp_domain: "lab.local"
+
+################################################################################
+# DNS Configuration (dnsmasq)
+################################################################################
+# Upstream DNS servers that dnsmasq forwards queries to.
+# These are used when dnsmasq cannot resolve a name locally.
+router_dns_upstream_servers:
+  - "8.8.8.8" # Google Public DNS (primary)
+  - "8.8.4.4" # Google Public DNS (secondary)
+  - "1.1.1.1" # Cloudflare DNS (fallback)
+
+# Whether to enable DNS caching in dnsmasq (reduces external lookups).
+router_dns_cache_size: 1000
+
+################################################################################
+# Static DHCP Leases (MAC → IP reservations)
+################################################################################
+# Define static DHCP leases for lab devices that need fixed IPs.
+# Format: list of dicts with mac, ip, and hostname keys.
+# Example:
+#   router_static_leases:
+#     - { mac: "aa:bb:cc:dd:ee:f1", ip: "10.42.10.10", hostname: "pve1" }
+#     - { mac: "aa:bb:cc:dd:ee:f2", ip: "10.42.10.11", hostname: "pve2" }
+router_static_leases: []
+
+################################################################################
+# Firewall / NAT Configuration
+################################################################################
+# Whether to enable NAT (masquerading) on the WAN interface.
+# Required for lab devices to reach the internet through the Pi.
+router_enable_nat: true
+
+# Whether to block traffic from lab network → home network.
+# This is an important security measure: if a lab device is compromised,
+# it should not be able to reach devices on the home network.
+router_block_lab_to_home: true
+
+# Whether to install and use iptables-persistent to save firewall rules
+# across reboots. Without this, rules are lost on reboot.
+router_iptables_persistent: true
