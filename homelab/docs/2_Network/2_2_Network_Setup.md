@@ -150,6 +150,7 @@ Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a stati
 ```bash
 # Ensure the Pi is up-to-date:
 sudo apt update && sudo apt full-upgrade -y
+sudo apt install vim # My favorite text editor, but you can use nano or any other editor you prefer.
 sudo reboot
 
 # Open the Raspberry Pi OS configuration tool:
@@ -245,10 +246,10 @@ ssh <username>@<pi-ip>
 # Example: ssh pi@192.168.2.123
 # Use the username you set during Raspberry Pi OS setup (default is "pi").
 # On first connect you'll be asked to confirm the host fingerprint — type "yes".
+# NOTE: This should work from WSL as well, unless you have a VPN (e.g. a work VPN). Check with th eping command!
 
 # Alternatively, connect by hostname (no need to look up the IP):
 ssh <username>@lab-router.local
-# NOTE: This only works from the primary OS on your laptop (e.g., Windows, macOS, Linux) if it supports mDNS/Bonjour. If it doesn't work, use the IP address instead. For example, this does not work from WSL because WSL doesn't automatically participate in your local network's mDNS/Bonjour (Multicast DNS, Apple's Bonjour service for resolving names like lab-router.local without a DNS server) name resolution, so a hostname like lab-router.local often cannot be resolved inside WSL even though it may work from Windows itself.
 ```
 5. Set up SSH key-based authentication and disable password login for security purposes (even though it is your homelab, you should still make it secure!). Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 ```bash
@@ -264,7 +265,7 @@ ssh-keygen -t ed25519 -C "your-email@example.com"
 
 # ========================== Copy your public key to the Pi ==========================
 # ssh-copy-id is the simplest method — it appends your public key to ~/.ssh/authorized_keys on the Pi:
-ssh-copy-id <username>@<pi-ip>
+ssh-copy-id -i ~/.ssh/id_homelab.pub <username>@<pi-ip>
 # Example: ssh-copy-id pi@192.168.2.123
 # You will be prompted for the Pi user's password one last time.
 
@@ -273,26 +274,36 @@ cat ~/.ssh/id_homelab.pub | ssh <username>@<pi-ip> "mkdir -p ~/.ssh && chmod 700
 
 # ========================== Verify key login works BEFORE disabling passwords ==========================
 # Open a NEW terminal and test key login (do NOT close the current session yet!):
-ssh <username>@<pi-ip>
+ssh <username>@<pi-ip> -i ~/.ssh/id_homelab
 # If you log in without being asked for a password (or only asked for your key passphrase), key auth works.
 # Only proceed to disable passwords once this succeeds.
 
 # ========================== On the Pi: disable password authentication ==========================
 # Edit the SSH daemon configuration:
-sudo nano /etc/ssh/sshd_config
+sudo su # Need to become root to edit the config file
+vim /etc/ssh/sshd_config
 
-# Find and set (or add) these lines:
+# Find and set (or add) these lines (excluding the explanations!):
 #   PasswordAuthentication no
+#     → Disables password-based login entirely. Only SSH keys can authenticate.
+#       Without this, attackers can still brute-force passwords over the network.
 #   ChallengeResponseAuthentication no
+#     → Disables challenge-response mechanisms (e.g. one-time passwords, keyboard-interactive prompts).
+#       If left enabled, PAM or other modules can still prompt for a password even when
+#       PasswordAuthentication is off, bypassing your key-only policy.
 #   UsePAM no
-# Save and exit (Ctrl+O, Enter, Ctrl+X in nano).
+#     → Disables PAM (Pluggable Authentication Modules) for SSH sessions.
+#       PAM can re-enable password prompts or other auth methods behind the scenes.
+#       Setting this to "no" ensures SSH relies solely on its own key-based auth,
+#       with no PAM module overriding your configuration.
+# Save and exit (Esc, :wq, Enter in vim).
 
 # Apply the new config by restarting SSH:
 sudo systemctl restart ssh
 
 # ========================== Verify from your laptop ==========================
 # From a new terminal, confirm key login still works:
-ssh <username>@<pi-ip>
+ssh <username>@<pi-ip> -i ~/.ssh/id_homelab
 # Should log in using your key without prompting for a password.
 
 # Confirm password login is rejected (optional — use a different user or try explicitly):
