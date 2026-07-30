@@ -246,11 +246,12 @@ ssh <username>@<pi-ip>
 # Example: ssh pi@192.168.2.123
 # Use the username you set during Raspberry Pi OS setup (default is "pi").
 # On first connect you'll be asked to confirm the host fingerprint — type "yes".
-# NOTE: This should work from WSL as well, unless you have a VPN (e.g. a work VPN). Check with th eping command!
+# NOTE: This should work from WSL as well, even with a VPN (unless you have a full VPN), check reachability via ping with IP (hostname usually does not work from WSL!)!
 
 # Alternatively, connect by hostname (no need to look up the IP):
 ssh <username>@lab-router.local
 ```
+**TODO: This is done for now as a manual step, integarte this in Ansible later to automate this and provide a public key and only add the step of generating the key and saving it from below, etc.!**
 5. Set up SSH key-based authentication and disable password login for security purposes (even though it is your homelab, you should still make it secure!). Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 ```bash
 # ========================== On your LAPTOP: generate an SSH key pair ==========================
