@@ -287,12 +287,18 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <username>@<
 ```
 
 From this step onwards you can use another device to SSH into the Pi.
-6. TODO: Config with Ansible: TODO: from this point you need to configure the rest with Ansible.
-    - Set a static IP on `eth1` (LAN side).
-    - Enable IP forwarding.
-    - Install and configure `dnsmasq` to serve DHCP on the lab network.
-    - Configure NAT with `iptables` so lab devices can reach the internet through `eth0`.
-    - Verify connectivity from a lab device and from the Pi itself.
+6. TODO: Config with Ansible: 
+```bash
+# ========================== Run Ansible playbook to configure the Pi as a router ==========================
+cd homelab/ansible
+# Test connectivity from your local laptop:
+ansible all -i hosts -m ping -l lab-router -u <username>
+# Run the playbook to configure the Pi as a router:
+TODO: check and diff first
+TODO: for below command what to add, such as the flags I use at my work as well, etc.
+TODO: add explanation for what each flag does
+ansible-playbook site.yml -i hosts -l lab-router --diff -u <username> -C
+```
 7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
 ```bash
 sudo shutdown -h now
