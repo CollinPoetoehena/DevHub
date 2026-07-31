@@ -18,3 +18,6 @@ TODO: VERY IMPORTANT: and also very important for myself is power consumption mo
 
 
 TODO: also use automation here such as Ansible and Terraform, etc.
+
+**TODO: here again use mgmtvm to manage the homelab, etc.!?!?**
+TODO: use tmux (see [tmux reference](./reference/tmux.md)) to manage multiple terminal sessions and keep them running in the background (avoids breaking SSH connections stopping halfway an upgrade which might corrupt state, etc.), etc.

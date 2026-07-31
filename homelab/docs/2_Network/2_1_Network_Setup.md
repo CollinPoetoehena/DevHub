@@ -88,35 +88,9 @@ ISP Modem/Router
                  └─ 10.42.30.14  k8s-worker-3 (VM; runs on PVE3, part of Kubernetes cluster)
 ```
 
-### Background Knowledge: Raspberry Pi and Related Concepts
+### Background Knowledge: Raspberry Pi, Hardware & OS
 
-#### Raspberry Pi
-A small, low-cost single-board computer that runs a full Linux OS. It has USB ports, HDMI, GPIO pins, and built-in Ethernet. It uses an ARM architecture (64-bit ARMv8 on the Pi 4), which differs from the x86-64 architecture used by most desktop and server hardware — keep this in mind when installing software or compiling binaries. It draws very little power (typically 3–7W) and is well-suited for running as a dedicated appliance such as a router, DNS server, or monitoring node. The Pi 4 and later models are capable enough to handle routing, DHCP, NAT, and firewalling for a small homelab. It is generally cheaper than a mini PC or dedicated router appliance for small applications like a router, and it is a great learning tool for Linux networking.
-#### SD Card
-A small, removable flash storage card (Secure Digital). The Raspberry Pi has no built-in storage (no hard drive or SSD) — the SD card is its primary storage device. It holds the operating system, all configuration files, and any data the Pi writes. The Pi boots directly from it.
-#### Operating System (OS)
-The software that manages the hardware and provides a foundation for running programs. Without an OS, the Pi is just bare hardware. For a router, the OS runs the kernel that handles networking, the DHCP server, the firewall, etc.
-
-**What does "64-bit" mean?** It refers to the ARM64 (AArch64) instruction set. The Pi 4's CPU supports 64-bit, which allows the OS to use more than 4 GB of RAM and run 64-bit software. Use the 64-bit version.
-
-#### Flashing the OS onto the SD Card
-
-"Flashing" means writing a disk image byte-for-byte onto storage media. The term comes from the underlying technology: SD cards use flash memory (non-volatile storage that retains data without power). A disk image is a complete binary snapshot of an entire filesystem — every byte, partition table, bootloader, and file — packaged into a single `.img` file. Writing it to the SD card produces a fully bootable system (a `boot device`); the Pi can boot directly from it without any installation steps.
-
-#### Network Interfaces
-
-> See [Network Background & Commands — Network Interface](./2_1_Network_Background_Commands.md#network-interface) for background on what a network interface is.
-
-A router needs two separate network interfaces: one facing the upstream network (WAN) and one facing the lab devices (LAN). The Pi's built-in Ethernet port serves as the WAN side; a USB-to-Ethernet adapter adds the LAN side.
-
-```text
-ISP Modem LAN port → Pi eth0 (WAN side)
-Pi eth1 (LAN side) → Lab switch or directly to lab devices
-```
-
-The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's `eth1` is the gateway for the lab network (e.g. `10.42.0.1`).
-
-**Avoid WiFi for the WAN side:** The Pi does have a WiFi interface (`wlan0`), which could be used for the WAN side instead of `eth0`. However, WiFi is less stable than wired Ethernet, and I want to avoid potential connectivity issues in my lab. For example, in an earlier version I tested with WiFi, which resulted in an unstable and very slow connection where you could basically do almost nothing (I could not even connect to the Pi via SSH, while all other devices (e.g. my laptop) had perfectly fine WiFi connections). Therefore, I use the built-in Ethernet port for the WAN side and a USB-to-Ethernet adapter for the LAN side, and do not recommend using WiFi for the WAN side.
+> See [Raspberry Pi: Hardware & OS Background](../reference/raspberry_pi_hardware_os.md) for detailed background on the Raspberry Pi hardware, ARM vs x86 architecture, SD cards, the operating system and kernel, the boot process, flashing, network interfaces, GPIO, `raspi-config`, and headless operation.
 
 ### Prerequisites
 
