@@ -25,7 +25,8 @@
 - name: Configure static IP on LAN interface (eth1) via dhcpcd
   ansible.builtin.blockinfile:
     path: /etc/dhcpcd.conf
-    marker: "# {mark} ANSIBLE MANAGED - Lab Router LAN interface"
+    # marker: In Ansible's blockinfile, the marker wraps the managed block with BEGIN and END lines (via {mark}) so Ansible can find and update/replace the block on subsequent runs without duplicating it.
+    marker: "# {mark} ANSIBLE MANAGED - router/tasks/networking.yml"
     block: |
       # Static IP for the lab network LAN interface.
       # This makes the Pi the gateway at {{ router_lan_ip }} for all lab devices.
