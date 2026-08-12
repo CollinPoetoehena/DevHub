@@ -42,8 +42,8 @@
 # =============================================================================
 
 - name: Set up local Ansible environment
-  hosts: localhost
-  connection: local
+  hosts: localhost # Run on localhost because this playbook configures the local environment (not remote hosts)
+  connection: local # Use local connection to run tasks on the controller machine (localhost)
   gather_facts: false
 
   # All configuration (paths, inventory hosts, vault variables) is loaded from
@@ -60,7 +60,7 @@
       prompt: "Enter Ansible Vault password (leave empty if vault already exists)"
       private: true # Hide input for security
       default: ""
-  
+
   tasks:
     # =========================================================================
     # PART 1 — Prerequisites
@@ -83,11 +83,11 @@
     # PART 2 — Install Ansible Galaxy Roles
     # =========================================================================
     # Installs external roles defined in requirements.yml (e.g. devhub.users, devhub.jumphost).
-    # These are pulled from Git repositories and placed in he roles/ directory.
-    # --force ensures updates if versions changed.
+    # These are pulled from Git repositories and placed in the roles/ directory.
+    # No --force: skips roles that are already installed at the correct version.
     - name: "GALAXY ROLES | Install roles from requirements.yml"
       ansible.builtin.command:
-        cmd: "ansible-galaxy install -r {{ requirements_file }} --force"
+        cmd: "ansible-galaxy install -r {{ requirements_file }}"
       register: galaxy_result
       changed_when: "'was installed successfully' in galaxy_result.stdout"
 
@@ -98,9 +98,9 @@
     # =========================================================================
     # PART 3 — Generate Ansible Inventory (hosts file)
     # =========================================================================
-    # Renders templates/hosts.j2 using the inventory_hosts variable from vars/setup_local_env.yml. 
+    # Renders templates/hosts.j2 using the inventory_hosts variable from vars/setup_local_env.yml.
     # See the template above for details on what is loaded.
-    # If the inventory file already exists, it is overwritten with the new version. 
+    # If the inventory file already exists, it is overwritten with the new version.
     # If no changes are detected, Ansible will report "ok" instead of "changed".
     - name: "INVENTORY | Generate hosts file from template"
       ansible.builtin.template:

@@ -43,7 +43,8 @@ ansible --version
 
 # Run the local environment setup playbook. See details in the playbook itself, it describes what it does exactly.
 # Safe to re-run — skips steps that are already done.
-ansible-playbook setup_local_env.yml
+# --diff: show file changes made on the host
+ansible-playbook setup_local_env.yml --diff
 ```
 
 After this completes, your environment is ready to run playbooks. See the setup playbook itself (`ansible/setup_local_env.yml`) for full details on what each step does, and `ansible/vars/setup_local_env.yml` for how to add new hosts or vault secrets.
