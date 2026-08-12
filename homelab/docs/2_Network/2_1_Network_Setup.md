@@ -226,18 +226,11 @@ ssh <username>@<pi-ip>
 ssh <username>@lab-router.local
 ```
 **TODO: This is done for now as a manual step, integarte this in Ansible later to automate this and provide a public key and only add the step of generating the key and saving it from below, etc.!**
-5. Set up SSH key-based authentication and disable password login for security purposes (even though it is your homelab, you should still make it secure!). Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
-```bash
-# ========================== On your LAPTOP: generate an SSH key pair ==========================
-# Generate a new Ed25519 key (modern, compact, fast; recommended over RSA):
-ssh-keygen -t ed25519 -C "your-email@example.com"
-# Save with appropriate name (e.g., ~/.ssh/id_homelab, NOTE: you cannot fill in "~", so use type out your full home path, such as /home/pi).
-# Enter a passphrase (strongly recommended — protects the key if your laptop is stolen).
-# This creates two files:
-#   ~/.ssh/id_homelab       — private key (never share this)
-#   ~/.ssh/id_homelab.pub   — public key  (safe to share; goes on the Pi)
-# Make sure to save these files and the passphrase securely (e.g., in a password manager like KeePassXC). If you lose the private key, you cannot log in to the Pi.
+5. Set up SSH key-based authentication and disable password login. Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 
+> **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1](../0_Local_Environment_Setup.md#step-1-generate-an-ssh-key-pair) if you haven't done this yet.
+
+```bash
 # ========================== Copy your public key to the Pi ==========================
 # ssh-copy-id is the simplest method — it appends your public key to ~/.ssh/authorized_keys on the Pi:
 ssh-copy-id -i ~/.ssh/id_homelab.pub <username>@<pi-ip>
@@ -287,23 +280,33 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <username>@<
 ```
 
 From this step onwards you can use another device to SSH into the Pi.
-6. TODO: Config with Ansible: 
+6. Configure the Pi with Ansible: 
 ```bash
-# ========================== Run Ansible playbook to configure the Pi as a router ==========================
-# Go to Ansible directory and install requirements
+# Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
 cd homelab/ansible
-ansible-galaxy install -r requirements.yml
+source venv/bin/activate
 
-# Run the user setup playbook to create the user and set up SSH keys:
-ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <initial-user> -K
+# ========================== Bootstrap the ansibleremote user ==========================
+# Run the users play to create the ansibleremote service account on the Pi.
+# -u poetoec: connect as the initial OS user (the one you created during Pi setup)
+# -K: prompt for the sudo password (needed because poetoec requires a password for sudo)
+# --diff: show file changes made on the remote host
+# --vault-password-file: provide the vault password for decrypting secrets
+ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u poetoec -K --vault-password-file ~/.vault_pass.txt
 
-# Test connectivity from your local laptop:
-ansible all -i hosts -m ping -l lab-router -u <username>
-# Run the playbook to configure the Pi as a router:
-TODO: check and diff first
-TODO: for below command what to add, such as the flags I use at my work as well, etc.
-TODO: add explanation for what each flag does
-ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C
+# ========================== Verify connectivity with ansibleremote ==========================
+# Test that Ansible can reach the Pi using the newly created ansibleremote user:
+ansible all -i hosts -m ping -l lab-router -u ansibleremote
+
+# ========================== Configure the Pi as a router ==========================
+# First do a dry run (-C) to preview changes without applying them:
+# -C (--check): dry run — shows what WOULD change without actually changing anything
+# --diff: shows the exact file content changes (like a git diff)
+# --vault-password-file: provide the vault password for decrypting secrets
+ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C --vault-password-file ~/.vault_pass.txt
+
+# If the dry run looks good, apply the changes (remove -C):
+ansible-playbook site.yml -i hosts -l lab-router --tags router --diff --vault-password-file ~/.vault_pass.txt
 ```
 7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
 ```bash

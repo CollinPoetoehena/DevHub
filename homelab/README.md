@@ -55,6 +55,7 @@ This section documents the step-by-step process for building this home lab from 
 
 | Step | File | Description |
 |------|------|-------------|
+| 0 | [Local Environment Setup & Prerequisites](docs/0_Local_Environment_Setup.md) | Set up the local environment, including Ansible Galaxy roles, vault password file, and encrypted vault secrets file, etc. |
 | 1 | [Goals & Hardware](docs/1_Goals_Hardware.md) | Define goals, choose hardware type, compare refurbished shops, and decide on your node setup. |
 | 2 | [OS & Hypervisor](docs/2_OS_Hypervisor.md) | Install the OS or hypervisor (e.g. Proxmox VE, Ubuntu) on each node — bootable USB, BIOS config, and installation process. |
 | 3 | [Cluster & Network](docs/3_Cluster_Network.md) | Link nodes into a cluster, configure networking — Gigabit switch, static IPs, VLANs, and join nodes via Proxmox cluster or k3s/kubeadm. |

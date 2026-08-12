@@ -1,0 +1,216 @@
+---
+# =============================================================================
+# Local Environment Setup Playbook
+# =============================================================================
+# Run this playbook once after cloning the repository to set up the local
+# development environment for Ansible. It configures everything needed on
+# your laptop (the Ansible controller) before you can run playbooks against
+# remote hosts.
+#
+# This playbook automates the full local setup process, without having to manually perform
+# these steps. In previous projects, I used Bash scripts, however, Ansible is much more powerful
+# and flexible for this purpose. Therefore, this playbook is written in Ansible.
+#
+# PLACEMENT: This playbook lives at the root of the ansible/ directory (alongside site.yml)
+# because it IS a playbook — not a shell script or utility. Ansible convention is to keep all
+# playbooks at the project root. site.yml targets remote infrastructure; this playbook targets
+# localhost. Having both at the same level makes them equally discoverable and avoids awkward
+# ../ path prefixes that would be needed if it lived in a subdirectory like scripts/.
+#
+# VARIABLES: Configuration is separated into vars/setup_local_env.yml so that this playbook
+# defines the logic (what to do) while the vars file defines the data (what values to use).
+# This separation means:
+#   - Adding hosts or secrets requires only editing the vars file, not the playbook
+#   - The playbook logic can be reused across different setups without modification
+#   - All configurable values live in one easy-to-find, well-documented place
+#   - The playbook is extensible: as the homelab grows, just add entries to the vars file
+# See vars/setup_local_env.yml for full documentation on each variable.
+#
+# What it does (in order):
+#   1. Validates prerequisites (required tools are installed)
+#   2. Installs Ansible Galaxy roles from requirements.yml
+#   3. Generates the Ansible inventory (hosts) file from a template
+#   4. Creates the Ansible Vault password file (vars/setup_local_env.yml/vault_pass_file)
+#   5. Creates and encrypts the Ansible Vault secrets file (vars/setup_local_env.yml/vault_file)
+#
+# Usage (from the homelab/ansible/ directory):
+#   cd homelab/ansible
+#   source venv/bin/activate
+#   ansible-playbook setup_local_env.yml
+#
+# Safe to re-run: all steps check for existing files/state and skip if already configured (idempotent).
+# =============================================================================
+
+- name: Set up local Ansible environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  # All configuration (paths, inventory hosts, vault variables) is loaded from
+  # the vars file. Edit vars/setup_local_env.yml to change IPs, add hosts, etc.
+  vars_files:
+    - vars/setup_local_env.yml
+
+  # Vars_prompt is used to prompt for the vault password if the vault file does not exist yet. The password is stored in a
+  # temporary variable and written to the vault password file (see vars.vault_pass_file) for future use.
+  vars_prompt:
+    # Only used when vault files don't exist yet (tasks check before using).
+    # ansible-playbook always shows vars_prompt, but the tasks skip if files exist.
+    - name: vault_password
+      prompt: "Enter Ansible Vault password (leave empty if vault already exists)"
+      private: true # Hide input for security
+      default: ""
+  
+  tasks:
+    # =========================================================================
+    # PART 1 — Prerequisites
+    # =========================================================================
+    - name: "PREREQUISITES | Check that ansible-vault is available"
+      ansible.builtin.command:
+        cmd: which ansible-vault
+      register: ansible_vault_check
+      changed_when: false # Do not mark as changed — just checking for existence
+      failed_when: ansible_vault_check.rc != 0
+
+    - name: "PREREQUISITES | Check that ansible-galaxy is available"
+      ansible.builtin.command:
+        cmd: which ansible-galaxy
+      register: ansible_galaxy_check
+      changed_when: false # Do not mark as changed — just checking for existence
+      failed_when: ansible_galaxy_check.rc != 0
+
+    # =========================================================================
+    # PART 2 — Install Ansible Galaxy Roles
+    # =========================================================================
+    # Installs external roles defined in requirements.yml (e.g. devhub.users, devhub.jumphost).
+    # These are pulled from Git repositories and placed in he roles/ directory.
+    # --force ensures updates if versions changed.
+    - name: "GALAXY ROLES | Install roles from requirements.yml"
+      ansible.builtin.command:
+        cmd: "ansible-galaxy install -r {{ requirements_file }} --force"
+      register: galaxy_result
+      changed_when: "'was installed successfully' in galaxy_result.stdout"
+
+    - name: "GALAXY ROLES | Show install output"
+      ansible.builtin.debug:
+        var: galaxy_result.stdout_lines
+
+    # =========================================================================
+    # PART 3 — Generate Ansible Inventory (hosts file)
+    # =========================================================================
+    # Renders templates/hosts.j2 using the inventory_hosts variable from vars/setup_local_env.yml. 
+    # See the template above for details on what is loaded.
+    # If the inventory file already exists, it is overwritten with the new version. 
+    # If no changes are detected, Ansible will report "ok" instead of "changed".
+    - name: "INVENTORY | Generate hosts file from template"
+      ansible.builtin.template:
+        src: "{{ inventory_template }}"
+        dest: "{{ inventory_file }}"
+        mode: "0644"
+
+    - name: "INVENTORY | Hosts file ready"
+      ansible.builtin.debug:
+        msg: "Generated: {{ inventory_file }}"
+
+    # =========================================================================
+    # PART 4 — Ansible Vault Password File
+    # =========================================================================
+    # The vault password file is stored outside the repository (vars/setup_local_env.yml/vault_pass_file)
+    # so it is never accidentally committed to Git. It is referenced by
+    # ansible-playbook via --vault-password-file or in ansible.cfg.
+    - name: "VAULT | Check if vault password file exists"
+      ansible.builtin.stat:
+        path: "{{ vault_pass_file }}"
+      register: vault_pass_stat
+
+    - name: "VAULT | Validate vault password was provided"
+      ansible.builtin.fail:
+        msg: >
+          Vault password file does not exist and no password was provided.
+          Re-run the playbook and enter a vault password when prompted.
+      when:
+        - not vault_pass_stat.stat.exists
+        - vault_password | length == 0
+
+    - name: "VAULT | Create vault password file"
+      ansible.builtin.copy:
+        content: "{{ vault_password }}"
+        dest: "{{ vault_pass_file }}"
+        mode: "0600"
+      when: not vault_pass_stat.stat.exists
+      no_log: true # Hide in logs for security
+
+    - name: "VAULT | Vault password file ready"
+      ansible.builtin.debug:
+        msg: "{{ 'Created: ' ~ vault_pass_file if not vault_pass_stat.stat.exists else 'Already exists: ' ~ vault_pass_file }}"
+
+    # =========================================================================
+    # PART 5 — Ansible Vault Secrets File
+    # =========================================================================
+    # Creates vars.vault_file with encrypted sensitive variables.
+    # Each variable defined in vault_variables is prompted interactively.
+    - name: "VAULT | Check if vault secrets file exists"
+      ansible.builtin.stat:
+        path: "{{ vault_file }}"
+      register: vault_file_stat
+
+    - name: "VAULT | Prompt for vault variable values"
+      ansible.builtin.pause:
+        prompt: "{{ item.prompt }}"
+      register: vault_var_values
+      loop: "{{ vault_variables }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: not vault_file_stat.stat.exists
+
+    - name: "VAULT | Build plaintext vault content"
+      ansible.builtin.set_fact:
+        vault_plaintext: >-
+          {%- set lines = [] -%}
+          {%- for result in vault_var_values.results -%}
+          {%-   set _ = lines.append(result.item.name ~ ': "' ~ result.user_input ~ '"') -%}
+          {%- endfor -%}
+          {{ lines | join('\n') }}
+      when: not vault_file_stat.stat.exists
+      no_log: true
+
+    - name: "VAULT | Write temporary plaintext vault file"
+      ansible.builtin.copy:
+        content: "{{ vault_plaintext }}\n"
+        dest: "{{ vault_file }}.tmp"
+        mode: "0600"
+      when: not vault_file_stat.stat.exists
+      no_log: true
+
+    - name: "VAULT | Encrypt vault file with ansible-vault"
+      ansible.builtin.command:
+        cmd: >
+          ansible-vault encrypt {{ vault_file }}.tmp
+          --vault-password-file {{ vault_pass_file }}
+          --output {{ vault_file }}
+      when: not vault_file_stat.stat.exists
+      no_log: true
+
+    - name: "VAULT | Remove temporary plaintext file"
+      ansible.builtin.file:
+        path: "{{ vault_file }}.tmp"
+        state: absent
+      when: not vault_file_stat.stat.exists
+
+    - name: "VAULT | Vault secrets file ready"
+      ansible.builtin.debug:
+        msg: "{{ 'Created: ' ~ vault_file if not vault_file_stat.stat.exists else 'Already exists: ' ~ vault_file ~ ' — skipped' }}"
+
+    # =========================================================================
+    # Done
+    # =========================================================================
+    - name: "SETUP COMPLETE"
+      ansible.builtin.debug:
+        msg:
+          - "Local environment is ready."
+          - ""
+          - "View vault contents:"
+          - "  ansible-vault view {{ vault_file }} --vault-password-file {{ vault_pass_file }}"
+          - ""
+          - "Run playbooks:"
+          - "  ansible-playbook site.yml -i hosts -l lab-router --tags router --vault-password-file {{ vault_pass_file }}"

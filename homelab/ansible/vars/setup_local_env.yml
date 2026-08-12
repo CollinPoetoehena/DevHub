@@ -1,0 +1,84 @@
+---
+# =============================================================================
+# Variables for the Local Environment Setup Playbook (setup_local_env.yml)
+# =============================================================================
+# This file is separated from the playbook intentionally for flexibility and
+# extensibility:
+#
+#   - SEPARATION OF CONCERNS: The playbook (setup_local_env.yml) defines the
+#     logic/functionality (what to do), while this file defines the configuration
+#     (what values to use). This means you can change IPs, add hosts, or add new
+#     vault secrets without touching the playbook logic at all.
+#
+#   - EXTENSIBILITY: As the homelab grows (new Proxmox hosts, k8s nodes, VMs),
+#     simply add entries to the inventory_hosts or vault_variables lists below.
+#     The playbook automatically handles any number of hosts or secrets.
+#
+#   - REUSABILITY: If this project is forked or used as a template for another
+#     homelab, only this vars file needs to change — the playbook works as-is.
+#
+#   - SINGLE SOURCE OF TRUTH: All host IPs and secrets definitions live in one
+#     place. The inventory (hosts file) is generated from inventory_hosts below,
+#     so there is no risk of the inventory drifting out of sync with what is
+#     defined here.
+#
+# Usage: This file is loaded automatically by the playbook via vars_files.
+# =============================================================================
+
+# =============================================================================
+# Paths
+# =============================================================================
+# Vault password file — stored outside the repo (never committed to Git).
+vault_pass_file: "{{ lookup('env', 'HOME') }}/.vault_pass.txt"
+# Encrypted vault secrets file (committed to Git, but encrypted).
+vault_file: "{{ playbook_dir }}/group_vars/all/vault.yml"
+# Ansible Galaxy requirements file.
+requirements_file: "{{ playbook_dir }}/requirements.yml"
+# Generated inventory file.
+inventory_file: "{{ playbook_dir }}/hosts"
+# Jinja2 template used to generate the inventory.
+inventory_template: "{{ playbook_dir }}/templates/hosts.j2"
+
+# =============================================================================
+# Inventory Hosts
+# =============================================================================
+# Defines every host in the homelab, grouped by role. The setup playbook renders
+# the hosts.j2 template with these values to produce the inventory file.
+#
+# Format per group: a list of {alias, ip} dicts.
+#   - alias: the human-readable name shown in Ansible output and used with --limit
+#   - ip: the IP address Ansible connects to via SSH (ansible_host)
+#
+# Empty lists ([]) are valid — the template renders a TODO placeholder for
+# groups that have no hosts yet. Uncomment and fill in entries as you provision
+# new hosts.
+inventory_hosts:
+  router:
+    - { alias: "lab-router", ip: "192.168.2.59" }
+  jumphost: []
+    # - { alias: "jumphost", ip: "10.42.10.x" }
+  mgmtvm: []
+    # - { alias: "mgmtvm", ip: "10.42.10.x" }
+  proxmox: []
+    # - { alias: "pve1", ip: "10.42.10.10" }
+    # - { alias: "pve2", ip: "10.42.10.11" }
+    # - { alias: "pve3", ip: "10.42.10.12" }
+  control_plane: []
+    # - { alias: "k8s-cp-1", ip: "10.42.30.10" }
+    # - { alias: "k8s-cp-2", ip: "10.42.30.11" }
+  workers: []
+    # - { alias: "k8s-w-1", ip: "10.42.30.12" }
+    # - { alias: "k8s-w-2", ip: "10.42.30.13" }
+    # - { alias: "k8s-w-3", ip: "10.42.30.14" }
+
+# =============================================================================
+# Vault Variables
+# =============================================================================
+# Secrets to prompt for during initial setup. Each entry becomes a key in the
+# encrypted vault file (group_vars/all/vault.yml).
+#
+# To add a new secret: append an entry with name (YAML key) and prompt (text
+# shown to the user). The playbook handles prompting and encryption automatically.
+vault_variables:
+  - name: vault_ssh_private_key_src_ansibleremote
+    prompt: "Path to the SSH private key for ansibleremote (e.g. ~/.ssh/id_homelab)"
