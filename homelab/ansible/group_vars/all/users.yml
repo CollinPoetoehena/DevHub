@@ -23,7 +23,7 @@
 #                       leave and personal key management is out of scope for CI/CD.
 # ansibleremote is:
 #   - Granted passwordless sudo via /etc/sudoers.d/ so "become: true" works without prompts.
-#   - Authorised by a dedicated SSH key (id_k8slab), separate from personal keys so
+#   - Authorised by a dedicated SSH key (e.g. id_homelab), separate from personal keys so
 #     access can be rotated or revoked independently without affecting human operators.
 #   - The only SSH identity used by the Ansible controller and CI/CD pipelines, giving a
 #     clear audit trail of what automation touched vs. what human operators changed.

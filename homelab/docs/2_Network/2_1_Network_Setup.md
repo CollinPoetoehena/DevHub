@@ -290,14 +290,20 @@ From this step onwards you can use another device to SSH into the Pi.
 6. TODO: Config with Ansible: 
 ```bash
 # ========================== Run Ansible playbook to configure the Pi as a router ==========================
+# Go to Ansible directory and install requirements
 cd homelab/ansible
+ansible-galaxy install -r requirements.yml
+
+# Run the user setup playbook to create the user and set up SSH keys:
+ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <initial-user> -K
+
 # Test connectivity from your local laptop:
 ansible all -i hosts -m ping -l lab-router -u <username>
 # Run the playbook to configure the Pi as a router:
 TODO: check and diff first
 TODO: for below command what to add, such as the flags I use at my work as well, etc.
 TODO: add explanation for what each flag does
-ansible-playbook site.yml -i hosts -l lab-router --diff -u <username> -C
+ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C
 ```
 7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
 ```bash

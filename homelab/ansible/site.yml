@@ -1,64 +1,53 @@
 ---
-# TODO: update below with HomeLab, this is all copied from k8s-lab repo.
-
 ################################################################################
-# TransacFlow Infrastructure Playbook (Remote/Production & DTA Environments)
-# See /docs/design/Environments.md for details on different environments
-# local.yml sets up local development environment
+# HomeLab Infrastructure Playbook
 ################################################################################
-# This is the main playbook for configuring the TransacFlow Kubernetes cluster
-# infrastructure on Azure. It orchestrates the deployment of:
-#   - Jump host (bastion) for secure cluster access
-#   - Management VM with all tooling (kubectl, helm, az cli, ansible, etc.)
-#   - Kubernetes control plane nodes using Kubeadm
-#   - Kubernetes worker nodes
-#   - Container runtime (containerd/CRI-O)
-#   - CNI networking plugin (Calico/Cilium/Flannel)
+# Main playbook for configuring the homelab infrastructure. It orchestrates:
+#   - Lab router (Raspberry Pi) for network isolation, DHCP, DNS, NAT, firewall
+#   - Jump host (bastion) for secure access to internal nodes
+#   - Management VM with tooling (kubectl, helm, ansible, etc.)
+#   - Kubernetes control plane and worker nodes
 #
-# See README.md for detailed instructions on running this playbook and the role of each component.
-#
+# See README.md for detailed instructions on running this playbook.
 ################################################################################
 
 ################################################################################
-# PLAY 0: Bootstrap OS Users (run once after initial VM provisioning)
+# PLAY 0: Bootstrap OS Users (run once after initial provisioning)
 ################################################################################
-# TODO: this needs to be changed to just normal, NOT Azure specific anymore. It should create these users on all.
-# Azure provisions VMs with a default user (azureuser). These plays use that
-# account for the very first connection to create the dedicated Ansible service
-# account (ansibleremote) and any personal accounts on all hosts.
+# Each host is provisioned with a default OS user (e.g. the user created during
+# Raspberry Pi OS setup, or a cloud-provisioned default). This play uses that
+# initial account to create the dedicated Ansible service account (ansibleremote)
+# and any personal accounts on all hosts.
 #
-# Run once at initial setup (before anything else):
-#   ansible-playbook site.yml --tags users -u azureuser
+# Run once at initial setup (before anything else), specifying the initial user and -K to prompt for the sudo password:
+#   ansible-playbook site.yml --tags users -u <initial-user> -K
 #
-# WHY a separate bootstrap play with remote_user: azureuser?
-#   After terraform apply the only available SSH identity is azureuser.
-#   Once these plays complete, ansibleremote exists on every host and all
-#   subsequent plays connect as ansibleremote (set explicitly per play and
-#   as the default in ansible.cfg).
+# WHY a separate bootstrap play?
+#   After initial provisioning, the only available SSH identity is the default
+#   OS user. Once this play completes, ansibleremote exists on every host and
+#   all subsequent plays connect as ansibleremote (set explicitly per play).
 #
 # WHY ansibleremote? See group_vars/all/users.yml for the full explanation.
 ################################################################################
 
-# TODO: add mgmtvm to the inventory (hosts file) once it is provisioned via terraform.
-- name: Bootstrap OS users on all VMs
-  hosts: all # Apply to all hosts to ensure ansibleremote (and optional other users per host) are created everywhere for consistent access in future plays.
+- name: Bootstrap OS users on all hosts
+  hosts: all
   become: true
   gather_facts: false
-  # azureuser is the Azure-provisioned default; only needed for this first run.
-  # After this play, ansibleremote is available and used for all subsequent plays.
-  remote_user: azureuser
+  # No remote_user set here — use -u <initial-user> on the CLI. Play-level remote_user overrides the CLI -u 
+  # flag, so we intentionally omit it to let the CLI decide which user to connect as.
+  # First run: -u poetoec (or whatever the default OS user is). Later runs: -u ansibleremote (once it exists)
   tags:
     - users
-  # Use the users role to create and configure the users and groups
-  # User definitions (vars input for the users role) live in group_vars — no vars block needed here:
+  # User definitions live in group_vars — no vars block needed here:
   #   group_vars/all/users.yml: applied to every host
-  #   group_vars/mgmtvm/users.yml — overrides specific for mgmtvm
+  #   group_vars/mgmtvm/users.yml: overrides specific for mgmtvm
   roles:
-    - role: users
+    - role: devhub.users
   post_tasks:
     - name: Confirm users are bootstrapped
       ansible.builtin.debug:
-        msg: "Users bootstrapped on {{ inventory_hostname }} — future runs no longer need -u azureuser"
+        msg: "Users bootstrapped on {{ inventory_hostname }}"
 
 # TODO: this router play is done and should be tested now:
 ################################################################################
@@ -85,7 +74,7 @@
 # Run: ansible-playbook site.yml --tags router
 ################################################################################
 - name: Configure Lab Router (Raspberry Pi)
-  hosts: router
+  hosts: router # Run only for the router host group defined in the inventory (hosts file)
   become: true
   gather_facts: true
   remote_user: ansibleremote
@@ -102,7 +91,6 @@
           - "LAN interface ({{ router_lan_interface }}): serving lab network at {{ router_lan_ip }}/{{ router_lan_cidr }}"
           - "DHCP range: {{ router_dhcp_range_start }} - {{ router_dhcp_range_end }}"
           - "Lab devices can now get IPs and reach the internet through this router"
-
 
 # TODO: this below is for testing, see comment later below.
 # TODO: all roles in roles folder should be removed later, these should be split into separate repos later, see Issues in Git.
@@ -132,7 +120,7 @@
     - jumphost
   roles:
     # Jump host role: Configure bastion access and SSH forwarding, etc.
-    - role: jumphost
+    - role: devhub.jumphost
   post_tasks:
     - name: Display jump host information
       ansible.builtin.debug:
@@ -140,8 +128,6 @@
           - "Jump host (bastion) configuration completed successfully"
           - "SSH access gateway is ready"
           - "Use this host to securely access the mgmtvm"
-
-
 # TODO: all of below is commented, but this is the main structure that should be used, above it just for testing purposes,
 # TODO: update below later with the final content and roles, etc.
 # TODO: in README.md create a section listing all possible tags and what they do to make a clear overview for it, etc.!

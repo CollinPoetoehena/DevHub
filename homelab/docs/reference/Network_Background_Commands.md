@@ -338,18 +338,21 @@ ping -c 3 <host>
 
 ---
 
-### `ip neigh`
+### `ip neigh` / `arp` — ARP Neighbour Table
 
-Shows the neighbour (ARP) table — the mapping of IP addresses to MAC addresses for devices on the same link.
+Shows the ARP (Address Resolution Protocol) table — the mapping of IP addresses to MAC addresses for devices on the same link. ARP is how the kernel finds the MAC address of a device it needs to send a packet to directly (i.e. on the same subnet). It sends an ARP broadcast ("who has `<ip>`?"), caches the reply here, and uses the MAC for delivery.
 
-ARP (Address Resolution Protocol) is how the kernel finds the MAC address of a device it needs to send a packet to directly (i.e. on the same subnet). It sends an ARP broadcast ("who has `<ip>`?"), caches the reply here, and uses the MAC for delivery.
+There are two families of commands that show this same table: the modern `ip neigh` (from iproute2) and the legacy `arp` (from net-tools). Both read the same kernel ARP cache — they just format and enrich the output differently.
 
-**Output format per entry:**
+#### IPs only: `ip neigh` and `arp -n`
+
+These show the ARP table with raw IP addresses (no hostname resolution).
+
+**`ip neigh`** — the modern command; includes the ARP state (`REACHABLE`, `STALE`, `DELAY`, `FAILED`, `PERMANENT`):
+
 ```
 <ip-address> dev <interface> lladdr <mac-address> <state>
 ```
-
-**Key fields:**
 
 | Field | Description |
 |-------|-------------|
@@ -359,39 +362,46 @@ ARP (Address Resolution Protocol) is how the kernel finds the MAC address of a d
 | `<state>` | `REACHABLE` = recently confirmed; `STALE` = not confirmed recently, will re-probe on next use; `DELAY` = waiting to confirm after a packet was sent; `FAILED` = ARP probe sent but no reply — device unreachable or gone; `PERMANENT` = statically configured, never expires |
 
 ```
-ip neigh
+poetoec@lab-router:~ $ ip neigh
+192.168.2.254 dev eth0 lladdr b0:5b:99:28:74:80 DELAY
+192.168.2.5 dev eth0 lladdr 80:e4:ba:58:58:c2 REACHABLE
 ```
 
-Example output:
+**`arp -n`** — the legacy equivalent; `-n` suppresses hostname resolution. Shows flags instead of states (`C` = complete/MAC resolved, `M` = permanent/static, `P` = published), such as:
+
 ```
-192.168.2.254 dev eth0 lladdr a4:91:b1:xx:xx:xx REACHABLE
-10.42.0.100 dev eth1 lladdr b8:27:eb:xx:xx:xx REACHABLE
+poetoec@lab-router:~ $ arp -n
+Address         HWtype  HWaddress           Flags Iface
+192.168.2.254   ether   b0:5b:99:28:74:80   C     eth0
+192.168.2.5     ether   80:e4:ba:58:58:c2   C     eth0
 ```
 
-- `192.168.2.254` on `eth0` — the ISP modem; `REACHABLE` means its MAC was recently resolved via ARP.
-- `10.42.0.100` on `eth1` — a lab device that received its IP from the DHCP server and is currently reachable.
+- `192.168.2.254` on `eth0` — the ISP modem; `DELAY` in `ip neigh` means the kernel sent a packet and is waiting for an ARP confirmation (transitions to `REACHABLE` on reply, or `FAILED` if no reply comes).
+- `192.168.2.5` on `eth0` — a device on the home network; `REACHABLE` means its MAC was recently confirmed via ARP.
 - If a device shows `FAILED`, the Pi sent an ARP request but got no reply — the device is off, not connected, or there is a cabling/VLAN issue.
 
----
+#### With hostnames: `arp -a` and `ip neigh` + reverse DNS
 
-### `arp -n`
+To identify *which* device is behind each IP, you need hostname resolution. `arp -a` does this automatically; `ip neigh` does not, but you can pipe it through a reverse DNS lookup.
 
-Shows the same ARP table as `ip neigh` but in the older `arp(8)` format. `-n` suppresses hostname resolution (faster and unambiguous).
-
-**Output format:**
-```
-<ip-address>   <hw-type>   <mac-address>   <flags>   <interface>
-```
-
-Flags: `C` = complete (MAC resolved successfully), `M` = permanent/static, `P` = published.
+**`arp -a`** — resolves IPs to hostnames via reverse DNS or `/etc/hosts` out of the box, such as:
 
 ```
-arp -n
+poetoec@lab-router:~ $ arp -a
+mijnmodem.kpn (192.168.2.254) at b0:5b:99:28:74:80 [ether] on eth0
+<laptop name>.home (192.168.2.5) at 80:e4:ba:58:58:c2 [ether] on eth0
 ```
 
-Example output:
+- `mijnmodem.kpn` — the ISP modem's hostname (advertised via the ISP modem's DNS).
+- `<laptop name>.home` — the laptop's hostname on the home network.
+
+**`ip neigh` with manual reverse DNS** — `ip neigh` has no built-in hostname resolution, but you can add it by piping each IP through `getent hosts` (which queries DNS and `/etc/hosts`):
+
+```bash
+ip neigh | while read ip rest; do
+  name=$(getent hosts "$ip" | awk '{print $2}')
+  echo "${name:-(unknown)} $ip $rest"
+done
 ```
-Address         HWtype  HWaddress           Flags Iface
-192.168.2.254   ether   a4:91:b1:xx:xx:xx   C     eth0
-10.42.0.100     ether   b8:27:eb:xx:xx:xx   C     eth1
-```
+
+Use `arp -a` when you want to quickly identify who's who on the network; use `ip neigh` (with or without the pipe) when you need the ARP state information for debugging.

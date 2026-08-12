@@ -10,6 +10,10 @@ This document is split into three chapters:
 
 Use this as the baseline process for preparing homelab nodes.
 
+
+TODO: add here my personal homelab setup: Proxmox VE on all physical nodes, because I just want VMs, I do not use BM nodes (chapter 3: Linux OS), see [Network Setup](../2_Network/2_1_Network_Setup.md)
+
+
 ## Chapter 1: Bootable USB (General)
 
 A bootable USB is a USB drive prepared with an installer image (ISO) so a machine can start directly from it and run an OS or hypervisor installation. This is also called `flashing` an OS onto a storage device (in this case a USB drive), making it a `boot device`.
@@ -233,7 +237,9 @@ apt full-upgrade -y
 
 Use this chapter for non-hypervisor nodes (k8s workers, utility hosts, monitoring nodes, etc.).
 
-A worker node is a regular Linux server that runs workloads or supporting services, rather than hosting virtual machines for other systems.
+A worker node is a regular Linux server that runs workloads or supporting services, rather than hosting virtual machines for other systems. 
+
+This is optional, you can choose to run all workloads inside VMs on Proxmox, or you can run some workloads directly on bare-metal Linux nodes. This is a personal choice based on your homelab goals and learning objectives.
 
 ### Example Target
 
