@@ -167,7 +167,8 @@
 
     - name: "VAULT | Parse existing vault variables"
       ansible.builtin.set_fact:
-        existing_vault: "{{ existing_vault_raw.stdout | from_yaml | default({}) }}"
+        # "or {}" is necessary to avoid the following error when the vault has no vars/content: "object of type 'NoneType' has no attribute 'keys'"
+        existing_vault: "{{ (existing_vault_raw.stdout | from_yaml) or {} }}"
       when: vault_file_stat.stat.exists
       no_log: true
 
@@ -222,6 +223,13 @@
       when: vault_needs_update
       no_log: true
 
+    # If no variables remain, just remove the vault file entirely.
+    - name: "VAULT | Remove vault file if no variables defined"
+      ansible.builtin.file:
+        path: "{{ vault_file }}"
+        state: absent
+      when: vault_needs_update and (vault_merged | default({}) | length == 0)
+
     # Render via a Jinja2 template file to avoid YAML scalar folding issues
     # that corrupt newlines when building multi-line content inline with set_fact.
     - name: "VAULT | Render vault content from template"
@@ -229,28 +237,28 @@
         src: "{{ playbook_dir }}/templates/vault.yml.j2"
         dest: "{{ vault_file }}.tmp"
         mode: "0600"
-      when: vault_needs_update
+      when: vault_needs_update and (vault_merged | default({}) | length > 0)
       no_log: true
 
     - name: "VAULT | Remove existing vault before re-encrypting"
       ansible.builtin.file:
         path: "{{ vault_file }}"
         state: absent
-      when: vault_needs_update and vault_file_stat.stat.exists
+      when: vault_needs_update and vault_file_stat.stat.exists and (vault_merged | default({}) | length > 0)
 
     # --encrypt-vault-id default: required because ansible.cfg also sets vault_password_file,
     # creating two "default" vault IDs. Without this flag, ansible-vault refuses to encrypt.
     - name: "VAULT | Encrypt vault file"
       ansible.builtin.command:
         cmd: "ansible-vault encrypt {{ vault_file }}.tmp --vault-password-file {{ vault_pass_file }} --encrypt-vault-id default --output {{ vault_file }}"
-      when: vault_needs_update
+      when: vault_needs_update and (vault_merged | default({}) | length > 0)
       no_log: true
 
     - name: "VAULT | Remove temporary plaintext file"
       ansible.builtin.file:
         path: "{{ vault_file }}.tmp"
         state: absent
-      when: vault_needs_update
+      when: vault_needs_update and (vault_merged | default({}) | length > 0)
 
     - name: "VAULT | Vault secrets file ready"
       ansible.builtin.debug:
