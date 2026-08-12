@@ -80,5 +80,7 @@ inventory_hosts:
 # To add a new secret: append an entry with name (YAML key) and prompt (text
 # shown to the user). The playbook handles prompting and encryption automatically.
 vault_variables:
-  - name: vault_ssh_private_key_src_ansibleremote
-    prompt: "Path to the SSH private key for ansibleremote (e.g. ~/.ssh/id_homelab)"
+  # - name: vault_ssh_private_key_src_ansibleremote
+  #   prompt: "Path to the SSH private key for ansibleremote (e.g. ~/.ssh/id_homelab)"
+  # - name: vault_ssh_public_key_src_poetoec
+  #   prompt: "Path to the SSH public key for poetoec (e.g. ~/.ssh/id_homelab.pub)"

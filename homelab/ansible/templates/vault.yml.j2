@@ -1,0 +1,4 @@
+{# Rendered by setup_local_env.yml — produces plaintext YAML for ansible-vault to encrypt. Avoids YAML formatting and/or scalar folding issues. #}
+{% for key, value in vault_merged.items() %}
+{{ key }}: "{{ value }}"
+{% endfor %}

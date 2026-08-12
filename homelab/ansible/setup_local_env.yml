@@ -147,62 +147,117 @@
     # =========================================================================
     # PART 5 — Ansible Vault Secrets File
     # =========================================================================
-    # Creates vars.vault_file with encrypted sensitive variables.
-    # Each variable defined in vault_variables is prompted interactively.
+    # Keeps the vault file in sync with vault_variables from the vars file:
+    #   - First run: prompts for all variables and creates the vault
+    #   - New variable added to vault_variables: prompts only for the new one
+    #   - Variable removed from vault_variables: removed from the vault
+    #   - No changes: vault is left untouched
     - name: "VAULT | Check if vault secrets file exists"
       ansible.builtin.stat:
         path: "{{ vault_file }}"
       register: vault_file_stat
 
-    - name: "VAULT | Prompt for vault variable values"
+    - name: "VAULT | Decrypt existing vault"
+      ansible.builtin.command:
+        cmd: "ansible-vault view {{ vault_file }} --vault-password-file {{ vault_pass_file }}"
+      register: existing_vault_raw
+      when: vault_file_stat.stat.exists
+      no_log: true
+      changed_when: false
+
+    - name: "VAULT | Parse existing vault variables"
+      ansible.builtin.set_fact:
+        existing_vault: "{{ existing_vault_raw.stdout | from_yaml | default({}) }}"
+      when: vault_file_stat.stat.exists
+      no_log: true
+
+    - name: "VAULT | Initialize empty vault for first run"
+      ansible.builtin.set_fact:
+        existing_vault: {}
+      when: not vault_file_stat.stat.exists
+
+    - name: "VAULT | Identify new variables to add"
+      ansible.builtin.set_fact:
+        vars_to_add: "{{ vault_variables | rejectattr('name', 'in', existing_vault.keys() | list) | list }}"
+
+    - name: "VAULT | Identify removed variables to clean up"
+      ansible.builtin.set_fact:
+        vars_to_remove: "{{ existing_vault.keys() | list | difference(vault_variables | map(attribute='name') | list) }}"
+
+    - name: "VAULT | Determine if vault needs updating"
+      ansible.builtin.set_fact:
+        vault_needs_update: "{{ (vars_to_add | length > 0) or (vars_to_remove | length > 0) or (not vault_file_stat.stat.exists) }}"
+
+    - name: "VAULT | Show vault sync status"
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'Vault is up to date — no changes needed.' if not vault_needs_update else
+             'Vault update: adding [' ~ (vars_to_add | map(attribute='name') | join(', ') or 'none') ~
+             '], removing [' ~ (vars_to_remove | join(', ') or 'none') ~ '].' }}
+
+    - name: "VAULT | Prompt for new vault variable values"
       ansible.builtin.pause:
         prompt: "{{ item.prompt }}"
-      register: vault_var_values
-      loop: "{{ vault_variables }}"
+      register: new_var_values
+      loop: "{{ vars_to_add }}"
       loop_control:
         label: "{{ item.name }}"
-      when: not vault_file_stat.stat.exists
+      when: vars_to_add | length > 0
 
-    - name: "VAULT | Build plaintext vault content"
+    # Build a dict of newly prompted values so we can merge them with existing vars.
+    - name: "VAULT | Collect new variable values into dict"
       ansible.builtin.set_fact:
-        vault_plaintext: >-
-          {%- set lines = [] -%}
-          {%- for result in vault_var_values.results -%}
-          {%-   set _ = lines.append(result.item.name ~ ': "' ~ result.user_input ~ '"') -%}
-          {%- endfor -%}
-          {{ lines | join('\n') }}
-      when: not vault_file_stat.stat.exists
+        new_vars_dict: "{{ new_vars_dict | default({}) | combine({item.item.name: item.user_input}) }}"
+      loop: "{{ new_var_values.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: vars_to_add | length > 0 and item.user_input is defined
       no_log: true
 
-    - name: "VAULT | Write temporary plaintext vault file"
-      ansible.builtin.copy:
-        content: "{{ vault_plaintext }}\n"
+    # Merge existing vars (minus removed) + new vars into a single dict.
+    # This dict is passed to templates/vault.yml.j2 which renders it as YAML.
+    - name: "VAULT | Merge all vault variables"
+      ansible.builtin.set_fact:
+        vault_merged: "{{ (existing_vault | dict2items | rejectattr('key', 'in', vars_to_remove) | items2dict) | combine(new_vars_dict | default({})) }}"
+      when: vault_needs_update
+      no_log: true
+
+    # Render via a Jinja2 template file to avoid YAML scalar folding issues
+    # that corrupt newlines when building multi-line content inline with set_fact.
+    - name: "VAULT | Render vault content from template"
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/vault.yml.j2"
         dest: "{{ vault_file }}.tmp"
         mode: "0600"
-      when: not vault_file_stat.stat.exists
+      when: vault_needs_update
       no_log: true
 
-    - name: "VAULT | Encrypt vault file with ansible-vault"
+    - name: "VAULT | Remove existing vault before re-encrypting"
+      ansible.builtin.file:
+        path: "{{ vault_file }}"
+        state: absent
+      when: vault_needs_update and vault_file_stat.stat.exists
+
+    # --encrypt-vault-id default: required because ansible.cfg also sets vault_password_file,
+    # creating two "default" vault IDs. Without this flag, ansible-vault refuses to encrypt.
+    - name: "VAULT | Encrypt vault file"
       ansible.builtin.command:
-        cmd: >
-          ansible-vault encrypt {{ vault_file }}.tmp
-          --vault-password-file {{ vault_pass_file }}
-          --output {{ vault_file }}
-      when: not vault_file_stat.stat.exists
+        cmd: "ansible-vault encrypt {{ vault_file }}.tmp --vault-password-file {{ vault_pass_file }} --encrypt-vault-id default --output {{ vault_file }}"
+      when: vault_needs_update
       no_log: true
 
     - name: "VAULT | Remove temporary plaintext file"
       ansible.builtin.file:
         path: "{{ vault_file }}.tmp"
         state: absent
-      when: not vault_file_stat.stat.exists
+      when: vault_needs_update
 
     - name: "VAULT | Vault secrets file ready"
       ansible.builtin.debug:
-        msg: "{{ 'Created: ' ~ vault_file if not vault_file_stat.stat.exists else 'Already exists: ' ~ vault_file ~ ' — skipped' }}"
+        msg: "{{ 'Updated: ' ~ vault_file if vault_needs_update else 'Up to date: ' ~ vault_file }}"
 
     # =========================================================================
-    # Done
+    # Done: Print summary and next steps
     # =========================================================================
     - name: "SETUP COMPLETE"
       ansible.builtin.debug:
@@ -212,5 +267,5 @@
           - "View vault contents:"
           - "  ansible-vault view {{ vault_file }} --vault-password-file {{ vault_pass_file }}"
           - ""
-          - "Run playbooks:"
-          - "  ansible-playbook site.yml -i hosts -l lab-router --tags router --vault-password-file {{ vault_pass_file }}"
+          - "Run playbooks, such as (NOTE: no --vault-password-file because it is already present in ansible.cfg!):"
+          - "  ansible-playbook site.yml -i hosts -l lab-router --tags router"

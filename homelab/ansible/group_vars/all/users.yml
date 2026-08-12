@@ -32,7 +32,7 @@
 # General user variables
 # ---------------------------------------------------------------------------
 # Utility variables for the path of the key files for ansibleremote (private key only used if ansibleremote_ssh_private_keys
-# is overridden in group_vars/<group>/users.yml for hosts that need it, e.g. mgmtvm, hosts that do not need it get no private key).
+# is overridden in group_vars/<group>/users.yml for hosts that need it (e.g. mgmtvm), hosts that do not need it get no private key).
 # These defaults are defined here so that ansibleremote has consistent handling for all hosts
 ssh_private_key_src_ansibleremote: "{{ vault_ssh_private_key_src_ansibleremote }}"
 ssh_public_key_src_ansibleremote: "{{ vault_ssh_private_key_src_ansibleremote }}.pub" # Use the same base path as the private key for consistency, just with .pub extension
@@ -68,12 +68,12 @@ _users_list_base:
     group: ansibleremote # Own primary group so sudo is scoped to this account only
     use_sudo: true
     # Deployed only on hosts where ssh_private_keys_ansibleremote is overridden
-    # (non-empty). Defaults to [] — no private key deployed on other hosts (if the private key 
+    # (non-empty). Defaults to [] — no private key deployed on other hosts (if the private key
     # is not needed it should not be added for security reasons!).
     ssh_private_keys: "{{ ssh_private_keys_ansibleremote }}"
     # Always add public key so that the account is accessible via SSH with the corresponding private key
     ssh_public_keys:
-      - key: "{{ ssh_public_key_src_ansibleremote }}"
+      - src: "{{ ssh_public_key_src_ansibleremote }}"
         comment: "Ansible controller key"
 
 # Override in group_vars/<group>/users.yml to add host-specific extra users.

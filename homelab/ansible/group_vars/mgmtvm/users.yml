@@ -1,5 +1,5 @@
 ---
-# mgmtvm-specific user additions — merged with group_vars/all/users.yml at runtime.
+# mgmtvm-specific user additions — merged with group_vars/all/users.yml and group_vars/mgmt/users.yml at runtime.
 
 # Override: deploy ansibleremote's private key on mgmtvm so it can SSH outbound to cluster/workload VMs (e.g. mgmtvm → cluster nodes). 
 # Uses the default path variables defined in group_vars/all/users.yml for consistency.
@@ -7,18 +7,4 @@ ssh_private_keys_ansibleremote:
   - src: "{{ ssh_private_key_src_ansibleremote }}"
     dest: "{{ ssh_private_key_dest_ansibleremote }}"
 
-# Extra users specific to mgmtvm — appended to _users_list_base from group_vars/mgmtvm/users.yml at runtime.
-# In practice, a team of people/administrators need access to the mgmtvm, each with their own account and SSH key, etc., 
-# and this setup below illustrates that is possible by just adding more entries to the list here.
-_users_list_extra:
-  # Personal admin account — sudo inherited from as-admin group,
-  # so no redundant per-user sudoers file is created (see role/users role README).
-  - username: poetoec
-    desc: "Collin Poetoehena"
-    group: as-admin
-    use_sudo: true
-    ssh_public_keys:
-      # Store the actual key src in vault.yml as vault_ssh_public_key_src_poetoec.
-      - src: "{{ vault_ssh_public_key_src_poetoec }}"
-        comment: "poetoec personal key"
-  # NOTE: could potentially add more users here later if needed, such as if more administrators need access to the mgmtvm, etc.
+# Extra users are added in group_vars/mgmt/users.yml, no additional specific users needed for mgmtvm.

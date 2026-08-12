@@ -4,23 +4,37 @@ This document provides guidance for diagnosing and resolving common network issu
 
 ## Some home network devices cannot connect to the internet
 
-**Symptoms:** Multiple devices (e.g. phone, TV, printer over Ethernet) lose internet access, while others remain unaffected.
+- **Symptoms:** Multiple devices (phone, TV, printer) lose internet while others work fine.
+- **Cause:** Proxmox `vmbr0` bridge on the home LAN conflicts with the ISP modem's DHCP — causes duplicate IPs.
+- **Diagnosis:** Check ISP modem admin page (`192.168.2.1`) → DHCP leases → look for duplicate IPs.
+- **Fix:** Set up a dedicated lab router (Raspberry Pi) between the ISP modem and lab devices to isolate the lab subnet. See [Network Setup](./2_1_Network_Setup.md).
+- **Interim workaround:** Shut down the Proxmox host until the lab router is ready.
 
-**Likely cause:** Proxmox VE running on the home network can cause IP conflicts. When Proxmox creates a Linux bridge (`vmbr0`) on the same subnet as your home LAN, it may respond to ARP requests or DHCP traffic in a way that conflicts with the ISP modem's DHCP assignments. This causes some devices to get duplicate IPs or lose their lease, which breaks connectivity for those devices but not necessarily all of them.
+---
 
-**Diagnosis:**
-1. Log in to your ISP's modem/router admin page (typically at `192.168.2.1` or `192.168.1.1`).
-2. Look for a connected devices or DHCP leases table.
-3. Check for duplicate IP addresses or unexpected entries — this confirms an IP conflict.
+## SSH key authentication fails for ansibleremote after user bootstrap
 
-**Solutions:**
+- **Symptoms:** After running the users bootstrap playbook, `ssh ansibleremote@<pi-ip>` fails:
+    ```
+    ansibleremote@192.168.2.59: Permission denied (publickey).
+    ```
+  But Ansible `ping` may still work (due to SSH connection multiplexing from the same session).
 
-Partial fix (not fully safe): Reserve static IPs in your ISP modem for all lab devices and configure a static address and internal bridge in Proxmox. This reduces the chance of conflict but does not eliminate it, since Proxmox bridge interfaces can still interfere with LAN traffic.
+- **Diagnosis:** SSH into the Pi with a user that still works (e.g. the initial OS user) and check sshd logs:
+    ```bash
+    ssh <initial-user>@<pi-ip>
+    sudo journalctl | grep -i "sshd" | tail -30
+    ```
+  If you see this line, the account is locked:
+    ```
+    sshd-session[1551]: User ansibleremote not allowed because account is locked
+    ```
 
-Recommended fix: Set up a dedicated router for the homelab (e.g. a Raspberry Pi or TP-Link ER605) placed between your ISP modem and all lab devices. This creates a fully isolated subnet for the lab so Proxmox and other lab services can never interfere with the home network.
+- **Cause:** The `ansibleremote` user was created without a password (correct for key-only auth), but `UsePAM no` in `/etc/ssh/sshd_config` makes OpenSSH 10.x reject pubkey login for locked accounts. Without PAM, sshd checks the password field in `/etc/shadow` directly — a `!` or `*` means locked, and the connection is refused before the key is even checked.
 
-```
-ISP Modem (e.g. 192.168.2.0/24) → Lab Router (e.g. 192.168.10.0/24) → Lab Devices
-```
-
-**Interim workaround (while setting up the dedicated router):** Shut down the Proxmox VE host and temporarily install Ubuntu Desktop on it via bootable USB (see [OS and Hypervisor Installation](2_2_OS_Hypervisor.md) for steps). This prevents Proxmox from interfering with the home network on each boot, while still allowing you to use the machine. Once the dedicated router is ready, reinstall Proxmox VE on the host.
+- **Fix:** Set `UsePAM yes` in sshd_config (the Debian default):
+    ```bash
+    sudo sed -i 's/^UsePAM no/UsePAM yes/' /etc/ssh/sshd_config
+    sudo systemctl restart ssh
+    ```
+  With `UsePAM yes` + `PasswordAuthentication no`, PAM handles account validation and correctly allows key-based auth for locked accounts — password login remains disabled. See [step 5 in Network Setup](./2_1_Network_Setup.md) for the full sshd_config recommendations.

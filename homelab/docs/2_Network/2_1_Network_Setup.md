@@ -259,11 +259,13 @@ vim /etc/ssh/sshd_config
 #     → Disables challenge-response mechanisms (e.g. one-time passwords, keyboard-interactive prompts).
 #       If left enabled, PAM or other modules can still prompt for a password even when
 #       PasswordAuthentication is off, bypassing your key-only policy.
-#   UsePAM no
-#     → Disables PAM (Pluggable Authentication Modules) for SSH sessions.
-#       PAM can re-enable password prompts or other auth methods behind the scenes.
-#       Setting this to "no" ensures SSH relies solely on its own key-based auth,
-#       with no PAM module overriding your configuration.
+#   UsePAM yes
+#     → Keep PAM enabled (this is the Debian default). Do NOT set this to "no".
+#       On Debian-based systems (including Raspberry Pi OS), OpenSSH 10.x rejects
+#       pubkey login for accounts without a password (locked accounts like ansibleremote)
+#       when PAM is disabled. With UsePAM yes + PasswordAuthentication no, PAM does NOT
+#       allow password login — it only handles account validation and session setup,
+#       which correctly permits key-based auth for locked service accounts.
 # Save and exit (Esc, :wq, Enter in vim).
 
 # Apply the new config by restarting SSH:
@@ -286,13 +288,24 @@ From this step onwards you can use another device to SSH into the Pi.
 cd homelab/ansible
 source venv/bin/activate
 
+# Load the SSH key into the agent so Ansible can use it without prompting for the passphrase.
+# Without this, Ansible fails with "Permission denied (publickey)" because it cannot
+# interactively prompt for the key's passphrase like a manual ssh command can.
+eval $(ssh-agent) && ssh-add ~/.ssh/id_homelab
+# Enter your passphrase once — it stays cached for this shell session.
+
 # ========================== Bootstrap the ansibleremote user ==========================
 # Run the users play to create the ansibleremote service account on the Pi.
-# -u poetoec: connect as the initial OS user (the one you created during Pi setup)
-# -K: prompt for the sudo password (needed because poetoec requires a password for sudo)
 # --diff: show file changes made on the remote host
-# --vault-password-file: provide the vault password for decrypting secrets
-ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u poetoec -K --vault-password-file ~/.vault_pass.txt
+# -u <username>: connect as the initial OS user (the one you created during Pi setup)
+# -K: prompt for the sudo password (needed because <username> requires a password for sudo)
+ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <username> -K
+# Check users with a few of the commands provided by the users role: see ./roles/devhub.users/tasks/main.yml
+# Furthermore, you can check logs on the Pi if you have authentication problems:
+sudo journalctl | grep -i "sshd" | tail -30
+
+# After the initial setup (ansibleremote added), you can also run without -K on the router (ansibleremote has passwordless sudo):
+ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u ansibleremote
 
 # ========================== Verify connectivity with ansibleremote ==========================
 # Test that Ansible can reach the Pi using the newly created ansibleremote user:
@@ -300,13 +313,12 @@ ansible all -i hosts -m ping -l lab-router -u ansibleremote
 
 # ========================== Configure the Pi as a router ==========================
 # First do a dry run (-C) to preview changes without applying them:
-# -C (--check): dry run — shows what WOULD change without actually changing anything
 # --diff: shows the exact file content changes (like a git diff)
-# --vault-password-file: provide the vault password for decrypting secrets
-ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C --vault-password-file ~/.vault_pass.txt
+# -C (--check): dry run — shows what WOULD change without actually changing anything
+ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C
 
 # If the dry run looks good, apply the changes (remove -C):
-ansible-playbook site.yml -i hosts -l lab-router --tags router --diff --vault-password-file ~/.vault_pass.txt
+ansible-playbook site.yml -i hosts -l lab-router --tags router --diff
 ```
 7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
 ```bash
