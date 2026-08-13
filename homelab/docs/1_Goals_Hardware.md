@@ -18,6 +18,10 @@ This document covers the goals for this home lab and all decisions around choosi
   - [Why NOT Raspberry Pi](#why-not-raspberry-pi)
 - [Node Setup](#node-setup)
   - [How Many Nodes](#how-many-nodes)
+    - [What Is Quorum?](#what-is-quorum)
+    - [Why Odd Numbers of Voting Members?](#why-odd-numbers-of-voting-members)
+    - [Where Does Quorum Apply?](#where-does-quorum-apply)
+    - [Why 3 for This Lab](#why-3-for-this-lab)
   - [Recommended Node Composition](#recommended-node-composition)
   - [Start Small, Expand Later](#start-small-expand-later)
   - [Current Personal Setup](#current-personal-setup)
@@ -149,11 +153,53 @@ More importantly, the Pi uses ARM/Pi OS instead of x86/Ubuntu or RHEL — which 
 
 ### How Many Nodes
 
-**Aim for 3 nodes.** A 3-node setup gives you true cluster stability because it can form a **quorum** (a majority of nodes agree the cluster is healthy, so it can keep running even if one node fails). This enables real high-availability (HA) behaviour, proper leader election, and realistic distributed-systems scheduling — the way production clusters actually work.
+**Aim for 3 nodes.** A 3-node setup gives you true cluster stability because it can form a **quorum** — and quorum is the foundation of high-availability (HA) in distributed systems.
 
-More than 3 nodes is overkill for a learning lab: it increases power usage and cost without adding significant learning value.
+#### What Is Quorum?
 
-You can of course add more nodes if you want but note that 3 is the sweet spot for a home lab that balances realism, cost, and manageability.
+Quorum means a **majority of voting members agree** the cluster is healthy. This majority is required for critical operations: electing a leader, committing configuration changes, and confirming writes. Without a majority, the cluster cannot make decisions and becomes unavailable — this prevents **split-brain**, where two halves of a cluster both think they're in charge and start making conflicting changes.
+
+#### Why Odd Numbers of Voting Members?
+
+It's not that HA *requires* an odd total node count — what matters is an **odd number of voting/quorum members**. The reason is simple math: even numbers waste a node without improving fault tolerance.
+
+| Voting Nodes | Majority Needed | Failures Tolerated |
+|:---:|:---:|:---:|
+| 2 | 2 | 0 |
+| **3** | **2** | **1** |
+| 4 | 3 | 1 |
+| **5** | **3** | **2** |
+| 6 | 4 | 2 |
+| **7** | **4** | **3** |
+
+Notice: **3 nodes and 4 nodes both tolerate only 1 failure.** The 4th node adds cost and power usage but zero extra fault tolerance. The same applies to 5 vs. 6, and so on. That's why architects prefer odd numbers of voters.
+
+**Why does adding the 4th node not help?** Because majority is always `floor(n/2) + 1`. With 3 nodes, majority = 2, so you can lose 1 (3 − 2 = 1). With 4 nodes, majority jumps to 3, so you can still only lose 1 (4 − 3 = 1). The extra node raises both the total *and* the bar for consensus — the two cancel out. Every even node you add gets "absorbed" by the higher majority requirement. Only adding an odd node (3 → 5, 5 → 7) actually increases fault tolerance, because the majority threshold stays the same while the total grows.
+
+**Example — 2 nodes (no HA):**
+With 2 voting nodes, majority = 2. If one fails, only 1 vote remains — no majority, so the cluster goes down even though a node is still running.
+
+**Example — 3 nodes (HA):**
+With 3 voting nodes, majority = 2. If one fails, the remaining 2 still form a majority — the cluster stays operational.
+
+#### Where Does Quorum Apply?
+
+Quorum applies to **consensus/voting members**, not to every node in a system:
+
+- **Proxmox** — quorum is managed across all cluster nodes. With 3 nodes, losing 1 still leaves a majority, so the cluster stays operational and can fence the failed node.
+- **Kubernetes** — quorum applies to the **etcd cluster** (the backing store for all cluster state), not to worker nodes. etcd uses the **Raft consensus algorithm**, which requires a majority to elect a leader and commit writes. Typical setups: 1 control-plane node (not HA), 3 (HA, most common), or 5 (larger HA).
+- **Other distributed systems** — the same principle applies to ZooKeeper, Consul, database replicas with leader election, and any system using majority-based consensus.
+
+**Worker nodes are different.** They do not participate in quorum decisions. You can have 2, 4, 10, or 100 worker nodes — the odd-number recommendation applies only to quorum/consensus members.
+
+> **Common misconception:** "HA requires an odd number of nodes." More accurately: **HA systems that use majority-based consensus work most efficiently with an odd number of voting members.** You can absolutely have an even total node count (e.g. 3 control-plane nodes + 20 worker nodes = 23 total) — what matters is the voter count.
+
+#### Why 3 for This Lab
+
+3 nodes is the sweet spot for a home lab:
+- It's the **minimum for real quorum** — you get true HA behaviour, proper leader election, and realistic distributed-systems scheduling (the way production clusters actually work).
+- More than 3 is overkill for a learning lab: it increases power usage and cost without adding significant learning value.
+- You can of course add more nodes if you want, but 3 balances realism, cost, and manageability.
 
 ### Recommended Node Composition
 
