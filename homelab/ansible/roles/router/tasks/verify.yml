@@ -15,12 +15,30 @@
   changed_when: false
   failed_when: router_lan_connection_name not in verify_nm_connections.stdout
 
+- name: Check LAN interface carrier state
+  ansible.builtin.command:
+    cmd: "cat /sys/class/net/{{ router_lan_interface }}/carrier"
+  register: verify_lan_carrier
+  changed_when: false
+  failed_when: false
+
 - name: Verify LAN interface has correct static IP
   ansible.builtin.command:
     cmd: "ip -4 addr show {{ router_lan_interface }}"
   register: verify_lan_ip
   changed_when: false
   failed_when: "(router_lan_ip ~ '/' ~ router_lan_cidr) not in verify_lan_ip.stdout"
+  # NetworkManager only assigns the IP when the interface has link (cable connected).
+  # Skip this check if no cable is plugged in — the NM profile is still correct.
+  when: verify_lan_carrier.stdout | trim == '1'
+
+- name: Warn if LAN interface has no carrier (no cable connected)
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: {{ router_lan_interface }} has no carrier (no cable connected).
+      The static IP ({{ router_lan_ip }}/{{ router_lan_cidr }}) will be assigned
+      automatically by NetworkManager once a cable is plugged in.
+  when: verify_lan_carrier.stdout | trim != '1'
 
 - name: Verify WAN interface has an IP (DHCP from ISP modem)
   ansible.builtin.command:
@@ -54,6 +72,9 @@
   register: verify_dns_listen
   changed_when: false
   failed_when: "':53 ' not in verify_dns_listen.stdout"
+  # dnsmasq binds DNS to the LAN IP ({{router_lan_ip}}); without carrier NM never
+  # assigns that IP, so port 53 won't appear until a cable is connected.
+  when: verify_lan_carrier.stdout | trim == '1'
 
 - name: Verify dnsmasq is serving DHCP (port 67)
   ansible.builtin.command:
@@ -121,7 +142,7 @@
 # The Pi's /etc/resolv.conf is managed by NetworkManager and points to the ISP
 # modem (e.g. 192.168.2.254) — the upstream DNS from the WAN DHCP lease.
 # This is CORRECT and EXPECTED for a router: the Pi itself resolves DNS via the
-# ISP modem directly, while LAB DEVICES use the Pi's dnsmasq (10.42.0.1) as
+# ISP modem directly, while LAB DEVICES use the Pi's dnsmasq ({{router_lan_ip}}) as
 # their DNS server (configured via DHCP option 6 in dnsmasq.conf).
 # The Pi does NOT need to route its own DNS through dnsmasq.
 - name: Verify /etc/resolv.conf nameserver matches WAN gateway

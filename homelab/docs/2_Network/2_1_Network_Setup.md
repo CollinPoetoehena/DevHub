@@ -100,7 +100,7 @@ ISP Modem/Router
     - **Why Raspberry Pi OS Lite (and not Ubuntu Server or others)?** Raspberry Pi OS is the officially supported OS for the Pi, maintained by the Raspberry Pi Foundation. It is based on Debian, well-tested on Pi hardware, and includes Pi-specific optimisations and drivers out of the box (e.g. the `r8152` USB-Ethernet driver, GPU memory split, hardware interfaces). "Lite" means no desktop environment — just a minimal command-line system, which is exactly what you want for a headless appliance like a router. Ubuntu Server also works on the Pi, but it requires more manual configuration for Pi-specific hardware, has a larger footprint, and offers no real advantage for this use case. Stick with Raspberry Pi OS Lite.
     - > **Note — OS alternatives:** You could run OpenWRT or pfSense on the Pi instead. Both are purpose-built router/firewall OSes with polished web UIs and pre-configured networking stacks. However, the goal of my homelab ([see personal goal](../1_Goals_Hardware.md)) is to learn Linux networking by doing it yourself — configuring IP forwarding, DHCP, NAT, and firewall rules manually gives you a much deeper understanding than clicking through a GUI. You can always switch to OpenWRT or pfSense later once you understand what they are doing under the hood.
 - **USB-to-Ethernet adapter (`eth1`)** — adds the LAN interface. I bought the "TP-LINK UE306" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reliable brand and affordable (do not buy the "TP-LINK UE300C" — it is USB-C, which the Pi 4 does not have). Plug into a USB-A port; Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically as `eth1`.
-- **Managed switch** — expands LAN ports and enables VLANs. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt because "NETGEAR" is a reputable brand and affordable (the "TP-LINK TL-SG105E" is a good alternative).
+- **Managed switch** — expands LAN ports and enables VLANs. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt because "NETGEAR" is a reputable brand and affordable (the "TP-LINK TL-SG105E" is a good alternative). See [User Manual](https://www.netgear.com/support/product/gs305e)
 - **Ethernet cables** (Cat6 or better for gigabit speeds):
     - **Long Ethernet cable for WAN (ISP modem → lab router)** 1 cable (10 m (ensures it can reach the router, such as if it needs to go through the wall or a conduit to a different floor (e.g. your work room), etc.)). I bought the "ISY IPC-6100-1-GB Netwerkkabel 10 m Wit" at MediaMarkt for 18.99 EUR because "ISY" (MediaMarkt's own store brand) is a reputable brand and affordable.
     - **Lab router → lab switch:** 1 cable (0.75 m). I bought the "ISY IPC-1012 CAT6A U/UTP Slim Netwerkkabel 0,75 m Wit" at MediaMarkt for 9.99 EUR (same reasoning for this brand as above).
@@ -113,14 +113,24 @@ ISP Modem/Router
 Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
 
 #### Step 2: Configure the Pi as a Router
-1. Assemble the Raspberry Pi: fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). See the steps below for how to configure the Pi and setup SSH, etc. Possible accessories (including link to set them up/configure them):
-    - [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
-    - [power supply](https://www.raspberrypi.com/products/power-supply/)
-    - [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
-    - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
-    - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
-2. Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
-3. Boot the Pi and perform the first setup configuration. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). Some important first startup settings in the Raspberry Pi OS configuration tool (`raspi-config`):
+
+##### 1. Assemble the Raspberry Pi
+
+Fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). See the steps below for how to configure the Pi and setup SSH, etc. Possible accessories (including link to set them up/configure them):
+- [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
+- [power supply](https://www.raspberrypi.com/products/power-supply/)
+- [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
+- [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
+- USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
+
+##### 2. Insert the SD card and connect cables
+
+Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
+
+##### 3. First boot and initial configuration
+
+Boot the Pi and perform the first setup configuration. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). Some important first startup settings in the Raspberry Pi OS configuration tool (`raspi-config`):
+
 ```bash
 # Ensure the Pi is up-to-date:
 sudo apt update && sudo apt full-upgrade -y
@@ -177,7 +187,11 @@ localectl status
 echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C"
 vcgencmd measure_temp  # Alternative method
 ```
-4. Enable SSH manually via terminal (required before you can access it from another device!): SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
+
+##### 4. Enable SSH
+
+Enable SSH manually via terminal (required before you can access it from another device!). SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
+
 ```bash
 # ========================== Enable SSH: ==========================
 # Check if SSH is already enabled:
@@ -225,8 +239,12 @@ ssh <username>@<pi-ip>
 # Alternatively, connect by hostname (no need to look up the IP):
 ssh <username>@lab-router.local
 ```
+
 **TODO: This is done for now as a manual step, integarte this in Ansible later to automate this and provide a public key and only add the step of generating the key and saving it from below, etc.!**
-5. Set up SSH key-based authentication and disable password login. Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
+
+##### 5. Set up SSH key-based authentication and disable password login
+
+Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 
 > **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1](../0_Local_Environment_Setup.md#step-1-generate-an-ssh-key-pair) if you haven't done this yet.
 
@@ -282,7 +300,35 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <username>@<
 ```
 
 From this step onwards you can use another device to SSH into the Pi.
-6. Configure the Pi with Ansible: 
+
+##### 6. Ensure eth1 has carrier (cable connected to an active device)
+
+Ensure `eth1` has a cable connected to an active device (the switch in this case!) before running the router playbook. NetworkManager only assigns the static IP (`10.42.0.1/20`) to `eth1` when the interface has **carrier** (link detected). Without carrier, the IP is never assigned, dnsmasq cannot bind to it, and the router does not function.
+
+**Why carrier is required:** Ethernet link detection is a physical-layer handshake — both ends of the cable must be connected to active Ethernet ports that exchange electrical link pulses (auto-negotiation). If the other end is disconnected, unpowered, or missing, the Pi's Ethernet PHY reports `NO-CARRIER` and NetworkManager treats the interface as inactive (no IP assignment).
+
+**In the real setup this is not a problem:** The Pi's `eth1` connects to the managed switch. A switch port is always electrically active — it provides carrier immediately, even if no other devices are plugged into the switch yet. So once the Pi is cabled to the switch, `eth1` gets carrier → NM assigns the IP → dnsmasq binds → everything works, regardless of whether any lab devices are connected.
+
+**During testing with a direct laptop connection:** If you connect `eth1` directly to a laptop (no switch), the laptop's Ethernet port must be active (powered on, interface up) for carrier to be detected. A powered-off laptop or disconnected cable means no carrier → no IP → no DHCP/DNS.
+
+```bash
+# Verify carrier status on the Pi:
+cat /sys/class/net/eth1/carrier
+# 1 = cable connected to active device (carrier detected)
+# 0 or "No such file" = no carrier (cable missing or other end inactive)
+
+# Or check via ip command:
+ip link show eth1
+# Look for: state UP + LOWER_UP = carrier present
+#           state DOWN or NO-CARRIER = no active link
+
+# Once carrier is detected, verify NM assigned the IP:
+ip -4 addr show eth1
+# Should show: inet 10.42.0.1/20
+```
+
+##### 7. Configure the Pi with Ansible
+
 ```bash
 # Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
 cd homelab/ansible
@@ -323,8 +369,75 @@ ansible-playbook site.yml -i hosts -l lab-router --tags router --diff
 # ========================== Verify router configuration ==========================
 # Check the router configuration on the Pi (uses tag "verify" from the roles/router), run with -vvv to check the actual results and commands that ran on the Pi:
 ansible-playbook site.yml -i hosts -l lab-router --tags verify -vvv
+
+# ---------- Some helpful manual verification steps: ----------
+# Check that the DHCP server is running
+systemctl status dnsmasq.service
+# List all listening ports and their associated processes (should show dnsmasq listening)
+# t = TCP; u = UDP; l = listening sockets only; p = show process; n = numeric addresses/ports (don't resolve names)
+sudo ss -tulpn
+journalctl -xeu dnsmasq.service # TODO: what does htis do and also the options!
+
+# If there are problems and you need to re-apply the router playbook, you may need to stop the process manually on the Pi:
+sudo kill 992
+sudo systemctl restart dnsmasq
 ```
-7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
+
+##### 8. Configure the Managed Switch
+
+The switch's web UI is on the lab network (`10.42.0.168`), which is not directly reachable from your home laptop (`192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
+
+**Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
+
+```
+Traffic flow:
+
+Home Laptop browser → localhost:8080
+    │
+    │  SSH tunnel (encrypted, over home network)
+    ▼
+Pi (192.168.2.59) — decrypts and forwards →
+    │
+    │  (over lab network)
+    ▼
+Switch web UI (10.42.0.168:80)
+```
+
+**Alternatives (and why SSH forwarding is preferred):**
+- **Add a route on the home laptop** (`sudo ip route add 10.42.0.0/20 via 192.168.2.59`): works, but breaks the network isolation that the dedicated router is designed to provide. Home devices should not have routes into the lab network.
+- **Connect the laptop directly to the switch**: works for initial setup, but requires physically moving the Ethernet cable and getting a lab IP via DHCP, losing access to the home network.
+
+```bash
+# ========================== Find the switch's IP address ==========================
+# SSH into the Pi and check the ARP/neighbour table to find the switch:
+ip neigh
+# Should show something like: 10.42.0.168 dev eth1 lladdr 28:94:01:8a:ec:28 STALE
+# Or use:
+arp -a
+# Could show: ? (10.42.0.168) at 28:94:01:8a:ec:28 [ether] on eth1
+
+# ========================== Access the switch web UI via SSH tunnel ==========================
+# From your home laptop, open an SSH tunnel that forwards local port 8080
+# to the switch's web UI (port 80) through the Pi:
+#   -L 8080:10.42.0.168:80  = "listen on localhost:8080 on my laptop, and
+#      forward connections through the Pi to 10.42.0.168:80"
+ssh -L 8080:10.42.0.168:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
+
+# While the SSH session is open, open a browser on your home laptop and go to:
+#   http://localhost:8080
+# You should see the NETGEAR switch management interface.
+# When you close the SSH session, the tunnel closes and the port is released.
+
+# NOTE: This same technique works for any web UI on the lab network. For example,
+# to access the Proxmox web UI (port 8006) later:
+#   ssh -L 8006:10.42.10.10:8006 <username>@192.168.2.59 -i ~/.ssh/id_homelab
+#   Then browse to: https://localhost:8006
+```
+
+##### 9. Shutting down the Pi
+
+If you want to shut the Raspberry Pi down, use the following command to safely power it off:
+
 ```bash
 sudo shutdown -h now
 # Then after a few seconds when the lights on the Pi stop blinking, you can safely unplug the power supply.

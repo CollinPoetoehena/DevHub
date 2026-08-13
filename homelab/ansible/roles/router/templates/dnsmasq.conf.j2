@@ -16,10 +16,34 @@
 # home network for everyone in the house.
 interface={{ router_lan_interface }}
 
-# Do not listen on the WAN interface. This is an extra safety measure in addition
-# to the "interface" directive above. bind-interfaces ensures dnsmasq only binds
-# to the specified interface, not all interfaces.
-bind-interfaces
+# This is an extra safety measure in addition to the "interface" directive above. 
+# bind-interfaces or bind-dynamic ensures dnsmasq only binds to the specified interface, 
+# not all interfaces.
+# bind-dynamic is a safer alternative to bind-interfaces. Both prevent dnsmasq
+# from listening on all interfaces (which would serve DHCP on the WAN side and
+# break the home network). The difference:
+#
+#   bind-interfaces: binds at startup and never re-checks. If eth1 does not
+#     have its static IP yet when dnsmasq starts (race condition with
+#     NetworkManager), dnsmasq silently skips it and never serves DHCP — devices
+#     connected to the LAN get no IP address at all.
+#
+#   bind-dynamic: re-checks interfaces periodically and picks up eth1 once
+#     NetworkManager assigns the static IP, even if that happens after dnsmasq
+#     has already started.
+#
+# This was the root cause of a previous issue where a laptop connected to eth1
+# did not receive a DHCP address until it generated traffic (e.g. ping). The
+# DHCP handshake was delayed because dnsmasq had not bound to eth1 at startup.
+# Therefore, the bind-dynamic option is used to avoid this race condition and ensure
+# that dnsmasq always serves DHCP on the LAN interface, even if it starts before
+# NetworkManager assigns the static IP to eth1.
+bind-dynamic
+
+# Exclude loopback: dnsmasq implicitly includes lo even when interface= is set.
+# If anything else listens on 127.0.0.1:53 (e.g. systemd-resolved stub), dnsmasq
+# fails with "Address already in use". The router only needs DNS/DHCP on eth1.
+except-interface=lo
 
 # Do not read /etc/resolv.conf for upstream DNS servers.
 # We explicitly define them below so the configuration is fully self-contained
@@ -55,6 +79,14 @@ expand-hosts
 ################################################################################
 # DHCP configuration
 ################################################################################
+# Mark dnsmasq as the only DHCP server on this network. Without this, dnsmasq
+# is conservative: it waits longer before responding to DHCPDISCOVER and won't
+# NAK unknown leases (from a previous server). The result is that new devices
+# can take 30+ seconds to get an IP, or may not get one until they generate
+# traffic. With dhcp-authoritative, dnsmasq replies immediately and NAKs stale
+# leases so clients retry and get a fresh address quickly.
+dhcp-authoritative
+
 # Define the DHCP range: the pool of IP addresses that dnsmasq hands out to
 # lab devices that connect and request an address.
 #

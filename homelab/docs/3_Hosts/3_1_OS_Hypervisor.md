@@ -92,7 +92,7 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 
 ### Proxmox VE Prerequisites
 
-- [ ] Proxmox VE ISO downloaded from the official site
+- [ ] Proxmox VE ISO downloaded from the [official site](https://www.proxmox.com/en/products/proxmox-virtual-environment/get-started) and written to a USB drive (see [Chapter 1: Bootable USB](#chapter-1-bootable-usb-general))
 - [ ] At least one SSD/NVMe for host storage
 - [ ] Planned static management IP, gateway, and DNS
 - [ ] Planned hostname (example: `pve1.homelab.local`)
@@ -100,7 +100,7 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 ### Install Proxmox VE & Configure Host Machine
 
 1. Boot target machine from the Proxmox USB. Then select `Install Proxmox VE` in the boot menu.
-2. Now you can configure the host machine by following the [Proxmox VE Installation Guide](https://pve.proxmox.com/wiki/Installation) and the [Proxmox VE Configuration Guide](https://pve.proxmox.com/pve-docs/chapter-sysadmin.html). Some tips and notes for myself regarding the installation and configuration are added below (e.g. Network tips).
+2. Now you can configure the host machine by following the [Proxmox VE Installation Guide](https://pve.proxmox.com/wiki/Installation) and the [Proxmox VE Configuration Guide](https://pve.proxmox.com/pve-docs/chapter-sysadmin.html). Some tips and notes for myself regarding the installation and configuration are added below (e.g. network tips).
 3. Confirm summary and start installation. Wait until complete (may take 5–15 minutes depending on hardware).
 4. Remove USB and reboot.
 
@@ -248,7 +248,7 @@ This is optional, you can choose to run all workloads inside VMs on Proxmox, or 
 
 ### Install Linux Worker Node
 
-1. Boot target machine from Linux USB.
+1. Boot target machine from Linux USB, installed from [Chapter 1: Bootable USB](#chapter-1-bootable-usb-general).
 2. Start installer (for Ubuntu: `Try or Install Ubuntu Server`).
 3. Configure language, keyboard, and network.
 4. Set static IP if this node should not rely on DHCP.

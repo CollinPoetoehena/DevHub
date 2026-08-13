@@ -38,3 +38,31 @@ This document provides guidance for diagnosing and resolving common network issu
     sudo systemctl restart ssh
     ```
   With `UsePAM yes` + `PasswordAuthentication no`, PAM handles account validation and correctly allows key-based auth for locked accounts — password login remains disabled. See [step 5 in Network Setup](./2_1_Network_Setup.md) for the full sshd_config recommendations.
+
+---
+
+## Lab device has an IP but cannot reach the internet
+
+- **Symptoms:** A device connected to the lab network (via the Pi router's `eth1`) receives a DHCP address (e.g. `10.42.0.160`) and can ping the Pi's LAN IP (e.g. `10.42.0.1`), but `ping 8.8.8.8` and `ping google.com` both fail. The Pi itself can reach the internet fine.
+
+- **Diagnosis:** Check IPv4 forwarding on the Pi:
+    ```bash
+    cat /proc/sys/net/ipv4/ip_forward
+    ```
+  If it returns `0`, the kernel is not forwarding packets between interfaces — traffic from lab devices stops at the Pi and is never sent out to the internet via `eth0`.
+
+- **Cause:** IPv4 forwarding is disabled. This can happen if:
+  - The Ansible `sysctl` task wrote to `/etc/sysctl.conf` but a file in `/etc/sysctl.d/` overrides it with `0` (files in `/etc/sysctl.d/` are loaded after `/etc/sysctl.conf` and take priority).
+  - The setting was never applied at runtime (only written to disk, requiring a reboot).
+
+- **Fix:** Enable forwarding immediately and persist it:
+    ```bash
+    sudo sysctl -w net.ipv4.ip_forward=1        # Apply now
+    cat /proc/sys/net/ipv4/ip_forward            # Verify: should show 1
+    ```
+  To persist across reboots, write to a high-priority sysctl file:
+    ```bash
+    echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-router-ip-forward.conf
+    sudo sysctl -p /etc/sysctl.d/99-router-ip-forward.conf
+    ```
+  Then re-test from the lab device — `ping 8.8.8.8` and `ping google.com` should both work.

@@ -62,7 +62,7 @@
 #
 # The router is a Raspberry Pi with two Ethernet interfaces:
 #   - eth0 (WAN): connected to the ISP modem, gets IP via DHCP
-#   - eth1 (LAN): connected to the lab switch, static IP 10.42.0.1
+#   - eth1 (LAN): connected to the lab switch, static IP {{router_lan_ip}}
 #
 # Prerequisites before running this play:
 #   - Raspberry Pi OS Lite (64-bit) flashed and booted

@@ -421,7 +421,7 @@ Lists block devices in a tree structure showing the relationship between disks, 
 | `RM` | Removable device: `1` = yes (USB), `0` = no |
 | `SIZE` | Size of the device |
 | `RO` | Read-only: `1` = yes, `0` = no |
-| `TYPE` | `disk` = whole disk, `part` = partition, `lvm` = logical volume, `rom` = CD-ROM |
+| `TYPE` | `disk` = whole physical/virtual disk (e.g. /dev/sda), `part` = partition on a disk (e.g. /dev/sda1), `lvm` = Logical Volume Manager volume, `loop` = loopback device used to mount disk images or Snap packages, `rom` = rom = read-only optical media device such as a CD-ROM (Compact Disc Read-Only Memory) or DVD-ROM (Digital Versatile Disc Read-Only Memory). CDs and DVDs are optical storage discs that store data and are read by a laser in an optical drive. |
 | `MOUNTPOINTS` | Where the device is currently mounted (empty = not mounted) |
 
 ```

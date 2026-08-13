@@ -29,6 +29,13 @@
   ansible.builtin.import_tasks: firewall.yml
   tags: [firewall, nat, router]
 
+# Flush handlers before verification so that any pending restarts (e.g. dnsmasq
+# config change) are applied first. Without this, verify runs against the old
+# state and a failure aborts the play before handlers ever fire.
+- name: Flush pending handlers before verification
+  ansible.builtin.meta: flush_handlers
+  tags: [router]
+
 - name: Verify router setup
   ansible.builtin.import_tasks: verify.yml
   tags: [verify, router]
