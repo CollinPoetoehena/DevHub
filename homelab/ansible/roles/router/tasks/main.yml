@@ -13,6 +13,10 @@
 # the LAN interface to have an IP), and firewall rules depend on both interfaces
 # being properly configured.
 
+- name: Install utility packages
+  ansible.builtin.import_tasks: packages.yml
+  tags: [packages, router]
+
 - name: Configure network interfaces and IP forwarding
   ansible.builtin.import_tasks: networking.yml
   tags: [networking, router]
@@ -24,3 +28,7 @@
 - name: Configure firewall, NAT, and security rules
   ansible.builtin.import_tasks: firewall.yml
   tags: [firewall, nat, router]
+
+- name: Verify router setup
+  ansible.builtin.import_tasks: verify.yml
+  tags: [verify, router]

@@ -1,0 +1,11 @@
+---
+# packages.yml — Install utility packages for router administration and debugging.
+
+- name: Install utility packages
+  ansible.builtin.apt:
+    name:
+      - dnsutils # nslookup, dig — DNS debugging
+      - tcpdump # packet capture for network debugging
+      - curl # HTTP testing
+    state: present
+    update_cache: true

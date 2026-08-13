@@ -14,6 +14,11 @@ router_wan_interface: "eth0"
 # A USB-to-Ethernet adapter provides the LAN interface.
 router_lan_interface: "eth1"
 
+# NetworkManager connection profile name for the LAN interface.
+# This is the name shown in `nmcli connection show` and used to manage the
+# static IP configuration. Must be unique across all NM connections.
+router_lan_connection_name: "lab-lan"
+
 ################################################################################
 # LAN Network Configuration (Lab Network)
 ################################################################################
@@ -34,6 +39,9 @@ router_lan_subnet: "10.42.0.0/20"
 # The home network subnet. Used to create firewall rules that prevent lab
 # devices from reaching home devices (security isolation).
 router_home_subnet: "192.168.2.0/24"
+
+# ISP modem/gateway IP — used for connectivity verification.
+router_home_gateway: "192.168.2.254"
 
 ################################################################################
 # DHCP Configuration (dnsmasq)

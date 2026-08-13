@@ -1,0 +1,162 @@
+---
+# verify.yml — Post-configuration verification for the router role.
+#
+# Runs a series of checks to confirm the router is correctly configured
+# and operational. Covers networking, DHCP/DNS, firewall, and connectivity.
+
+################################################################################
+# Network Interface Checks
+################################################################################
+
+- name: Verify LAN connection profile exists in NetworkManager
+  ansible.builtin.command:
+    cmd: "nmcli -t -f NAME connection show"
+  register: verify_nm_connections
+  changed_when: false
+  failed_when: router_lan_connection_name not in verify_nm_connections.stdout
+
+- name: Verify LAN interface has correct static IP
+  ansible.builtin.command:
+    cmd: "ip -4 addr show {{ router_lan_interface }}"
+  register: verify_lan_ip
+  changed_when: false
+  failed_when: "(router_lan_ip ~ '/' ~ router_lan_cidr) not in verify_lan_ip.stdout"
+
+- name: Verify WAN interface has an IP (DHCP from ISP modem)
+  ansible.builtin.command:
+    cmd: "ip -4 addr show {{ router_wan_interface }}"
+  register: verify_wan_ip
+  changed_when: false
+  failed_when: "'inet ' not in verify_wan_ip.stdout"
+
+- name: Verify IPv4 forwarding is enabled
+  ansible.builtin.command:
+    cmd: "sysctl -n net.ipv4.ip_forward"
+  register: verify_ip_forward
+  changed_when: false
+  failed_when: verify_ip_forward.stdout | trim != '1'
+
+################################################################################
+# DHCP / DNS Checks
+################################################################################
+
+- name: Gather service facts for verification
+  ansible.builtin.service_facts:
+
+- name: Verify dnsmasq service is running
+  ansible.builtin.assert:
+    that: ansible_facts.services['dnsmasq.service'].state == 'running'
+    fail_msg: "dnsmasq is not running"
+
+- name: Verify dnsmasq is listening on LAN interface (port 53)
+  ansible.builtin.command:
+    cmd: "ss -ulnp"
+  register: verify_dns_listen
+  changed_when: false
+  failed_when: "':53 ' not in verify_dns_listen.stdout"
+
+- name: Verify dnsmasq is serving DHCP (port 67)
+  ansible.builtin.command:
+    cmd: "ss -ulnp"
+  register: verify_dhcp_listen
+  changed_when: false
+  failed_when: "':67 ' not in verify_dhcp_listen.stdout"
+  ignore_errors: true # DHCP only binds when eth1 has link (cable connected); can be skipped if not, just notify the user
+
+################################################################################
+# Firewall / NAT Checks
+################################################################################
+
+- name: Verify NAT masquerade rule exists
+  ansible.builtin.command:
+    cmd: "iptables -t nat -L POSTROUTING -n"
+  register: verify_nat
+  changed_when: false
+  failed_when: "'MASQUERADE' not in verify_nat.stdout"
+
+- name: Verify FORWARD rules exist
+  ansible.builtin.command:
+    cmd: "iptables -L FORWARD -n"
+  register: verify_forward
+  changed_when: false
+  failed_when: "'ACCEPT' not in verify_forward.stdout"
+
+- name: Verify lab-to-home blocking rule exists
+  ansible.builtin.command:
+    cmd: "iptables -L FORWARD -n"
+  register: verify_block
+  changed_when: false
+  failed_when: >
+    router_block_lab_to_home and
+    router_home_subnet.split('/')[0] not in verify_block.stdout
+
+################################################################################
+# Connectivity Checks
+################################################################################
+
+- name: Verify Pi can reach ISP modem (WAN gateway)
+  ansible.builtin.command:
+    cmd: "ping -c 2 -W 3 {{ router_home_gateway }}"
+  register: verify_gateway_ping
+  changed_when: false
+  failed_when: verify_gateway_ping.rc != 0
+  ignore_errors: true
+
+- name: Verify Pi can reach the internet
+  ansible.builtin.command:
+    cmd: "ping -c 2 -W 3 8.8.8.8"
+  register: verify_internet_ping
+  changed_when: false
+  failed_when: verify_internet_ping.rc != 0
+  ignore_errors: true
+
+- name: Verify DNS resolution works via dnsmasq
+  ansible.builtin.command:
+    cmd: "nslookup google.com {{ router_lan_ip }}"
+  register: verify_dns_resolve
+  changed_when: false
+  failed_when: verify_dns_resolve.rc != 0
+  ignore_errors: true
+
+# The Pi's /etc/resolv.conf is managed by NetworkManager and points to the ISP
+# modem (e.g. 192.168.2.254) — the upstream DNS from the WAN DHCP lease.
+# This is CORRECT and EXPECTED for a router: the Pi itself resolves DNS via the
+# ISP modem directly, while LAB DEVICES use the Pi's dnsmasq (10.42.0.1) as
+# their DNS server (configured via DHCP option 6 in dnsmasq.conf).
+# The Pi does NOT need to route its own DNS through dnsmasq.
+- name: Verify /etc/resolv.conf nameserver matches WAN gateway
+  ansible.builtin.command:
+    cmd: "grep -q '^nameserver {{ router_home_gateway }}' /etc/resolv.conf"
+  register: verify_resolv_conf
+  changed_when: false
+  failed_when: verify_resolv_conf.rc != 0 # Return code (rc) 0 means grep found the expected nameserver; non-zero means it did not.
+  ignore_errors: true
+
+- name: Read /etc/resolv.conf for summary
+  ansible.builtin.command:
+    cmd: "grep '^nameserver' /etc/resolv.conf"
+  register: verify_resolv_content
+  changed_when: false
+  ignore_errors: true
+
+################################################################################
+# Summary
+################################################################################
+
+- name: Display verification results
+  ansible.builtin.debug:
+    msg:
+      - "==================== ROUTER VERIFICATION ===================="
+      - "LAN connection ({{ router_lan_connection_name }}): {{ 'OK' if router_lan_connection_name in verify_nm_connections.stdout else 'MISSING' }}"
+      - "LAN IP ({{ router_lan_ip }}/{{ router_lan_cidr }}): {{ 'OK' if (router_lan_ip ~ '/' ~ router_lan_cidr) in verify_lan_ip.stdout else 'MISSING' }}"
+      - "WAN IP: {{ 'OK' if 'inet ' in verify_wan_ip.stdout else 'MISSING' }}"
+      - "IPv4 forwarding: {{ 'ON' if verify_ip_forward.stdout | trim == '1' else 'OFF' }}"
+      - "dnsmasq: {{ ansible_facts.services['dnsmasq.service'].state | default('unknown') }}"
+      - "DHCP (port 67): {{ 'OK' if verify_dhcp_listen.rc == 0 else 'NOT LISTENING (expected if eth1 has no cable)' }}"
+      - "NAT masquerade: {{ 'OK' if 'MASQUERADE' in verify_nat.stdout else 'MISSING' }}"
+      - "Lab→home block: {{ 'OK' if router_home_subnet.split('/')[0] in verify_block.stdout else 'MISSING' }}"
+      - "Gateway ping: {{ 'OK' if (verify_gateway_ping.rc | default(1)) == 0 else 'FAILED' }}"
+      - "Internet ping: {{ 'OK' if (verify_internet_ping.rc | default(1)) == 0 else 'FAILED' }}"
+      - "DNS resolution: {{ 'OK' if (verify_dns_resolve.rc | default(1)) == 0 else 'FAILED' }}"
+      - "resolv.conf: {{ 'OK' if (verify_resolv_conf.rc | default(1)) == 0 else 'MISMATCH' }} — expected nameserver {{ router_home_gateway }} (Pi's own DNS via WAN DHCP — lab devices use dnsmasq)"
+      - "============================================================="

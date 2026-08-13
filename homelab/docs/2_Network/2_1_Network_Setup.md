@@ -304,7 +304,7 @@ ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <usernam
 # Furthermore, you can check logs on the Pi if you have authentication problems:
 sudo journalctl | grep -i "sshd" | tail -30
 
-# After the initial setup (ansibleremote added), you can also run without -K on the router (ansibleremote has passwordless sudo):
+# After the initial setup (ansibleremote added), you need to run without -K on the router (ansibleremote has passwordless sudo):
 ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u ansibleremote
 
 # ========================== Verify connectivity with ansibleremote ==========================
@@ -319,6 +319,10 @@ ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C
 
 # If the dry run looks good, apply the changes (remove -C):
 ansible-playbook site.yml -i hosts -l lab-router --tags router --diff
+
+# ========================== Verify router configuration ==========================
+# Check the router configuration on the Pi (uses tag "verify" from the roles/router), run with -vvv to check the actual results and commands that ran on the Pi:
+ansible-playbook site.yml -i hosts -l lab-router --tags verify -vvv
 ```
 7. If you want to shut the Raspberry Pi down, use the following command to safely power it off:
 ```bash
@@ -327,70 +331,6 @@ sudo shutdown -h now
 
 # Power on again by plugging the power supply back in. The Pi will boot automatically.
 ```
-
-
-TODO: I want to do this via Ansible, use Ansible to configure all of this and add code in this repo!
-TODO: for now use the Pi OS with Ansible and make it in a role called `router` that configures the Pi as a router with DHCP, NAT, and firewall rules, etc. 
-TODO: add detailed comments everywhere in the Ansible code what everything does, why it is needed, etc., so I can understand it well and always go back to it later and easily read it, etc.
-
-TODO: here use Ansible, below can all move to Ansible and here only the run for the Ansible playbook.
-**TODO: VERY IMPORTANT:** Also add firewalling with the lab router to block access to the home network from the lab network, an extra safety measure to prevent lab devices from accidentally reaching the home network. This is important because if a lab device is compromised, it should not be able to access the home network. Add firewall rules to block traffic from the lab subnet reaching the home network in the router configuration (TODO: add in Ansible variables files the home network subnet).
-
-
-**2a. Set a static IP on the LAN interface (`eth1`):**
-
-Edit `/etc/dhcpcd.conf`:
-
-```
-interface eth1
-static ip_address=10.42.0.1/20
-```
-
-**2b. Enable IP forwarding:**
-
-```bash
-echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
-```
-
-**2c. Install and configure `dnsmasq` for DHCP on the lab network:**
-
-```bash
-sudo apt install dnsmasq
-```
-
-Edit `/etc/dnsmasq.conf`:
-
-```
-interface=eth1
-dhcp-range=10.42.0.100,10.42.0.200,255.255.240.0,24h
-```
-
-Apply and enable:
-
-```bash
-sudo systemctl restart dnsmasq
-sudo systemctl enable dnsmasq
-```
-
-**2d. Configure NAT so lab devices can reach the internet:**
-
-```bash
-sudo apt install iptables iptables-persistent
-
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
-sudo iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
-
-sudo netfilter-persistent save
-```
-
-TODO: Block lab → home:
-```bash
-sudo iptables -A FORWARD -i eth1 -o eth0 -m state --state NEW -j ACCEPT
-sudo iptables -A FORWARD -i eth0 -o eth1 -j DROP
-```
-This allows lab → internet but blocks home → lab.
 
 #### Step 3: Connect Lab Devices
 

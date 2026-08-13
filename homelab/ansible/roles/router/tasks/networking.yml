@@ -14,28 +14,51 @@
 ################################################################################
 # Static IP on LAN Interface (eth1)
 ################################################################################
-# dhcpcd is the default network configuration daemon on Raspberry Pi OS.
-# We configure it to assign a static IP to the LAN interface (eth1) so that:
+# NetworkManager is the network daemon on Raspberry Pi OS (Trixie/Debian 13+).
+# We create a named connection profile (router_lan_connection_name) with a static
+# IP on the LAN interface so that:
 #   - Lab devices always know the gateway is at router_lan_ip (e.g. 10.42.0.1)
 #   - The DHCP server (dnsmasq) can bind to a known address
 #   - Firewall rules can reference a stable IP
 #
 # The WAN interface (eth0) is left as DHCP — it gets its IP from the ISP modem.
+#
+# The community.general.nmcli module is idempotent: it creates the connection
+# on first run and only modifies it if parameters change on subsequent runs.
+#
+# NOTE: older Raspberry Pi OS versions used dhcpcd instead of NetworkManager.
+# If your Pi uses dhcpcd, configure the static IP in /etc/dhcpcd.conf instead.
 
-- name: Configure static IP on LAN interface (eth1) via dhcpcd
-  ansible.builtin.blockinfile:
-    path: /etc/dhcpcd.conf
-    # marker: In Ansible's blockinfile, the marker wraps the managed block with BEGIN and END lines (via {mark}) so Ansible can find and update/replace the block on subsequent runs without duplicating it.
-    marker: "# {mark} ANSIBLE MANAGED - router/tasks/networking.yml"
-    block: |
-      # Static IP for the lab network LAN interface.
-      # This makes the Pi the gateway at {{ router_lan_ip }} for all lab devices.
-      interface {{ router_lan_interface }}
-      static ip_address={{ router_lan_ip }}/{{ router_lan_cidr }}
-      # No default gateway on LAN side — the Pi routes outbound traffic via eth0.
-      # No DNS servers on LAN side — the Pi itself provides DNS via dnsmasq.
+- name: Configure static IP on LAN interface ({{ router_lan_interface }}) via NetworkManager
+  community.general.nmcli:
+    conn_name: "{{ router_lan_connection_name }}"
+    ifname: "{{ router_lan_interface }}"
+    type: ethernet
+    ip4: "{{ router_lan_ip }}/{{ router_lan_cidr }}"
+    method4: manual
+    autoconnect: true
     state: present
-  notify: Restart dhcpcd
+  notify: Activate LAN connection
+
+# NetworkManager auto-creates "Wired connection N" profiles for detected
+# interfaces. These conflict with our managed profile and can cause the
+# interface to get DHCP instead of the static IP. Remove any auto-created
+# connection for the LAN interface, keeping only our managed one.
+- name: Check for auto-created connections on LAN interface
+  ansible.builtin.command:
+    cmd: "nmcli -t -f NAME,DEVICE,UUID connection show"
+  register: nm_connections
+  changed_when: false
+
+- name: Remove auto-created connections for LAN interface
+  ansible.builtin.command:
+    cmd: "nmcli connection delete '{{ item.split(':')[0] }}'"
+  loop: "{{ nm_connections.stdout_lines }}"
+  when: >
+    item.split(':')[0] != router_lan_connection_name and
+    (item.split(':')[1] == router_lan_interface or
+     (item.split(':')[1] == '--' and 'Wired connection' in item.split(':')[0] and item.split(':')[0] != 'Wired connection 1'))
+  changed_when: true
 
 ################################################################################
 # IP Forwarding

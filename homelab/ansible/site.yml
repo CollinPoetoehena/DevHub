@@ -29,7 +29,6 @@
 #
 # WHY ansibleremote? See group_vars/all/users.yml for the full explanation.
 ################################################################################
-
 - name: Bootstrap OS users on all hosts
   hosts: all
   become: true

@@ -5,13 +5,13 @@
 # (or when explicitly flushed). They ensure services are restarted/reloaded only
 # when their configuration has actually changed, avoiding unnecessary restarts.
 
-# Restart dhcpcd when the static IP configuration changes.
-# dhcpcd manages network interface configuration on Raspberry Pi OS.
-# A restart is needed for it to pick up the new static IP on eth1.
-- name: Restart dhcpcd
-  ansible.builtin.service:
-    name: dhcpcd
-    state: restarted
+# Bring up (or restart) the LAN NetworkManager connection after the static IP
+# is created or modified. This applies the new IP to the interface immediately
+# without waiting for a reboot.
+- name: Activate LAN connection
+  ansible.builtin.command:
+    cmd: "nmcli connection up {{ router_lan_connection_name }}"
+  changed_when: true
 
 # Restart dnsmasq when its configuration file changes.
 # This applies new DHCP ranges, DNS settings, static leases, etc.

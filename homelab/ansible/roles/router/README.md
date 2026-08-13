@@ -6,9 +6,11 @@ Configures a Raspberry Pi as a dedicated lab router providing network isolation,
 
 | Task File | Purpose |
 |-----------|---------|
-| `networking.yml` | Static IP on LAN interface (`eth1`), enable IPv4 forwarding |
+| `packages.yml` | Install utility packages (dnsutils, tcpdump, curl) for debugging |
+| `networking.yml` | Static IP on LAN interface (`eth1`) via NetworkManager, enable IPv4 forwarding |
 | `dhcp_dns.yml` | Install and configure `dnsmasq` for DHCP + DNS on the lab network |
 | `firewall.yml` | NAT (masquerading), forwarding rules, lab→home blocking, INPUT protection |
+| `verify.yml` | Post-configuration checks: networking, DHCP/DNS, firewall, connectivity |
 
 ## Network Topology
 
@@ -34,9 +36,11 @@ ISP Modem (192.168.2.0/24)
 |----------|---------|-------------|
 | `router_wan_interface` | `eth0` | WAN interface (ISP modem side) |
 | `router_lan_interface` | `eth1` | LAN interface (lab switch side) |
+| `router_lan_connection_name` | `lab-lan` | NetworkManager connection profile name |
 | `router_lan_ip` | `10.42.0.1` | Gateway IP for the lab network |
 | `router_lan_cidr` | `20` | Subnet mask (4094 usable IPs) |
 | `router_home_subnet` | `192.168.2.0/24` | Home network to block from lab |
+| `router_home_gateway` | `192.168.2.254` | ISP modem/gateway IP for connectivity checks |
 | `router_dhcp_range_start` | `10.42.0.100` | DHCP pool start |
 | `router_dhcp_range_end` | `10.42.0.200` | DHCP pool end |
 | `router_dhcp_lease_time` | `24h` | DHCP lease duration |
@@ -53,11 +57,16 @@ ansible-playbook site.yml --tags router
 ansible-playbook site.yml --tags firewall
 ansible-playbook site.yml --tags dhcp
 ansible-playbook site.yml --tags networking
+
+# Run only verification:
+ansible-playbook site.yml --tags verify
 ```
 
 ## Tags
 
 - `router` — all router tasks
+- `packages` — utility package installation
 - `networking` — static IP and IP forwarding
 - `dhcp`, `dns`, `dnsmasq` — DHCP/DNS configuration
 - `firewall`, `nat` — iptables rules
+- `verify` — post-configuration verification checks
