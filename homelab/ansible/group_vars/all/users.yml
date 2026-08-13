@@ -5,12 +5,12 @@
 # HOW merging works:
 #   Ansible does NOT merge list variables natively, but this file uses a
 #   base + extra pattern to achieve it:
-#   - _users_list_base  : the ansibleremote user, present on every host.
+#   - _users_list_base  : the ansibleremote user + a set of admin and test accounts for personal use and testing, present on every host.
 #   - _users_list_extra : empty by default; override in group_vars/<group>/users.yml
 #                         to add host-specific users (e.g. poetoec on mgmtvm).
 #   - users_list        : the variable the users role reads — combines base + extra.
 #   The same pattern applies to users_groups.
-#   Scalar variables (e.g. ssh_private_key_src_ansibleremote) can be overridden directly in group_vars/<group>/users.yml 
+#   Scalar variables (e.g. ssh_private_key_src_ansibleremote) can be overridden directly in group_vars/<group>/users.yml
 #   for hosts that need them (e.g. mgmtvm), and left as defaults for hosts that do not (e.g. jumphost, cluster nodes, etc.).
 #
 # WHY ansibleremote? Best practice: use a dedicated service account instead of:
@@ -52,6 +52,9 @@ _users_groups_base:
   # needing individual /etc/sudoers.d/ files (see users role README: Sudo behaviour).
   - groupname: as-admin
     use_sudo: true
+  # Non-privileged group for testing unprivileged access
+  - groupname: testuser
+    use_sudo: false
 
 # Override in group_vars/<group>/users.yml to add host-specific extra groups.
 _users_groups_extra: []
@@ -67,14 +70,39 @@ _users_list_base:
     desc: "Ansible service account"
     group: ansibleremote # Own primary group so sudo is scoped to this account only
     use_sudo: true
-    # Deployed only on hosts where ssh_private_keys_ansibleremote is overridden
-    # (non-empty). Defaults to [] — no private key deployed on other hosts (if the private key
-    # is not needed it should not be added for security reasons!).
+    # Deployed only on hosts where ssh_private_keys_ansibleremote is overridden (non-empty). Defaults to [] — no private
+    # key(s) deployed on other hosts (if the private key(s) are not needed it should not be added for security reasons!).
     ssh_private_keys: "{{ ssh_private_keys_ansibleremote }}"
     # Always add public key so that the account is accessible via SSH with the corresponding private key
     ssh_public_keys:
       - src: "{{ ssh_public_key_src_ansibleremote }}"
         comment: "Ansible controller key"
+  # Personal admin accounts — sudo inherited from as-admin group, so no redundant per-user sudoers file is created (see role/users role README).
+  # In practice, a team of people/administrators need access to the hosts (e.g. a mgmtvm or a different host, etc.), each with their
+  # own account and SSH key, etc., and this setup below illustrates that is possible by just adding more entries to the list here.
+  # NOTE: These admin accounts are added to all hosts (including non-mgmt hosts) because you may need to log in to any host to troubleshoot or perform a manual task, etc.
+  - username: poetoec # My personal account
+    desc: "Collin Poetoehena"
+    group: as-admin
+    use_sudo: true
+    ssh_public_keys:
+      - src: "{{ vault_ssh_public_key_src_poetoec }}" # Store the actual key src in vault.yml as vault_ssh_public_key_src_poetoec.
+        comment: "poetoec personal key"
+  - username: dummy # Dummy account for testing using the same setup as other admin accounts (e.g. to test with a different admin account than my personal account (with the same definition/privileges) or test other behavior, etc.)
+    desc: "Dummy account for testing (using the same setup as other admin accounts)"
+    group: as-admin
+    use_sudo: true
+    ssh_public_keys:
+      - src: "{{ vault_ssh_public_key_src_dummy }}" # Store the actual key src in vault.yml as vault_ssh_public_key_src_dummy.
+        comment: "dummy account key"
+  - username: testuser # Non-root account for testing unprivileged behavior (e.g. permission checks, sudo-less workflows, etc.)
+    desc: "Non-root test account"
+    group: testuser
+    use_sudo: false
+    ssh_public_keys:
+      - src: "{{ vault_ssh_public_key_src_testuser }}"
+        comment: "testuser account key"
+  # NOTE: could potentially add more users here later if needed, such as if more administrators need access to the host, etc.
 
 # Override in group_vars/<group>/users.yml to add host-specific extra users.
 _users_list_extra: []

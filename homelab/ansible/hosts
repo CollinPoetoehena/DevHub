@@ -71,11 +71,12 @@ lab-router    ansible_host=192.168.2.59
 # Group hierarchy — logical groupings for shared variables and targeting
 # ===========================================================================
 
-# All management hosts — shares group_vars/mgmt/ (e.g. admin user accounts).
+# All management hosts — shares group_vars/mgmt/
 [mgmt:children]
-# Router needs to be in the mgmt group so that also additional users (e.g. poetoec) are properly set up on this host!
 router
 mgmtvm
+jumphost
+proxmox
 
 # All Kubernetes nodes (control plane + workers) for plays that apply to both.
 [k8s:children]
