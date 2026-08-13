@@ -10,6 +10,7 @@ This is the central documentation for my personal home lab. It covers the goals,
   - [What this is NOT](#what-this-is-not)
 - [Home Lab Design](#home-lab-design)
 - [Installation & Setup](#installation--setup)
+- [Reference](#reference)
 
 ---
 
@@ -59,8 +60,14 @@ This section documents the step-by-step process for building this home lab from 
 | 1 | [Goals & Hardware](docs/1_Goals_Hardware.md) | Define goals, choose hardware type, compare refurbished shops, and decide on your node setup. |
 | 2 | [OS & Hypervisor](docs/2_OS_Hypervisor.md) | Install the OS or hypervisor (e.g. Proxmox VE, Ubuntu) on each node — bootable USB, BIOS config, and installation process. |
 | 3 | [Cluster & Network](docs/3_Cluster_Network.md) | Link nodes into a cluster, configure networking — Gigabit switch, static IPs, VLANs, and join nodes via Proxmox cluster or k3s/kubeadm. |
-| 4 | [Core Services & Monitoring](docs/4_Core_Services_Monitoring.md) | Deploy the core stack — container runtime, GitHub Runners, monitoring (Prometheus + Grafana), and logging, etc. |
-| 5 | [Storage & Backups](docs/5_Storage_Backups.md) | Storage and backup strategy — why cloud-based backups fit this lab's goals, and when NAS/RAID makes sense. |
+| 4 | [Storage & Backups](docs/5_Storage_Backups.md) | Storage and backup strategy — why cloud-based backups fit this lab's goals, and when NAS/RAID makes sense. |
+| 5 | [Core Services & Monitoring](docs/4_Core_Services_Monitoring.md) | Deploy the core stack — container runtime, GitHub Runners, monitoring (Prometheus + Grafana), and logging, etc. |
 | 6 | [Experiment](docs/6_Experiment.md) | The ongoing phase — experiment, break things, and learn. |
 
 TODO: update with latest documentation setup at the end.
+
+---
+
+## Reference
+
+The [reference/](docs/reference/README.md) folder contains theoretical knowledge, useful commands, and quick-reference information that complements the setup documentation above. Topics include:

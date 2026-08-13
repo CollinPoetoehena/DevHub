@@ -1,5 +1,5 @@
 # Network Background & Commands
-TODO: this document provides background information and commands with detailed explanation for networking. This provides a reference for networking concepts and commands that are commonly used in networking and avoid repetition of information in other documents.
+This document provides background information and commands with detailed explanation for networking. This provides a reference for networking concepts and commands that are commonly used in networking and avoid repetition of information in other documents (e.g. installation steps).
 
 ---
 
@@ -225,7 +225,7 @@ lo                  57b46a79-d752-41c4-bac9-0cd0e0a5591c  loopback  lo
 
 ---
 
-### `ip a`
+### `ip a` (or `ip addr` or `ip address`)
 
 Shows all network interfaces and their IP addresses.
 
