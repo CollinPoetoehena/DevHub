@@ -5,7 +5,8 @@
   ansible.builtin.apt:
     name:
       - dnsutils # nslookup, dig — DNS debugging
-      - tcpdump # packet capture for network debugging
+      - tcpdump # packet capture for network debugging (https://www.tcpdump.org/index.html)
+      - tshark # CLI Wireshark — deep packet inspection and protocol analysis (https://tshark.dev/)
       - curl # HTTP testing
     state: present
     update_cache: true
