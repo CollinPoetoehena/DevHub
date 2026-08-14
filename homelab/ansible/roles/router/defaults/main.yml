@@ -28,9 +28,14 @@ router_lan_ip: "10.42.0.1"
 
 # Subnet mask in CIDR notation for the lab network.
 # /20 gives 4094 usable host addresses (10.42.0.1 – 10.42.15.254).
+# /24 (254 hosts) is too small once you add VLANs — each VLAN needs its own
+# /24 subnet carved from this range. /20 fits 16 × /24 subnets comfortably.
+# /16 (65k hosts) would also work but is much larger than needed.
+# See details in ../docs/2_Network/2_1_Network_Setup.md on why /20 and not /24 or /16.
 router_lan_cidr: "20"
 
 # Full CIDR notation for the lab subnet (used in firewall rules, etc.)
+# See details in ../docs/2_Network/2_1_Network_Setup.md on why 10.42.x.x and not 10.0.x.x.
 router_lan_subnet: "10.42.0.0/20"
 
 ################################################################################
