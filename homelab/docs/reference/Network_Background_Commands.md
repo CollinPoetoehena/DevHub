@@ -3,6 +3,29 @@ This document provides background information and commands with detailed explana
 
 ---
 
+## Table of Contents
+
+- [Background: Networking Concepts](#background-networking-concepts)
+  - [ISP Modem / Gateway](#isp-modem--gateway)
+  - [Router](#router)
+  - [Switch](#switch)
+  - [Network Interface](#network-interface)
+  - [Subnet](#subnet)
+  - [DHCP](#dhcp)
+  - [DNS](#dns)
+- [Commands: Networking](#commands-networking)
+  - [nmcli connection show](#nmcli-connection-show)
+  - [ip a](#ip-a-or-ip-addr-or-ip-address)
+  - [ip r](#ip-r)
+  - [ping](#ping)
+  - [ip neigh / arp — ARP Neighbour Table](#ip-neigh--arp--arp-neighbour-table)
+  - [ss — Socket Statistics](#ss--socket-statistics)
+  - [dig / nslookup — DNS Lookup](#dig--nslookup--dns-lookup)
+  - [DHCP Client Commands](#dhcp-client-commands)
+  - [tcpdump — Packet Capture](#tcpdump--packet-capture)
+
+---
+
 ## Background: Networking Concepts
 
 ### ISP Modem / Gateway
@@ -139,6 +162,8 @@ Dynamic Host Configuration Protocol — the protocol that automatically assigns 
 
 **DHCP conflicts:** If two DHCP servers run on the same subnet, devices may receive duplicate addresses, causing connectivity failures. This is a common mistake when connecting a Proxmox host or second router directly to the home network — its bridged interface can start responding to DHCP requests alongside the ISP modem.
 
+> This homelab uses [dnsmasq](dnsmasq.md) as the DHCP server on the lab router. See the dnsmasq reference for configuration, lease management, and debugging commands.
+
 ### DNS
 
 Domain Name System — the protocol that translates human-readable hostnames (e.g. `google.com`) into IP addresses (e.g. `142.250.185.110`). Without DNS you would need to know and type the IP address of every service you want to reach.
@@ -184,7 +209,7 @@ In practice the recursive resolver almost always has `.com` and many popular dom
 - **TTL (Time To Live):** How long a DNS response may be cached before it must be re-queried. Set by the domain owner. Short TTL = more DNS queries but faster propagation of IP changes; long TTL = fewer queries but slower propagation.
 - **Common record types:** `A` = hostname → IPv4; `AAAA` = hostname → IPv6; `CNAME` = hostname alias → another hostname; `PTR` = IP → hostname (reverse DNS); `MX` = mail server for a domain.
 
-**DNS in the homelab:** The lab router runs `dnsmasq`, which acts as both the DHCP server and a local DNS forwarder. It forwards external queries upstream (to the ISP modem or a public resolver) and can resolve local hostnames for lab devices by reading its own DHCP lease database.
+**DNS in the homelab:** The lab router runs [dnsmasq](dnsmasq.md), which acts as both the DHCP server and a local DNS forwarder. It forwards external queries upstream (to the ISP modem or a public resolver) and can resolve local hostnames for lab devices by reading its own DHCP lease database. See the dnsmasq reference for configuration and DNS/DHCP commands.
 
 ---
 
@@ -498,3 +523,398 @@ tcp  LISTEN  0  4096  127.0.0.53%lo:53  0.0.0.0:*  users:(("systemd-resolve",pid
 ```
 
 This shows `systemd-resolved` is listening on `127.0.0.53:53` — it must be stopped or dnsmasq must be configured to not bind to loopback (`except-interface=lo`).
+
+---
+
+### `dig` / `nslookup` — DNS Lookup
+
+Queries DNS servers to resolve hostnames to IP addresses (or vice versa). Use these to debug DNS resolution issues — verify that a hostname resolves correctly, check which DNS server is answering, and inspect the full DNS response.
+
+There are two commands: `dig` (the modern, detailed tool) and `nslookup` (simpler, available on most systems including Windows). Both query DNS; `dig` gives more control and detail.
+
+#### `dig`
+
+`dig` (Domain Information Groper) queries a DNS server and shows the full response, including the answer, the server that responded, and the query time.
+
+**Basic usage:**
+
+```bash
+dig <hostname>                  # query the default DNS server for an A record
+dig <hostname> @<server>        # query a specific DNS server
+dig -x <ip>                     # reverse DNS lookup (IP → hostname)
+dig <hostname> AAAA             # query for IPv6 address
+dig <hostname> MX               # query for mail server records
+dig <hostname> NS               # query for nameservers
+dig <hostname> SOA              # query for Start of Authority (zone info)
+dig <hostname> TXT              # query for TXT records (SPF, verification, etc.)
+dig <hostname> ANY              # request all available record types
+dig <hostname> +short           # compact output — just the answer
+dig <hostname> +noall +answer   # suppress everything except the answer section
+dig <hostname> +trace           # trace the full resolution path from root to answer
+```
+
+**Example — full query:**
+
+```
+poetoec@lab-router:~ $ dig google.com
+
+; <<>> DiG 9.18.28 <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12345
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;google.com.                    IN      A
+
+;; ANSWER SECTION:
+google.com.             300     IN      A       142.250.185.110
+
+;; Query time: 12 msec
+;; SERVER: 192.168.2.254#53(192.168.2.254) (UDP)
+;; WHEN: Thu Aug 14 12:00:00 CEST 2026
+;; MSG SIZE  rcvd: 55
+```
+
+**Header flags:**
+
+The line `flags: qr rd ra` contains single-letter flags describing the query and response:
+
+| Flag | Name | Description |
+|------|------|-------------|
+| `qr` | Query Response | This is a response (not a query). |
+| `rd` | Recursion Desired | The client asked the server to resolve recursively (follow the chain of nameservers on its behalf). |
+| `ra` | Recursion Available | The server supports recursion. |
+| `aa` | Authoritative Answer | The responding server is the authoritative nameserver for this domain (not a cache). Absent here because the ISP modem's resolver is a cache, not the authority for `google.com`. |
+| `tc` | Truncated | Response was too large for UDP and was truncated — the client should retry over TCP. |
+| `ad` | Authenticated Data | DNSSEC validation passed — the response is cryptographically verified. |
+| `cd` | Checking Disabled | The client asked the server to skip DNSSEC validation. |
+
+The `status` field shows the result: `NOERROR` = success, `NXDOMAIN` = domain does not exist, `SERVFAIL` = server error (e.g. upstream unreachable or DNSSEC failure), `REFUSED` = server refused the query.
+
+The counters (`QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1`) show how many records are in each section of the response.
+
+**Answer format:**
+
+Each line in the ANSWER section has five columns:
+
+```
+google.com.             300     IN      A       142.250.185.110
+<name>                  <TTL>   <class> <type>  <data>
+```
+
+| Column | Description |
+|--------|-------------|
+| `<name>` | The domain name this record belongs to. The trailing `.` is the DNS root — all fully qualified domain names end with it. |
+| `<TTL>` | Time To Live in seconds — how long this answer may be cached. `300` = 5 minutes. After this, the resolver must re-query. |
+| `<class>` | Almost always `IN` (Internet). Other classes exist (`CH`, `HS`) but are rarely used. |
+| `<type>` | Record type — see table below. |
+| `<data>` | The record value — an IP address, hostname, or other data depending on the type. |
+
+**Common record types in detail:**
+
+| Type | Description | Example Data |
+|------|-------------|--------------|
+| `A` | IPv4 address | `142.250.185.110` |
+| `AAAA` | IPv6 address | `2a00:1450:400e:811::200e` |
+| `CNAME` | Alias — points to another hostname (the "canonical name"). The resolver follows the chain until it reaches an A/AAAA record. | `www.google.com. → www.google.com.cdn.example.net.` |
+| `MX` | Mail exchanger — where to deliver email for this domain. Includes a priority (lower = preferred). | `10 smtp.google.com.` |
+| `NS` | Nameserver — the authoritative DNS servers for this domain. | `ns1.google.com.` |
+| `TXT` | Arbitrary text — used for SPF (email anti-spoofing), domain verification, DKIM, etc. | `"v=spf1 include:_spf.google.com ~all"` |
+| `SOA` | Start of Authority — zone metadata: primary nameserver, admin email, serial number, refresh/retry/expire timers. | `ns1.google.com. dns-admin.google.com. 2024010100 900 900 1800 60` |
+| `PTR` | Pointer — reverse DNS, maps an IP back to a hostname. Used with `dig -x`. | `mijnmodem.kpn.` |
+| `SRV` | Service locator — specifies host and port for a service (e.g. SIP, LDAP, Kubernetes API). | `0 5 5060 sip.example.com.` |
+
+**Key sections:**
+
+| Section | Description |
+|---------|-------------|
+| `QUESTION` | What was asked — the hostname and record type. |
+| `ANSWER` | The response records matching the question. |
+| `AUTHORITY` | The authoritative nameservers for the domain (usually present when the answer comes from a referral). |
+| `ADDITIONAL` | Extra records provided to avoid follow-up queries (e.g. A records for the nameservers listed in AUTHORITY). |
+| `SERVER` | Which DNS server answered (here: the ISP modem at `192.168.2.254`). |
+| `Query time` | How long the lookup took — useful for comparing resolvers. |
+
+**Example — short output:**
+
+```
+poetoec@lab-router:~ $ dig google.com +short
+142.250.185.110
+```
+
+**Example — clean answer only:**
+
+```bash
+dig google.com +noall +answer
+```
+
+Suppresses the header, question, authority, and additional sections — shows only the answer lines. Useful for scripting or when you want a clean but not *too* short output (unlike `+short`, this still shows TTL and record type).
+
+**Example — query a specific DNS server:**
+
+```bash
+dig google.com @8.8.8.8          # ask Google's public DNS directly
+dig google.com @10.42.0.1        # ask the lab router's DNS
+```
+
+Useful for verifying whether the lab's local DNS server resolves differently from a public one. For example, if `dig lab-node1.lab @10.42.0.1` returns an answer but `dig lab-node1.lab @8.8.8.8` returns `NXDOMAIN`, your local DNS is working correctly — public resolvers have no knowledge of private hostnames.
+
+**Example — reverse DNS:**
+
+```bash
+dig -x 192.168.2.254 +short      # find the hostname for an IP
+```
+
+This sends a PTR query for `254.2.168.192.in-addr.arpa` — the special reversed-IP format used for reverse DNS.
+
+**Example — trace full resolution path:**
+
+```bash
+dig google.com +trace
+```
+
+Shows every step of the resolution: root nameservers → `.com` TLD nameservers → `google.com` authoritative nameservers → final answer. Useful for debugging where in the chain a lookup breaks — if the trace stops at a certain level, that is where the problem is.
+
+**Example — querying different record types:**
+
+```bash
+dig google.com MX +short          # mail servers
+dig google.com NS +short          # authoritative nameservers
+dig google.com TXT +short         # TXT records (SPF, verification)
+dig google.com SOA +short         # zone authority info
+```
+
+**Useful flag combinations:**
+
+| Command | Purpose |
+|---------|---------|
+| `dig <host> +short` | Quick answer only. |
+| `dig <host> +noall +answer` | Answer with TTL and record type, no clutter. |
+| `dig <host> +trace` | Trace full resolution chain from root. |
+| `dig <host> @<server>` | Test a specific resolver. |
+| `dig <host> +stats` | Show query time and server (default on, useful if disabled). |
+| `dig -x <ip>` | Reverse DNS lookup. |
+
+#### `nslookup`
+
+`nslookup` is a simpler DNS lookup tool. Less detailed than `dig`, but available on virtually every OS (Linux, macOS, Windows).
+
+**Basic usage:**
+
+```bash
+nslookup <hostname>              # query the default DNS server
+nslookup <hostname> <server>     # query a specific DNS server
+nslookup <ip>                    # reverse DNS lookup
+```
+
+**Example:**
+
+```
+poetoec@lab-router:~ $ nslookup google.com
+Server:         192.168.2.254
+Address:        192.168.2.254#53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 142.250.185.110
+```
+
+- `Server` / `Address` — the DNS server that was queried.
+- `Non-authoritative answer` — the response came from a cache (the recursive resolver), not directly from Google's authoritative nameserver. This is normal.
+
+**Example — query a specific server:**
+
+```
+poetoec@lab-router:~ $ nslookup google.com 8.8.8.8
+Server:         8.8.8.8
+Address:        8.8.8.8#53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 142.250.185.110
+```
+
+#### When to use which
+
+| Tool | Best for |
+|------|----------|
+| `dig +short` | Quick "does this hostname resolve?" check. |
+| `dig` (full) | Debugging DNS — see TTL, response status, which server answered, query time. |
+| `dig @<server>` | Testing whether a specific DNS server (e.g. the lab router) resolves correctly. |
+| `nslookup` | Quick lookups on any OS, especially Windows where `dig` is not installed by default. |
+
+---
+
+### DHCP Client Commands
+
+Commands for inspecting and managing DHCP leases from the **client** side (the device requesting an IP). For server-side DHCP management (lease files, reservations, debugging), see the [dnsmasq reference](dnsmasq.md#commands-dhcp).
+
+#### `dhclient` — Request or Release a DHCP Lease
+
+`dhclient` is the ISC DHCP client. It sends DHCP DISCOVER/REQUEST messages to obtain a lease, or releases an existing one.
+
+```bash
+sudo dhclient eth0                     # request a new lease on eth0
+sudo dhclient -r eth0                  # release the current lease
+sudo dhclient -v eth0                  # verbose — shows the full DORA exchange
+```
+
+**Verbose output example:**
+
+```
+poetoec@proxmox-node1:~ $ sudo dhclient -v eth0
+Internet Systems Consortium DHCP Client 4.4.3
+Listening on LPF/eth0/28:94:01:8a:ec:28
+Sending on   LPF/eth0/28:94:01:8a:ec:28
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3
+DHCPOFFER of 10.42.0.168 from 10.42.0.1
+DHCPREQUEST for 10.42.0.168 on eth0 to 255.255.255.255 port 67
+DHCPACK of 10.42.0.168 from 10.42.0.1
+bound to 10.42.0.168 -- renewal in 40000 seconds.
+```
+
+This shows the full DORA handshake: DISCOVER → OFFER → REQUEST → ACK. The server (`10.42.0.1`, the lab router) assigned `10.42.0.168`.
+
+#### NetworkManager — Release and Renew
+
+On systems using NetworkManager (most modern desktop/server Linux), use `nmcli` instead of `dhclient`:
+
+```bash
+# Bounce the connection (release + renew in one step):
+sudo nmcli connection down "Wired connection 1" && sudo nmcli connection up "Wired connection 1"
+
+# Or by device name:
+sudo nmcli device disconnect eth0 && sudo nmcli device connect eth0
+```
+
+#### View Current DHCP Lease Details
+
+On the client, the active lease is stored in a file:
+
+```bash
+# dhclient lease file (location varies by distribution):
+cat /var/lib/dhcp/dhclient.eth0.leases
+
+# Or check the current IP and lease time via ip:
+ip -4 addr show eth0
+```
+
+The `valid_lft` value in `ip addr` output shows the remaining lease time in seconds (`forever` = static, not DHCP).
+
+#### Inspect DHCP Traffic
+
+Use [`tcpdump`](#tcpdump--packet-capture) to capture live DHCP traffic and see exactly what the client sends and what the server responds:
+
+```bash
+sudo tcpdump -i eth0 -n port 67 or port 68
+```
+
+See the [tcpdump section](#tcpdump--packet-capture) for full details, flags, and output format.
+
+#### Quick DHCP Debugging Checklist
+
+| Check | Command |
+|-------|---------|
+| Does the client have an IP? | `ip -4 addr show eth0` |
+| What is the default gateway? | `ip route \| grep default` |
+| What DNS server was assigned? | `cat /etc/resolv.conf` or `resolvectl status` |
+| Is the DHCP server reachable? | `ping <dhcp-server-ip>` |
+| Is port 67 open on the server? | `ss -ulpn \| grep :67` (on the server) |
+| What does the DHCP exchange look like? | `sudo tcpdump -i eth0 -n port 67 or port 68` |
+| Force a fresh lease | `sudo dhclient -r eth0 && sudo dhclient -v eth0` |
+
+---
+
+### `tcpdump` — Packet Capture
+
+Captures and displays network packets in real time. The most fundamental network debugging tool — it shows you exactly what is going on the wire. Requires `sudo` because it puts the network interface into promiscuous mode.
+
+**Basic usage:**
+
+```bash
+sudo tcpdump -i <interface>                         # capture all traffic on an interface
+sudo tcpdump -i eth0 -n                              # -n = numeric (no DNS resolution, faster)
+sudo tcpdump -i eth0 -n -c 10                        # capture only 10 packets then stop
+sudo tcpdump -i eth0 -n port 53                      # capture only DNS traffic (port 53)
+sudo tcpdump -i eth0 -n port 67 or port 68           # capture only DHCP traffic
+sudo tcpdump -i eth0 -n host 10.42.0.168             # capture traffic to/from a specific host
+sudo tcpdump -i eth0 -n icmp                         # capture only ICMP (ping) traffic
+sudo tcpdump -i eth0 -n tcp port 22                  # capture only SSH traffic
+sudo tcpdump -i eth0 -n -w capture.pcap              # write raw packets to file (for Wireshark)
+sudo tcpdump -i eth0 -n -r capture.pcap              # read packets from a file
+```
+
+**Common flags:**
+
+| Flag | Description |
+|------|-------------|
+| `-i <iface>` | Interface to capture on. Use `-i any` to capture on all interfaces. |
+| `-n` | Numeric output — don't resolve IPs to hostnames or ports to service names. Much faster. |
+| `-nn` | Numeric output for both IPs and ports (same as `-n` on most systems). |
+| `-c <count>` | Stop after capturing `<count>` packets. |
+| `-v` / `-vv` / `-vvv` | Increase verbosity — show more protocol details (TTL, ID, flags, checksums, etc.). |
+| `-w <file>` | Write raw packets to a `.pcap` file instead of printing to terminal. Can be opened in Wireshark. |
+| `-r <file>` | Read and display packets from a previously captured `.pcap` file. |
+| `-A` | Print packet payload in ASCII (useful for HTTP, DNS text, etc.). |
+| `-X` | Print packet payload in both hex and ASCII. |
+| `-e` | Show link-layer (Ethernet) headers — includes MAC addresses. |
+| `-q` | Quiet — shorter output, less protocol detail. |
+
+**Filter expressions:**
+
+tcpdump uses BPF (Berkeley Packet Filter) expressions to select which packets to capture:
+
+| Filter | Description |
+|--------|-------------|
+| `host <ip>` | Traffic to or from a specific IP. |
+| `src <ip>` | Traffic from a specific source IP. |
+| `dst <ip>` | Traffic to a specific destination IP. |
+| `port <n>` | Traffic on a specific port (TCP or UDP). |
+| `tcp port <n>` | TCP traffic on a specific port. |
+| `udp port <n>` | UDP traffic on a specific port. |
+| `icmp` | ICMP traffic only (ping, traceroute). |
+| `arp` | ARP traffic only. |
+| `net <cidr>` | Traffic to or from a subnet (e.g. `net 10.42.0.0/20`). |
+| `not port 22` | Exclude SSH traffic (useful when capturing over SSH to avoid flooding). |
+| Combine with `and`, `or`, `not` | `host 10.42.0.1 and port 53` = DNS traffic to/from the lab router. |
+
+**Output format:**
+
+Each line shows one packet:
+
+```
+<timestamp> <protocol> <src> > <dst>: <details>
+```
+
+Example — DHCP traffic:
+```
+12:00:01.123456 IP 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHCP, Request from 28:94:01:8a:ec:28, length 300
+12:00:01.124789 IP 10.42.0.1.67 > 10.42.0.168.68: BOOTP/DHCP, Reply, length 300
+```
+
+- First line: client (`0.0.0.0`, no IP yet) broadcasts a DHCP request on port 68 → 67.
+- Second line: server (`10.42.0.1`) replies with an offer/ack to the client on port 67 → 68.
+
+Example — DNS query:
+```
+12:00:02.456789 IP 10.42.0.168.43210 > 10.42.0.1.53: 12345+ A? google.com. (28)
+12:00:02.458123 IP 10.42.0.1.53 > 10.42.0.168.43210: 12345 1/0/0 A 142.250.185.110 (44)
+```
+
+- First line: client queries the lab router's DNS for `google.com` (A record).
+- Second line: server responds with `142.250.185.110`.
+
+**Useful recipes:**
+
+| Purpose | Command |
+|---------|---------|
+| Debug DHCP | `sudo tcpdump -i eth0 -n port 67 or port 68` |
+| Debug DNS | `sudo tcpdump -i eth0 -n port 53` |
+| Debug ARP | `sudo tcpdump -i eth0 -n arp` |
+| All traffic to/from a host | `sudo tcpdump -i eth0 -n host 10.42.0.168` |
+| Capture for Wireshark | `sudo tcpdump -i eth0 -n -w /tmp/capture.pcap` |
+| Capture over SSH (exclude SSH itself) | `sudo tcpdump -i eth0 -n not port 22` |
+| Verbose DHCP with MACs | `sudo tcpdump -i eth0 -n -e -v port 67 or port 68` |
+
+> **Tip:** When capturing over SSH, always add `not port 22` to your filter — otherwise tcpdump captures its own SSH traffic, which generates more traffic, which generates more captures, flooding the output.

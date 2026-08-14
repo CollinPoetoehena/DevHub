@@ -3,6 +3,38 @@ This document provides background information and commands with detailed explana
 
 ---
 
+## Table of Contents
+
+- [Background: Storage Concepts](#background-storage-concepts)
+  - [Block Devices](#block-devices)
+  - [Partitions & Partition Tables](#partitions--partition-tables)
+  - [Filesystems](#filesystems)
+  - [Mounting](#mounting)
+  - [LVM (Logical Volume Manager)](#lvm-logical-volume-manager)
+  - [RAID (Redundant Array of Independent Disks)](#raid-redundant-array-of-independent-disks)
+  - [NFS (Network File System)](#nfs-network-file-system)
+- [Background: Kubernetes Storage](#background-kubernetes-storage)
+  - [Volumes](#volumes)
+  - [PersistentVolume (PV)](#persistentvolume-pv)
+  - [PersistentVolumeClaim (PVC)](#persistentvolumeclaim-pvc)
+  - [StorageClass](#storageclass)
+  - [StatefulSet Storage](#statefulset-storage)
+  - [CSI (Container Storage Interface)](#csi-container-storage-interface)
+- [Commands: Storage](#commands-storage)
+  - [lsblk](#lsblk)
+  - [df](#df)
+  - [du](#du)
+  - [blkid](#blkid)
+  - [mount / umount](#mount--umount)
+  - [fdisk / gdisk / parted](#fdisk--gdisk--parted)
+  - [mkfs](#mkfs)
+  - [findmnt](#findmnt)
+  - [LVM Commands](#lvm-commands)
+  - [smartctl](#smartctl)
+  - [Kubernetes Storage Commands](#kubernetes-storage-commands)
+
+---
+
 ## Background: Storage Concepts
 
 ### Block Devices
