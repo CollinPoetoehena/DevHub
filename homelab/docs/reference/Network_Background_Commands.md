@@ -344,6 +344,30 @@ Shows the ARP (Address Resolution Protocol) table — the mapping of IP addresse
 
 There are two families of commands that show this same table: the modern `ip neigh` (from iproute2) and the legacy `arp` (from net-tools). Both read the same kernel ARP cache — they just format and enrich the output differently.
 
+> **The ARP table is not always up-to-date.** It only contains entries for devices the kernel has recently communicated with. A device that is online but has not been contacted will not appear. Entries also expire — `STALE` entries are re-probed on next use, and old entries eventually disappear. If you expect to see a device but it is missing, `ping` it first to trigger an ARP exchange, then check again:
+>
+> ```
+> poetoec@lab-router:~ $ ip neigh
+> 192.168.2.5 dev eth0 lladdr 80:e4:ba:58:58:c2 REACHABLE
+> ```
+>
+> No entry for `10.42.0.168` yet — the Pi has not talked to it. After pinging:
+>
+> ```
+> poetoec@lab-router:~ $ ping -c 3 10.42.0.168
+> PING 10.42.0.168 (10.42.0.168) 56(84) bytes of data.
+> 64 bytes from 10.42.0.168: icmp_seq=1 ttl=64 time=4.67 ms
+> 64 bytes from 10.42.0.168: icmp_seq=2 ttl=64 time=2.50 ms
+> 64 bytes from 10.42.0.168: icmp_seq=3 ttl=64 time=2.52 ms
+>
+> poetoec@lab-router:~ $ ip neigh
+> 192.168.2.254 dev eth0 lladdr b0:5b:99:28:74:80 REACHABLE
+> 192.168.2.5 dev eth0 lladdr 80:e4:ba:58:58:c2 REACHABLE
+> 10.42.0.168 dev eth1 lladdr 28:94:01:8a:ec:28 REACHABLE
+> ```
+>
+> Now `10.42.0.168` appears on `eth1` because the ping triggered an ARP resolution.
+
 #### IPs only: `ip neigh` and `arp -n`
 
 These show the ARP table with raw IP addresses (no hostname resolution).
