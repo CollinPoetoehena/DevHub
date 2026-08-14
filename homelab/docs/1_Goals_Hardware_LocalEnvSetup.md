@@ -18,10 +18,11 @@ This document covers the goals for this home lab and all decisions around choosi
   - [Why NOT Raspberry Pi](#why-not-raspberry-pi)
 - [Node Setup](#node-setup)
   - [How Many Nodes](#how-many-nodes)
-    - [What Is Quorum?](#what-is-quorum)
+    - [Prioritise Fewer, More Powerful Nodes](#prioritise-fewer-more-powerful-nodes)
+    - [Quorum Explained](#quorum-explained)
     - [Why Odd Numbers of Voting Members?](#why-odd-numbers-of-voting-members)
     - [Where Does Quorum Apply?](#where-does-quorum-apply)
-    - [Why 3 for This Lab](#why-3-for-this-lab)
+    - [When Does This Matter?](#when-does-this-matter)
   - [Recommended Node Composition](#recommended-node-composition)
   - [Start Small, Expand Later](#start-small-expand-later)
   - [Current Personal Setup](#current-personal-setup)
@@ -33,7 +34,11 @@ This document covers the goals for this home lab and all decisions around choosi
 
 The personal goal is described in detail in the [Home Lab README](../README.md#personal-goal). In short: learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
 
-Personally, I work as a DevOps Engineer, not as a hardware, network, or storage engineer. That means this lab is mostly about broadening my knowledge and following personal interest, but not about mastering hardware, networking, or storage topics at a deeply advanced specialist level like hardware, network, or storage engineers do. It is focused on theory, practical understanding, and some more advanced concepts, but not on the most advanced specialist work a dedicated network, storage, or hardware engineer would do. For example, building and operating an entire self-hosted storage or private cloud setup, such as a full NAS-style platform that hosts its own Netflix, etc., is not a goal of this lab.
+Personally, I work as a DevOps Engineer, not as a hardware, network, or storage engineer. That means this lab is mostly about broadening my knowledge and following personal interest, but not about mastering hardware, networking, or storage topics at a deeply advanced specialist level like hardware, network, or storage engineers do. It is focused on theory, practical understanding, and some more advanced concepts, but not on the most advanced specialist work a dedicated network, storage, or hardware engineer would do.
+
+**This is not a self-hosting / home data centre project.** Some people enjoy turning their home lab into a full self-hosted platform — replacing cloud services like OneDrive, Netflix, Spotify, running their own VPN, NAS, DNS, mail server, and making their entire household depend on the lab. That's a perfectly valid hobby, but it's not the goal here. That kind of setup essentially becomes a second job: you need to maintain uptime, handle backups, deal with security patches, manage storage, and if the lab goes down, the whole house is affected — no media, no files, no internet services. It demands production-level reliability from what is supposed to be a learning environment.
+
+This lab is the opposite for myself: it's for **learning, experimenting, and having fun**. If I break something, nothing in the house stops working. If I want to wipe and rebuild the entire cluster over the weekend, I can — no impact on anyone. The lab should be something I enjoy tinkering with, not something I'm obligated to keep running. That freedom to break things without consequences is exactly what makes it valuable for learning. A home lab should not feel like a second job. It should not come with on-call responsibilities, uptime obligations, or the stress of "if this goes down, people are affected." The moment it starts feeling like an obligation — patching at midnight because the family can't stream, debugging DNS at 7 AM because smart home devices stopped working — it stops being fun and starts being ops work you're not getting paid for. Keep it simple, keep it enjoyable, and keep it separate from the things your household actually depends on. That is the goal of this personal homelab for me.
 
 The hardware choices below are driven by this goal: affordable, real-world-grade, and sufficient for running a small Kubernetes cluster with Proxmox, Ansible, Terraform, and monitoring tools.
 
@@ -108,11 +113,11 @@ Companies replace hardware on a fixed cycle — often every 3–5 years, regardl
 | Category | CPU Power | RAM | Storage | Noise | Power Usage | Virtualization | Cost | Best Use Case |
 |---|---|---|---|---|---|---|---|---|
 | **Raspberry Pi** | Low | 1–8 GB | SD / USB SSD | Silent | Very low (5–10W) | Limited (ARM) | €50–€150 | Lightweight services, learning Linux |
-| **Mini PC** | Medium to high | 8–64 GB | NVMe SSD (most common) | Silent / very quiet | Low (10–40W) | Excellent | €150–€400 | Proxmox, Docker, Kubernetes, CI/CD |
+| **Mini PC** | Medium to high | 8–64 GB | NVMe SSD (most common) | Silent / very quiet | Low (10–40W) | Excellent | €150–€600 | Proxmox, Docker, Kubernetes, CI/CD |
 | **Laptop** | Medium | 8–32 GB | NVMe SSD | Quiet | Low–medium (10–60W) | Good | €200–€600 | Portable DevOps work, Docker, k3s |
-| **Server** | Very high | 32–256 GB | RAID SSD/HDD | Loud | Very high (100–300W) | Enterprise-grade | €300–€800 | Production workloads (overkill for home labs) |
+| **Server / Workstation** | Very high | 32–256 GB | RAID SSD/HDD | Very loud (even at idle — ever been in a data centre? That constant hum comes from these machines) | Very high (100–300W) | Enterprise-grade | €300–€800 | Production workloads (overkill for home labs) |
 
-> A great DevOps home lab focuses on **production-like architecture, not production-grade hardware**. You don't need enterprise servers (very harmfull for your wallet) — but you do need reproducibility, automation, observability, and failure testing, etc.
+> A great DevOps home lab focuses on **production-like architecture, not production-grade hardware**. You don't need enterprise servers (very harmful for your wallet and your ears) — but you do need reproducibility, automation, observability, and failure testing, etc.
 
 ### Why Mini PCs
 
@@ -154,9 +159,33 @@ More importantly, the Pi uses ARM/Pi OS instead of x86/Ubuntu or RHEL — which 
 
 ### How Many Nodes
 
-**Aim for 3 nodes.** A 3-node setup gives you true cluster stability because it can form a **quorum** — and quorum is the foundation of high-availability (HA) in distributed systems.
+**It depends on your situation — 1 node can be more than enough.** The number of nodes you need depends entirely on what you want to run and what your goals are. If your goal is learning Kubernetes, Docker, Ansible, and monitoring, a single well-specced mini PC can handle all of that comfortably. If you're not even filling one node with workloads, buying more nodes just to "have a cluster" is not worth the energy cost and purchasing cost.
 
-#### What Is Quorum?
+You might want to add a second node if you want more compute capacity or redundancy for your workloads — but that's optional, not required.
+
+You do not need more nodes than that unless you want to host many workloads (e.g. your entire home cloud replacing Netflix, cloud storage like OneDrive, etc.) — but that is not the goal of this lab (see [Goals](#goals)). If you're using the lab for learning and/or hosting smaller workloads like small home automations, 1–2 nodes is more than enough.
+
+#### Prioritise Fewer, More Powerful Node(s)
+
+The biggest factor in energy cost is the **number of physical machines**, not how much RAM is in each one. RAM itself uses very little power compared to the CPU, motherboard, SSDs, and PSU losses. One node with 64 GB RAM uses roughly the same power as one node with 16 GB RAM — but four 16 GB nodes use roughly 4× the power of one 64 GB node.
+
+Using realistic numbers for modern business mini PCs (ThinkCentre Tiny, OptiPlex Micro, EliteDesk Mini) at typical homelab load (e.g. ~20W per node) and Dutch electricity prices (e.g. ~€0.30/kWh in 2026), the yearly cost of running a cluster of nodes looks like this:
+
+| Setup | Total RAM | Typical Power | Est. Yearly Cost |
+|-------|-----------|---------------|------------------|
+| 1 × 64 GB | 64 GB | ~20 W | ~€53 |
+| 2 × 32 GB | 64 GB | ~40 W | ~€105 |
+| 4 × 16 GB | 64 GB | ~80 W | ~€210 |
+
+Same total RAM — but power and cost roughly double with each doubling of nodes. On top of the energy cost, each additional node also means an additional purchase, more cables, more maintenance, and more points of failure.
+
+In terms of learning value, one well-specced node already covers ~85–90% of DevOps learning (Proxmox, Docker, Kubernetes, Terraform, Ansible, monitoring). A second node adds clustering, VM migration, and multi-node Kubernetes (~95%). Three or more nodes add HA, Ceph, and quorum — useful, but increasingly niche for a home lab.
+
+**Bottom line:** prioritise one powerful node over multiple smaller ones. It's cheaper to buy, cheaper to run, and covers nearly all the learning value. You can add a second node if you want (e.g. an old laptop you already have) — but don't feel obligated to buy more nodes just to "have a cluster." One node is enough for most learning goals.
+
+> **What about clustering and quorum?** In production environments, you need at least 3 nodes for high availability through quorum (see [Quorum Explained](#quorum-explained) below). But this is a home lab — not production. If you want to practice clustering, you can temporarily add a 3rd node (e.g. an old laptop you already have) just for experimenting. It doesn't need to run 24/7 — only when you're testing clustering. You can also practice clustering with VMs on a single host or small numbers of hosts — spin up 3 VMs to simulate a multi-node cluster. It's not real physical separation, but it does simulate the clustering behaviour (e.g. you can drop a VM to test failover, practice quorum loss, etc.). Another option is to practice through your work environment where you likely have a large scale setup of nodes and clusters, etc.
+
+#### Quorum Explained
 
 Quorum means a **majority of voting members agree** the cluster is healthy. This majority is required for critical operations: electing a leader, committing configuration changes, and confirming writes. Without a majority, the cluster cannot make decisions and becomes unavailable — this prevents **split-brain**, where two halves of a cluster both think they're in charge and start making conflicting changes.
 
@@ -195,48 +224,48 @@ Quorum applies to **consensus/voting members**, not to every node in a system:
 
 > **Common misconception:** "HA requires an odd number of nodes." More accurately: **HA systems that use majority-based consensus work most efficiently with an odd number of voting members.** You can absolutely have an even total node count (e.g. 3 control-plane nodes + 20 worker nodes = 23 total) — what matters is the voter count.
 
-#### Why 3 for This Lab
+#### When Does This Matter?
 
-3 nodes is the sweet spot for a home lab:
-- It's the **minimum for real quorum** — you get true HA behaviour, proper leader election, and realistic distributed-systems scheduling (the way production clusters actually work).
-- More than 3 is overkill for a learning lab: it increases power usage and cost without adding significant learning value.
-- You can of course add more nodes if you want, but 3 balances realism, cost, and manageability.
+In **production**, quorum is essential — you need at least 3 voting members for high availability. If you're building a production cluster, 3 nodes is the recommended minimum.
+
+But for a **home lab** focused on learning and experimentation, quorum is not a hard requirement. Tailor the number of nodes to your situation and your goals. If you're running 3 nodes just to mimic production but you're not even filling 1 or 2 nodes with workloads, it's not worth the extra energy and purchasing cost. Just do whatever fits your goals — 1 well-specced node is a perfectly valid home lab.
 
 ### Recommended Node Composition
 
-- **2 identical refurbished enterprise-grade mini PCs** — the main compute nodes, providing real-world hardware experience (e.g. Lenovo ThinkCentre Tiny, Dell OptiPlex Micro, HP EliteDesk Mini, etc.).
-- **1 older piece of hardware** — e.g. an old laptop. Lower specs are fine for a third node; it still completes the quorum and adds variety.
+- **1 refurbished enterprise-grade mini PC** — your main compute node, providing real-world hardware experience (e.g. Lenovo ThinkCentre Tiny, Dell OptiPlex Micro, HP EliteDesk Mini, etc.). A single well-specced node is enough for learning and running smaller workloads.
+- **Optionally a 2nd mini PC or an old laptop you already have** — if you want more capacity or want to experiment with workload distribution. Only worth it if you're actually using the resources on the first node.
 
 ### Recommended Specs per Node
 
 | Component | Recommended | Notes |
 |-----------|-------------|-------|
 | **CPU** | 4+ cores Intel N-series or 12th-gen Core i5 — full VT-x and VT-d support | Enough to run Proxmox + multiple VMs simultaneously without contention. |
-| **RAM** | 16 GB | Minimum for comfortably running Proxmox with a few VMs. 32 GB if you can afford it for the main compute nodes. |
+| **RAM** | 32–64 GB | 32 GB is comfortable for running Proxmox with several VMs. 64 GB gives plenty of headroom and is often more power-efficient than running two separate 32 GB nodes (if you need 64 GB RAM total) — one well-specced machine uses less energy than two underpowered ones (see [Prioritise Fewer, More Powerful Node(s)](#prioritise-fewer-more-powerful-nodes)). |
 | **Storage** | NVMe SSD | Significantly faster than SATA SSD (3–7 GB/s vs ~550 MB/s) and far faster than HDD. Matters for VM boot times, live migration, snapshot I/O, and running multiple VMs in parallel. Most enterprise-grade mini PCs ship with an M.2 slot, making NVMe a natural fit — no cables, no adapters, compact form factor. |
 
 **Storage sizing — intentional asymmetry:**
 
 Not all nodes need the same storage size. A good approach is:
 - **1× larger drive (e.g. 512 GB-1 TB)** on one node — acts as a "shock absorber": migration staging area, ISO storage, snapshots, and local VM disks when you need fast temporary storage, etc.
-- **Smaller drives (e.g. 256 GB)** on the other compute nodes — sufficient for the OS, Proxmox, and their resident VMs, etc.
+- **Smaller drives (e.g. 256 GB-512 GB)** on the other compute nodes — sufficient for the OS, Proxmox, and their resident VMs, etc.
 
 This asymmetry is intentional: the larger node handles temporary bulk workloads so the compute nodes stay lean and focused.
 
 ### Start Small, Expand Later
 
-If budget is a constraint, **start with 1 mini PC + 1–2 older devices** and expand later. You can still learn the fundamentals with a smaller cluster and add a second mini PC when ready. This keeps initial costs low while giving you a working multi-node environment from day one.
+**Start with 1 mini PC or 1 old laptop** and expand later if needed. You can learn all the fundamentals — Kubernetes, Docker, Ansible, monitoring — on a single well-specced node. Only add a second node when you're actually running out of resources on the first one.
 
-That's exactly how I started: my old Acer laptop and 1 Mini PC I bought refurbished. Once I had those running I expanded to the full setup described in [Current Personal Setup](#current-personal-setup).
+If you want to practice clustering or quorum without buying extra hardware, see [How Many Nodes](#how-many-nodes) above — in short you can temporarily add a 3rd node (e.g. an old laptop you already have), use at least 3 VMs to simulate a multi-node cluster, or practice through your work environment if you have access to a larger setup.
+
+That's how I started: my old Acer laptop. Later I expanded to the full setup described in [Current Personal Setup](#current-personal-setup).
 
 ### Current Personal Setup
 My current home lab setup consists of:
 
 | Role | Device | CPU | RAM | Storage | Source | Why chosen |
 |------|--------|-----|-----|---------|--------|------------|
-| Compute node 1 + 2 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | 16 GB | 256 GB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
-| Quorum node | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to complete the 3-node quorum at zero extra cost. |
-| Extra node | Raspberry Pi 4 Model B | ARM Cortex-A72 (1.5 GHz, 4 cores, 4 threads) | 4 GB | 64 GB microSD | Personal (already owned), bought from Raspberry Store in 2025 for about €200 total (Raspberry Pi 4 Model B, Case, Case Fan, microSD, etc.) | Not the recommended choice for this lab — see [Why NOT Raspberry Pi](#why-not-raspberry-pi). However, it was already on hand so it was integrated into the cluster rather than left unused. |
+| Compute node 1 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | TODO: 32 or 64 GB | TODO: 512 GB or 1 TB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
+| Compute node 2 | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to add a second physical host to experiment with, without extra purchasing cost. |
 
 #### How to Check Your Hardware Specs
 
