@@ -32,15 +32,15 @@ This document covers the goals for this home lab and all decisions around choosi
 
 ## Goals
 
-The personal goal is described in detail in the [Home Lab README](../README.md#personal-goal). In short: learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
+This is a reference section — the full goal is described in the [Home Lab README](../README.md#personal-goal). In short:
 
-Personally, I work as a DevOps Engineer, not as a hardware, network, or storage engineer. That means this lab is mostly about broadening my knowledge and following personal interest, but not about mastering hardware, networking, or storage topics at a deeply advanced specialist level like hardware, network, or storage engineers do. It is focused on theory, practical understanding, and some more advanced concepts, but not on the most advanced specialist work a dedicated network, storage, or hardware engineer would do.
+**Goal:** Learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
 
-**This is not a self-hosting / home data centre project.** Some people enjoy turning their home lab into a full self-hosted platform — replacing cloud services like OneDrive, Netflix, Spotify, running their own VPN, NAS, DNS, mail server, and making their entire household depend on the lab. That's a perfectly valid hobby, but it's not the goal here. That kind of setup essentially becomes a second job: you need to maintain uptime, handle backups, deal with security patches, manage storage, and if the lab goes down, the whole house is affected — no media, no files, no internet services. It demands production-level reliability from what is supposed to be a learning environment.
+**What I am not:** I'm a DevOps Engineer, not a hardware, network, or storage specialist. This lab broadens my knowledge in those areas but doesn't aim for deep specialist mastery.
 
-This lab is the opposite for myself: it's for **learning, experimenting, and having fun**. If I break something, nothing in the house stops working. If I want to wipe and rebuild the entire cluster over the weekend, I can — no impact on anyone. The lab should be something I enjoy tinkering with, not something I'm obligated to keep running. That freedom to break things without consequences is exactly what makes it valuable for learning. A home lab should not feel like a second job. It should not come with on-call responsibilities, uptime obligations, or the stress of "if this goes down, people are affected." The moment it starts feeling like an obligation — patching at midnight because the family can't stream, debugging DNS at 7 AM because smart home devices stopped working — it stops being fun and starts being ops work you're not getting paid for. Keep it simple, keep it enjoyable, and keep it separate from the things your household actually depends on. That is the goal of this personal homelab for me.
+**What this lab is not:** Not a self-hosting / home data centre project. Not production, not an obligation. No 24/7 uptime required, no self-hosted cloud replacements, no advanced hardware tinkering. If it breaks, nothing in the house stops working. The hardware choices below are driven by this: affordable, real-world-grade, and sufficient for a small homelab.
 
-The hardware choices below are driven by this goal: affordable, real-world-grade, and sufficient for running a small Kubernetes cluster with Proxmox, Ansible, Terraform, and monitoring tools.
+See further details in the [Home Lab README](../README.md#what-this-is-not) and [Home Lab Design](../README.md#home-lab-design).
 
 ---
 
