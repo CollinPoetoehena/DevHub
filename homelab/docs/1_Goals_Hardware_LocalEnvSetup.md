@@ -34,11 +34,9 @@ This document covers the goals for this home lab and all decisions around choosi
 
 This is a reference section — the full goal is described in the [Home Lab README](../README.md#personal-goal). In short:
 
-**Goal:** Learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
-
-**What I am not:** I'm a DevOps Engineer, not a hardware, network, or storage specialist. This lab broadens my knowledge in those areas but doesn't aim for deep specialist mastery.
-
-**What this lab is not:** Not a self-hosting / home data centre project. Not production, not an obligation. No 24/7 uptime required, no self-hosted cloud replacements, no advanced hardware tinkering. If it breaks, nothing in the house stops working. The hardware choices below are driven by this: affordable, real-world-grade, and sufficient for a small homelab.
+- **Goal:** Learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
+- **What I am not:** I'm a DevOps Engineer, not a hardware, network, or storage specialist. This lab broadens my knowledge in those areas but doesn't aim for deep specialist mastery.
+- **What this lab is not:** Not a self-hosting / home data centre project. Not production, not an obligation. No 24/7 uptime required, no self-hosted cloud replacements, no advanced hardware tinkering. If it breaks, nothing in the house stops working. The hardware choices below are driven by this: affordable, real-world-grade, and sufficient for a small homelab.
 
 See further details in the [Home Lab README](../README.md#what-this-is-not) and [Home Lab Design](../README.md#home-lab-design).
 
@@ -183,7 +181,7 @@ In terms of learning value, one well-specced node already covers ~85–90% of De
 
 **Bottom line:** prioritise one powerful node over multiple smaller ones. It's cheaper to buy, cheaper to run, and covers nearly all the learning value. You can add a second node if you want (e.g. an old laptop you already have) — but don't feel obligated to buy more nodes just to "have a cluster." One node is enough for most learning goals.
 
-> **What about clustering and quorum?** In production environments, you need at least 3 nodes for high availability through quorum (see [Quorum Explained](#quorum-explained) below). But this is a home lab — not production. If you want to practice clustering, you can temporarily add a 3rd node (e.g. an old laptop you already have) just for experimenting. It doesn't need to run 24/7 — only when you're testing clustering. You can also practice clustering with VMs on a single host or small numbers of hosts — spin up 3 VMs to simulate a multi-node cluster. It's not real physical separation, but it does simulate the clustering behaviour (e.g. you can drop a VM to test failover, practice quorum loss, etc.). Another option is to practice through your work environment where you likely have a large scale setup of nodes and clusters, etc.
+> **What about clustering and quorum?** In production environments, you need at least 3 nodes for high availability through quorum (see [Quorum Explained](#quorum-explained) below). But this is a home lab — not production. If you want to practice clustering, you can temporarily add a 3rd node (e.g. an old laptop you already have) just for experimenting. It doesn't need to run 24/7 — only when you're testing clustering. You can also practice clustering with VMs on a single host or small numbers of hosts — spin up 3 VMs to simulate a multi-node cluster. It's not real physical separation, but it does simulate the clustering behaviour (e.g. you can drop a VM to test failover, practice quorum loss, etc.). Another option is to practice through your work environment (in a test environment of course!) where you likely have a large scale setups and resources (e.g. multiple notes, data centers, etc.), etc.
 
 #### Quorum Explained
 
