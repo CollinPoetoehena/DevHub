@@ -175,7 +175,7 @@ If the Pi does not boot:
 
 ## Network Interfaces
 
-> See [Network Background & Commands — Network Interface](./Network_Background_Commands.md#network-interface) for background on what a network interface is.
+> See [Network Devices & Interfaces — Network Interface](./network/Network_Devices.md#network-interface) for background on what a network interface is.
 
 A router needs two separate network interfaces: one facing the upstream network (WAN) and one facing the lab devices (LAN). The Pi's built-in Ethernet port serves as the WAN side; a USB-to-Ethernet adapter adds the LAN side.
 

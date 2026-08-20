@@ -260,6 +260,8 @@ Use `arp -a` when you want to quickly identify who's who on the network; use `ip
 
 Shows active network sockets (connections and listening ports). Replaces the legacy `netstat` command. Use it to check which services are listening on which ports, verify a daemon started correctly, or debug port conflicts.
 
+**What is a socket?** A socket is one endpoint of a network connection — the combination of an **IP address** and a **port number** (e.g. `10.42.0.1:53`). When a program wants to communicate over the network, it creates a socket and either *listens* on it (server: "I'm accepting connections on this IP:port") or *connects* to a remote socket (client: "I want to talk to that IP:port"). Every network connection has two sockets — one on each end. A listening socket (e.g. `0.0.0.0:22` for SSH) is a server waiting for incoming connections; an established socket (e.g. `10.42.0.1:22 ↔ 192.168.2.5:43210`) is an active connection between two endpoints. The OS tracks all sockets in a table — `ss` reads and displays that table.
+
 **Common flags:**
 
 | Flag | Description |

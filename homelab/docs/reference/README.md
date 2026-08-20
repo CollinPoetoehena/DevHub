@@ -10,7 +10,7 @@ It is not intended to be a complete guide of Software Engineering/IT in general 
 
 | File | Description |
 |------|-------------|
-| [Network_Background_Commands.md](Network_Background_Commands.md) | Networking concepts (subnets, DHCP, DNS, routing) and Linux networking commands. |
+| [Network Reference](network/README.md) | Networking concepts (devices, subnets, IP addresses, DHCP, DNS, NAT, IPv6) and Linux networking commands. Split into multiple files — see the network README for the full index. |
 | [Storage_Background_Commands.md](Storage_Background_Commands.md) | Storage concepts (filesystems, mounting, LVM, RAID, NFS) and Kubernetes storage (Volumes, PV, PVC, StorageClass). |
 | [raspberry_pi_hardware_os.md](raspberry_pi_hardware_os.md) | Raspberry Pi hardware and OS reference. |
 | [tmux.md](tmux.md) | tmux terminal multiplexer reference. |

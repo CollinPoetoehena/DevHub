@@ -25,7 +25,7 @@ dnsmasq combines two services in one lightweight daemon:
 - **DNS forwarder** — receives DNS queries from lab devices and forwards them upstream to a public resolver (e.g. the ISP modem, `8.8.8.8`, `1.1.1.1`). It also caches responses to speed up repeated lookups and can resolve local hostnames for devices on the lab network by reading its own DHCP lease database.
 - **DHCP server** — assigns IP addresses, subnet masks, default gateway, and DNS server addresses to devices that join the lab network. Supports static reservations (bind a specific IP to a MAC address).
 
-For background on DNS and DHCP concepts, see [Network Background & Commands](Network_Background_Commands.md#dns) and [DHCP](Network_Background_Commands.md#dhcp).
+For background on DNS and DHCP concepts, see [DHCP & DNS](DHCP_and_DNS.md).
 
 ---
 
@@ -101,7 +101,7 @@ Note: not all config changes take effect with `SIGHUP` — a full `systemctl res
 
 ### Query the local DNS server
 
-Use `dig` or `nslookup` to test that dnsmasq is resolving correctly (see [dig / nslookup](./Network_Background_Commands.md#dig--nslookup--dns-lookup) for full details):
+Use `dig` or `nslookup` to test that dnsmasq is resolving correctly (see [dig / nslookup](Network_Commands.md#dig--nslookup--dns-lookup) for full details):
 
 ```bash
 dig google.com @10.42.0.1              # external query via dnsmasq
@@ -215,7 +215,7 @@ sudo nmcli connection down "Wired connection 1" && sudo nmcli connection up "Wir
 sudo ss -ulpn | grep :67
 ```
 
-Port 67 is the DHCP server port. The output shows which process holds it and on which address (see [ss](Network_Background_Commands.md#ss--socket-statistics) for details).
+Port 67 is the DHCP server port. The output shows which process holds it and on which address (see [ss](Network_Commands.md#ss--socket-statistics) for details).
 
 ---
 
