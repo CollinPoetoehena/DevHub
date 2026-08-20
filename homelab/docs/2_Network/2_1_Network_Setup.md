@@ -112,6 +112,11 @@ ISP Modem/Router
 - **Access to the ISP modem admin page** — to reserve a static IP for the Pi's `eth0` by MAC address and check for IP conflicts. Typically at `192.168.2.1` or `192.168.1.1`.
 
 ### Full Setup Steps
+
+> **Important security note:** The IPs named here are all local network addresses, they are not reachable from the internet. Make sure to avoid listing any public IPs in the documentation (e.g. `curl ifconfig.me` returns your public IP) because this is sensitive information that can be used to attack your network. Only use local IPs (e.g., `192.168.x.x`, `10.x.x.x`, `172.16.x.x`) in documentation!
+>
+> **Extra caution with IPv6:** Unlike IPv4 (where devices use private addresses like `192.168.x.x` behind NAT and are not directly reachable from the internet), IPv6 gives every device a **globally unique, internet-routable public address**. This means IPv6 addresses are *far more sensitive* than IPv4 private addresses — leaking an IPv6 address in documentation, a screenshot, or a log file exposes the real, directly reachable address of that device. An attacker with your device's IPv6 address can attempt to connect to it directly (if your firewall allows it or is misconfigured). Commands like `ip -6 addr show scope global`, `curl -6 ifconfig.me`, or even `ip a` (which shows `inet6` lines with global-scope addresses) can reveal public IPv6 addresses — never include their output in documentation or public repositories. Furthermore, if privacy extensions are not enabled, the IPv6 address embeds the device's MAC address (via EUI-64), which is a permanent hardware identifier that can be used to track the device across networks. See [Network Background & Commands — IP Addresses](../reference/Network_Background_Commands.md#ip-addresses--ipv4-and-ipv6) for full details on how IPv6 addressing works and why NAT does not protect IPv6 devices.
+
 #### Step 1: Reserve a Static IP for the Pi on the ISP Modem
 
 Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
