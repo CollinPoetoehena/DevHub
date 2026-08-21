@@ -124,6 +124,8 @@ For a homelab router that just needs to hand out leases on one subnet and forwar
 
 ## Network Topology
 
+> See [Node Setup](../1_Goals_Hardware_LocalEnvSetup.md#node-setup) for the physical nodes in the homelab. The network topology diagram below shows how the nodes are connected to the lab router and switch, and how the lab network is isolated from the home network.
+
 Full network topology (in .md diagram format to save space (no image file needed for this setup)):
 ```
 Internet
