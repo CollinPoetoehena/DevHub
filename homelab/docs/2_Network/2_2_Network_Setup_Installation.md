@@ -363,6 +363,8 @@ ssh -L 8080:10.42.0.168:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 #   Then browse to: https://localhost:8006
 ```
 
+TODO: left off here, add VLAN setup and how to configure it, etc.
+
 ---
 
 ## Step 9: Connect Lab Devices
