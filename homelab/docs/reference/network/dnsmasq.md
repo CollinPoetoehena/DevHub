@@ -5,6 +5,8 @@
 - **Official site:** [https://dnsmasq.org/doc.html](https://dnsmasq.org/doc.html) and [https://docs.opnsense.org/manual/dnsmasq.html](https://docs.opnsense.org/manual/dnsmasq.html)
 - **Man page:** `man dnsmasq` (on the host where it is installed)
 
+> **Note:** `dnsmasq` does not have a CLI for interactive use. It is configured via a config file and run as a background service. Use `systemctl` to manage the service and `journalctl` to view logs. This document provides a reference for other commands for DNS and DHCP as well.
+
 ---
 
 ## Table of Contents
@@ -69,7 +71,7 @@ dnsmasq is configured via a single file (or a directory of files). The main conf
 **Validate config before restarting:**
 
 ```bash
-dnsmasq --test
+sudo dnsmasq --test
 ```
 
 Returns `dnsmasq: syntax check OK.` if the config is valid, or shows the error and line number if not.
@@ -99,7 +101,20 @@ Note: not all config changes take effect with `SIGHUP` — a full `systemctl res
 
 ## Commands: DNS
 
+
+### Check which interface dnsmasq is serving DNS on
+
+```bash
+sudo ss -tulpn | grep dnsmasq
+```
+
+The [configuration](../../../ansible/roles/router/templates/dnsmasq.conf.j2) explicitly binds dnsmasq only to the LAN interface (eth1) and excludes lo using interface=eth1 and except-interface=lo. As a result, DNS queries must be sent to the router’s LAN IP (e.g., 10.42.0.1) instead of 127.0.0.1 (localhost). This is intentional (as explained in the [configuration](../../../ansible/roles/router/templates/dnsmasq.conf.j2)): binding only to eth1 prevents dnsmasq from answering DNS or DHCP requests on unintended interfaces (like WAN (breaking the home network) or localhost), which keeps the router safe and avoids conflicts with other local DNS services. As a result, DNS queries must be sent to the router’s LAN IP (e.g., 10.42.0.1) instead of 127.0.0.1.
+
+See [ss](Network_Commands.md#ss--socket-statistics) for details about the `ss` command.
+
 ### Query the local DNS server
+
+> See [Check which interface dnsmasq is serving DNS on](#check-which-interface-dnsmasq-is-serving-dns-on) above to verify the correct interface and IP address to use below (e.g. `10.42.0.1`).
 
 Use `dig` or `nslookup` to test that dnsmasq is resolving correctly (see [dig / nslookup](Network_Commands.md#dig--nslookup--dns-lookup) for full details):
 
@@ -149,6 +164,8 @@ dig -x 10.42.0.10 @10.42.0.1 +short   # reverse lookup
 ---
 
 ## Commands: DHCP
+
+`dnsmasq` manages DHCP from the server-side. Use `dhclient` to manage DHCP from the client-side (e.g. a VM), see [dhclient](Network_Commands.md#dhclient--dhcp-client) for full details.
 
 ### View active DHCP leases
 

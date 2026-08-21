@@ -7,6 +7,9 @@
 #   1. DHCP server: automatically assigns IP addresses to lab devices
 #   2. DNS server: resolves domain names for lab devices (forwarding to upstream
 #      DNS for internet domains, and resolving local hostnames from DHCP leases)
+#
+# See docs/2_Network/2_1_Network_Design.md for details on the network design and used 
+# variables, such as the LAN subnet, DHCP range, and static leases. 
 
 ################################################################################
 # Interface binding
@@ -45,11 +48,6 @@ bind-dynamic
 # fails with "Address already in use". The router only needs DNS/DHCP on eth1.
 except-interface=lo
 
-# Do not read /etc/resolv.conf for upstream DNS servers.
-# We explicitly define them below so the configuration is fully self-contained
-# and not affected by DHCP-provided DNS from the ISP modem.
-no-resolv
-
 ################################################################################
 # Upstream DNS servers
 ################################################################################
@@ -59,6 +57,11 @@ no-resolv
 {% for dns_server in router_dns_upstream_servers %}
 server={{ dns_server }}
 {% endfor %}
+
+# Do not read /etc/resolv.conf for upstream DNS servers.
+# We explicitly define them below so the configuration is fully self-contained
+# and not affected by DHCP-provided DNS from the ISP modem.
+no-resolv
 
 ################################################################################
 # DNS settings

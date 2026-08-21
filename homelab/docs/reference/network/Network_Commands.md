@@ -549,7 +549,7 @@ Address: 142.250.185.110
 
 ### DHCP Client Commands
 
-Commands for inspecting and managing DHCP leases from the **client** side (the device requesting an IP). For server-side DHCP management (lease files, reservations, debugging), see the [dnsmasq reference](dnsmasq.md#commands-dhcp).
+Commands for inspecting and managing DHCP leases from the **client** side (the device requesting an IP, such as a VM). For server-side DHCP management (lease files, reservations, debugging, etc.), see the [dnsmasq reference](dnsmasq.md#commands-dhcp).
 
 #### `dhclient` — Request or Release a DHCP Lease
 

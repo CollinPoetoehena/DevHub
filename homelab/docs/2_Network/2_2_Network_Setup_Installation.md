@@ -1,142 +1,52 @@
 # Network Setup
 
-A stable network is the foundation of a reliable homelab. This document covers the setup options available, why a dedicated lab router behind the ISP modem is the right choice, and the specific steps to set it up using a Raspberry Pi as the lab router.
+This document covers the specific steps to set up the homelab network using the setup explained in [Network Design](2_1_Network_Design.md).
 
+> **Prerequisites:** See [Network Design — Hardware & Software](2_1_Network_Design.md#hardware--software) for all required hardware (Pi, SD card, USB-Ethernet adapter, switch, cables) and software choices before starting.
+>
+> See [Network Design](2_1_Network_Design.md) for the network architecture, design decisions, and target topology.
 > See the [Network Reference](../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
+> **If you need to shutdown the Pi, such as when you are not using it anymore, etc., use:** `sudo shutdown -h now` — wait for the lights to stop blinking, then unplug the power supply. Power on again by plugging it back in.
 
----
+## Table of Contents
 
-## Network Setup Options
-
-### Option 1: Lab devices directly on the home network
-
-Connect lab devices (Proxmox hosts, worker nodes) directly to the ISP modem or home switch.
-
-```
-ISP Modem → Home Switch → Lab Devices + Home Devices (same network)
-```
-
-**Why not:** Lab mistakes — DHCP conflicts, Proxmox bridge misconfiguration, routing loops — directly affect the home network. This is what caused home devices (phone, TV, printer) to lose internet access when Proxmox was first connected: its `vmbr0` bridge interfered with the home LAN's DHCP, creating IP conflicts that were visible in the ISP modem's admin page.
-
-### Option 2: VLANs on the ISP modem
-
-Segment the network using VLANs configured on the ISP modem itself.
-
-**Why not:** Most ISP modems have very limited or no VLAN support. A misconfiguration can break the entire home network. Not practical.
-
-### Option 3: Dedicated router behind the ISP modem (chosen approach)
-
-Place a dedicated lab router between the ISP modem and all lab devices. The lab runs on its own subnet, fully isolated from the home network.
-
-```
-ISP Modem (192.168.2.0/24) → Lab Router → Lab Devices (10.42.0.0/20)
-```
-
-**Why `10.42.0.0/20` and not `10.0.0.0/20`?** The `10.0.0.0/x` range is extremely common — corporate VPNs, Docker defaults, Kubernetes pod CIDRs, and cloud VPCs all frequently use `10.0.x.x`. If any of these overlap with the lab subnet, routes conflict and traffic breaks. `10.42.0.0/20` is an uncommon slice of the `10.0.0.0/8` private range, so it is unlikely to collide with anything. The `42` is arbitrary — just picked to stay out of the way.
-
-**Why `/20` and not `/24` or `/16`?** A `/24` gives only 254 usable addresses — that is enough for a flat network, but too small once you start carving out VLANs (each VLAN gets its own `/24` subnet within the parent range). A `/20` gives 4094 addresses and fits 16 × `/24` subnets comfortably — plenty of room for management, monitoring, Kubernetes, and future VLANs without ever running out. A `/16` (65k addresses) would also work but is far more than needed for a home lab.
-
----
-
-## Why a Dedicated Router Behind the ISP Modem
-
-**Full isolation (maintaining home network is not in my homelab's scope):** The lab runs on its own subnet with its own DHCP and firewall. Lab mistakes — DHCP conflicts, Proxmox bridge issues, Kubernetes networking — are contained within the lab network and never reach home devices. Avoid changing the ISP Modem's core configuration when others in the house depend on it for internet access. Changing the home network configuration can break connectivity for everyone, so it’s best to leave it as-is and put your own router behind it for the lab. Furthermore, the ISP modem may have limited or no VLAN support, making it unsuitable for isolating your lab network. Finally, it is not in my homelab's scope to maintain the home network, so I want to keep it untouched and let the ISP modem handle the home network while I experiment freely in my lab network.
-
-**Keeps the ISP modem intact:** Other people in the house depend on the ISP modem for WiFi and internet. Replacing it or changing its configuration would mean taking ownership of the entire home network. Keeping it untouched means home connectivity stays stable regardless of what happens in the lab. See [Goals](../1_Goals_Hardware_LocalEnvSetup.md#goals), in short: I am NOT planning to self-host everything and make the home network dependent on my lab!
-
-**Learn networking:** Building and running your own router is a hands-on way to learn subnetting, routing, DHCP, firewall rules, and VLANs in a real environment.
-
-**It is fun:** Designing and configuring your own network infrastructure is genuinely enjoyable.
-
-**Classic mistakes that break home networks (avoid these):**
-
-- Running a DHCP server on the same subnet as home devices
-- Changing DNS settings on the ISP modem
-- Connecting Proxmox or Kubernetes nodes directly to the home network
-- Misconfiguring Proxmox bridges (can cause broadcast loops)
-- Running firewall experiments on the home LAN
-
----
-
-## Setup: Lab Router on a Raspberry Pi
-
-A Raspberry Pi is used as the dedicated lab router. It is cost-effective, educational, and provides full control over routing, DHCP, firewall rules, and future VLANs.
-
-Full network setup (in .md diagram format to save space (no image file needed for this setup)):
-```
-Internet
-    │
-ISP Modem/Router
-(192.168.2.0/24)
-    │
-    ├── Home devices
-    │
-    └── Raspberry Pi Router (Homelab Network: 10.42.0.0/20) `eth0` (WAN; connected to ISP Modem) → `eth1` (LAN; connected to switch)
-            │
-      Managed Switch (simply expands the number of available LAN ports (router typically does not have enough ports for all physical lab devices below))
-            ├─ VLAN 10 Management    (10.42.10.0/24)
-            │    ├─ 10.42.10.10  PVE1 (phycial machine: Proxmox VE host 1)
-            │    ├─ 10.42.10.11  PVE2 (physical machine: Proxmox VE host 2)
-            │    ├─ 10.42.10.12  PVE3 (physical machine: Proxmox VE host 3)
-            │    ├─ 10.42.10.20  Router (physical machine: Raspberry Pi Router)
-            │    └─ 10.42.10.30  Switch (physical machine: Managed Switch)
-            ├─ VLAN 20 Monitoring    (10.42.20.0/24)
-            │    ├─ 10.42.20.10  Monitoring VM1 (runs on PVE1, such as Prometheus, Grafana, etc.)
-            │    ├─ 10.42.20.11  Monitoring VM2 (same as above, runs on PVE2)
-            │    └─ 10.42.20.12  Monitoring VM3 (same as above, runs on PVE3)
-            └─ VLAN 30 Kubernetes    (10.42.30.0/24)
-                 ├─ 10.42.30.10  k8s-control-plane-1 (VM; runs on PVE1, part of Kubernetes cluster)
-                 ├─ 10.42.30.11  k8s-control-plane-2 (VM; runs on PVE2, part of Kubernetes cluster)
-                 ├─ 10.42.30.12  k8s-worker-1 (VM; runs on PVE1, part of Kubernetes cluster)
-                 ├─ 10.42.30.13  k8s-worker-2 (VM; runs on PVE2, part of Kubernetes cluster)
-                 └─ 10.42.30.14  k8s-worker-3 (VM; runs on PVE3, part of Kubernetes cluster)
-```
-
-### Background Knowledge: Raspberry Pi, Hardware & OS
-
-> See [Raspberry Pi: Hardware & OS Background](../reference/raspberry_pi_hardware_os.md) for detailed background on the Raspberry Pi hardware, ARM vs x86 architecture, SD cards, the operating system and kernel, the boot process, flashing, network interfaces, GPIO, `raspi-config`, and headless operation.
-
-### Prerequisites
-
-- **Raspberry Pi 4 or later** — the compute unit running the router software.
-- **SD card with Raspberry Pi OS Lite (64-bit) flashed** — primary storage. Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) — a free tool from the Raspberry Pi Foundation. Download and install it on your laptop, select the OS image and your SD card as the target, and click Write. It downloads the image, writes it, and verifies it. Then insert the SD card into the Pi and it boots from it automatically.
-    - **No SD card reader on your laptop?** Most laptops do not have a built-in SD card reader (and even those that do often only accept full-size SD, not microSD). Use a USB SD card reader/adapter — a small dongle that accepts a microSD card and plugs into a USB port. I bought the "ISY ICR-120 USB 2.0-kaartlezer USB 2.0" for 6.99 EUR at MediaMarkt (ISY is MediaMarkt's store brand, it is a reputable and affordable brand). Plug it into your laptop, insert the microSD card, and it appears as a removable drive that Raspberry Pi Imager can write to.
-    - **Why Raspberry Pi OS Lite (and not Ubuntu Server or others)?** Raspberry Pi OS is the officially supported OS for the Pi, maintained by the Raspberry Pi Foundation. It is based on Debian, well-tested on Pi hardware, and includes Pi-specific optimisations and drivers out of the box (e.g. the `r8152` USB-Ethernet driver, GPU memory split, hardware interfaces). "Lite" means no desktop environment — just a minimal command-line system, which is exactly what you want for a headless appliance like a router. Ubuntu Server also works on the Pi, but it requires more manual configuration for Pi-specific hardware, has a larger footprint, and offers no real advantage for this use case. Stick with Raspberry Pi OS Lite.
-    - > **Note — OS alternatives:** You could run OpenWRT or pfSense on the Pi instead. Both are purpose-built router/firewall OSes with polished web UIs and pre-configured networking stacks. However, the goal of my homelab ([see personal goal](../1_Goals_Hardware_LocalEnvSetup.md)) is to learn Linux networking by doing it yourself — configuring IP forwarding, DHCP, NAT, and firewall rules manually gives you a much deeper understanding than clicking through a GUI. You can always switch to OpenWRT or pfSense later once you understand what they are doing under the hood.
-- **USB-to-Ethernet adapter (`eth1`)** — adds the LAN interface. I bought the "TP-LINK UE306" for 12.99 EUR at MediaMarkt because "TP-LINK" is a reliable brand and affordable (do not buy the "TP-LINK UE300C" — it is USB-C, which the Pi 4 does not have). Plug into a USB-A port; Raspberry Pi OS includes the `r8152` driver by default, so it is detected automatically as `eth1`.
-- **Managed switch** — expands LAN ports and enables VLANs. I bought the "NETGEAR GS305E" for 24.99 EUR at MediaMarkt because "NETGEAR" is a reputable brand and affordable (the "TP-LINK TL-SG105E" is a good alternative). See [User Manual](https://www.netgear.com/support/product/gs305e)
-- **Ethernet cables** (Cat6 or better for gigabit speeds):
-    - **Long Ethernet cable for WAN (ISP modem → lab router)** 1 cable (10 m (ensures it can reach the router, such as if it needs to go through the wall or a conduit to a different floor (e.g. your work room), etc.)). I bought the "ISY IPC-6100-1-GB Netwerkkabel 10 m Wit" at MediaMarkt for 18.99 EUR because "ISY" (MediaMarkt's own store brand) is a reputable brand and affordable.
-    - **Lab router → lab switch:** 1 cable (0.75 m). I bought the "ISY IPC-1012 CAT6A U/UTP Slim Netwerkkabel 0,75 m Wit" at MediaMarkt for 9.99 EUR (same reasoning for this brand as above).
-    - **Lab switch → lab devices:** 1 cable per device (same model as above).
-- **Access to the ISP modem admin page** — to reserve a static IP for the Pi's `eth0` by MAC address and check for IP conflicts. Typically at `192.168.2.1` or `192.168.1.1`.
-
-### Full Setup Steps
+- [Step 1: Reserve a Static IP for the Pi on the ISP Modem](#step-1-reserve-a-static-ip-for-the-pi-on-the-isp-modem)
+- [Step 2: Assemble and Boot the Pi](#step-2-assemble-and-boot-the-pi)
+- [Step 3: First Boot and Initial Configuration](#step-3-first-boot-and-initial-configuration)
+- [Step 4: Enable SSH](#step-4-enable-ssh)
+- [Step 5: Set Up SSH Key-Based Authentication](#step-5-set-up-ssh-key-based-authentication)
+- [Step 6: Ensure eth1 Has Carrier](#step-6-ensure-eth1-has-carrier)
+- [Step 7: Configure the Pi with Ansible](#step-7-configure-the-pi-with-ansible)
+- [Step 8: Configure the Managed Switch](#step-8-configure-the-managed-switch)
+- [Step 9: Connect Lab Devices](#step-9-connect-lab-devices)
+- [Step 10: Verify](#step-10-verify)
 
 > **Important security note:** The IPs named here are all local network addresses, they are not reachable from the internet. Make sure to avoid listing any public IPs in the documentation (e.g. `curl ifconfig.me` returns your public IP) because this is sensitive information that can be used to attack your network. Only use local IPs (e.g., `192.168.x.x`, `10.x.x.x`, `172.16.x.x`) in documentation!
 >
 > **Extra caution with IPv6:** Unlike IPv4 (where devices use private addresses like `192.168.x.x` behind NAT and are not directly reachable from the internet), IPv6 gives every device a **globally unique, internet-routable public address**. This means IPv6 addresses are *far more sensitive* than IPv4 private addresses — leaking an IPv6 address in documentation, a screenshot, or a log file exposes the real, directly reachable address of that device. An attacker with your device's IPv6 address can attempt to connect to it directly (if your firewall allows it or is misconfigured). Commands like `ip -6 addr show scope global`, `curl -6 ifconfig.me`, or even `ip a` (which shows `inet6` lines with global-scope addresses) can reveal public IPv6 addresses — never include their output in documentation or public repositories. Furthermore, if privacy extensions are not enabled, the IPv6 address embeds the device's MAC address (via EUI-64), which is a permanent hardware identifier that can be used to track the device across networks. See [Subnets & IP Addresses — IPv6](../reference/network/Subnets_and_IP_Addresses.md#ipv6) for full details on how IPv6 addressing works and why NAT does not protect IPv6 devices.
 
-#### Step 1: Reserve a Static IP for the Pi on the ISP Modem
+---
+
+## Step 1: Reserve a Static IP for the Pi on the ISP Modem
 
 Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
 
-#### Step 2: Configure the Pi as a Router
+---
 
-##### 1. Assemble the Raspberry Pi
+## Step 2: Assemble and Boot the Pi
 
-Fit it in a case, and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). See the steps below for how to configure the Pi and setup SSH, etc. Possible accessories (including link to set them up/configure them):
+Fit the Pi in a case and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). Possible accessories (including link to set them up/configure them):
 - [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
 - [power supply](https://www.raspberrypi.com/products/power-supply/)
 - [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
 - [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
 - USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
 
-##### 2. Insert the SD card and connect cables
+Insert the SD card (already containing flashed OS, see [prerequisites](2_1_Network_Design.md#hardware--software)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch. Power on the Pi.
 
-Insert the SD card (already containing flashed OS, [see prerequisites](#prerequisites-including-background-knowledge-for-the-setup)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch.
+---
 
-##### 3. First boot and initial configuration
+## Step 3: First Boot and Initial Configuration
 
 Boot the Pi and perform the first setup configuration. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. In the next step we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). Some important first startup settings in the Raspberry Pi OS configuration tool (`raspi-config`):
 
@@ -197,7 +107,9 @@ echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C"
 vcgencmd measure_temp  # Alternative method
 ```
 
-##### 4. Enable SSH
+---
+
+## Step 4: Enable SSH
 
 Enable SSH manually via terminal (required before you can access it from another device!). SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
 
@@ -251,7 +163,9 @@ ssh <username>@lab-router.local
 
 **TODO: This is done for now as a manual step, integarte this in Ansible later to automate this and provide a public key and only add the step of generating the key and saving it from below, etc.!**
 
-##### 5. Set up SSH key-based authentication and disable password login
+---
+
+## Step 5: Set Up SSH Key-Based Authentication
 
 Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 
@@ -310,7 +224,9 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <username>@<
 
 From this step onwards you can use another device to SSH into the Pi.
 
-##### 6. Ensure eth1 has carrier (cable connected to an active device)
+---
+
+## Step 6: Ensure eth1 Has Carrier
 
 Ensure `eth1` has a cable connected to an active device (the switch in this case!) before running the router playbook. NetworkManager only assigns the static IP (`10.42.0.1/20`) to `eth1` when the interface has **carrier** (link detected). Without carrier, the IP is never assigned, dnsmasq cannot bind to it, and the router does not function.
 
@@ -336,7 +252,9 @@ ip -4 addr show eth1
 # Should show: inet 10.42.0.1/20
 ```
 
-##### 7. Configure the Pi with Ansible
+---
+
+## Step 7: Configure the Pi with Ansible
 
 ```bash
 # Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
@@ -392,7 +310,9 @@ sudo kill 992
 sudo systemctl restart dnsmasq
 ```
 
-##### 8. Configure the Managed Switch
+---
+
+## Step 8: Configure the Managed Switch
 
 The switch's web UI is on the lab network (`10.42.0.168`), which is not directly reachable from your home laptop (`192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
 
@@ -443,26 +363,19 @@ ssh -L 8080:10.42.0.168:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 #   Then browse to: https://localhost:8006
 ```
 
-##### 9. Shutting down the Pi
+---
 
-If you want to shut the Raspberry Pi down, use the following command to safely power it off:
-
-```bash
-sudo shutdown -h now
-# Then after a few seconds when the lights on the Pi stop blinking, you can safely unplug the power supply.
-
-# Power on again by plugging the power supply back in. The Pi will boot automatically.
-```
-
-#### Step 3: Connect Lab Devices
+## Step 9: Connect Lab Devices
 
 Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached to `eth1`. Devices will receive IPs in `10.42.0.0/20` from the Pi's DHCP server and route internet traffic through the Pi Router.
 
-#### Step 4: Verify
+---
+
+## Step 10: Verify
 
 See [Network Commands](../reference/network/Network_Commands.md) for detailed explanations of each command and its output used below. The following commands are used for verification, specifying only the expected outputs, the commands themselves are explained in the document above.
 
-#### Pi Connectivity
+### Pi Connectivity
 
 From the Pi:
 
@@ -476,7 +389,7 @@ ip neigh                # 192.168.2.254 on eth0 REACHABLE; lab devices on eth1 R
 arp -n                  # Same information as ip neigh, in older format
 ```
 
-#### Lab Device Connectivity
+### Lab Device Connectivity
 
 From a lab device:
 
@@ -487,8 +400,3 @@ ping -c 3 10.42.0.1     # Test gateway (Pi) reachability
 ping -c 3 8.8.8.8       # Test internet connectivity
 ping -c 3 google.com    # Test DNS resolution
 ```
-
----
-
-## Setup: TODO: other network setup
-TODO: here add things like VLANs on the managed switch, and any other networking setup that may be required outside of the lab router, etc.

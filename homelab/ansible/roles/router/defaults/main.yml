@@ -4,6 +4,12 @@
 # group_vars/router/ or host_vars/ as needed.
 
 ################################################################################
+# Reference: Where to find these variables and documentation:
+# See docs/2_Network/2_1_Network_Design.md for details on the network design and used 
+# variables, such as the LAN subnet, DHCP range, and static leases. 
+################################################################################
+
+################################################################################
 # Network Interfaces
 ################################################################################
 # WAN interface: connects to the ISP modem (upstream/home network).
