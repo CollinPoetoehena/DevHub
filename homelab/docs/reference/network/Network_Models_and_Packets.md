@@ -286,13 +286,13 @@ A TCP segment is the unit of data for reliable end-to-end delivery between proce
 **TCP 3-way handshake (connection establishment):**
 ```
 Client                          Server
-  │                                │
-  │──── SYN (seq=100) ───────────→│   "I want to connect"
-  │                                │
-  │←─── SYN-ACK (seq=300,ack=101)─│   "OK, I acknowledge your SYN"
-  │                                │
-  │──── ACK (seq=101,ack=301) ───→│   "Got it, connection established"
-  │                                │
+  │                               │
+  │──── SYN (seq=100) ───────────→│ "I want to connect"
+  │                               │
+  │←─── SYN-ACK (seq=300,ack=101)─│ "OK, I acknowledge your SYN"
+  │                               │
+  │──── ACK (seq=101,ack=301) ───→│ "Got it, connection established"
+  │                               │
 ```
 
 ---
