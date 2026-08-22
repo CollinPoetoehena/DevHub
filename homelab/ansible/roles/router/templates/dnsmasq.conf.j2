@@ -124,9 +124,11 @@ dhcp-option=6,{{ router_lan_ip }}
 dhcp-host={{ lease.mac }},{{ lease.ip }},{{ lease.hostname }}
 {% endfor %}
 {% else %}
-# No static leases defined. Add them in router_static_leases variable:
+# No static leases defined. Add them in router_static_leases variable. Example:
 #   router_static_leases:
-#     - { mac: "aa:bb:cc:dd:ee:f1", ip: "10.42.10.10", hostname: "pve1" }
+#     - { mac: "aa:bb:cc:dd:ee:01", ip: "10.42.0.2", hostname: "lab-switch" }
+#     - { mac: "aa:bb:cc:dd:ee:02", ip: "10.42.10.10", hostname: "pve1" }
+#     - { mac: "aa:bb:cc:dd:ee:03", ip: "10.42.10.11", hostname: "pve2" }
 {% endif %}
 
 ################################################################################

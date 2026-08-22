@@ -1,12 +1,13 @@
 ---
 # defaults file for router
-# These are the default variables for the router role. Override them in
-# group_vars/router/ or host_vars/ as needed.
+# Generic defaults that work for any deployment. Site-specific values
+# (network addressing, home subnet, DHCP range) MUST be set in
+# group_vars/router/ or host_vars/.
 
 ################################################################################
 # Reference: Where to find these variables and documentation:
-# See docs/2_Network/2_1_Network_Design.md for details on the network design and used 
-# variables, such as the LAN subnet, DHCP range, and static leases. 
+# See docs/2_Network/2_1_Network_Design.md for details on the network design and used
+# variables, such as the LAN subnet, DHCP range, and static leases.
 ################################################################################
 
 ################################################################################
@@ -27,50 +28,42 @@ router_lan_connection_name: "lab-lan"
 
 ################################################################################
 # LAN Network Configuration (Lab Network)
+# --- REQUIRED: override in group_vars/router/ ---
 ################################################################################
-# Static IP address assigned to the LAN interface (eth1).
-# This becomes the default gateway for all lab devices.
-router_lan_ip: "10.42.0.1"
-
-# Subnet mask in CIDR notation for the lab network.
-# /20 gives 4094 usable host addresses (10.42.0.1 – 10.42.15.254).
-# /24 (254 hosts) is too small once you add VLANs — each VLAN needs its own
-# /24 subnet carved from this range. /20 fits 16 × /24 subnets comfortably.
-# /16 (65k hosts) would also work but is much larger than needed.
-# See details in ../docs/2_Network/2_1_Network_Setup.md on why /20 and not /24 or /16.
-router_lan_cidr: "20"
-
-# Full CIDR notation for the lab subnet (used in firewall rules, etc.)
-# See details in ../docs/2_Network/2_1_Network_Setup.md on why 10.42.x.x and not 10.0.x.x.
-router_lan_subnet: "10.42.0.0/20"
+# Static IP assigned to the LAN interface (becomes default gateway for lab devices).
+# router_lan_ip:
+# Subnet mask in CIDR notation (e.g. "20" for /20 = 4094 hosts).
+# router_lan_cidr:
+# Full CIDR notation for the lab subnet (e.g. "10.42.0.0/20").
+# router_lan_subnet:
 
 ################################################################################
 # Home Network (for firewall blocking rules)
+# --- REQUIRED: override in group_vars/router/ ---
 ################################################################################
-# The home network subnet. Used to create firewall rules that prevent lab
-# devices from reaching home devices (security isolation).
-router_home_subnet: "192.168.2.0/24"
-
-# ISP modem/gateway IP — used for connectivity verification.
-router_home_gateway: "192.168.2.254"
+# The home network subnet (used to block lab→home traffic).
+# router_home_subnet:
+# ISP modem/gateway IP (used for connectivity verification).
+# router_home_gateway:
 
 ################################################################################
 # DHCP Configuration (dnsmasq)
+# --- REQUIRED: override in group_vars/router/ ---
 ################################################################################
 # Start of the DHCP range. Addresses below this are reserved for static leases.
-router_dhcp_range_start: "10.42.0.100"
+# router_dhcp_range_start:
 
-# End of the DHCP range.
-router_dhcp_range_end: "10.42.0.200"
+# End of the DHCP range. Addresses above this are reserved for dynamic leases.
+# router_dhcp_range_end:
 
-# Subnet mask handed out to DHCP clients (must match the /20 CIDR above).
-router_dhcp_netmask: "255.255.240.0"
+# Subnet mask handed out to DHCP clients (must match the CIDR above in `router_lan_cidr`).
+# router_dhcp_netmask:
+
+# Domain name for the lab network (optional, used for local DNS resolution).
+# router_dhcp_domain:
 
 # DHCP lease duration. How long a client keeps its assigned IP before renewing.
 router_dhcp_lease_time: "24h"
-
-# Domain name for the lab network (optional, used for local DNS resolution).
-router_dhcp_domain: "lab.local"
 
 ################################################################################
 # DNS Configuration (dnsmasq)
@@ -92,15 +85,16 @@ router_dns_cache_size: 1000
 # Format: list of dicts with mac, ip, and hostname keys.
 # Example:
 #   router_static_leases:
-#     - { mac: "aa:bb:cc:dd:ee:f1", ip: "10.42.10.10", hostname: "pve1" }
-#     - { mac: "aa:bb:cc:dd:ee:f2", ip: "10.42.10.11", hostname: "pve2" }
+#     - { mac: "aa:bb:cc:dd:ee:01", ip: "10.42.0.2", hostname: "lab-switch" }
+#     - { mac: "aa:bb:cc:dd:ee:02", ip: "10.42.10.10", hostname: "pve1" }
+#     - { mac: "aa:bb:cc:dd:ee:03", ip: "10.42.10.11", hostname: "pve2" }
 router_static_leases: []
 
 ################################################################################
 # Firewall / NAT Configuration
 ################################################################################
 # Whether to enable NAT (masquerading) on the WAN interface.
-# Required for lab devices to reach the internet through the Pi.
+# Required for lab devices to reach the internet through the router.
 router_enable_nat: true
 
 # Whether to block traffic from lab network → home network.

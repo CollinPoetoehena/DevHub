@@ -1,0 +1,41 @@
+---
+# Router group variables — site-specific values for THIS lab.
+# Overrides roles/router/defaults/main.yml.
+# See docs/2_Network/2_1_Network_Design.md for the network design behind these choices.
+#
+# The explanations of the variables are in roles/router/defaults/main.yml, so you can see what each variable does.
+
+################################################################################
+# LAN Network Configuration (Lab Network): See explanation of these vars in roles/router/defaults/main.yml.
+################################################################################
+router_lan_ip: "10.42.0.1"
+
+# See details in ../docs/2_Network/2_1_Network_Setup.md on why /20 and not /24 or /16.
+router_lan_cidr: "20"
+
+# See details in ../docs/2_Network/2_1_Network_Setup.md on why 10.42.x.x and not 10.0.x.x.
+router_lan_subnet: "10.42.0.0/20"
+
+################################################################################
+# Home Network (for firewall blocking rules): See explanation of these vars in roles/router/defaults/main.yml.
+################################################################################
+router_home_subnet: "192.168.2.0/24"
+router_home_gateway: "192.168.2.254"
+
+################################################################################
+# DHCP Configuration (dnsmasq): See explanation of these vars in roles/router/defaults/main.yml.
+################################################################################
+router_dhcp_range_start: "10.42.0.100"
+router_dhcp_range_end: "10.42.0.200"
+router_dhcp_netmask: "255.255.240.0"
+router_dhcp_domain: "lab.local"
+
+################################################################################
+# Static DHCP Leases (MAC → IP reservations): See explanation of these vars in roles/router/defaults/main.yml.
+################################################################################
+# Assigns fixed (static) IPs to lab infrastructure devices so their addresses are
+# predictable (for SSH tunnels, firewall rules, monitoring, etc.).
+# IPs are chosen below the DHCP dynamic range (see `router_dhcp_range_start` and `router_dhcp_range_end`).
+router_static_leases:
+  - { mac: "28:94:01:8a:ec:28", ip: "10.42.0.2", hostname: "lab-switch" }
+  # TODO: later add here the MAC addresses of the Proxmox physical nodes!

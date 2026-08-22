@@ -30,22 +30,36 @@ ISP Modem (192.168.2.0/24)
 - SSH enabled and `ansibleremote` user created (via the users bootstrap play)
 - `eth0` connected to ISP modem, `eth1` connected to lab switch
 
-## Key Variables (defaults/main.yml)
+## Key Variables
+
+### Required (no default — set in `group_vars/router/main.yml`)
+
+| Variable | Description |
+|----------|-------------|
+| `router_lan_ip` | Gateway IP for the lab network (e.g. `10.42.0.1`) |
+| `router_lan_cidr` | Subnet mask in CIDR notation (e.g. `20`) |
+| `router_lan_subnet` | Full CIDR notation (e.g. `10.42.0.0/20`) |
+| `router_home_subnet` | Home network to block from lab (e.g. `192.168.2.0/24`) |
+| `router_home_gateway` | ISP modem/gateway IP (e.g. `192.168.2.254`) |
+| `router_dhcp_range_start` | DHCP pool start (e.g. `10.42.0.100`) |
+| `router_dhcp_range_end` | DHCP pool end (e.g. `10.42.0.200`) |
+| `router_dhcp_netmask` | Subnet mask for DHCP clients (e.g. `255.255.240.0`) |
+| `router_dhcp_domain` | DNS search domain (e.g. `lab.local`) |
+| `router_static_leases` | Static MAC→IP reservations (list of `{mac, ip, hostname}`) |
+
+### Optional (have sensible defaults)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `router_wan_interface` | `eth0` | WAN interface (ISP modem side) |
 | `router_lan_interface` | `eth1` | LAN interface (lab switch side) |
 | `router_lan_connection_name` | `lab-lan` | NetworkManager connection profile name |
-| `router_lan_ip` | `10.42.0.1` | Gateway IP for the lab network |
-| `router_lan_cidr` | `20` | Subnet mask (4094 usable IPs) |
-| `router_home_subnet` | `192.168.2.0/24` | Home network to block from lab |
-| `router_home_gateway` | `192.168.2.254` | ISP modem/gateway IP for connectivity checks |
-| `router_dhcp_range_start` | `10.42.0.100` | DHCP pool start |
-| `router_dhcp_range_end` | `10.42.0.200` | DHCP pool end |
 | `router_dhcp_lease_time` | `24h` | DHCP lease duration |
-| `router_static_leases` | `[]` | Static MAC→IP reservations |
+| `router_dns_upstream_servers` | `[8.8.8.8, 8.8.4.4, 1.1.1.1]` | Upstream DNS forwarders |
+| `router_dns_cache_size` | `1000` | DNS cache entries |
+| `router_enable_nat` | `true` | Enable NAT on WAN interface |
 | `router_block_lab_to_home` | `true` | Firewall: block lab→home traffic |
+| `router_iptables_persistent` | `true` | Save iptables rules across reboots |
 
 ## Usage
 

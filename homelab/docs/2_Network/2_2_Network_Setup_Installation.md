@@ -313,20 +313,25 @@ sudo systemctl restart dnsmasq
 ---
 
 ## Step 8: Configure the Managed Switch
-### Step 8.1: Determine the switch's IP address
-Determine the switch's IP: This can be done in the following ways after logging into the Pi via SSH (see previous steps):
-- Check the DHCP leases on the Pi to see what IP was assigned to the switch: [see dnsmasq command to check active DHCP leases](../reference/network/dnsmasq.md#view-active-dhcp-leases). The switch's MAC address is printed on the device itself.
-- Use the ARP table on the Pi (alternative):
+### Step 8.1: Assign a static IP to the switch
+The switch should have a fixed IP so SSH tunnels, documentation, and firewall rules don't break when leases change. This is done via a DHCP static lease (reservation) in dnsmasq on the Pi — the switch still uses DHCP, but dnsmasq always hands out the same IP for its MAC address.
+
+The static lease is defined in [`group_vars/router/main.yml`](../../ansible/group_vars/router/main.yml) (the `router_static_leases` variable) and deployed by the router playbook. The switch's MAC address is printed on the device itself.
+
 ```bash
-# SSH into the Pi and check the ARP/neighbour table to find the switch:
-ip neigh
-# Should show something like: 10.42.0.168 dev eth1 lladdr 28:94:01:8a:ec:28 STALE
-# Or use:
-arp -a
-# Could show: ? (10.42.0.168) at 28:94:01:8a:ec:28 [ether] on eth1
+# Re-run the router playbook to deploy the updated dnsmasq config with the static lease: See Step 7 above for details on running the playbook.
+
+# Then on the Pi, verify the lease file shows the reservation:
+grep "lab-switch" /etc/dnsmasq.conf
+# Should show: dhcp-host=<MAC address>,10.42.0.2,lab-switch
+
+# Force the switch to pick up its new IP (reboot the switch, or wait for lease expiry).
+# After that, verify from the Pi:
+ping -c 3 10.42.0.2
 ```
+
 ### Step 8.2: Access the switch's web UI via SSH tunnel
-Access the switch's web UI via SSH tunnel: The switch's web UI is on the lab network (e.g. `10.42.0.168`), which is not directly reachable from your home laptop because it is in the home network (e.g. `192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
+Access the switch's web UI via SSH tunnel: The switch's web UI is on the lab network (`10.42.0.2`), which is not directly reachable from your home laptop because it is in the home network (e.g. `192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
 ```
 Traffic flow:
 
@@ -338,7 +343,7 @@ Pi (192.168.2.59) — decrypts and forwards →
     │
     │  (over lab network)
     ▼
-Switch web UI (10.42.0.168:80)
+Switch web UI (10.42.0.2:80)
 ```
 - **Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
 - **Alternatives (and why SSH forwarding is preferred):**
@@ -349,9 +354,9 @@ Follow these steps to set up the SSH tunnel and access the switch's web UI:
 ```bash 
 # From your home laptop, open an SSH tunnel that forwards local port 8080
 # to the switch's web UI (port 80) through the Pi:
-#   -L 8080:10.42.0.168:80  = "listen on localhost:8080 on my laptop, and
-#      forward connections through the Pi to 10.42.0.168:80"
-ssh -L 8080:10.42.0.168:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
+#   -L 8080:10.42.0.2:80  = "listen on localhost:8080 on my laptop, and
+#      forward connections through the Pi to 10.42.0.2:80"
+ssh -L 8080:10.42.0.2:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 
 # While the SSH session is open, open a browser on your home laptop and go to:
 #   http://localhost:8080

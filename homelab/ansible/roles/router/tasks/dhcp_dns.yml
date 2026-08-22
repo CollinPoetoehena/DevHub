@@ -46,13 +46,19 @@
 - name: Deploy dnsmasq configuration
   ansible.builtin.template:
     src: dnsmasq.conf.j2
-    # TODO: maybe path to templates/...??
     dest: /etc/dnsmasq.conf
     owner: root
     group: root
     mode: "0644"
     backup: true
   notify: Restart dnsmasq
+
+# Fail fast if the generated config has syntax errors — prevents restarting
+# dnsmasq with a broken config (which would take down DHCP/DNS for the lab).
+- name: Validate dnsmasq configuration syntax
+  ansible.builtin.command:
+    cmd: dnsmasq --test
+  changed_when: false
 
 ################################################################################
 # Disable systemd-resolved if present (conflicts with dnsmasq on port 53)
