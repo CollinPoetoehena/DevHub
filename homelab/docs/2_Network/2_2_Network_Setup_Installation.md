@@ -325,7 +325,9 @@ The static lease is defined in [`group_vars/router/main.yml`](../../ansible/grou
 grep "lab-switch" /etc/dnsmasq.conf
 # Should show: dhcp-host=<MAC address>,10.42.0.2,lab-switch
 
-# Force the switch to pick up its new IP (reboot the switch, or wait for lease expiry).
+# Force the switch to pick up its new IP:
+# - reboot the switch: Unplug the switch's power cable, wait ~5 seconds, plug it back in. On boot it will send a new DHCP DISCOVER and get the reserved IP.
+# - Or wait for the DHCP lease to expire and renew automatically.
 # After that, verify from the Pi:
 ping -c 3 10.42.0.2
 ```
@@ -369,8 +371,37 @@ ssh -L 8080:10.42.0.2:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 #   Then browse to: https://localhost:8006
 ```
 
+### Step 8.3: Change the default admin password
+The NETGEAR GS305E ships with a well-known default password (`password`). Change it immediately to prevent unauthorized access from any device on the lab network.
 
-TODO: left off here, add VLAN setup and how to configure it, etc.
+1. Log in to the switch web UI (via the SSH tunnel from [Step 8.2](#step-82-access-the-switchs-web-ui-via-ssh-tunnel)): `http://localhost:8080`
+2. Default credentials: no username, password is `password`
+3. Navigate to **Maintenance → Change Password** (or the switch may force you to change it on first login)
+4. Set a strong, unique password and store it in your password manager
+### Step 8.4: Configure VLANs on the switch
+VLANs segment the lab network into isolated broadcast domains — devices in different VLANs cannot communicate without going through the router (which can apply firewall rules). See [Network Design — Subnet & VLAN Design](2_1_Network_Design.md#subnet--vlan-design) for the full rationale (why management stays on the native VLAN) and [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for the port-to-VLAN mapping.
+
+**Steps in the NETGEAR web UI:**
+
+1. Navigate to **VLAN → 802.1Q (not Port-based!) → Advanced → VLAN Configuration**
+2. Add VLAN 20 (name: `Monitoring`), VLAN 30 (name: `Workloads`)
+3. For VLAN 20 and VLAN 30, go to **VLAN Membership** and set (see [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for what tagged/untagged means and why each VLAN uses that mode):
+   - Port 1 (router): **T** (tagged)
+   - Port 2 (PVE1): **T** (tagged)
+   - Port 3 (PVE2): **T** (tagged)
+   - Ports 4–5: leave as not a member
+4. Verify VLAN 1 (default) membership — all ports should remain **U** (untagged) for VLAN 1 (this is the native/management VLAN that carries untagged traffic)
+5. Set the **PVID** (Port VLAN ID) for all ports to 1 (this is typically the default — it means untagged frames arriving on any port are assigned to VLAN 1)
+6. Click **Apply** to save the configuration
+
+> **Note:** The NETGEAR GS305E saves configuration immediately when you click Apply — there is no separate "save to startup" step. However, verify after a power cycle that VLANs persist.
+
+### Step 8.5: Configure VLAN sub-interfaces on the Pi router
+After the switch is configured with VLANs, the Pi router needs VLAN sub-interfaces on `eth1` to route traffic between VLANs and serve DHCP/DNS per VLAN. Management traffic stays on the physical `eth1` interface (native/untagged) — only workload VLANs need sub-interfaces.
+
+> **TODO:** This requires updates to the router Ansible role — adding VLAN sub-interfaces (`eth1.20`, `eth1.30`) via NetworkManager, per-VLAN DHCP ranges in dnsmasq, and inter-VLAN firewall rules. Implement this once the Proxmox hosts are ready to connect.
+
+TODO: left off here, implement VLAN sub-interfaces in the router role and document the Ansible steps.
 
 ---
 

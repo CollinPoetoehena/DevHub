@@ -137,20 +137,76 @@ ISP Modem/Router
     │
     └── Raspberry Pi Router (Homelab Network: 10.42.0.0/20) `eth0` (WAN; connected to ISP Modem) → `eth1` (LAN; connected to switch)
             │
-      Managed Switch (simply expands the number of available LAN ports (router typically does not have enough ports for all physical lab devices below))
-            ├─ VLAN 10 Management    (10.42.10.0/24)
-            │    ├─ 10.42.10.10  PVE1 (phycial machine: Proxmox VE host 1)
-            │    ├─ 10.42.10.11  PVE2 (physical machine: Proxmox VE host 2)
-            │    ├─ 10.42.10.20  Router (physical machine: Raspberry Pi Router)
-            │    └─ 10.42.10.30  Switch (physical machine: Managed Switch)
-            TODO: router and switch are not correct now I think, update with latest version!
-            ├─ VLAN 20 Monitoring    (10.42.20.0/24)
+      Managed Switch (expands LAN ports; router only has one LAN port)
+            │
+            ├─ Native VLAN (untagged)  — Management (10.42.0.0/24)
+            │    ├─ 10.42.0.1   Router (Raspberry Pi — gateway for all VLANs)
+            │    ├─ 10.42.0.2   Switch (NETGEAR GS305E — management interface)
+            │    ├─ 10.42.0.10  PVE1 (physical machine: Proxmox VE host 1)
+            │    └─ 10.42.0.11  PVE2 (physical machine: Proxmox VE host 2)
+            │
+            ├─ VLAN 20 Monitoring      (10.42.20.0/24)
             │    ├─ 10.42.20.10  Monitoring VM1
-            │    ├─ 10.42.20.11  Monitoring VM2
-            │    └─ 10.42.20.12  Monitoring VM3
-            └─ VLAN 30 Kubernetes    (10.42.30.0/24)
-                 ├─ 10.42.30.10  k8s-control-plane-1 (VM; part of Kubernetes cluster)
-                 ├─ 10.42.30.11  k8s-control-plane-2 (VM; part of Kubernetes cluster)
-                 ├─ 10.42.30.12  k8s-worker-1 (VM; part of Kubernetes cluster)
-                 ├─ 10.42.30.13  k8s-worker-2 (VM; part of Kubernetes cluster)
+            │    └─ ...          (other monitoring VMs, Prometheus, Grafana, alerting, etc.)
+            │
+            └─ VLAN 30 Workloads       (10.42.30.0/24)
+                 ├─ 10.42.30.x   Kubernetes nodes, application VMs, databases, or any non-monitoring service
+                 └─ ...          (other workload VMs, Kubernetes pods, etc.)
 ```
+
+### Subnet & VLAN Design
+
+| Subnet | VLAN | Purpose |
+|--------|------|---------|
+| 10.42.0.0/24 | Native (untagged, VLAN 1) | Management — router, switch, Proxmox host management IPs |
+| 10.42.20.0/24 | 20 | Monitoring — Grafana, Prometheus, alerting VMs |
+| 10.42.30.0/24 | 30 | Workloads — Kubernetes, application VMs, databases, and other services |
+
+**Why management lives on the native (untagged) VLAN instead of a dedicated VLAN 10:**
+
+1. **Always-reachable recovery path:** The router's physical `eth1` interface must have an IP on the native VLAN for the trunk to function. If the VLAN configuration on the switch ever breaks (bad config, firmware bug), tagged traffic stops flowing — but untagged (native) traffic still works. Keeping management on the native VLAN means you can always reach the router and switch to fix things, even when VLANs are misconfigured.
+2. **Switch management defaults to VLAN 1:** The NETGEAR GS305E's management interface lives on the default/native VLAN (VLAN 1). While it *can* be moved to a tagged VLAN, doing so means a VLAN misconfiguration locks you out of the switch entirely — requiring a factory reset (hold the reset button for 10 seconds) to regain access.
+3. **Less complexity for a homelab:** A dedicated management VLAN adds value in enterprise environments where hundreds of ports exist and you need to restrict which physical ports can reach management interfaces. In a 5-port switch where all ports are already trusted (physically in your home), it adds configuration without meaningful security gain.
+4. **The router and switch already have their IPs on 10.42.0.x:** The router is `10.42.0.1` (its `eth1` static IP) and the switch is `10.42.0.2` (DHCP static lease). Moving them to a VLAN would require changing established addressing and SSH tunnel configurations.
+
+### Switch Port Assignments (NETGEAR GS305E — 5 ports)
+
+| Port | Connected Device | VLAN Membership |
+|------|-----------------|-----------------|
+| 1 | Pi Router (eth1) | Untagged: 1 (native) + Tagged: 20, 30 (trunk port) |
+| 2 | PVE1 (Proxmox host 1) | Untagged: 1 (native) + Tagged: 20, 30 |
+| 3 | PVE2 (Proxmox host 2) | Untagged: 1 (native) + Tagged: 20, 30 |
+| 4 | (spare) | Untagged: 1 (native) |
+| 5 | (spare) | Untagged: 1 (native) |
+
+#### How to read this table
+
+> See [Network Devices — Tagged vs Untagged](../reference/network/Network_Devices.md#tagged-vs-untagged-8021q-vlan-tagging) for a full explanation of what tagged and untagged mean, how frames flow through the switch, and when to use each mode.
+
+Each port can be a member of multiple VLANs simultaneously. The "VLAN Membership" column lists **all** VLANs that a port participates in, separated by `+`. The keyword before each VLAN entry tells the switch how to handle frames for that VLAN on that port:
+
+- **Untagged: 1** — Frames for VLAN 1 are sent/received **without** a VLAN tag in the Ethernet header. The device on the other end of the cable sees plain Ethernet frames with no VLAN information — it doesn't need to know VLANs exist. This is how the management interfaces work: the Pi's `eth1` has IP `10.42.0.1`, the Proxmox hosts have `10.42.0.10`/`.11` — all on plain, untagged Ethernet.
+
+- **Tagged: 20, 30** — Frames for VLANs 20 and 30 are sent/received **with** an 802.1Q VLAN tag in the Ethernet header (a 4-byte field that says "this frame belongs to VLAN X"). The device on the other end must understand VLAN tags and process them — the Pi uses sub-interfaces (`eth1.20`, `eth1.30`) and Proxmox uses VLAN-aware bridges to separate tagged traffic into the correct virtual networks.
+
+**The `+` does NOT mean "20 and 30 are untagged from VLAN 1"** — it means the port carries three independent traffic streams: one untagged (VLAN 1) and two tagged (VLAN 20, VLAN 30). They coexist on the same physical cable but are completely separate at the logical level.
+
+#### Per-port explanation
+
+**Port 1 — Pi Router (eth1):**
+The router is the gateway for all VLANs. It receives untagged management traffic on `eth1` (VLAN 1, IP `10.42.0.1`) and tagged traffic on sub-interfaces `eth1.20` (VLAN 20, IP `10.42.20.1`) and `eth1.30` (VLAN 30, IP `10.42.30.1`). The router forwards traffic between VLANs (inter-VLAN routing) and applies firewall rules. This is a "trunk port" — it carries all VLANs.
+
+**Ports 2–3 — Proxmox hosts (PVE1, PVE2):**
+Each Proxmox host has one physical NIC connected to the switch. Management traffic (SSH to the host, Proxmox web UI) flows untagged on VLAN 1 — so the host's management IP (`10.42.0.10` or `.11`) works without any VLAN configuration on the base interface. VMs running on the host are placed into VLANs via Proxmox's VLAN-aware bridge (`vmbr0`): a monitoring VM gets tagged into VLAN 20, a workload VM into VLAN 30. The switch delivers tagged frames for those VLANs to the port, and Proxmox's bridge routes them to the correct VM.
+
+**Ports 4–5 — Spare:**
+Simple access ports — only untagged VLAN 1. Any device plugged in gets a management network IP via DHCP. No VLAN awareness required on the connected device.
+
+#### Why tagged for workload VLANs instead of untagged (access ports)?
+
+An alternative design would be to assign each port to a single VLAN as untagged (e.g. port 2 = untagged VLAN 20, port 3 = untagged VLAN 30). This is simpler per-port but has a critical limitation: **you only get 5 ports total**, and each device would be locked to a single VLAN. Since Proxmox hosts run VMs in multiple VLANs simultaneously (monitoring VMs + workload VMs on the same physical machine), the host's port MUST carry multiple VLANs — which requires tagging. The management VLAN stays untagged so you can always reach the host even if VLAN tagging breaks.
+
+**Summary of the tagging logic:**
+- **VLAN 1 (management): untagged** — ensures infrastructure is always reachable; no VLAN-aware config needed on base interfaces.
+- **VLAN 20 (monitoring): tagged** — VMs in this VLAN are placed there by Proxmox/router; requires VLAN-aware bridge/sub-interface.
+- **VLAN 30 (workloads): tagged** — same reasoning as VLAN 20.

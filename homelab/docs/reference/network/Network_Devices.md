@@ -9,6 +9,7 @@ Background information on the physical and virtual network components: ISP modem
 - [ISP Modem / Gateway](#isp-modem--gateway)
 - [Router](#router)
 - [Switch](#switch)
+- [VLAN (Virtual LAN)](#vlan-virtual-lan)
 - [Network Interface](#network-interface)
 
 ---
@@ -55,6 +56,41 @@ A switch connects multiple devices within the same network. It does not create a
 |--------|---------------------|------|----------|-----------|
 | Switch | No                  | No   | No       | No        |
 | Router | Yes                 | Yes  | Yes      | Yes       |
+
+### VLAN (Virtual LAN)
+
+A VLAN is a way to split one physical switch into multiple isolated logical networks. Devices in the same VLAN can communicate directly (layer 2); devices in different VLANs cannot reach each other without going through a router (layer 3). VLANs are defined by the IEEE 802.1Q standard.
+
+**Why use VLANs:**
+- **Isolation:** Separate traffic types (management, monitoring, workloads) so a misconfiguration or compromise in one VLAN doesn't affect the others.
+- **Security:** The router between VLANs can enforce firewall rules — e.g. workload VMs cannot reach management interfaces.
+- **Efficiency:** You don't need a separate physical switch for each network — one managed switch handles all VLANs on the same hardware.
+
+**Key concepts:**
+- **VLAN ID:** A number (1–4094) that identifies the VLAN. VLAN 1 is the default/native VLAN on most switches.
+- **PVID (Port VLAN ID):** The VLAN assigned to untagged frames arriving on a port. Typically set to 1 (default).
+- **Native VLAN:** The VLAN carried untagged on a trunk port. Usually VLAN 1.
+- **Trunk port:** A port that carries multiple VLANs (combination of tagged and untagged traffic).
+- **Access port:** A port that carries only one VLAN (all traffic untagged).
+
+#### Tagged vs Untagged (802.1Q VLAN Tagging)
+
+A single physical Ethernet cable can carry traffic for multiple VLANs. The switch needs to know how to handle frames for each VLAN on each port — that's where "tagged" and "untagged" come in:
+
+- **Untagged (access):** The switch strips/adds the VLAN tag transparently. The device on the other end sees plain Ethernet frames — it has no idea VLANs exist. Used for devices that don't support VLANs or for the "default" network on a port. Each port can be untagged for **only one** VLAN (its PVID).
+
+- **Tagged (trunk):** The switch preserves the 802.1Q VLAN tag in the Ethernet frame header (a 4-byte field containing the VLAN ID). The device on the other end **must** understand VLAN tags and use them to separate traffic into the correct virtual network (e.g. via sub-interfaces on Linux, or VLAN-aware bridges in Proxmox). A port can be tagged for **multiple** VLANs simultaneously.
+
+**How a frame travels through the switch:**
+1. A frame arrives on a port. If it has no VLAN tag, the switch assigns it to the port's PVID (e.g. VLAN 1).
+2. The switch looks up the destination MAC in its forwarding table and determines which port(s) to send the frame out on.
+3. On the egress port: if that VLAN is configured as **untagged**, the switch strips the tag before sending. If **tagged**, it keeps the tag in the frame.
+
+**Analogy:** Think of a tagged port as a multi-lane highway with lane markers (each lane is a VLAN). An untagged port is a single-lane road with no markers — traffic just flows without any labelling.
+
+**When to use tagged vs untagged:**
+- Use **untagged** for devices that don't understand VLANs (printers, laptops, simple servers) or for the management/default network that should always be reachable even if VLAN config breaks.
+- Use **tagged** when a device needs to participate in multiple VLANs simultaneously (e.g. a router with sub-interfaces, or a hypervisor running VMs in different VLANs).
 
 ### Network Interface
 
