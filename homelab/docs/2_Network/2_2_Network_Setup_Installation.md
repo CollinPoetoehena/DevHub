@@ -313,11 +313,20 @@ sudo systemctl restart dnsmasq
 ---
 
 ## Step 8: Configure the Managed Switch
-
-The switch's web UI is on the lab network (`10.42.0.168`), which is not directly reachable from your home laptop (`192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
-
-**Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
-
+### Step 8.1: Determine the switch's IP address
+Determine the switch's IP: This can be done in the following ways after logging into the Pi via SSH (see previous steps):
+- Check the DHCP leases on the Pi to see what IP was assigned to the switch: [see dnsmasq command to check active DHCP leases](../reference/network/dnsmasq.md#view-active-dhcp-leases). The switch's MAC address is printed on the device itself.
+- Use the ARP table on the Pi (alternative):
+```bash
+# SSH into the Pi and check the ARP/neighbour table to find the switch:
+ip neigh
+# Should show something like: 10.42.0.168 dev eth1 lladdr 28:94:01:8a:ec:28 STALE
+# Or use:
+arp -a
+# Could show: ? (10.42.0.168) at 28:94:01:8a:ec:28 [ether] on eth1
+```
+### Step 8.2: Access the switch's web UI via SSH tunnel
+Access the switch's web UI via SSH tunnel: The switch's web UI is on the lab network (e.g. `10.42.0.168`), which is not directly reachable from your home laptop because it is in the home network (e.g. `192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
 ```
 Traffic flow:
 
@@ -331,21 +340,13 @@ Pi (192.168.2.59) — decrypts and forwards →
     ▼
 Switch web UI (10.42.0.168:80)
 ```
+- **Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
+- **Alternatives (and why SSH forwarding is preferred):**
+    - **Add a route on the home laptop** (`sudo ip route add 10.42.0.0/20 via 192.168.2.59`): works, but breaks the network isolation that the dedicated router is designed to provide. Home devices should not have routes into the lab network.
+    - **Connect the laptop directly to the switch**: works for initial setup, but requires physically moving the Ethernet cable and getting a lab IP via DHCP, losing access to the home network.
 
-**Alternatives (and why SSH forwarding is preferred):**
-- **Add a route on the home laptop** (`sudo ip route add 10.42.0.0/20 via 192.168.2.59`): works, but breaks the network isolation that the dedicated router is designed to provide. Home devices should not have routes into the lab network.
-- **Connect the laptop directly to the switch**: works for initial setup, but requires physically moving the Ethernet cable and getting a lab IP via DHCP, losing access to the home network.
-
-```bash
-# ========================== Find the switch's IP address ==========================
-# SSH into the Pi and check the ARP/neighbour table to find the switch:
-ip neigh
-# Should show something like: 10.42.0.168 dev eth1 lladdr 28:94:01:8a:ec:28 STALE
-# Or use:
-arp -a
-# Could show: ? (10.42.0.168) at 28:94:01:8a:ec:28 [ether] on eth1
-
-# ========================== Access the switch web UI via SSH tunnel ==========================
+Follow these steps to set up the SSH tunnel and access the switch's web UI:
+```bash 
 # From your home laptop, open an SSH tunnel that forwards local port 8080
 # to the switch's web UI (port 80) through the Pi:
 #   -L 8080:10.42.0.168:80  = "listen on localhost:8080 on my laptop, and
@@ -362,6 +363,7 @@ ssh -L 8080:10.42.0.168:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 #   ssh -L 8006:10.42.10.10:8006 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 #   Then browse to: https://localhost:8006
 ```
+
 
 TODO: left off here, add VLAN setup and how to configure it, etc.
 
