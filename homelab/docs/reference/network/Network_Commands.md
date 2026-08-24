@@ -10,6 +10,7 @@ General networking commands with output format explanations. Used for connectivi
 - [ip a](#ip-a-or-ip-addr-or-ip-address)
 - [ip r](#ip-r)
 - [ping](#ping)
+- [traceroute / tracepath — Trace Packet Path](#traceroute--tracepath--trace-packet-path)
 - [ip neigh / arp — ARP Neighbour Table](#ip-neigh--arp--arp-neighbour-table)
 - [ss — Socket Statistics](#ss--socket-statistics)
 - [dig / nslookup — DNS Lookup](#dig--nslookup--dns-lookup)
@@ -156,6 +157,141 @@ Tests reachability and measures round-trip time to a host by sending ICMP echo r
 ```
 ping -c 3 <host>
 ```
+
+---
+
+### `traceroute` / `tracepath` — Trace Packet Path
+
+Shows the route packets take from your machine to a destination, listing every intermediate hop (router) along the way. Each hop decrements the packet's TTL (Time To Live) by 1; when TTL reaches 0 the router discards the packet and sends back an ICMP "Time Exceeded" message — this is how traceroute discovers each hop.
+
+Use it to find where packets are being dropped, which path traffic takes through the network, or where latency is introduced.
+
+There are two commands: `traceroute` (classic, feature-rich, may need installation) and `tracepath` (simpler, always available on modern Linux, no root required).
+
+#### `traceroute`
+
+**Basic usage:**
+
+```bash
+traceroute <host>                      # trace using UDP probes (default on Linux)
+traceroute -I <host>                   # use ICMP echo (like ping) instead of UDP
+traceroute -T <host>                   # use TCP SYN probes (useful when ICMP is blocked)
+traceroute -n <host>                   # numeric output — don't resolve hostnames
+traceroute -m <max_ttl> <host>         # set max hops (default: 30)
+traceroute -w <seconds> <host>         # timeout per probe (default: 5s)
+traceroute -q <n> <host>               # number of probes per hop (default: 3)
+traceroute -p <port> <host>            # set destination port (for UDP/TCP probes)
+```
+
+**Common flags:**
+
+| Flag | Description |
+|------|-------------|
+| `-I` | Use ICMP echo requests instead of UDP. Requires root. More likely to get responses from all hops since many routers respond to ICMP. |
+| `-T` | Use TCP SYN probes. Useful for tracing to hosts behind firewalls that block UDP/ICMP but allow TCP on common ports (e.g. `-T -p 443`). Requires root. |
+| `-n` | Don't resolve IP addresses to hostnames — faster output. |
+| `-m <hops>` | Maximum number of hops (TTL) before giving up. Default is 30. |
+| `-q <n>` | Number of probe packets per hop. Default is 3 (hence three time values per line). |
+| `-w <sec>` | Seconds to wait for a response before printing `*`. Default is 5. |
+| `-f <ttl>` | Start at this TTL instead of 1 (skip the first N-1 hops). |
+| `-p <port>` | Destination port for UDP or TCP probes. |
+
+**Output format:**
+
+Each line represents one hop (router) along the path:
+
+```
+<hop>  <hostname> (<ip>)  <rtt1> ms  <rtt2> ms  <rtt3> ms
+```
+
+| Field | Description |
+|-------|-------------|
+| `<hop>` | Hop number (TTL value that reached this router). |
+| `<hostname>` | Reverse DNS name of the router (or just the IP if `-n` is used or reverse DNS fails). |
+| `<ip>` | IP address of the router interface that sent the ICMP reply. |
+| `<rtt>` | Round-trip time for each probe packet. Three values by default (one per probe). |
+| `*` | No response received within the timeout — the router either dropped the probe, is configured not to reply, or is behind a firewall. |
+| `!H` | Host unreachable. |
+| `!N` | Network unreachable. |
+| `!X` | Communication administratively prohibited (firewall). |
+| `!P` | Protocol unreachable. |
+
+**Example — trace to an external host:**
+
+```
+poetoec@lab-router:~ $ traceroute -n 8.8.8.8
+traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets
+ 1  192.168.2.254  1.234 ms  1.112 ms  1.098 ms
+ 2  10.0.0.1  8.456 ms  8.321 ms  8.298 ms
+ 3  172.16.50.1  12.789 ms  12.654 ms  12.601 ms
+ 4  * * *
+ 5  108.170.241.1  14.123 ms  14.067 ms  13.998 ms
+ 6  8.8.8.8  13.456 ms  13.321 ms  13.289 ms
+```
+
+- Hop 1: `192.168.2.254` — the ISP modem (first gateway from `ip r`).
+- Hop 2–3: ISP internal routers.
+- Hop 4: `* * *` — a router that does not respond to probes (common — many ISP/backbone routers disable ICMP replies). This does not mean the path is broken; it just means that router is silent.
+- Hop 5–6: Google's network; final hop is the destination `8.8.8.8`.
+
+**Example — trace within the lab network:**
+
+```
+poetoec@proxmox-node1:~ $ traceroute -n 192.168.2.5
+traceroute to 192.168.2.5 (192.168.2.5), 30 hops max, 60 byte packets
+ 1  10.42.0.1  2.456 ms  2.321 ms  2.298 ms
+ 2  192.168.2.5  3.789 ms  3.654 ms  3.601 ms
+```
+
+- Hop 1: `10.42.0.1` — the lab router (default gateway for the lab subnet).
+- Hop 2: `192.168.2.5` — the destination on the home network, reached via the router.
+
+**Interpreting problems:**
+
+| Symptom | Meaning |
+|---------|---------|
+| All hops respond, latency increases gradually | Normal — each hop adds some delay. |
+| `* * *` for one hop, then continues | That router silently forwards but does not reply to TTL-exceeded — not a problem. |
+| `* * *` for all remaining hops | Traffic is being dropped at or after the last responding hop — check firewall rules or routing. |
+| Sudden large latency jump at one hop | That link is congested or geographically distant. |
+| `!H` or `!N` at a hop | The router at that hop has no route to the destination — routing misconfiguration. |
+| Loop (same IPs repeating) | Routing loop — two routers are bouncing packets between each other. |
+
+#### `tracepath`
+
+`tracepath` is a simpler alternative that comes pre-installed on most Linux distributions. It does not require root, uses UDP probes, and also discovers the Path MTU (maximum packet size that can traverse the entire path without fragmentation).
+
+```bash
+tracepath <host>                       # trace with automatic PMTU discovery
+tracepath -n <host>                    # numeric output
+tracepath -b <host>                    # show both hostname and IP
+tracepath -m <max_hops> <host>         # set max hops (default: 30)
+```
+
+**Example:**
+
+```
+poetoec@lab-router:~ $ tracepath -n 8.8.8.8
+ 1?: [LOCALHOST]                        pmtu 1500
+ 1:  192.168.2.254                        1.234ms
+ 1:  192.168.2.254                        1.112ms
+ 2:  10.0.0.1                             8.456ms asymm  3
+ 3:  172.16.50.1                          12.789ms reached
+     Resume: pmtu 1500 hops 3 back 3
+```
+
+- `pmtu 1500` — Path MTU is 1500 bytes (standard Ethernet, no fragmentation needed).
+- `asymm 3` — asymmetric routing: the return path has a different hop count (3) than the forward path at this point. Not necessarily a problem, but worth noting.
+- `reached` — destination was reached.
+
+#### When to use which
+
+| Tool | Best for |
+|------|----------|
+| `traceroute -n` | Quick path check with numeric output. |
+| `traceroute -I` | When UDP probes get no response but ICMP might work. |
+| `traceroute -T -p 443` | Tracing through firewalls that only allow TCP on well-known ports. |
+| `tracepath` | No-root quick trace with Path MTU discovery. |
 
 ---
 
