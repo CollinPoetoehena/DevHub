@@ -192,6 +192,8 @@ Bits on the wire:       101010001110010101...
 
 An Ethernet frame is the unit of data on a local network. It's what switches forward between ports.
 
+The frame structure of [Ethernet](https://en.wikipedia.org/wiki/Ethernet): [Ethernet II Frame Structure](https://en.wikipedia.org/wiki/Ethernet_frame#Ethernet_II):
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Ethernet II Frame                            │
@@ -265,7 +267,6 @@ An IP packet is the unit of data routed between networks. It's what routers forw
 │ variable       │        Data (variable length — layer 4 segment/datagram)      │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
-
 **How to read the diagrams:** Each diagram is a single box with three parts: the **bit-position ruler** (top 2 rows), the **header fields**, and the **data** (payload), separated by a `═══` divider.
 - **The ruler (top 2 rows):** The first row (`OFFSET / Octet`) labels the four octets (0, 1, 2, 3) that make up each 32-bit row. The second row (`Octet / Bit`) shows individual bit positions within those octets, numbered 0–9 repeating for each octet (the first `0` is bit 0, the second `0` after octet 1 is bit 10, the third is bit 20, the fourth is bit 30 — see the Offset column to know which row you're in). Each bit has its own cell (`│0│1│2│...│`) so you can count exactly where a field starts and ends.
 - **Why 0–9 instead of 0–31:** Each octet contains 10 bit positions (0 through 9), and the numbering repeats for each of the 4 octets. This keeps the diagram compact — full two-digit numbers (10, 11, ..., 31) would require wider cells and break the alignment with the header fields below. Since each octet is clearly labeled (0, 1, 2, 3) in the row above, you can always calculate the absolute bit position: octet number × 10 + bit digit. For example, bit `3` under octet `2` = bit 23. The `│` separators between each digit make it easy to count without ambiguity.
@@ -330,7 +331,6 @@ Data:           [TCP segment: src port 54321, dst port 80, seq 1, "GET / HTTP/1.
 │ variable       │           Data (variable length — layer 4 segment/datagram)   │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
-
 > **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
 
 The IPv6 header is simpler than IPv4 — it is always exactly 40 bytes (no variable-length options, no IHL field, no header checksum). Optional functionality is handled through **extension headers** that are chained after the fixed header.
@@ -404,7 +404,6 @@ A TCP segment is the unit of data for reliable end-to-end delivery between proce
 │ variable       │           Data (variable length — application data)           │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
-
 > **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
 
 > **Why individual flag bits?** Unlike most header fields that span multiple bits and represent a numeric value (e.g. a 16-bit port number), each TCP flag is a single bit that is independently either set (`1`) or unset (`0`). That is why the diagram and table list them separately — each flag has its own meaning and can be toggled independently of the others. A single segment can have multiple flags set at the same time (e.g. PSH+ACK, SYN+ACK).
@@ -469,7 +468,6 @@ A UDP datagram is the unit of data for fast, connectionless delivery. No handsha
 │ variable       │           Data (variable length — application data)           │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
-
 > **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
 
 The UDP header is only **8 bytes** — far simpler than TCP's 20+ bytes. There is no sequence number, no acknowledgment, no flow control, and no connection state.
