@@ -19,7 +19,11 @@ How data travels across a network — from application to wire and back. This do
   - [Encapsulation and De-encapsulation](#encapsulation-and-de-encapsulation)
   - [Anatomy of a Frame (Layer 2)](#anatomy-of-a-frame-layer-2)
   - [Anatomy of a Packet (Layer 3)](#anatomy-of-a-packet-layer-3)
-  - [Anatomy of a Segment (Layer 4)](#anatomy-of-a-segment-layer-4)
+    - [IPv4 Packet](#ipv4-packet)
+    - [IPv6 Packet](#ipv6-packet)
+  - [Anatomy of a Segment/Datagram (Layer 4)](#anatomy-of-a-segmentdatagram-layer-4)
+    - [TCP Segment](#tcp-segment)
+    - [UDP Datagram](#udp-datagram)
   - [Full Example: HTTP Request Through the Layers](#full-example-http-request-through-the-layers)
 - [Understanding Local and Remote Network Communication](#understanding-local-and-remote-network-communication)
   - [Example 1: Same Subnet, Same Switch](#example-1-same-subnet-same-switch)
@@ -96,6 +100,17 @@ Provides end-to-end communication between processes on different machines. Uses 
 
 - **TCP (Transmission Control Protocol):** Reliable, ordered delivery. Establishes a connection (3-way handshake: SYN → SYN-ACK → ACK), tracks sequence numbers, retransmits lost data, provides flow control. Used by HTTP, SSH, SMTP.
 - **UDP (User Datagram Protocol):** Unreliable, unordered, no connection. Just sends datagrams — fast but no guarantees. Used by DNS queries, DHCP, video streaming, gaming.
+
+**TCP vs UDP — when to use which:**
+
+| | TCP | UDP |
+|-|-----|-----|
+| Connection | Yes (3-way handshake) | No (just send) |
+| Reliability | Guaranteed delivery, retransmission | Best-effort, no retransmission |
+| Ordering | Maintains order via sequence numbers | No ordering guarantees |
+| Overhead | 20+ byte header, connection state | 8 byte header, stateless |
+| Speed | Slower (reliability has a cost) | Faster (no setup, no waiting) |
+| Use cases | HTTP, SSH, SMTP, file transfers | DNS queries, DHCP, video streaming, gaming, VoIP |
 
 **Failures at this layer:** port blocked by firewall, connection refused (no process listening), TCP timeout/reset.
 
@@ -223,34 +238,62 @@ Payload:    45 00 00 3c ...      ← IP packet starts here
 
 An IP packet is the unit of data routed between networks. It's what routers forward based on the destination IP address.
 
-**IPv4 Header:**
+#### IPv4 Packet
 
+[IPv4 Packet Structure](https://en.wikipedia.org/wiki/IPv4#Packet_structure):
 ```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-├─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┤
-│Version│  IHL  │    DSCP   │ECN│         Total Length          │
-├───────┴───────┼───────────┴───┼───────────────────────────────┤
-│   Identification              │Flags│     Fragment Offset     │
-├───────────────┼───────────────┼───────────────────────────────┤
-│      TTL      │   Protocol    │       Header Checksum         │
-├───────────────┴───────────────┴───────────────────────────────┤
-│                       Source IP Address                       │
-├───────────────────────────────────────────────────────────────┤
-│                    Destination IP Address                     │
-├───────────────────────────────────────────────────────────────┤
-│                    Options (if IHL > 5)                       │
-└───────────────────────────────────────────────────────────────┘
+┌────────┬───────┬───────────────┬───────────────┬───────────────┬───────────────┐
+│ OFFSET │ Octet │ 0             │ 1             │ 2             │ 3             │
+├────────┼───────┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┤
+│ Octet  │ Bit   │0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│
+├────────┼───────┼─┴─┴─┴─┼─┴─┴─┴─┼─┴─┴─┴─┴─┴─┼─┴─┼─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┤
+│ 0      │ 0     │Version│  IHL  │      DSCP │ECN│        Total Length           │
+├────────┼───────┼───────┴───────┴───────────┴───┼─────┬─────────────────────────┤
+│ 4      │ 32    │           Identification      │Flags│    Fragment Offset      │
+├────────┼───────┼───────────────┬───────────────┼─────┴─────────────────────────┤
+│ 8      │ 64    │      TTL      │      Protocol │      Header Checksum          │
+├────────┼───────┼───────────────┴───────────────┴───────────────────────────────┤
+│ 12     │ 96    │                         Source IP Address                     │
+├────────┼───────┼───────────────────────────────────────────────────────────────┤
+│ 16     │ 128   │                      Destination IP Address                   │
+├────────┼───────┼───────────────────────────────────────────────────────────────┤
+│ 20–59  │ 160   │                                                               │
+│        │ -     │                      Options (if IHL > 5)                     │
+│        │ 479   │           (0 - 320 bits, padded to multiples of 32 bits)      │
+│        │       │                                                               │
+├────────┴───────┼═══════════════════════════════════════════════════════════════╡
+│ variable       │        Data (variable length — layer 4 segment/datagram)      │
+└────────────────┴───────────────────────────────────────────────────────────────┘
 ```
+
+**How to read the diagrams:** Each diagram is a single box with three parts: the **bit-position ruler** (top 2 rows), the **header fields**, and the **data** (payload), separated by a `═══` divider.
+- **The ruler (top 2 rows):** The first row (`OFFSET / Octet`) labels the four octets (0, 1, 2, 3) that make up each 32-bit row. The second row (`Octet / Bit`) shows individual bit positions within those octets, numbered 0–9 repeating for each octet (the first `0` is bit 0, the second `0` after octet 1 is bit 10, the third is bit 20, the fourth is bit 30 — see the Offset column to know which row you're in). Each bit has its own cell (`│0│1│2│...│`) so you can count exactly where a field starts and ends.
+- **Why 0–9 instead of 0–31:** Each octet contains 10 bit positions (0 through 9), and the numbering repeats for each of the 4 octets. This keeps the diagram compact — full two-digit numbers (10, 11, ..., 31) would require wider cells and break the alignment with the header fields below. Since each octet is clearly labeled (0, 1, 2, 3) in the row above, you can always calculate the absolute bit position: octet number × 10 + bit digit. For example, bit `3` under octet `2` = bit 23. The `│` separators between each digit make it easy to count without ambiguity.
+- **The Offset column:** The left two columns show the cumulative position of each row — `OFFSET` is the octet offset from the start of the header, and `Octet` is the bit offset. For example, row `4 / 32` means "starting at octet 4 (= bit 32)". Each row adds 4 octets (32 bits).
+- **How to read a field's position:** Find the field in the header section. Its left edge aligns with a bit in the ruler above — that's its start position. Count the bit cells it spans to get its size. For example, `Version` spans 4 bit cells (bits 0–3), `Total Length` spans 16 bit cells (bits 16–31 = 2 octets).
+- **The `═══` divider:** Separates the header from the data. Everything above is the protocol header (structured, fixed-format fields). Everything below is the data payload (variable length, carries the next layer's content).
+- **The `│` separators:** Every bit in the ruler row has its own cell (`│0│1│2│...│`), and every field in the header rows is enclosed in `│` borders. This makes it easy to count exactly how many bits a field spans — just count the cells between its left `│` and right `│`. It also makes field boundaries unambiguous, even when two fields sit side by side in the same row (like `Version│IHL` or `Flags│Fragment Offset`).
+- **Why "octet" instead of "byte":** An [octet](https://en.wikipedia.org/wiki/Octet_(computing)) is a unit of exactly 8 bits. Networking standards use "octet" because "byte" historically meant different sizes on different systems. In practice on modern systems, 1 octet = 1 byte = 8 bits.
+- **Structure vs values:** The diagrams show the *structure* (field layout), not actual values. When a real packet is sent, each bit position is filled with the actual value for that field.
+- **Why bit-level diagrams are used:** These RFC-style diagrams are the standard in protocol documentation because they provide a precise, implementation-independent representation. Any device from any vendor can interpret packets correctly by reading the defined bit ranges.
 
 | Field | Size | Description |
 |-------|------|-------------|
 | Version | 4 bits | `4` for IPv4, `6` for IPv6 |
 | IHL (Internet Header Length) | 4 bits | Header length in 32-bit words (usually 5 = 20 bytes) |
-| TTL (Time To Live) | 1 byte | Decremented by each router; packet is dropped when it reaches 0 (prevents infinite loops) |
-| Protocol | 1 byte | Layer 4 protocol: `6` = TCP, `17` = UDP, `1` = ICMP |
-| Source IP | 4 bytes | IP address of the sender (e.g. `10.42.0.10`) |
-| Destination IP | 4 bytes | IP address of the target (e.g. `8.8.8.8`) |
+| DSCP (Differentiated Services Code Point) | 6 bits | Used for QoS — marks traffic priority class |
+| ECN (Explicit Congestion Notification) | 2 bits | Allows routers to signal congestion without dropping packets |
+| Total Length | 16 bits (2 bytes) | Total size of the IP packet (header + payload) in bytes |
+| Identification | 16 bits (2 bytes) | Unique ID for reassembling fragmented packets |
+| Flags | 3 bits | Fragmentation control: DF (Don't Fragment), MF (More Fragments) |
+| Fragment Offset | 13 bits | Position of this fragment within the original packet |
+| TTL (Time To Live) | 8 bits (1 byte) | Decremented by each router; packet is dropped when it reaches 0 (prevents infinite loops) |
+| Protocol | 8 bits (1 byte) | Layer 4 protocol: `6` = TCP, `17` = UDP, `1` = ICMP |
+| Header Checksum | 16 bits (2 bytes) | Error-detection checksum over the header only (recalculated at each hop) |
+| Source IP | 32 bits (4 bytes) | IP address of the sender (e.g. `10.42.0.10`) |
+| Destination IP | 32 bits (4 bytes) | IP address of the target (e.g. `8.8.8.8`) |
+| Options | 0–320 bits (0–40 bytes) | Optional fields (e.g. record route, timestamp). Present when IHL > 5. Padded to 32-bit boundary. |
+| Data | Variable | The layer 4 segment/datagram being carried (TCP segment, UDP datagram, ICMP message, etc.). Size = Total Length − (IHL × 4). |
 
 **Example:**
 ```
@@ -258,37 +301,143 @@ Version: 4, IHL: 5 (20 bytes), Total Length: 60
 TTL: 64, Protocol: 6 (TCP)
 Source IP:      10.42.0.10
 Destination IP: 8.8.8.8
+Data:           [TCP segment: src port 54321, dst port 80, seq 1, "GET / HTTP/1.1..."]
 ```
 
-### Anatomy of a Segment (Layer 4)
+#### IPv6 Packet
+
+[IPv6 Packet Structure](https://en.wikipedia.org/wiki/IPv6_packet#Fixed_header):
+```
+┌────────┬───────┬───────────────┬───────────────┬───────────────┬───────────────┐
+│ OFFSET │ Octet │ 0             │ 1             │ 2             │ 3             │
+├────────┼───────┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┤
+│ Octet  │ Bit   │0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│
+├────────┼───────┼─┴─┴─┴─┼─┴─┴─┴─┴─┴─┴─┴─┼─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┤
+│ 0      │ 0     │Version│ Traffic Class │              Flow Label               │
+├────────┼───────┼───────┴───────────────┴───────┬───────────────┬───────────────┤
+│ 4      │ 32    │       Payload Length          │  Next Header  │   Hop Limit   │
+├────────┼───────┼───────────────────────────────┴───────────────┴───────────────┤
+│ 8–23   │ 64    │                                                               │
+│        │ -     │                       Source Address                          │
+│        │ 191   │                        (128 bits)                             │
+│        │       │                                                               │
+├────────┼───────┼───────────────────────────────────────────────────────────────┤
+│ 24–39  │ 192   │                                                               │
+│        │ -     │                    Destination Address                        │
+│        │ 319   │                        (128 bits)                             │
+│        │       │                                                               │
+├────────┴───────┼═══════════════════════════════════════════════════════════════╡
+│ variable       │           Data (variable length — layer 4 segment/datagram)   │
+└────────────────┴───────────────────────────────────────────────────────────────┘
+```
+
+> **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
+
+The IPv6 header is simpler than IPv4 — it is always exactly 40 bytes (no variable-length options, no IHL field, no header checksum). Optional functionality is handled through **extension headers** that are chained after the fixed header.
+
+| Field | Size | Description |
+|-------|------|-------------|
+| Version | 4 bits | Always `6` for IPv6 |
+| Traffic Class | 8 bits | Equivalent to IPv4's DSCP + ECN — used for QoS (priority/class of traffic) |
+| Flow Label | 20 bits | Identifies a flow of packets that should receive the same treatment (e.g. same path through routers). Set to `0` if not used. |
+| Payload Length | 16 bits | Length of the payload in bytes (everything after this 40-byte header, including extension headers) |
+| Next Header | 8 bits | Identifies the type of the next header — either a layer 4 protocol (`6` = TCP, `17` = UDP, `58` = ICMPv6) or an extension header type (`0` = Hop-by-Hop, `43` = Routing, `44` = Fragment, etc.) |
+| Hop Limit | 8 bits | Same function as IPv4's TTL — decremented by each router, packet dropped at 0 |
+| Source Address | 128 bits (16 bytes) | IPv6 address of the sender (e.g. `2a02:a44a:8185:1::10`) |
+| Destination Address | 128 bits (16 bytes) | IPv6 address of the target (e.g. `2001:4860:4860::8888`) |
+| Data | Variable | The layer 4 segment/datagram being carried (TCP segment, UDP datagram, ICMPv6 message, etc.). Size = Payload Length (minus any extension headers). |
+
+**Key differences from IPv4:**
+
+| | IPv4 | IPv6 |
+|-|------|------|
+| Header size | Variable (20–60 bytes) | Fixed (40 bytes) |
+| Address size | 32 bits (4 bytes) | 128 bits (16 bytes) |
+| Checksum | Header checksum field (recalculated at every hop) | No checksum — removed to improve router performance; layer 4 (TCP/UDP) checksums handle integrity |
+| Fragmentation | Done by any router along the path | Done only by the source (routers never fragment; they send "Packet Too Big" ICMPv6 if needed) |
+| Options | Variable-length Options field in the header | Extension headers chained after the fixed header |
+| Broadcast | Yes (`255.255.255.255`, subnet broadcast) | No — replaced entirely by multicast |
+
+**Example:**
+```
+Version: 6, Traffic Class: 0, Flow Label: 0
+Payload Length: 40, Next Header: 6 (TCP), Hop Limit: 64
+Source:      2a02:a44a:8185:1::10
+Destination: 2001:4860:4860::8888
+Data:        [TCP segment: src port 54321, dst port 443, seq 1, TLS ClientHello...]
+```
+
+### Anatomy of a Segment/Datagram (Layer 4)
+
+Layer 4 has two main protocols: TCP (reliable, connection-oriented) and UDP (unreliable, connectionless). Each has its own header format.
+
+#### TCP Segment
 
 A TCP segment is the unit of data for reliable end-to-end delivery between processes.
 
-**TCP Header:**
-
+[TCP Segment Structure](https://en.wikipedia.org/wiki/Transmission_Control_Protocol#TCP_segment_structure):
 ```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-├─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┼─┤
-│          Source Port          │        Destination Port       │
-├───────────────────────────────┼───────────────────────────────┤
-│                       Sequence Number                         │
-├───────────────────────────────────────────────────────────────┤
-│                    Acknowledgment Number                      │
-├───────┼───────┼─┼─┼─┼─┼─┼─┼───┼───────────────────────────────┤
-│Offset │Reserv │U│A│P│R│S│F│   │           Window Size         │
-├───────┴───────┴─┴─┴─┴─┴─┴─┴───┼───────────────────────────────┤
-│          Checksum             │        Urgent Pointer         │
-└───────────────────────────────┴───────────────────────────────┘
+┌────────┬───────┬───────────────┬───────────────┬───────────────┬───────────────┐
+│ OFFSET │ Octet │ 0             │ 1             │ 2             │ 3             │
+├────────┼───────┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┤
+│ Octet  │ Bit   │0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│
+├────────┼───────┼─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┼─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┤
+│ 0      │ 0     │          Source Port          │        Destination Port       │
+├────────┼───────┼───────────────────────────────┴───────────────────────────────┤
+│ 4      │ 32    │                       Sequence Number                         │
+├────────┼───────┼───────────────────────────────────────────────────────────────┤
+│ 8      │ 64    │                    Acknowledgment Number                      │
+│        │       │                (meaningful when ACK bit set)                  │
+├────────┼───────┼───────┬───────┬─┬─┬─┬─┬─┬─┬─┬─┬───────────────────────────────┤
+│ 12     │ 96    │ Data  │Reser- │C│E│U│A│P│R│S│F│           Window              │
+│        │       │ Offset│ved    │W│C│R│C│S│S│Y│I│                               │
+│        │       │       │       │R│E│G│K│H│T│N│N│                               │
+├────────┼───────┼───────┴───────┴─┴─┴─┴─┴─┴─┴─┴─┼───────────────────────────────┤
+│ 16     │ 128   │          Checksum             │        Urgent Pointer         │
+│        │       │                               │ (meaningful when URG bit set) │
+├────────┼───────┼───────────────────────────────┴───────────────────────────────┤
+│ 20–59  │ 160   │                                                               │
+│        │ -     │                  Options (if Data Offset > 5)                 │
+│        │ 479   │ (0 - 320 bits, padded with zeroes to a multiple of 32 bits)   │
+│        │       │                                                               │
+├────────┴───────┼═══════════════════════════════════════════════════════════════╡
+│ variable       │           Data (variable length — application data)           │
+└────────────────┴───────────────────────────────────────────────────────────────┘
 ```
 
-| Field | Description |
-|-------|-------------|
-| Source Port | Port on the sending machine (e.g. `54321` — ephemeral/random) |
-| Destination Port | Port on the receiving machine (e.g. `80` for HTTP, `22` for SSH) |
-| Sequence Number | Byte position in the stream (used for ordering and retransmission) |
-| Flags | SYN (start connection), ACK (acknowledge), FIN (close), RST (reset), PSH (push) |
-| Window Size | How much data the receiver can accept (flow control) |
+> **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
+
+> **Why individual flag bits?** Unlike most header fields that span multiple bits and represent a numeric value (e.g. a 16-bit port number), each TCP flag is a single bit that is independently either set (`1`) or unset (`0`). That is why the diagram and table list them separately — each flag has its own meaning and can be toggled independently of the others. A single segment can have multiple flags set at the same time (e.g. PSH+ACK, SYN+ACK).
+
+| Field | Size | Description |
+|-------|------|-------------|
+| Source Port | 16 bits (2 bytes) | Port on the sending machine (e.g. `54321` — ephemeral/random) |
+| Destination Port | 16 bits (2 bytes) | Port on the receiving machine (e.g. `80` for HTTP, `22` for SSH) |
+| Sequence Number | 32 bits (4 bytes) | Byte position in the stream (used for ordering and retransmission) |
+| Acknowledgment Number | 32 bits (4 bytes) | Next byte the sender expects to receive (confirms receipt of data) |
+| Data Offset | 4 bits | TCP header length in 32-bit words (usually 5 = 20 bytes without options) |
+| Reserved | 3 bits | Reserved for future use — must be set to zero |
+| Flag: CWR | 1 bit | Congestion Window Reduced — sender reduced its transmit rate after receiving ECE |
+| Flag: ECE | 1 bit | ECN-Echo — signals congestion was detected (during handshake: ECN capability) |
+| Flag: URG | 1 bit | Urgent — Urgent Pointer field is valid; data should be prioritised |
+| Flag: ACK | 1 bit | Acknowledgment — Acknowledgment Number field is valid (set on all segments after the initial SYN) |
+| Flag: PSH | 1 bit | Push — deliver data to the application immediately, don't buffer |
+| Flag: RST | 1 bit | Reset — abort the connection (error or rejection) |
+| Flag: SYN | 1 bit | Synchronize — start a new connection (used in 3-way handshake) |
+| Flag: FIN | 1 bit | Finish — sender has finished sending data (graceful close) |
+| Window | 16 bits (2 bytes) | How much data (window size) the receiver can accept (flow control) |
+| Checksum | 16 bits (2 bytes) | Error-detection checksum over header + payload |
+| Urgent Pointer | 16 bits (2 bytes) | Points to urgent data in the stream (only valid when URG flag is set) |
+| Options | 0–320 bits (0–40 bytes) | Optional fields (e.g. MSS, window scaling, timestamps). Present when Data Offset > 5. Padded with zeroes to a multiple of 32 bits, since Data Offset counts words of 4 octets. |
+| Data | Variable | The application data being sent (e.g. HTTP request, SSH command, file bytes). Size = IP Total Length − IP header − TCP header. |
+
+**Example:**
+```
+Source Port: 54321, Destination Port: 80
+Sequence: 1, Acknowledgment: 1, Flags: PSH+ACK
+Window Size: 65535, Checksum: 0xA3F2
+Data: "GET / HTTP/1.1\r\nHost: google.com\r\n\r\n" (37 bytes)
+```
 
 **TCP 3-way handshake (connection establishment):**
 ```
@@ -301,6 +450,46 @@ Client                          Server
   │──── ACK (seq=101,ack=301) ───→│ "Got it, connection established"
   │                               │
 ```
+
+#### UDP Datagram
+
+A UDP datagram is the unit of data for fast, connectionless delivery. No handshake, no retransmission, no ordering guarantees — just send and hope it arrives.
+
+[UDP Datagram Structure](https://en.wikipedia.org/wiki/User_Datagram_Protocol#UDP_datagram_structure):
+```
+┌────────┬───────┬───────────────┬───────────────┬───────────────┬───────────────┐
+│ OFFSET │ Octet │ 0             │ 1             │ 2             │ 3             │
+├────────┼───────┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┼─┬─┬─┬─┬─┬─┬─┬─┤
+│ Octet  │ Bit   │0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│2│3│4│5│6│7│8│9│0│1│
+├────────┼───────┼─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┼─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┤
+│ 0      │ 0     │          Source Port          │       Destination Port        │
+├────────┼───────┼───────────────────────────────┼───────────────────────────────┤
+│ 4      │ 32    │            Length             │           Checksum            │
+├────────┴───────┼═══════════════════════════════┴═══════════════════════════════╡
+│ variable       │           Data (variable length — application data)           │
+└────────────────┴───────────────────────────────────────────────────────────────┘
+```
+
+> **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
+
+The UDP header is only **8 bytes** — far simpler than TCP's 20+ bytes. There is no sequence number, no acknowledgment, no flow control, and no connection state.
+
+| Field | Size | Description |
+|-------|------|-------------|
+| Source Port | 16 bits (2 bytes) | Port on the sending machine (optional — can be `0` if no reply is expected) |
+| Destination Port | 16 bits (2 bytes) | Port on the receiving machine (e.g. `53` for DNS, `67`/`68` for DHCP) |
+| Length | 16 bits (2 bytes) | Total size of the UDP datagram (header + payload) in bytes. Minimum is 8 (header only). |
+| Checksum | 16 bits (2 bytes) | Error-detection checksum over header + payload (optional in IPv4, mandatory in IPv6) |
+| Data | Variable | The application data being sent (e.g. DNS query, DHCP message, video frame). Size = Length − 8 bytes. |
+
+**Example:**
+```
+Source Port: 54321, Destination Port: 53
+Length: 45, Checksum: 0xB7E1
+Data: [DNS query: A record for "google.com"] (37 bytes)
+```
+
+**TCP vs UDP Comparison:** See [Layer 4 — Transport — TCP vs UDP](#layer-4--transport) for a detailed comparison of the two protocols.
 
 ### Full Example: HTTP Request Through the Layers
 

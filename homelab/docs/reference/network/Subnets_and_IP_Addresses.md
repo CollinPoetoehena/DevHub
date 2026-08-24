@@ -6,104 +6,24 @@ Background information on subnets, CIDR notation, IPv4, IPv6, and NAT.
 
 ## Table of Contents
 
-- [Subnet](#subnet)
 - [IP Addresses — IPv4 and IPv6](#ip-addresses--ipv4-and-ipv6)
   - [IPv4](#ipv4)
   - [NAT — Network Address Translation (IPv4)](#nat--network-address-translation-ipv4)
   - [IPv6](#ipv6)
+    - [IPv6 address types](#ipv6-address-types)
+    - [IPv6 does not need NAT — and why that matters](#ipv6-does-not-need-nat--and-why-that-matters)
+    - [How IPv6 address assignment works](#how-ipv6-address-assignment-works)
+- [Subnets](#subnets)
 
 ---
 
-### Subnet
-
-A subnet is a range of IP addresses that form one logical network. For example, `192.168.10.0/24` covers addresses `192.168.10.1` to `192.168.10.254`. Devices on different subnets cannot communicate directly — they need a router in between. This separation is what provides network isolation.
-
-- **Subnet mask:** A 32-bit number that defines which part of an IP address is the *network* portion and which part is the *host* portion. Written either in dotted-decimal (e.g. `255.255.255.0`) or CIDR prefix notation (e.g. `/24`). The network portion is the same for all devices in the subnet; the host portion is what makes each device's address unique within that subnet. In binary, the mask is a block of `1`s (network bits) followed by `0`s (host bits):
-    ```
-    255.255.255.0    =  11111111.11111111.11111111.00000000  (/24 — 24 network bits,  8 host bits)
-    255.255.0.0      =  11111111.11111111.00000000.00000000  (/16 — 16 network bits, 16 host bits)
-    255.255.240.0    =  11111111.11111111.11110000.00000000  (/20 — 20 network bits, 12 host bits)
-    255.255.252.0    =  11111111.11111111.11111100.00000000  (/22 — 22 network bits, 10 host bits)
-    255.255.255.192  =  11111111.11111111.11111111.11000000  (/26 — 26 network bits,  6 host bits)
-    ```
-    Note how the boundary can fall anywhere inside an octet (e.g. `/22` splits the third octet: `11111100` — 6 bits network, 2 bits host; `/26` splits the fourth octet: `11000000` — 2 bits network, 6 bits host). This is what makes CIDR "classless" — there is no requirement for the boundary to fall on an octet boundary.
-- **CIDR notation (Classless Inter-Domain Routing):** A compact way of writing an IP address together with its subnet mask as a single string: `<network-address>/<prefix-length>`. The prefix length (the number after the `/`) is simply the count of `1` bits in the subnet mask. CIDR replaced the old class-based system (Class A/B/C) and allows subnets of any size.
-- **How to read CIDR — key numbers:**
-    | CIDR  | Subnet Mask       | Usable Hosts | Host Range (example)                    | Notes                                              |
-    |-------|-------------------|--------------|-----------------------------------------|----------------------------------------------------|
-    | `/8`  | `255.0.0.0`       | 16,777,214   | `10.0.0.1` – `10.255.255.254`           | Very large; private `10.x.x.x` space               |
-    | `/16` | `255.255.0.0`     | 65,534       | `192.168.0.1` – `192.168.255.254`       | Large; private `192.168.x.x` space                 |
-    | `/20` | `255.255.240.0`   | 4,094        | `10.42.0.1` – `10.42.15.254`            | Used for a homelab lab network for example         |
-    | `/22` | `255.255.252.0`   | 1,022        | `10.42.8.1` – `10.42.11.254`            | Spans 4 "class C" blocks; used for medium LANs     |
-    | `/24` | `255.255.255.0`   | 254          | `192.168.2.1` – `192.168.2.254`         | Most common home/office subnet                     |
-    | `/26` | `255.255.255.192` | 62           | `10.42.10.1` – `10.42.10.62`            | Quarter of a /24; used to carve up a single block  |
-    | `/30` | `255.255.255.252` | 2            | `10.0.0.1` – `10.0.0.2`                 | Point-to-point links (e.g. router–router)          |
-    | `/32` | `255.255.255.255` | 0 (1 host)   | just that one IP                        | Single host route                                  |
-
-    Formula: usable hosts = $2^{(32 - \text{prefix})} - 2$ (subtract 2: one for the network address, one for the broadcast address).
-
-- **IPv6 subnets — separate table:** IPv6 subnets work differently from IPv4 in a few important ways. IPv6 addresses are 128 bits (not 32), there are no subnet masks in dotted-decimal form (only prefix lengths), and the standard subnet size for a LAN is always `/64` — regardless of how many devices are on it. IPv6 also has no broadcast address, so the formula is different: usable addresses = $2^{(128 - \text{prefix})}$ (no subtraction needed). ISPs assign prefixes to customers (typically `/48` or `/56`), who then carve them into `/64` networks. The prefix hierarchy looks like this:
-
-    | CIDR   | Addresses | Typical Use | Notes |
-    |--------|-----------|-------------|-------|
-    | `/32`  | $2^{96}$ = 79,228,162,514,264,337,593,543,950,336 (≈ 79.2 × 10²⁷) | ISP allocation from regional registry (RIR) | A single ISP receives this block and assigns sub-prefixes to customers |
-    | `/48`  | $2^{80}$ = 1,208,925,819,614,629,174,706,176 (≈ 1.2 × 10²⁴) | Site allocation — assigned to a large customer or organisation | Can be subnetted into 65,536 × `/64` networks |
-    | `/56`  | $2^{72}$ = 4,722,366,482,869,645,213,696 (≈ 4.7 × 10²¹) | Residential customer allocation — assigned by ISP to a home connection | Can be subnetted into 256 × `/64` networks — plenty for a homelab |
-    | `/64`  | $2^{64}$ = 18,446,744,073,709,551,616 (≈ 18.4 quintillion) | Single LAN subnet — the standard size for every IPv6 network segment | SLAAC requires exactly `/64`; this is the universal LAN prefix length. Never use anything smaller for a LAN. |
-    | `/128` | 1 | Single host route — one specific address | Equivalent to IPv4's `/32`; used in routing tables for individual hosts, loopback (`::1/128`) |
-
-    **Why `/64` is always the LAN size:** In IPv4, you choose a subnet size based on how many hosts you need (`/24` for 254, `/20` for 4094, etc.). In IPv6, the LAN size is always `/64` — not because you need $2^{64}$ addresses, but because SLAAC (the standard auto-configuration mechanism) requires it. SLAAC assumes the last 64 bits are the interface identifier and the first 64 bits are the network prefix. If you use a different prefix length (e.g. `/48` or `/96` on a LAN), SLAAC breaks and devices cannot auto-configure. DHCPv6 can technically work with other prefix lengths, but `/64` is the universal convention and deviating from it causes compatibility problems.
-
-    **How IPv6 prefix delegation works (ISP → customer → LANs):**
-    ```
-    ISP has:        2a02:a44a::/32                   ← ISP's allocation from RIPE
-    Assigns to you: 2a02:a44a:8185::/56              ← your home's prefix (256 /64s available)
-    Your LANs:
-      Home LAN:     2a02:a44a:8185:0001::/64         ← subnet 1
-      Lab LAN:      2a02:a44a:8185:0002::/64         ← subnet 2
-      IoT VLAN:     2a02:a44a:8185:0003::/64         ← subnet 3
-      ...up to:     2a02:a44a:8185:00ff::/64         ← subnet 256
-    ```
-
-    **Worked examples (IPv6):**
-    - `2a02:a44a:8185:1::1/64` → network `2a02:a44a:8185:1::/64`, hosts `2a02:a44a:8185:1::1` – `2a02:a44a:8185:1:ffff:ffff:ffff:ffff`. This is a global unicast address on a `/64` LAN — the standard configuration.
-    - `fe80::1d9f:d306:dbe6:f1db/10` → link-local address. The `/10` prefix means all addresses starting with `fe80` through `febf` are link-local. These are auto-configured on every interface and never routed beyond the local link.
-    - `fd12:3456:789a::1/48` → ULA (Unique Local Address) site prefix. Hosts `fd12:3456:789a::1` – `fd12:3456:789a:ffff:ffff:ffff:ffff:ffff`. Used for private internal communication, not routable on the internet. Can be subnetted into 65,536 × `/64` LANs.
-    - `::1/128` → the loopback address (IPv6 equivalent of `127.0.0.1`). A `/128` is a single address — the machine talking to itself.
-
-- **Network address and broadcast address:** For any subnet, the first address is the *network address* (identifies the subnet itself, not assignable to a host) and the last address is the *broadcast address* (sends to all hosts in the subnet, not assignable). Everything in between is usable.
-
-    > **Note:** This applies to IPv4 only. IPv6 has no broadcast address — it uses multicast instead. In IPv6, the first address of a subnet (e.g. `2a02:a44a:8185:1::/64`) is the "subnet-router anycast address" (used to reach any router on that subnet), and all other addresses in the range are usable. There is no "last address reserved for broadcast" concept.
-    ```
-    Subnet:    10.42.0.0/20
-    Network:   10.42.0.0       ← first address, not assignable
-    Hosts:     10.42.0.1  –  10.42.15.254   ← 4,094 usable addresses
-    Broadcast: 10.42.15.255    ← last address, not assignable
-
-    Subnet:    10.42.8.0/22
-    Network:   10.42.8.0       ← first address, not assignable
-    Hosts:     10.42.8.1  –  10.42.11.254   ← 1,022 usable addresses (spans .8, .9, .10, .11 in the third octet)
-    Broadcast: 10.42.11.255    ← last address, not assignable
-
-    Subnet:    10.42.10.0/26
-    Network:   10.42.10.0      ← first address, not assignable
-    Hosts:     10.42.10.1  –  10.42.10.62   ← 62 usable addresses (only the first quarter of the .10 block)
-    Broadcast: 10.42.10.63     ← last address, not assignable
-    ```
-- **Worked examples:**
-    - `192.168.2.59/24` → network `192.168.2.0`, hosts `.1`–`.254`, broadcast `.255`. The Pi's `eth0` address on the home network.
-    - `10.42.0.1/20` → network `10.42.0.0`, hosts `10.42.0.1`–`10.42.15.254`, broadcast `10.42.15.255`. The Pi's `eth1` address; the entire lab network fits inside this `/20`.
-    - `127.0.0.1/8` → the loopback subnet; all of `127.x.x.x` is local to the machine.
-    - `10.42.8.50/22` → network `10.42.8.0`, hosts `10.42.8.1`–`10.42.11.254`, broadcast `10.42.11.255`. A `/22` spans four consecutive `/24` blocks (`.8`, `.9`, `.10`, `.11`). A host at `.50` in the third octet is well within the range — the boundary is at `.11.255`, not at `.8.255`.
-    - `10.42.10.33/26` → network `10.42.10.0`, hosts `10.42.10.1`–`10.42.10.62`, broadcast `10.42.10.63`. This is the first `/26` carved out of `10.42.10.0/24`. The second `/26` would be `10.42.10.64/26` (hosts `.65`–`.126`), the third `.128/26`, the fourth `.192/26` — four equal quarters of the same `/24`.
-
-> **Note:** You do not need to calculate all of this by hand. Know the basics (what CIDR means, how to read a subnet mask, roughly how many hosts a prefix gives you), but for anything more precise use an online subnet calculator: [calculator.net](https://www.calculator.net/ip-subnet-calculator.html), [subnet-calculator.com](https://www.subnet-calculator.com/), or [subnet-calculator.nl](https://subnet-calculator.nl/).
-
-### IP Addresses — IPv4 and IPv6
+## IP Addresses — IPv4 and IPv6
 
 An IP address is a numeric label assigned to every device on a network. It serves two purposes: **identification** (which device is this?) and **location** (where is it on the network, and how do I route packets to it?). There are two versions of IP in use today: IPv4 (the original, still dominant) and IPv6 (the successor, designed to solve IPv4's limitations).
 
-#### IPv4
+### IPv4
+
+IPv4 is the fourth version of the Internet Protocol and the foundation of most modern networking. It’s still widely used today, especially in legacy systems and many home and enterprise networks.
 
 **Format:** A 32-bit number, written as four decimal octets separated by dots ("dotted-decimal notation"). Each octet is 8 bits → ranges from 0 to 255.
 
@@ -115,6 +35,11 @@ In binary:
 ```
 
 32 bits means $2^{32}$ = 4,294,967,296 total possible addresses (~4.3 billion). That sounds like a lot, but it is far fewer than the number of devices on the internet today. This shortage is the central problem that NAT solves and that IPv6 was designed to eliminate.
+
+**IPv4 address exhaustion:** IANA (the global IP address authority) allocated the last blocks of IPv4 addresses in 2011. Regional registries (RIPE for Europe, ARIN for North America, etc.) exhausted their pools in subsequent years. Today, new IPv4 addresses are only available through transfers (buying from others) or reclamation. This is why:
+- Most home and business networks use private addresses + NAT (one public IP shared by all devices).
+- ISPs increasingly use **CGNAT** (Carrier-Grade NAT) — putting multiple customers behind a single public IPv4 address, adding yet another NAT layer.
+- IPv6 was developed as the long-term solution.
 
 **Private address ranges (RFC 1918):** Three blocks of IPv4 addresses are reserved for private networks — they are not routable on the public internet. Any device can use them internally, and routers/firewalls will never forward them to the internet. If a packet with a private source IP reaches the internet, it is dropped.
 
@@ -136,30 +61,25 @@ For example, a homelab uses `10.42.0.0/20` (from the `10.0.0.0/8` block). The ho
 | `255.255.255.255` | Limited broadcast — reaches all hosts on the local network segment |
 | `100.64.0.0/10` | Carrier-grade NAT (CGNAT) — used by ISPs for another layer of NAT before the customer's modem |
 
-**IPv4 address exhaustion:** IANA (the global IP address authority) allocated the last blocks of IPv4 addresses in 2011. Regional registries (RIPE for Europe, ARIN for North America, etc.) exhausted their pools in subsequent years. Today, new IPv4 addresses are only available through transfers (buying from others) or reclamation. This is why:
-- Most home and business networks use private addresses + NAT (one public IP shared by all devices).
-- ISPs increasingly use **CGNAT** (Carrier-Grade NAT) — putting multiple customers behind a single public IPv4 address, adding yet another NAT layer.
-- IPv6 was developed as the long-term solution.
-
-#### NAT — Network Address Translation (IPv4)
+### NAT — Network Address Translation (IPv4)
 
 NAT is the mechanism that allows many devices sharing private IP addresses to access the internet through a single public IP address. It is the reason IPv4 still works despite address exhaustion — without NAT, every device would need its own public IP.
 
 **How NAT works — step by step:**
 
 ```
-                        Public Internet
+                       Public Internet
                               │
-                    ┌─────────┴─────────┐
-                    │   ISP Modem/Router │
-                    │ Public IP: 203.0.113.5 (example) │
-                    │ LAN IP: 192.168.2.1   │
-                    └─────────┬─────────┘
+           ┌──────────────────┴─────────────────┐
+           │          ISP Modem/Router          │
+           │ Public IP: 203.0.113.5 (example)   │
+           │        LAN IP: 192.168.2.1         │
+           └──────────────────┬─────────────────┘
                               │ NAT here
               ┌───────────────┼───────────────┐
               │               │               │
-         192.168.2.59    192.168.2.5     192.168.2.10
-          (Pi router)     (Laptop)        (Phone)
+        192.168.2.59     192.168.2.5    192.168.2.10
+         (Pi router)      (Laptop)        (Phone)
 ```
 
 1. **Outbound packet** — your laptop (`192.168.2.5`) sends a request to `142.250.185.110` (Google):
@@ -213,9 +133,7 @@ sudo conntrack -C
 | Simple to set up — every home router does it automatically | Makes peer-to-peer communication harder — two NATed devices cannot easily connect directly (requires STUN/TURN/ICE hole-punching techniques) |
 | | Double/triple NAT (ISP CGNAT + modem NAT + lab router NAT) multiplies these problems |
 
-**NAT in the homelab:** The lab uses double NAT: the ISP modem NATs home traffic to the public IP, and the Pi router NATs lab traffic to its home IP (`192.168.2.59`). For outbound internet access from lab devices, this works transparently. For inbound access (reaching a lab service from the internet), you would need port forwarding on both the ISP modem and the Pi router — but this homelab does not need inbound access from the internet, so double NAT is not a problem.
-
-#### IPv6
+### IPv6
 
 IPv6 is the successor to IPv4, designed primarily to solve address exhaustion. It uses 128-bit addresses, providing $2^{128}$ ≈ 340 undecillion (3.4 × 10³⁸) addresses — enough to assign a unique public IP to every device on every network on Earth, many times over. This is such an enormous space that NAT is no longer needed.
 
@@ -254,19 +172,19 @@ IPv6 is the successor to IPv4, designed primarily to solve address exhaustion. I
 **IPv6 address structure:** Unlike IPv4 where the network/host split is defined by the subnet mask, IPv6 addresses have a standardised structure:
 
 ```
-|← ───── 64 bits ───── →|← ───── 64 bits ───── →|
-|    Network Prefix       |    Interface ID         |
-|    (assigned by ISP/    |    (derived from MAC     |
-|     router/RA)          |     via EUI-64 or        |
-|                         |     randomly generated)  |
+|← ────── 64 bits ────── →|← ────── 64 bits ────── →|
+|     Network Prefix      |      Interface ID      |
+|   (assigned by ISP/     |   (derived from MAC    |
+|    router/RA)           |    via EUI-64 or       |
+|                         |    randomly generated) |
 
-Example: 2001:db8:1234:5678 : abcd:ef01:2345:6789
-         ──── prefix ────     ── interface ID ──
+Example:  2001:db8:1234:5678 : abcd:ef01:2345:6789
+          ──── prefix ─────    ── interface ID ───
 ```
 
 The first 64 bits identify the network (the "prefix"), the last 64 bits identify the device on that network (the "interface identifier"). ISPs typically assign a `/48` or `/56` prefix to customers, who then subnet it into `/64` networks — each `/64` supports $2^{64}$ ≈ 18.4 quintillion devices.
 
-**IPv6 address types:**
+#### IPv6 address types:
 
 | Type | Prefix | Scope | Example | Description |
 |------|--------|-------|---------|-------------|
@@ -278,7 +196,7 @@ The first 64 bits identify the network (the "prefix"), the last 64 bits identify
 
 > **Note:** There is no broadcast in IPv6. IPv4 uses broadcast (`255.255.255.255` or subnet broadcast like `192.168.2.255`) to reach all devices on a network. IPv6 replaces this entirely with multicast — targeted group communication that is more efficient and does not disturb devices that are not interested.
 
-**IPv6 does not need NAT — and why that matters:**
+#### IPv6 does not need NAT — and why that matters:
 
 This is the most important conceptual difference between IPv4 and IPv6:
 
@@ -306,7 +224,7 @@ IPv6 (no NAT):
     No translation needed — the address is the same end-to-end
 ```
 
-**How IPv6 address assignment works:**
+#### How IPv6 address assignment works:
 
 IPv6 devices get their addresses differently from IPv4. There are two main mechanisms:
 
@@ -384,9 +302,89 @@ curl -6 ifconfig.me            # WARNING: shows your public IPv6 — do not put 
 
 **Dual-stack:** Most networks today run IPv4 and IPv6 simultaneously — this is called "dual-stack". Each interface has both an IPv4 address and one or more IPv6 addresses. The OS decides which protocol to use for each connection (preferring IPv6 when available, per RFC 6724 "Happy Eyeballs"). The homelab currently uses IPv4 only for internal addressing (`10.42.0.0/20`), but the ISP modem likely provides IPv6 connectivity to the internet, which lab devices may use for outbound traffic via the Pi router (if IPv6 forwarding is enabled).
 
-**IPv6 in the homelab:**
+---
 
-For now, the homelab's internal network uses IPv4 (`10.42.0.0/20`) for simplicity — all the DHCP, DNS, and firewall configuration is IPv4-based. IPv6 may be used opportunistically for outbound internet access (if the ISP provides it), but internal lab communication is IPv4. Key considerations:
-- If the ISP assigns an IPv6 prefix to the Pi router's WAN interface (`eth0`), the Pi could advertise a sub-prefix on the LAN side (`eth1`) via Router Advertisements, giving lab devices public IPv6 addresses — but this requires explicit configuration (enabling IPv6 forwarding, running `radvd` or configuring dnsmasq for RA, and setting up ip6tables firewall rules).
-- ULA addresses (`fd00::/8`) could be used for internal-only IPv6 communication without exposing devices to the internet.
-- **Security implication:** If IPv6 is active but the firewall is not configured for it, lab devices with global IPv6 addresses may be directly reachable from the internet — bypassing all the IPv4 isolation the dedicated router provides. Always ensure `ip6tables` (or `nftables`) rules are in place if IPv6 is enabled. See the security note in the [Network Setup](../../2_Network/2_1_Network_Setup.md) document.
+## Subnets
+
+A subnet is a range of IP addresses that form one logical network. For example, `192.168.10.0/24` covers addresses `192.168.10.1` to `192.168.10.254`. Devices on different subnets cannot communicate directly — they need a router in between. This separation is what provides network isolation.
+
+- **Subnet mask:** A 32-bit number that defines which part of an IP address is the *network* portion and which part is the *host* portion. Written either in dotted-decimal (e.g. `255.255.255.0`) or CIDR prefix notation (e.g. `/24`). The network portion is the same for all devices in the subnet; the host portion is what makes each device's address unique within that subnet. In binary, the mask is a block of `1`s (network bits) followed by `0`s (host bits):
+    ```
+    255.255.255.0    =  11111111.11111111.11111111.00000000  (/24 — 24 network bits,  8 host bits)
+    255.255.0.0      =  11111111.11111111.00000000.00000000  (/16 — 16 network bits, 16 host bits)
+    255.255.240.0    =  11111111.11111111.11110000.00000000  (/20 — 20 network bits, 12 host bits)
+    255.255.252.0    =  11111111.11111111.11111100.00000000  (/22 — 22 network bits, 10 host bits)
+    255.255.255.192  =  11111111.11111111.11111111.11000000  (/26 — 26 network bits,  6 host bits)
+    ```
+    Note how the boundary can fall anywhere inside an octet (e.g. `/22` splits the third octet: `11111100` — 6 bits network, 2 bits host; `/26` splits the fourth octet: `11000000` — 2 bits network, 6 bits host). This is what makes CIDR "classless" — there is no requirement for the boundary to fall on an octet boundary.
+- **CIDR notation (Classless Inter-Domain Routing):** A compact way of writing an IP address together with its subnet mask as a single string: `<network-address>/<prefix-length>`. The prefix length (the number after the `/`) is simply the count of `1` bits in the subnet mask. CIDR replaced the old class-based system (Class A/B/C) and allows subnets of any size.
+- **How to read CIDR — key numbers:**
+    | CIDR  | Subnet Mask       | Usable Hosts | Host Range (example)                    | Notes                                              |
+    |-------|-------------------|--------------|-----------------------------------------|----------------------------------------------------|
+    | `/8`  | `255.0.0.0`       | 16,777,214   | `10.0.0.1` – `10.255.255.254`           | Very large; private `10.x.x.x` space               |
+    | `/16` | `255.255.0.0`     | 65,534       | `192.168.0.1` – `192.168.255.254`       | Large; private `192.168.x.x` space                 |
+    | `/20` | `255.255.240.0`   | 4,094        | `10.42.0.1` – `10.42.15.254`            | Used for a homelab lab network for example         |
+    | `/22` | `255.255.252.0`   | 1,022        | `10.42.8.1` – `10.42.11.254`            | Spans 4 "class C" blocks; used for medium LANs     |
+    | `/24` | `255.255.255.0`   | 254          | `192.168.2.1` – `192.168.2.254`         | Most common home/office subnet                     |
+    | `/26` | `255.255.255.192` | 62           | `10.42.10.1` – `10.42.10.62`            | Quarter of a /24; used to carve up a single block  |
+    | `/30` | `255.255.255.252` | 2            | `10.0.0.1` – `10.0.0.2`                 | Point-to-point links (e.g. router–router)          |
+    | `/32` | `255.255.255.255` | 0 (1 host)   | just that one IP                        | Single host route                                  |
+
+    Formula: usable hosts = $2^{(32 - \text{prefix})} - 2$ (subtract 2: one for the network address, one for the broadcast address).
+
+- **Network address and broadcast address:** For any subnet, the first address is the *network address* (identifies the subnet itself, not assignable to a host) and the last address is the *broadcast address* (sends to all hosts in the subnet, not assignable). Everything in between is usable.
+
+    > **Note:** This applies to IPv4 only. IPv6 has no broadcast address — it uses multicast instead. In IPv6, the first address of a subnet (e.g. `2a02:a44a:8185:1::/64`) is the "subnet-router anycast address" (used to reach any router on that subnet), and all other addresses in the range are usable. There is no "last address reserved for broadcast" concept.
+    ```
+    Subnet:    10.42.0.0/20
+    Network:   10.42.0.0       ← first address, not assignable
+    Hosts:     10.42.0.1  –  10.42.15.254   ← 4,094 usable addresses
+    Broadcast: 10.42.15.255    ← last address, not assignable
+
+    Subnet:    10.42.8.0/22
+    Network:   10.42.8.0       ← first address, not assignable
+    Hosts:     10.42.8.1  –  10.42.11.254   ← 1,022 usable addresses (spans .8, .9, .10, .11 in the third octet)
+    Broadcast: 10.42.11.255    ← last address, not assignable
+
+    Subnet:    10.42.10.0/26
+    Network:   10.42.10.0      ← first address, not assignable
+    Hosts:     10.42.10.1  –  10.42.10.62   ← 62 usable addresses (only the first quarter of the .10 block)
+    Broadcast: 10.42.10.63     ← last address, not assignable
+    ```
+- **Worked examples:**
+    - `192.168.2.59/24` → network `192.168.2.0`, hosts `.1`–`.254`, broadcast `.255`. The Pi's `eth0` address on the home network.
+    - `10.42.0.1/20` → network `10.42.0.0`, hosts `10.42.0.1`–`10.42.15.254`, broadcast `10.42.15.255`. The Pi's `eth1` address; the entire lab network fits inside this `/20`.
+    - `127.0.0.1/8` → the loopback subnet; all of `127.x.x.x` is local to the machine.
+    - `10.42.8.50/22` → network `10.42.8.0`, hosts `10.42.8.1`–`10.42.11.254`, broadcast `10.42.11.255`. A `/22` spans four consecutive `/24` blocks (`.8`, `.9`, `.10`, `.11`). A host at `.50` in the third octet is well within the range — the boundary is at `.11.255`, not at `.8.255`.
+    - `10.42.10.33/26` → network `10.42.10.0`, hosts `10.42.10.1`–`10.42.10.62`, broadcast `10.42.10.63`. This is the first `/26` carved out of `10.42.10.0/24`. The second `/26` would be `10.42.10.64/26` (hosts `.65`–`.126`), the third `.128/26`, the fourth `.192/26` — four equal quarters of the same `/24`.
+
+- **IPv6 subnets — separate table:** IPv6 subnets work differently from IPv4 in a few important ways. IPv6 addresses are 128 bits (not 32), there are no subnet masks in dotted-decimal form (only prefix lengths), and the standard subnet size for a LAN is always `/64` — regardless of how many devices are on it. IPv6 also has no broadcast address, so the formula is different: usable addresses = $2^{(128 - \text{prefix})}$ (no subtraction needed). ISPs assign prefixes to customers (typically `/48` or `/56`), who then carve them into `/64` networks. The prefix hierarchy looks like this:
+
+    | CIDR   | Addresses | Typical Use | Notes |
+    |--------|-----------|-------------|-------|
+    | `/32`  | $2^{96}$ = 79,228,162,514,264,337,593,543,950,336 (≈ 79.2 × 10²⁷) | ISP allocation from regional registry (RIR) | A single ISP receives this block and assigns sub-prefixes to customers |
+    | `/48`  | $2^{80}$ = 1,208,925,819,614,629,174,706,176 (≈ 1.2 × 10²⁴) | Site allocation — assigned to a large customer or organisation | Can be subnetted into 65,536 × `/64` networks |
+    | `/56`  | $2^{72}$ = 4,722,366,482,869,645,213,696 (≈ 4.7 × 10²¹) | Residential customer allocation — assigned by ISP to a home connection | Can be subnetted into 256 × `/64` networks — plenty for a homelab |
+    | `/64`  | $2^{64}$ = 18,446,744,073,709,551,616 (≈ 18.4 quintillion) | Single LAN subnet — the standard size for every IPv6 network segment | SLAAC requires exactly `/64`; this is the universal LAN prefix length. Never use anything smaller for a LAN. |
+    | `/128` | 1 | Single host route — one specific address | Equivalent to IPv4's `/32`; used in routing tables for individual hosts, loopback (`::1/128`) |
+
+    **Why `/64` is always the LAN size:** In IPv4, you choose a subnet size based on how many hosts you need (`/24` for 254, `/20` for 4094, etc.). In IPv6, the LAN size is always `/64` — not because you need $2^{64}$ addresses, but because SLAAC (the standard auto-configuration mechanism) requires it. SLAAC assumes the last 64 bits are the interface identifier and the first 64 bits are the network prefix. If you use a different prefix length (e.g. `/48` or `/96` on a LAN), SLAAC breaks and devices cannot auto-configure. DHCPv6 can technically work with other prefix lengths, but `/64` is the universal convention and deviating from it causes compatibility problems.
+
+    **How IPv6 prefix delegation works (ISP → customer → LANs):**
+    ```
+    ISP has:        2a02:a44a::/32                   ← ISP's allocation from RIPE
+    Assigns to you: 2a02:a44a:8185::/56              ← your home's prefix (256 /64s available)
+    Your LANs:
+      Home LAN:     2a02:a44a:8185:0001::/64         ← subnet 1
+      Lab LAN:      2a02:a44a:8185:0002::/64         ← subnet 2
+      IoT VLAN:     2a02:a44a:8185:0003::/64         ← subnet 3
+      ...up to:     2a02:a44a:8185:00ff::/64         ← subnet 256
+    ```
+
+    **Worked examples (IPv6):**
+    - `2a02:a44a:8185:1::1/64` → network `2a02:a44a:8185:1::/64`, hosts `2a02:a44a:8185:1::1` – `2a02:a44a:8185:1:ffff:ffff:ffff:ffff`. This is a global unicast address on a `/64` LAN — the standard configuration.
+    - `fe80::1d9f:d306:dbe6:f1db/10` → link-local address. The `/10` prefix means all addresses starting with `fe80` through `febf` are link-local. These are auto-configured on every interface and never routed beyond the local link.
+    - `fd12:3456:789a::1/48` → ULA (Unique Local Address) site prefix. Hosts `fd12:3456:789a::1` – `fd12:3456:789a:ffff:ffff:ffff:ffff:ffff`. Used for private internal communication, not routable on the internet. Can be subnetted into 65,536 × `/64` LANs.
+    - `::1/128` → the loopback address (IPv6 equivalent of `127.0.0.1`). A `/128` is a single address — the machine talking to itself.
+
+> **Note:** You do not need to calculate all of this by hand. Know the basics (what CIDR means, how to read a subnet mask, roughly how many hosts a prefix gives you), but for anything more precise use an online subnet calculator: [calculator.net](https://www.calculator.net/ip-subnet-calculator.html), [subnet-calculator.com](https://www.subnet-calculator.com/), or [subnet-calculator.nl](https://subnet-calculator.nl/).
