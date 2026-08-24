@@ -45,7 +45,6 @@ lo                  57b46a79-d752-41c4-bac9-0cd0e0a5591c  loopback  lo
 - `Wired connection 1` is the auto-created profile for the first Ethernet interface, active on `eth0`.
 - `lo` is the loopback profile, always present and always active.
 - If a connection has no `DEVICE` value, the profile exists but is not currently active.
-- TODO: the eth1 line needs to be added here later as example for the lab router
 
 ---
 
@@ -109,7 +108,6 @@ Example output (Pi router with two Ethernet interfaces):
 - `eth0` (WAN): `UP` + `LOWER_UP` — cable connected. Got `192.168.2.59/24` from the ISP modem's DHCP server; `valid_lft 86165sec` shows the lease expires in ~24h (not static).
 - `eth1` (LAN): `UP` + `LOWER_UP` — cable connected. Has static `10.42.0.1/20`; `valid_lft forever` confirms it is not DHCP.
 - `wlan0`: `NO-CARRIER` — no WiFi signal; `state DOWN` — not active; no `inet` line = no IP assigned.
-- TODO: the eth1 line was pasted by copilot, check what the actual output is later and update above
 
 ---
 
@@ -148,7 +146,6 @@ default via 192.168.2.254 dev eth0 proto dhcp src 192.168.2.59 metric 100
 - `default via 192.168.2.254 dev eth0` — all internet-bound traffic goes to the ISP modem first, then onward.
 - `192.168.2.0/24 dev eth0 scope link` — home network hosts are directly reachable via `eth0`; no gateway needed.
 - `10.42.0.0/20 dev eth1 scope link` — lab network hosts are directly reachable via `eth1`; no gateway needed.
-- TODO: the last line was pasted by copilot, check what the actual output is later and update above
 
 ---
 

@@ -258,8 +258,7 @@ ip -4 addr show eth1
 
 ```bash
 # Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
-cd homelab/ansible
-source venv/bin/activate
+cd homelab; source venv/bin/activate; cd ansible
 
 # Load the SSH key into the agent so Ansible can use it without prompting for the passphrase.
 # Without this, Ansible fails with "Permission denied (publickey)" because it cannot

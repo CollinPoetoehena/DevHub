@@ -13,6 +13,7 @@ The name reflects what the project is:
 1. [DevHub Design & Documentation](#devhub-design--documentation)
 2. [Home Lab](./homelab/README.md)
 3. [Packages](./packages/README.md)
+4. [Scripts](#scripts)
 
 --- 
 
@@ -25,4 +26,15 @@ Each part of DevHub lives in its own top-level folder (e.g. `homelab/`, `package
 
 The documentation in `DevHub` is intentionally kept minimal, with the main documentation for `DevHub` in general limited to this README.md file and further documentation provided by each part of the project (e.g. `homelab`, `packages` all have their own documentation, as explained above).
 
---- 
+---
+
+## Scripts
+The `scripts/` folder contains shared utility scripts used across the project. These are standalone tools that don't belong to a specific sub-project.
+
+| Script | Description |
+|--------|-------------|
+| `load_config.sh` | Shared configuration loader — sources project-wide variables and utility functions. Other scripts source this file to get the project root path and common settings. |
+| `convert_md_to_docx.py` | Converts a Markdown file to a Word (.docx) document. Handles headings, tables, code blocks, inline formatting, lists, and blockquotes. Requires `python-docx` (`pip install python-docx`). Usage: `python3 scripts/convert_md_to_docx.py <input.md> [output.docx]`. |
+| `terraform/` | Terraform scripts — contains various Terraform configurations and helper scripts for managing infrastructure. |
+
+---

@@ -333,11 +333,12 @@ ssh-keygen -t ed25519 -C "your-email@example.com"
 
 This key is referenced in `ansible.cfg` as `private_key_file = ~/.ssh/id_homelab` and stored in the Ansible Vault as `vault_ssh_private_key_src_ansibleremote` so the `users` role can deploy the public key to remote hosts.
 
-## Step 2: Install Ansible and Run Setup Playbook
+## Step 2: Install Python venv with Ansible and Run Setup Playbook
 
 ```bash
-# Go to the Ansible directory:
-cd homelab/ansible
+# Go to the Homelab directory:
+cd homelab
+# NOTE: The venv should be created in the root of this homelab directory so it can be used for all Python related tasks in this repo (not only Ansible, such as if it would be in the ansible directory).
 
 # Create a Python virtual environment and install Ansible:
 python3 -m venv venv
@@ -349,6 +350,7 @@ ansible --version
 # Run the local environment setup playbook. See details in the playbook itself, it describes what it does exactly.
 # Safe to re-run — skips steps that are already done.
 # --diff: show file changes made on the host
+cd ansible # Should run playbooks from this directory because this is where ansible.cfg is located
 ansible-playbook setup_local_env.yml --diff
 ```
 

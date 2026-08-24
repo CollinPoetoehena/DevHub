@@ -16,7 +16,7 @@ Background information on the physical and virtual network components: ISP modem
 
 ### ISP Modem / Gateway
 
-The device provided by your ISP (e.g. a KPN Experia Box) that connects your home to the internet. It is the bridge between your private home network and the public internet: one side faces the ISP (WAN — your public IP address, assigned by the ISP), the other side faces your home devices (LAN — private addresses such as `192.168.2.x`).
+Modem is short for *modulator-demodulator*. It converts digital signals from your devices into analog signals for transmission over telephone or cable lines, and vice versa. The device provided by your ISP (e.g. a KPN Experia Box) that connects your home to the internet. It is the bridge between your private home network and the public internet: one side faces the ISP (WAN — your public IP address, assigned by the ISP), the other side faces your home devices (LAN — private addresses such as `192.168.2.x`).
 
 **What it does:**
 
