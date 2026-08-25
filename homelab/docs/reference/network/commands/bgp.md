@@ -328,20 +328,30 @@ ping -c 3 -W 2 <candidate-ip>                        # IPv4
 ping6 -c 3 -W 2 <candidate-ip>                       # IPv6 (or `ping -6` on some systems)
 ```
 
+- `-c 3` — send 3 packets then stop (don't run forever).
+- `-W 2` — wait max 2 seconds for each reply (avoids long hangs on unreachable hosts).
+
+**Interpreting results:**
+
 - **Replies received** — something is using this IP, do not assign it.
 - **No reply** — likely free, but the host could be blocking ICMP. For a more thorough check, probe common service ports with [`nc`](host_networking.md#nc--netcat):
-
-See the [`ping` reference](host_networking.md#ping) for full flag details and output interpretation.
 
 ```bash
 nc -zv -w 2 <candidate-ip> 80 443 53 22              # test common protocols like HTTP (port 80), HTTPS (port 443), DNS (port 53), SSH (port 22)
 nc -6 -zv -w 2 <candidate-ipv6> 80 443 53 22         # same for IPv6 (some implementations auto-detect, others require -6)
 ```
 
+- `-z` — zero-I/O mode: only test if the port is open, don't send data.
+- `-v` — verbose: print the result (succeeded/refused/timed out) for each port.
+- `-w 2` — timeout after 2 seconds per port (essential for hosts that silently drop traffic).
+- `-6` — force IPv6 (needed by some `nc` implementations; others auto-detect from the address).
+
+**Interpreting results:**
+
 - **"Connection refused"** — a host is there but not running that service (IP is in use).
 - **"Connection timed out"** on all ports + no ping reply — IP is most likely free.
 
-See the [`nc` reference](host_networking.md#nc--netcat) for full flag details and output interpretation.
+See the [`ping`](host_networking.md#ping) and [`nc`](host_networking.md#nc--netcat) references for full details.
 
 > **Note:** Neither ping nor port scanning guarantees an IP is unused — a firewall could be silently dropping all traffic. If your environment has an IPAM (IP Address Management) system or CMDB, always cross-check there as well.
 
