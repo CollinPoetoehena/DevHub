@@ -77,9 +77,9 @@ A VLAN is a way to split one physical switch into multiple isolated logical netw
 
 A single physical Ethernet cable can carry traffic for multiple VLANs. The switch needs to know how to handle frames for each VLAN on each port — that's where "tagged" and "untagged" come in:
 
-- **Untagged (access):** The switch strips/adds the VLAN tag transparently. The device on the other end sees plain Ethernet frames — it has no idea VLANs exist. Used for devices that don't support VLANs or for the "default" network on a port. Each port can be untagged for **only one** VLAN (its PVID).
+- **Untagged (access):** The switch strips/adds the VLAN tag transparently. The device on the other end sees plain [Ethernet frames](./Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2) — it has no idea VLANs exist. Used for devices that don't support VLANs or for the "default" network on a port. Each port can be untagged for **only one** VLAN (its PVID).
 
-- **Tagged (trunk):** The switch preserves the 802.1Q VLAN tag in the Ethernet frame header (a 4-byte field containing the VLAN ID). The device on the other end **must** understand VLAN tags and use them to separate traffic into the correct virtual network (e.g. via sub-interfaces on Linux, or VLAN-aware bridges in Proxmox). A port can be tagged for **multiple** VLANs simultaneously.
+- **Tagged (trunk):** The switch preserves the 802.1Q VLAN tag in the [Ethernet frame](./Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2) header (a 4-byte field containing the VLAN ID). The device on the other end **must** understand VLAN tags and use them to separate traffic into the correct virtual network (e.g. via sub-interfaces on Linux, or VLAN-aware bridges in Proxmox). A port can be tagged for **multiple** VLANs simultaneously.
 
 **How a frame travels through the switch:**
 1. A frame arrives on a port. If it has no VLAN tag, the switch assigns it to the port's PVID (e.g. VLAN 1).
