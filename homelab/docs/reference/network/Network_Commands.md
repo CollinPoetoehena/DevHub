@@ -2,6 +2,8 @@
 
 General networking commands with output format explanations. Used for connectivity checks, debugging, and inspecting network configuration.
 
+> **Personal usage note:** I use these commands daily in my work, I keep this page as the central reference for networking commands and reference this page frequently in my documentation.
+
 ---
 
 ## Table of Contents
@@ -770,6 +772,8 @@ Tools for capturing and inspecting network packets in real time. Essential for d
 | `tshark` | CLI version of Wireshark — uses the same dissectors and display filters. | Deep protocol inspection, decoding complex protocols, reading `.pcap` files with rich detail. |
 
 Both require `sudo` because they put the network interface into promiscuous mode.
+
+> **WARNING:** `tcpdump` (and `tshark`) can be very resource-intensive. On a busy network, capturing unfiltered traffic can generate enormous volumes of data, potentially overloading the system's CPU, memory, or disk — which in extreme cases can lead to crashes or unresponsive servers. **Always** apply capture filters (e.g. `port 53`, `host 10.42.0.1`) and use `-c <count>` to limit the number of captured packets. Never run an unfiltered, unlimited capture on a production system.
 
 #### `tcpdump`
 
