@@ -335,7 +335,7 @@ See the [`ping` reference](host_networking.md#ping) for full flag details and ou
 
 ```bash
 nc -zv -w 2 <candidate-ip> 80 443 53 22              # test common protocols like HTTP (port 80), HTTPS (port 443), DNS (port 53), SSH (port 22)
-nc -6 -zv -w 2 <candidate-ipv6> 80 443 53 22         # same for IPv6
+nc -6 -zv -w 2 <candidate-ipv6> 80 443 53 22         # same for IPv6 (some implementations auto-detect, others require -6)
 ```
 
 - **"Connection refused"** — a host is there but not running that service (IP is in use).
