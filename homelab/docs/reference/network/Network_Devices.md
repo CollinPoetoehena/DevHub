@@ -96,7 +96,7 @@ A single physical Ethernet cable can carry traffic for multiple VLANs. The switc
 
 A network interface is the point of connection between a device and a network. Each interface is a distinct channel through which the device sends and receives network traffic.
 
-- **Physical interface** — a real hardware port: a built-in Ethernet port (e.g. `eth0` on the Pi), a USB-to-Ethernet adapter (e.g. `eth1`), or a WiFi card (`wlan0`). Each has a unique MAC address burned into the hardware.
+- **Physical interface** — a real hardware port: a built-in Ethernet port (e.g. `eth0` on the router), a USB-to-Ethernet adapter (e.g. `eth1`), or a WiFi card (`wlan0`). Each has a unique MAC address burned into the hardware.
 - **Virtual interface** — a software-only interface created by the OS: `lo` (loopback, always `127.0.0.1`, never leaves the machine), bridge interfaces (e.g. Proxmox's `vmbr0`), VLAN sub-interfaces (e.g. `eth1.10`), and tunnel interfaces.
 
 Each interface has:

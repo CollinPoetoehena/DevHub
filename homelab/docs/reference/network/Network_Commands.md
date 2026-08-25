@@ -82,7 +82,7 @@ Shows all network interfaces and their IP addresses.
 ip a
 ```
 
-Example output (Pi router with two Ethernet interfaces):
+Example output (router with two Ethernet interfaces):
 ```
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -137,7 +137,7 @@ Shows the routing table — how the kernel decides which interface and gateway t
 ip r
 ```
 
-Example output (Pi router):
+Example output (router):
 ```
 default via 192.168.2.254 dev eth0 proto dhcp src 192.168.2.59 metric 100
 192.168.2.0/24 dev eth0 proto kernel scope link src 192.168.2.59 metric 100
@@ -308,7 +308,7 @@ There are two families of commands that show this same table: the modern `ip nei
 > 192.168.2.5 dev eth0 lladdr 80:e4:ba:58:58:c2 REACHABLE
 > ```
 >
-> No entry for `10.42.0.168` yet — the Pi has not talked to it. After pinging:
+> No entry for `10.42.0.168` yet — the router has not talked to it. After pinging:
 >
 > ```
 > poetoec@lab-router:~ $ ping -c 3 10.42.0.168
@@ -359,7 +359,7 @@ Address         HWtype  HWaddress           Flags Iface
 
 - `192.168.2.254` on `eth0` — the ISP modem; `DELAY` in `ip neigh` means the kernel sent a packet and is waiting for an ARP confirmation (transitions to `REACHABLE` on reply, or `FAILED` if no reply comes).
 - `192.168.2.5` on `eth0` — a device on the home network; `REACHABLE` means its MAC was recently confirmed via ARP.
-- If a device shows `FAILED`, the Pi sent an ARP request but got no reply — the device is off, not connected, or there is a cabling/VLAN issue.
+- If a device shows `FAILED`, the router sent an ARP request but got no reply — the device is off, not connected, or there is a cabling/VLAN issue.
 
 #### With hostnames: `arp -a` and `ip neigh` + reverse DNS
 
@@ -436,7 +436,7 @@ Netid  State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
 sudo ss -tulpn
 ```
 
-Example output (Pi router running dnsmasq and SSH):
+Example output (router running dnsmasq and SSH):
 ```
 Netid  State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
 udp    UNCONN  0       0       10.42.0.1:53        0.0.0.0:*          users:(("dnsmasq",pid=512,fd=4))

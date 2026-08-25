@@ -1,6 +1,6 @@
 # dnsmasq
 
-`dnsmasq` is a lightweight DNS forwarder and DHCP server designed for small networks. It is the tool used in this homelab to provide DNS forwarding and DHCP services on the lab router (Raspberry Pi).
+`dnsmasq` is a lightweight DNS forwarder and DHCP server designed for small networks. It is the tool used in this homelab to provide DNS forwarding and DHCP services on the lab router (e.g. a Raspberry Pi).
 
 - **Official site:** [https://dnsmasq.org/doc.html](https://dnsmasq.org/doc.html) and [https://docs.opnsense.org/manual/dnsmasq.html](https://docs.opnsense.org/manual/dnsmasq.html)
 - **Man page:** `man dnsmasq` (on the host where it is installed)

@@ -79,7 +79,7 @@ NAT is the mechanism that allows many devices sharing private IP addresses to ac
               ┌───────────────┼───────────────┐
               │               │               │
         192.168.2.59     192.168.2.5    192.168.2.10
-         (Pi router)      (Laptop)        (Phone)
+         (router)         (Laptop)        (Phone)
 ```
 
 1. **Outbound packet** — your laptop (`192.168.2.5`) sends a request to `142.250.185.110` (Google):
@@ -110,14 +110,14 @@ The laptop never sees the public IP — it only knows its private address. Googl
 | Type | Also Known As | Description |
 |------|---------------|-------------|
 | **SNAT** (Source NAT) | Masquerading | Rewrites the *source* IP on outbound packets. This is what home routers do — all LAN devices appear to use the router's public IP. Called "masquerading" in Linux (`iptables -t nat -A POSTROUTING -j MASQUERADE`) because the private IPs are "masquerading" behind the public one. |
-| **DNAT** (Destination NAT) | Port forwarding | Rewrites the *destination* IP on inbound packets. Used to expose an internal service to the internet — e.g. forwarding port `8080` on the public IP to `192.168.2.59:80` on the Pi. Configured in the modem's admin page as "port forwarding". |
+| **DNAT** (Destination NAT) | Port forwarding | Rewrites the *destination* IP on inbound packets. Used to expose an internal service to the internet — e.g. forwarding port `8080` on the public IP to `192.168.2.59:80` on the router. Configured in the modem's admin page as "port forwarding". |
 | **PAT** (Port Address Translation) | NAT overload | A form of SNAT where multiple internal connections are distinguished by assigning different source *ports* on the public IP. This is what almost all home NAT does — one public IP, thousands of simultaneous connections, each mapped to a unique port. |
 | **1:1 NAT** | Static NAT | Maps one public IP to one private IP, bidirectionally. Uncommon in home networks; used in data centres where each server needs its own public IP. |
 
 **NAT table (connection tracking):** The router maintains a table of active translations. On Linux, this is managed by `conntrack` (part of netfilter/iptables):
 
 ```bash
-# View active NAT/connection tracking entries on the Pi router:
+# View active NAT/connection tracking entries on the router:
 sudo conntrack -L
 # Or check the count:
 sudo conntrack -C
@@ -209,7 +209,7 @@ This is the most important conceptual difference between IPv4 and IPv6:
 | **End-to-end connectivity** | Broken by NAT — two devices behind different NATs cannot easily connect directly | Restored — any device can connect to any other device (if firewalls allow it) |
 | **Port forwarding** | Required to expose services behind NAT | Not needed — services are directly reachable (firewall opens/closes ports) |
 
-With IPv6, your ISP assigns your home network a prefix (e.g. `/56`), and every device on your network gets its own globally routable address. Your laptop, phone, Pi, Proxmox hosts — they all have public IPv6 addresses that are, in principle, directly reachable from anywhere on the internet. **Security is provided by the firewall, not by NAT.** The ISP modem's firewall (and the Pi router's firewall, in the lab) blocks unsolicited inbound IPv6 traffic by default — the same stateful firewall rules that exist for IPv4, just without the NAT translation step.
+With IPv6, your ISP assigns your home network a prefix (e.g. `/56`), and every device on your network gets its own globally routable address. Your laptop, phone, Pi, Proxmox hosts — they all have public IPv6 addresses that are, in principle, directly reachable from anywhere on the internet. **Security is provided by the firewall, not by NAT.** The ISP modem's firewall (and the router's firewall, in the lab) blocks unsolicited inbound IPv6 traffic by default — the same stateful firewall rules that exist for IPv4, just without the NAT translation step.
 
 ```
 IPv4 (with NAT):
@@ -300,7 +300,7 @@ curl -6 ifconfig.me            # WARNING: shows your public IPv6 — do not put 
 
 > **Note:** IPv6 uses NDP (Neighbour Discovery Protocol) instead of ARP. NDP runs over ICMPv6 and handles address resolution (who has this IPv6?), router discovery (where is the gateway?), and duplicate address detection. The `ip -6 neigh` command shows the NDP neighbour table, which is the IPv6 equivalent of the ARP table shown by `ip neigh`.
 
-**Dual-stack:** Most networks today run IPv4 and IPv6 simultaneously — this is called "dual-stack". Each interface has both an IPv4 address and one or more IPv6 addresses. The OS decides which protocol to use for each connection (preferring IPv6 when available, per RFC 6724 "Happy Eyeballs"). The homelab currently uses IPv4 only for internal addressing (`10.42.0.0/20`), but the ISP modem likely provides IPv6 connectivity to the internet, which lab devices may use for outbound traffic via the Pi router (if IPv6 forwarding is enabled).
+**Dual-stack:** Most networks today run IPv4 and IPv6 simultaneously — this is called "dual-stack". Each interface has both an IPv4 address and one or more IPv6 addresses. The OS decides which protocol to use for each connection (preferring IPv6 when available, per RFC 6724 "Happy Eyeballs"). The homelab currently uses IPv4 only for internal addressing (`10.42.0.0/20`), but the ISP modem likely provides IPv6 connectivity to the internet, which lab devices may use for outbound traffic via the router (if IPv6 forwarding is enabled).
 
 ---
 
@@ -352,8 +352,8 @@ A subnet is a range of IP addresses that form one logical network. For example, 
     Broadcast: 10.42.10.63     ← last address, not assignable
     ```
 - **Worked examples:**
-    - `192.168.2.59/24` → network `192.168.2.0`, hosts `.1`–`.254`, broadcast `.255`. The Pi's `eth0` address on the home network.
-    - `10.42.0.1/20` → network `10.42.0.0`, hosts `10.42.0.1`–`10.42.15.254`, broadcast `10.42.15.255`. The Pi's `eth1` address; the entire lab network fits inside this `/20`.
+    - `192.168.2.59/24` → network `192.168.2.0`, hosts `.1`–`.254`, broadcast `.255`. The router's `eth0` address on the home network.
+    - `10.42.0.1/20` → network `10.42.0.0`, hosts `10.42.0.1`–`10.42.15.254`, broadcast `10.42.15.255`. The router's `eth1` address; the entire lab network fits inside this `/20`.
     - `127.0.0.1/8` → the loopback subnet; all of `127.x.x.x` is local to the machine.
     - `10.42.8.50/22` → network `10.42.8.0`, hosts `10.42.8.1`–`10.42.11.254`, broadcast `10.42.11.255`. A `/22` spans four consecutive `/24` blocks (`.8`, `.9`, `.10`, `.11`). A host at `.50` in the third octet is well within the range — the boundary is at `.11.255`, not at `.8.255`.
     - `10.42.10.33/26` → network `10.42.10.0`, hosts `10.42.10.1`–`10.42.10.62`, broadcast `10.42.10.63`. This is the first `/26` carved out of `10.42.10.0/24`. The second `/26` would be `10.42.10.64/26` (hosts `.65`–`.126`), the third `.128/26`, the fourth `.192/26` — four equal quarters of the same `/24`.

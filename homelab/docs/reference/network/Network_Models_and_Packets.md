@@ -264,7 +264,7 @@ An IP packet is the unit of data routed between networks. It's what routers forw
 │        │ 479   │           (0 - 320 bits, padded to multiples of 32 bits)      │
 │        │       │                                                               │
 ├────────┴───────┼═══════════════════════════════════════════════════════════════╡
-│ variable       │        Data (variable length — layer 4 segment/datagram)      │
+│ Variable       │        Data (variable length — layer 4 segment/datagram)      │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
 **How to read the diagrams:** Each diagram is a single box with three parts: the **bit-position ruler** (top 2 rows), the **header fields**, and the **data** (payload), separated by a `═══` divider.
@@ -328,7 +328,7 @@ Data:           [TCP segment: src port 54321, dst port 80, seq 1, "GET / HTTP/1.
 │        │ 319   │                        (128 bits)                             │
 │        │       │                                                               │
 ├────────┴───────┼═══════════════════════════════════════════════════════════════╡
-│ variable       │           Data (variable length — layer 4 segment/datagram)   │
+│ Variable       │           Data (variable length — layer 4 segment/datagram)   │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
 > **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
@@ -401,7 +401,7 @@ A TCP segment is the unit of data for reliable end-to-end delivery between proce
 │        │ 479   │ (0 - 320 bits, padded with zeroes to a multiple of 32 bits)   │
 │        │       │                                                               │
 ├────────┴───────┼═══════════════════════════════════════════════════════════════╡
-│ variable       │           Data (variable length — application data)           │
+│ Variable       │           Data (variable length — application data)           │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
 > **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
@@ -465,7 +465,7 @@ A UDP datagram is the unit of data for fast, connectionless delivery. No handsha
 ├────────┼───────┼───────────────────────────────┼───────────────────────────────┤
 │ 4      │ 32    │            Length             │           Checksum            │
 ├────────┴───────┼═══════════════════════════════┴═══════════════════════════════╡
-│ variable       │           Data (variable length — application data)           │
+│ Variable       │           Data (variable length — application data)           │
 └────────────────┴───────────────────────────────────────────────────────────────┘
 ```
 > **Note:** The bit positions in the diagram above are read the same way as in the IPv4 diagram — see the explanation in [Anatomy of a Packet (Layer 3) > "How to read the diagrams"](#anatomy-of-a-packet-layer-3).
@@ -523,9 +523,9 @@ Payload: [TCP segment from above]
 
 #### 4. Data Link Layer (Ethernet)
 
-The device's IP stack checks: "Is `142.250.179.110` on my local subnet (`10.42.0.0/20`)?" — No. So it sends the frame to its **default gateway** (`10.42.0.1` = the Pi router). It looks up the router's MAC via ARP:
+The device's IP stack checks: "Is `142.250.179.110` on my local subnet (`10.42.0.0/20`)?" — No. So it sends the frame to its **default gateway** (`10.42.0.1` = the router). It looks up the router's MAC via ARP:
 ```
-Destination MAC: dc:a6:32:xx:xx:xx  (Pi router's MAC)
+Destination MAC: dc:a6:32:xx:xx:xx  (router's MAC)
 Source MAC: aa:bb:cc:dd:ee:ff       (this device's MAC)
 EtherType: 0x0800 (IPv4)
 Payload: [IP packet from above]
