@@ -337,8 +337,10 @@ ping6 -c 3 -W 2 <candidate-ip>                       # IPv6 (or `ping -6` on som
 - **No reply** — likely free, but the host could be blocking ICMP. For a more thorough check, probe common service ports with [`nc`](host_networking.md#nc--netcat):
 
 ```bash
-nc -zv -w 2 <candidate-ip> 80 443 53 22              # test common protocols like HTTP (port 80), HTTPS (port 443), DNS (port 53), SSH (port 22)
-nc -6 -zv -w 2 <candidate-ipv6> 80 443 53 22         # same for IPv6 (some implementations auto-detect, others require -6)
+# Test with common protocols like HTTP (80), HTTPS (443), DNS (53), SSH (22):
+PORTS="80 443 53 22"
+for p in $PORTS; do nc -zv -w 2 <candidate-ip> "$p"; done              # IPv4
+for p in $PORTS; do nc -6 -zv -w 2 <candidate-ipv6> "$p"; done         # IPv6 (some implementations auto-detect, others require -6)
 ```
 
 - `-z` — zero-I/O mode: only test if the port is open, don't send data.

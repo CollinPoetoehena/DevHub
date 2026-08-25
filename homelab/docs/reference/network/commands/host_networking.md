@@ -455,11 +455,13 @@ poetoec@lab-router:~ $ tracepath -n 8.8.8.8
 
 ```bash
 nc -zv <host> <port>                                 # test if a single TCP port is open
-nc -zv <host> <port1> <port2> <port3>                # test multiple ports
-nc -zv -w 2 <host> 80 443 53 22                      # test with 2-second timeout per port for common protocols (HTTP (80), HTTPS (443), DNS (53), SSH (22))
+nc -zv -w 2 <host> <port>                            # test with 2-second timeout
 nc -u -zv <host> <port>                              # test a UDP port
-nc -zv <host> 8000-9000                              # scan a port range (not all implementations support this)
+nc -zv <host> 8000-9000                              # scan a port range (OpenBSD netcat only, ncat does not support this)
 nc -6 -zv <ipv6-host> <port>                         # test an IPv6 host
+
+# test multiple ports (ncat only accepts one port at a time), such as common protocols (HTTP (80), HTTPS (443), DNS (53), SSH (22)):
+PORTS="80 443 53 22"; for p in $PORTS; do nc -zv -w 2 <host> "$p"; done
 ```
 
 **Common flags:**
@@ -528,12 +530,12 @@ nc <receiver-ip> 12345 < file_to_send.txt
 | Purpose | Command |
 |---------|----------|
 | Test a single port | `nc -zv -w 2 <host> <port>` |
-| Test multiple ports | `nc -zv -w 2 <host> 80 443 22` |
+| Test multiple ports | `PORTS="80 443 22"; for p in $PORTS; do nc -zv -w 2 <host> "$p"; done` |
 | Test UDP port | `nc -u -zv -w 2 <host> 53` |
 | Test IPv6 port | `nc -6 -zv -w 2 <ipv6-host> <port>` |
 | Quick listener for testing | `nc -l <port>` |
 | Persistent listener | `nc -lk <port>` |
-| Check if a host is alive (any port) | `nc -zv -w 2 <host> 22 80 443` |
+| Check if a host is alive (any port) | `PORTS="22 80 443"; for p in $PORTS; do nc -zv -w 2 <host> "$p"; done` |
 
 > **Note:** There are multiple `nc` implementations (`OpenBSD netcat`, `GNU netcat`, `ncat` from Nmap) with slightly different flag support. If a flag does not work, check `nc -h` or `man nc` for your version. On RHEL/CentOS, `ncat` (from the `nmap-ncat` package) is the default.
 
