@@ -312,6 +312,9 @@ sudo systemctl restart dnsmasq
 ---
 
 ## Step 8: Configure the Managed Switch
+
+Below are the steps to configure the switch. Unfortunately, the NETGEAR GS305E web UI is not scriptable (no CLI or API), so this must be done manually. This is fine since these are only a few steps and buying a switch with automation capabilities would be overkill and generally costs significantly more money. Furthermore, it will cost more time to build the automation for the switch from scratch than manually configuring it. The steps below are a guide to what to do in the web UI.
+
 ### Step 8.1: Assign a static IP to the switch
 The switch should have a fixed IP so SSH tunnels, documentation, and firewall rules don't break when leases change. This is done via a DHCP static lease (reservation) in dnsmasq on the Pi — the switch still uses DHCP, but dnsmasq always hands out the same IP for its MAC address.
 

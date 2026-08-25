@@ -13,6 +13,7 @@ Commands for inspecting a host's network configuration (interfaces, addresses, r
 - [ping](#ping)
 - [traceroute / tracepath — Trace Packet Path](#traceroute--tracepath--trace-packet-path)
 - [nc — Netcat](#nc--netcat)
+- [nmap — Network Scanner](#nmap--network-scanner)
 - [ss — Socket Statistics](#ss--socket-statistics)
 
 ---
@@ -538,6 +539,162 @@ nc <receiver-ip> 12345 < file_to_send.txt
 | Check if a host is alive (any port) | `PORTS="22 80 443"; for p in $PORTS; do nc -zv -w 2 <host> "$p"; done` |
 
 > **Note:** There are multiple `nc` implementations (`OpenBSD netcat`, `GNU netcat`, `ncat` from Nmap) with slightly different flag support. If a flag does not work, check `nc -h` or `man nc` for your version. On RHEL/CentOS, `ncat` (from the `nmap-ncat` package) is the default.
+
+---
+
+## `nmap` — Network Scanner
+
+Network exploration and security auditing tool. Use it to discover hosts on a network, find open ports on a target, identify running services and their versions, and detect operating systems. More powerful than `nc -zv` for scanning multiple hosts or ports at once.
+
+**Basic usage:**
+
+```bash
+nmap <host>                            # scan top 1000 most common TCP ports on a host
+nmap -p <port(s)> <host>               # scan specific port(s)
+nmap -p- <host>                        # scan ALL 65535 TCP ports (slow but thorough)
+nmap -sn <network/cidr>                # ping sweep — discover live hosts without port scanning
+nmap -sV <host>                        # detect service versions on open ports
+nmap -O <host>                         # detect operating system (requires root)
+nmap -A <host>                         # aggressive — OS detection + version detection + scripts + traceroute
+nmap -sU -p <port(s)> <host>           # scan UDP ports (requires root, much slower than TCP)
+```
+
+**Common flags:**
+
+| Flag | Description |
+|------|-------------|
+| `-sn` | Ping scan only — discover live hosts, skip port scanning. Also called "host discovery" or "ping sweep". |
+| `-sS` | TCP SYN scan (default when run as root) — fast "half-open" scan; does not complete the TCP handshake, so it is less likely to be logged by the target. Requires root. |
+| `-sT` | TCP connect scan (default when run without root) — completes the full TCP handshake. Slower and more visible, but does not require root. |
+| `-sU` | UDP scan — probes UDP ports. Much slower than TCP because there is no handshake; relies on ICMP "port unreachable" for closed ports and timeouts for filtered ones. Requires root. |
+| `-sV` | Version detection — probe open ports to determine the service name and version (e.g. `OpenSSH 8.9p1`, `dnsmasq 2.89`). |
+| `-O` | OS detection — guess the target's operating system based on TCP/IP stack fingerprinting. Requires root. |
+| `-A` | Aggressive mode — enables `-sV`, `-O`, `--traceroute`, and default NSE scripts. Convenient but slow and noisy. |
+| `-p <ports>` | Specify ports: `-p 22` (single), `-p 22,80,443` (list), `-p 1-1024` (range), `-p-` (all 65535). |
+| `-F` | Fast scan — scan only the top 100 ports instead of the default 1000. |
+| `--top-ports <n>` | Scan the top `<n>` most common ports. |
+| `-n` | No DNS resolution — faster output when you don't need hostnames. |
+| `-v` / `-vv` | Increase verbosity — show open ports as they are found instead of waiting for the end. |
+| `-T<0-5>` | Timing template: `T0` = paranoid (very slow, IDS evasion), `T3` = normal (default), `T4` = aggressive (faster, good for LANs), `T5` = insane (may miss ports on slow links). |
+| `-oN <file>` | Save output in normal format to a file. |
+| `-oG <file>` | Save output in grepable format (easy to parse with `grep`/`awk`). |
+| `--open` | Show only open ports in the output (hide filtered/closed). |
+
+**Output format:**
+
+```
+PORT      STATE    SERVICE   VERSION
+22/tcp    open     ssh       OpenSSH 8.9p1 Ubuntu 3ubuntu0.6
+53/tcp    open     domain    dnsmasq 2.89
+80/tcp    closed   http
+443/tcp   filtered https
+```
+
+**Key fields:**
+
+| Field | Description |
+|-------|-------------|
+| `PORT` | Port number and protocol (`tcp` or `udp`). |
+| `STATE` | `open` = a service is listening and accepting connections; `closed` = reachable but nothing is listening (RST received); `filtered` = no response — a firewall is silently dropping probes (or the host is down). |
+| `SERVICE` | Service name guessed from the port number (from `/etc/services`). With `-sV`, this is the actual detected service. |
+| `VERSION` | Service version string (only with `-sV` or `-A`). |
+
+**Port states explained:**
+
+| State | Meaning |
+|-------|---------|
+| `open` | Port is accepting connections — a service is running. |
+| `closed` | Port is reachable (host replied with TCP RST) but no service is listening. Confirms the host is alive. |
+| `filtered` | No response — a firewall is dropping probes, or the host is unreachable. Cannot determine if a service is running. |
+| `unfiltered` | Port is reachable (ACK scan only) but nmap cannot determine if it is open or closed. |
+| `open|filtered` | Cannot determine between open and filtered (common with UDP scans when no response is received). |
+
+**Examples — common use cases:**
+
+```bash
+# Discover all live hosts on the lab subnet
+sudo nmap -sn 10.42.0.0/20
+
+# Default scan of a specific host (top 1000 TCP ports)
+nmap 10.42.0.1
+
+# Quick scan of a specific host — what's listening?
+nmap -F 10.42.0.1
+
+# Scan specific ports on the router
+nmap -p 22,53,67,80,443 10.42.0.1
+
+# Full TCP port scan of a host (finds services on non-standard ports)
+nmap -p- -T4 10.42.0.168
+
+# Detect service versions on open ports
+nmap -sV -p 22,53,80 10.42.0.1
+
+# Scan UDP ports (DNS, DHCP, NTP)
+sudo nmap -sU -p 53,67,68,123 10.42.0.1
+
+# Scan a range of hosts
+nmap -p 22 10.42.0.1-20
+
+# OS detection
+sudo nmap -O 10.42.0.168
+
+# Save results to a file for later analysis
+nmap -sV -p- -oN scan_results.txt 10.42.0.168
+```
+
+**Example — scan the router:**
+
+```
+poetoec@mgmtvm:~ $ nmap -sV -p 22,53,80 10.42.0.1
+Starting Nmap 7.93 ( https://nmap.org ) at 2026-08-25 14:30 CEST
+Nmap scan report for 10.42.0.1
+Host is up (0.0025s latency).
+
+PORT   STATE    SERVICE VERSION
+22/tcp open     ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+53/tcp open     domain  dnsmasq 2.89
+80/tcp filtered http
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 6.42 seconds
+```
+
+- Port 22: SSH is running with OpenSSH 8.9.
+- Port 53: dnsmasq is serving DNS.
+- Port 80: filtered — a firewall rule is dropping traffic to port 80 (no web server intended on the router).
+
+**Example — ping sweep to discover hosts:**
+
+```
+poetoec@mgmtvm:~ $ sudo nmap -sn 10.42.0.0/24
+Starting Nmap 7.93 ( https://nmap.org ) at 2026-08-25 14:35 CEST
+Nmap scan report for 10.42.0.1
+Host is up (0.0021s latency).
+MAC Address: DC:A6:32:XX:XX:XX (Raspberry Pi Trading)
+Nmap scan report for 10.42.0.168
+Host is up (0.0034s latency).
+MAC Address: 28:94:01:XX:XX:XX (Dell)
+Nmap scan report for 10.42.0.200
+Host is up (0.0028s latency).
+MAC Address: BC:24:11:XX:XX:XX (Proxmox)
+Nmap done: 256 IP addresses (3 hosts up) scanned in 2.14 seconds
+```
+
+- Three hosts discovered on the `10.42.0.0/24` portion of the lab subnet. MAC address OUI identifies the device manufacturer.
+
+**Interpreting results:**
+
+| Symptom | Meaning |
+|---------|---------|
+| All scanned ports `open` | Services are exposed — verify this is intentional (especially on WAN-facing interfaces). |
+| All ports `filtered` | A firewall is blocking all probes — host may still be alive but fully firewalled. Try `nmap -sn` to confirm it is up. |
+| Mix of `open` and `filtered` | Firewall is selectively allowing traffic — expected for a hardened host. |
+| `closed` ports | Host is alive and responding, but no service on those ports — normal for non-server machines. |
+| `-sn` finds host but port scan shows all `filtered` | Host is up but has strict iptables/nftables rules — only allowed ports will show `open`. |
+| `-sV` shows unexpected service | Possibly a misconfigured or rogue service — investigate. |
+
+> **Note:** On your own lab network, nmap is an essential diagnostic tool. On networks you do not control, scanning without permission may violate acceptable use policies or laws. Always have authorization before scanning third-party hosts.
 
 ---
 

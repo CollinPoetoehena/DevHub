@@ -12,4 +12,5 @@ General networking commands with output format explanations. Used for connectivi
 - [DNS Lookup — dig & nslookup](dns.md)
 - [DHCP Client Commands](dhcp_client.md)
 - [Packet Capture & Analysis — tcpdump, tshark & Wireshark](packet_capture_analysis.md)
+- [Network Performance Testing — iperf3](network_performance.md)
 - [BGP — Border Gateway Protocol](bgp.md)
