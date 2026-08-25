@@ -96,7 +96,7 @@ tcpdump uses BPF (Berkeley Packet Filter) expressions to select which packets to
 | `portrange 8000-9000` | Traffic on any port in the range. |
 | `len > 1000` | Packets larger than 1000 bytes. |
 | `ether host <mac>` | Traffic to/from a specific MAC address. |
-| Combine with `and`, `or`, `not` | `host 10.42.0.1 and port 53` = DNS traffic to/from the lab router. |
+| Combine with `and`, `or`, `not` | `host 10.42.0.1 and port 53` = DNS traffic to/from the router (e.g. the lab router). |
 | Parentheses for grouping | `(port 67 or port 68) and host 10.42.0.1` |
 
 ### Output format
@@ -144,7 +144,7 @@ Example — DNS query:
 12:00:02.458123 IP 10.42.0.1.53 > 10.42.0.168.43210: 12345 1/0/0 A 142.250.185.110 (44)
 ```
 
-- First line: client queries the lab router's DNS for `google.com` (A record). `+` means recursion desired.
+- First line: client queries the router's DNS (e.g. the lab router for the homelab) for `google.com` (A record). `+` means recursion desired.
 - Second line: server responds with `142.250.185.110`. `1/0/0` = 1 answer, 0 authority, 0 additional records.
 
 ### Useful recipes

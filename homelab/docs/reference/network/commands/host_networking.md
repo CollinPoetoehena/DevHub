@@ -12,6 +12,7 @@ Commands for inspecting a host's network configuration (interfaces, addresses, r
 - [ip neigh / arp — ARP Neighbour Table](#ip-neigh--arp--arp-neighbour-table)
 - [ping](#ping)
 - [traceroute / tracepath — Trace Packet Path](#traceroute--tracepath--trace-packet-path)
+- [nc — Netcat](#nc--netcat)
 - [ss — Socket Statistics](#ss--socket-statistics)
 
 ---
@@ -254,7 +255,10 @@ ping -i 0.2 <host>                     # send packets every 0.2s instead of defa
 ping -s 1472 -M do <host>              # test MTU — send 1472-byte payload (1500 with headers), don't fragment
 ping -I eth1 <host>                    # force ping out of a specific interface
 ping -n <host>                         # numeric output — don't resolve hostnames
+ping6 <host>                           # IPv6 ping (or `ping -6 <host>` on most modern systems)
 ```
+
+> **IPv4 vs IPv6:** On most modern Linux systems, `ping` auto-detects the address family — `ping <ipv6-addr>` just works. On older systems, use `ping6` or `ping -6` explicitly for IPv6 targets. All flags below work the same for both.
 
 **Common flags:**
 
@@ -391,7 +395,7 @@ traceroute to 192.168.2.5 (192.168.2.5), 30 hops max, 60 byte packets
  2  192.168.2.5  3.789 ms  3.654 ms  3.601 ms
 ```
 
-- Hop 1: `10.42.0.1` — the lab router (default gateway for the lab subnet).
+- Hop 1: `10.42.0.1` — the router (default gateway for the lab subnet for the homelab for example).
 - Hop 2: `192.168.2.5` — the destination on the home network, reached via the router.
 
 **Interpreting problems:**
@@ -440,6 +444,98 @@ poetoec@lab-router:~ $ tracepath -n 8.8.8.8
 | `traceroute -I` | When UDP probes get no response but ICMP might work. |
 | `traceroute -T -p 443` | Tracing through firewalls that only allow TCP on well-known ports. |
 | `tracepath` | No-root quick trace with Path MTU discovery. |
+
+---
+
+## `nc` — Netcat
+
+`nc` (netcat) is a versatile networking utility for reading and writing data across TCP and UDP connections. Often called the "Swiss army knife" of networking — use it to test whether a port is open, send/receive data over a connection, or set up a simple listener. Available as `nc`, `ncat` (from Nmap), or `netcat` depending on the distribution.
+
+**Basic usage:**
+
+```bash
+nc -zv <host> <port>                                 # test if a single TCP port is open
+nc -zv <host> <port1> <port2> <port3>                # test multiple ports
+nc -zv -w 2 <host> 80 443 53 22                      # test with 2-second timeout per port for common protocols (HTTP (80), HTTPS (443), DNS (53), SSH (22))
+nc -u -zv <host> <port>                              # test a UDP port
+nc -zv <host> 8000-9000                              # scan a port range (not all implementations support this)
+nc -6 -zv <ipv6-host> <port>                         # test an IPv6 host
+```
+
+**Common flags:**
+
+| Flag | Description |
+|------|-------------|
+| `-z` | Zero-I/O mode — just test the connection, don't send data. Used for port scanning/probing. |
+| `-v` | Verbose — print whether the connection succeeded or failed. Without this, `nc` is silent on success. |
+| `-w <seconds>` | Timeout — give up after `<seconds>` if no connection is established. Essential for probing hosts that silently drop traffic. |
+| `-u` | Use UDP instead of TCP. |
+| `-6` | Force IPv6. Required by some implementations when connecting to IPv6 addresses. |
+| `-l` | Listen mode — act as a server, waiting for incoming connections on the specified port. |
+| `-p <port>` | Specify the source port (when connecting) or the listen port (some implementations). |
+| `-k` | Keep listening — accept multiple connections (with `-l`). Without this, the listener exits after the first connection closes. |
+| `-n` | Numeric only — don't resolve hostnames via DNS. |
+
+**Output format (port probing with `-zv`):**
+
+```
+Connection to 10.42.0.1 22 port [tcp/ssh] succeeded!
+Connection to 10.42.0.1 80 port [tcp/http] refused!
+nc: connect to 10.42.0.1 port 443 (tcp) timed out: Operation now in progress
+```
+
+**Interpreting results:**
+
+| Result | Meaning |
+|--------|----------|
+| `succeeded` | Port is open — a service is listening and accepted the TCP handshake. |
+| `refused` (or `Connection refused`) | Host is reachable but nothing is listening on that port — the OS sent a TCP RST. |
+| `timed out` | No response — the host is down, the port is firewalled (silently dropped), or there is no route. |
+| `Network is unreachable` | No route to the destination. |
+
+> **`refused` vs `timed out`:** "Connection refused" actually confirms the host is alive and reachable — it just means no service is running on that port. "Timed out" is more ambiguous — could be a firewall, a down host, or a routing issue.
+
+**Examples — common use cases:**
+
+```bash
+# Test if SSH is reachable on a host
+nc -zv -w 2 10.42.0.168 22
+
+# Test if a web server is running
+nc -zv -w 2 10.42.0.168 80 443
+
+# Test if BGP port is open on a router
+nc -zv -w 2 10.42.0.1 179
+
+# Test if DNS is reachable on UDP
+nc -u -zv -w 2 10.42.0.1 53
+
+# Simple connectivity test between two machines:
+# On the listener (machine A):
+nc -l 12345
+# On the sender (machine B):
+echo "hello" | nc <machine-A-ip> 12345
+
+# Transfer a file (quick and dirty, no encryption):
+# Receiver:
+nc -l 12345 > received_file.txt
+# Sender:
+nc <receiver-ip> 12345 < file_to_send.txt
+```
+
+**Useful recipes:**
+
+| Purpose | Command |
+|---------|----------|
+| Test a single port | `nc -zv -w 2 <host> <port>` |
+| Test multiple ports | `nc -zv -w 2 <host> 80 443 22` |
+| Test UDP port | `nc -u -zv -w 2 <host> 53` |
+| Test IPv6 port | `nc -6 -zv -w 2 <ipv6-host> <port>` |
+| Quick listener for testing | `nc -l <port>` |
+| Persistent listener | `nc -lk <port>` |
+| Check if a host is alive (any port) | `nc -zv -w 2 <host> 22 80 443` |
+
+> **Note:** There are multiple `nc` implementations (`OpenBSD netcat`, `GNU netcat`, `ncat` from Nmap) with slightly different flag support. If a flag does not work, check `nc -h` or `man nc` for your version. On RHEL/CentOS, `ncat` (from the `nmap-ncat` package) is the default.
 
 ---
 

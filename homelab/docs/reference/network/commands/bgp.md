@@ -15,6 +15,7 @@ Commands for managing and inspecting BGP sessions across different environments:
   - [Debugging BGP Issues (BIRD)](#debugging-bgp-issues-bird)
 - [Kubernetes / OpenShift — MetalLB BGP](#kubernetes--openshift--metallb-bgp)
   - [MetalLB Resources](#metallb-resources)
+  - [IP Management — Checking Used & Available IPs](#ip-management--checking-used--available-ips)
   - [Service & Endpoint Inspection](#service--endpoint-inspection)
   - [MetalLB Speaker Logs](#metallb-speaker-logs)
   - [Debugging BGP Issues (K8s/OCP)](#debugging-bgp-issues-k8socp)
@@ -265,6 +266,84 @@ metallb-system   lab-router    10.42.0.1     65000                 false
 oc get communities -A                                 # list BGP community definitions
 oc get community <name> -n metallb-system -o yaml     # full community definition
 ```
+
+---
+
+## IP Management — Checking Used & Available IPs
+
+Commands for checking which MetalLB IPs are currently assigned, which are free, and which service is using a specific IP. Essential when provisioning new `LoadBalancer` services or troubleshooting IP conflicts.
+
+### Check assigned IPs
+
+List all IP address pools to see what is available:
+
+```bash
+oc -n metallb-system get ipaddresspool
+```
+
+Show pools that have assigned addresses (i.e. IPs currently in use):
+
+```bash
+# IPv4
+oc -n metallb-system get ipaddresspool -o jsonpath='{range .items[?(@.status.assignedIPv4==1)]}{.metadata.name}{"\t"}{.spec.addresses[0]}{"\n"}{end}'
+
+# IPv6
+oc -n metallb-system get ipaddresspool -o jsonpath='{range .items[?(@.status.assignedIPv6==1)]}{.metadata.name}{"\t"}{.spec.addresses[0]}{"\n"}{end}'
+```
+
+### Find which service owns an IP
+
+Given a set of IPs, find the corresponding `LoadBalancer` services across all namespaces:
+
+```bash
+TARGET_IP_REGEX="10.42.1.10|10.42.1.11|10.42.1.12"
+for ns in $(oc projects -q); do
+  oc get svc -n "$ns" \
+    --field-selector spec.type=LoadBalancer \
+    -o jsonpath="{range .items[*]}{'\n'}$ns{'\t'}{.metadata.name}{'\t'}{.status.loadBalancer.ingress[*].ip}{end}" \
+    2>/dev/null
+done | grep -E "$TARGET_IP_REGEX"
+```
+
+This iterates all projects/namespaces and prints `<namespace> <service-name> <external-ip>` for matching IPs. Works for both IPv4 and IPv6 addresses — adjust `TARGET_IP_REGEX` accordingly.
+
+### Check available (free) IPs
+
+Show pools that still have available (unassigned) addresses:
+
+```bash
+# IPv4
+oc -n metallb-system get ipaddresspool -o jsonpath='{range .items[?(@.status.availableIPv4==1)]}{.metadata.name}{"\t"}{.spec.addresses[0]}{"\n"}{end}'
+
+# IPv6
+oc -n metallb-system get ipaddresspool -o jsonpath='{range .items[?(@.status.availableIPv6==1)]}{.metadata.name}{"\t"}{.spec.addresses[0]}{"\n"}{end}'
+```
+
+### Verify an IP is truly unused
+
+Before assigning a "free" IP, verify that nothing is already using it. Start with a ping:
+
+```bash
+ping -c 3 -W 2 <candidate-ip>                        # IPv4
+ping6 -c 3 -W 2 <candidate-ip>                       # IPv6 (or `ping -6` on some systems)
+```
+
+- **Replies received** — something is using this IP, do not assign it.
+- **No reply** — likely free, but the host could be blocking ICMP. For a more thorough check, probe common service ports with [`nc`](host_networking.md#nc--netcat):
+
+See the [`ping` reference](host_networking.md#ping) for full flag details and output interpretation.
+
+```bash
+nc -zv -w 2 <candidate-ip> 80 443 53 22              # test common protocols like HTTP (port 80), HTTPS (port 443), DNS (port 53), SSH (port 22)
+nc -6 -zv -w 2 <candidate-ipv6> 80 443 53 22         # same for IPv6
+```
+
+- **"Connection refused"** — a host is there but not running that service (IP is in use).
+- **"Connection timed out"** on all ports + no ping reply — IP is most likely free.
+
+See the [`nc` reference](host_networking.md#nc--netcat) for full flag details and output interpretation.
+
+> **Note:** Neither ping nor port scanning guarantees an IP is unused — a firewall could be silently dropping all traffic. If your environment has an IPAM (IP Address Management) system or CMDB, always cross-check there as well.
 
 ---
 

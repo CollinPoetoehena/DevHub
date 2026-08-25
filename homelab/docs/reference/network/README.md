@@ -11,7 +11,7 @@ Background knowledge and command reference for networking. These documents expla
 
 ## Commands
 
-- [Network Commands](Network_Commands.md) — All networking commands with detailed output explanations: `nmcli`, `ip a`, `ip r`, `ping`, `ip neigh`/`arp`, `ss`, `dig`/`nslookup`, DHCP client commands, and `tcpdump`.
+- [Network Commands](commands/README.md) — All networking commands with detailed output explanations, organized by topic, such as host networking, DNS, etc.
 
 ## Other References
 
