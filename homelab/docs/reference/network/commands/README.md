@@ -8,9 +8,8 @@ General networking commands with output format explanations. Used for connectivi
 
 ## Table of Contents
 
-- [Network Status & Connectivity](status_connectivity.md)
-- [ss — Socket Statistics](ss.md)
+- [Host Networking](host_networking.md)
 - [DNS Lookup — dig & nslookup](dns.md)
 - [DHCP Client Commands](dhcp_client.md)
-- [Packet Capture — tcpdump & tshark](packet_capture.md)
+- [Packet Capture & Analysis — tcpdump, tshark & Wireshark](packet_capture_analysis.md)
 - [BGP — Border Gateway Protocol](bgp.md)
