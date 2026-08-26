@@ -21,10 +21,15 @@
 # Security isolation (lab → home blocking):
 #   Even though NAT allows lab devices to reach the internet, we add explicit
 #   rules to BLOCK lab devices from reaching the HOME network (e.g. 192.168.2.0/24).
-#   This is critical because:
-#     - If a lab device is compromised, it cannot attack home devices
-#     - Lab experiments (e.g. port scanning, vulnerability testing) are contained
-#     - Prevents accidental interference with home network services (avoids breaking the home network)
+#
+# Inter-VLAN isolation:
+#   By default, inter-VLAN traffic is allowed (the router forwards between all
+#   VLAN sub-interfaces). Specific rules block dangerous flows, e.g. IoT → Management.
+#
+# Interface matching:
+#   Firewall rules use "{{ router_lan_interface }}+" (e.g. "eth1+") which is an
+#   iptables wildcard matching the physical interface and all VLAN sub-interfaces
+#   (eth1.10, eth1.20, eth1.30). This avoids duplicating rules per VLAN.
 #
 # Rule order matters! iptables processes rules top-to-bottom and stops at the
 # first match. The blocking rule for home network traffic must come BEFORE the
@@ -96,7 +101,7 @@
 - name: Block lab network from reaching home network
   ansible.builtin.iptables:
     chain: FORWARD
-    in_interface: "{{ router_lan_interface }}"
+    in_interface: "{{ router_lan_interface }}+"
     destination: "{{ router_home_subnet }}"
     jump: DROP
     comment: "SECURITY: block lab devices from reaching home network"
@@ -109,7 +114,7 @@
 - name: Allow forwarding from LAN to WAN (lab → internet)
   ansible.builtin.iptables:
     chain: FORWARD
-    in_interface: "{{ router_lan_interface }}"
+    in_interface: "{{ router_lan_interface }}+"
     out_interface: "{{ router_wan_interface }}"
     jump: ACCEPT
     comment: "Allow lab devices to reach the internet via WAN"
@@ -118,20 +123,33 @@
 # RULE 3: Allow return traffic (WAN → LAN for established connections)
 # This allows response packets from the internet back to lab devices, but ONLY
 # for connections that were initiated from the lab side (RELATED,ESTABLISHED).
-# New inbound connections from the internet to lab devices are NOT allowed —
-# this effectively acts as a stateful firewall protecting the lab from
-# unsolicited inbound traffic.
 - name: Allow return traffic from WAN to LAN (established/related connections only)
   ansible.builtin.iptables:
     chain: FORWARD
     in_interface: "{{ router_wan_interface }}"
-    out_interface: "{{ router_lan_interface }}"
+    out_interface: "{{ router_lan_interface }}+"
     ctstate:
       - ESTABLISHED
       - RELATED
     jump: ACCEPT
     comment: "Allow return traffic for connections initiated by lab devices"
   notify: Save iptables rules
+
+# RULE 4: Allow inter-VLAN forwarding (traffic between VLAN sub-interfaces)
+# The router forwards between all VLANs by default. Specific deny rules below
+# restrict dangerous flows (e.g. IoT → Management).
+- name: Allow inter-VLAN forwarding
+  ansible.builtin.iptables:
+    chain: FORWARD
+    in_interface: "{{ router_lan_interface }}+"
+    out_interface: "{{ router_lan_interface }}+"
+    jump: ACCEPT
+    comment: "Allow inter-VLAN routing between lab VLANs"
+  notify: Save iptables rules
+
+# TODO: Add specific inter-VLAN deny rules once IoT VLAN is populated, e.g.:
+#   - Block IoT (eth1.30) → Management (eth1.10)
+#   - Allow IoT (eth1.30) → Services (eth1.20) for sensor data
 
 ################################################################################
 # INPUT chain — Protect the router itself
@@ -164,7 +182,7 @@
 - name: Allow SSH from LAN
   ansible.builtin.iptables:
     chain: INPUT
-    in_interface: "{{ router_lan_interface }}"
+    in_interface: "{{ router_lan_interface }}+"
     protocol: tcp
     destination_port: "22"
     jump: ACCEPT
@@ -187,7 +205,7 @@
 - name: Allow DHCP on LAN interface
   ansible.builtin.iptables:
     chain: INPUT
-    in_interface: "{{ router_lan_interface }}"
+    in_interface: "{{ router_lan_interface }}+"
     protocol: udp
     destination_port: "67"
     jump: ACCEPT
@@ -199,7 +217,7 @@
 - name: Allow DNS (UDP) on LAN interface
   ansible.builtin.iptables:
     chain: INPUT
-    in_interface: "{{ router_lan_interface }}"
+    in_interface: "{{ router_lan_interface }}+"
     protocol: udp
     destination_port: "53"
     jump: ACCEPT
@@ -209,7 +227,7 @@
 - name: Allow DNS (TCP) on LAN interface
   ansible.builtin.iptables:
     chain: INPUT
-    in_interface: "{{ router_lan_interface }}"
+    in_interface: "{{ router_lan_interface }}+"
     protocol: tcp
     destination_port: "53"
     jump: ACCEPT

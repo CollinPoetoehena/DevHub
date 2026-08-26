@@ -43,7 +43,7 @@ This document provides guidance for diagnosing and resolving common network issu
 
 ## Lab device has an IP but cannot reach the internet
 
-- **Symptoms:** A device connected to the lab network (via the Pi router's `eth1`) receives a DHCP address (e.g. `10.42.0.160`) and can ping the Pi's LAN IP (e.g. `10.42.0.1`), but `ping 8.8.8.8` and `ping google.com` both fail. The Pi itself can reach the internet fine.
+- **Symptoms:** A device connected to the lab network (via the Pi router's `eth1`) receives a DHCP address (e.g. `10.42.0.160`) and can ping the Pi's LAN IP (e.g. `10.42.10.1`), but `ping 8.8.8.8` and `ping google.com` both fail. The Pi itself can reach the internet fine.
 
 - **Diagnosis:** Check IPv4 forwarding on the Pi:
     ```bash

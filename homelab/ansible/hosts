@@ -29,7 +29,7 @@
 # Lab Router (Raspberry Pi)
 # ---------------------------------------------------------------------------
 # Connected via WAN IP (eth0) from the home network.
-# eth1 (LAN) serves the lab network at 10.42.0.1.
+# eth1 (LAN) serves the lab network at 10.42.10.1.
 [router]
 lab-router    ansible_host=192.168.2.59
 

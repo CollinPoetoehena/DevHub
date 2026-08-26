@@ -56,13 +56,13 @@ inventory_hosts:
   router:
     - { alias: "lab-router", ip: "192.168.2.59" }
   jumphost: []
-    # - { alias: "jumphost", ip: "10.42.0.x" }
+    # - { alias: "jumphost", ip: "10.42.10.x" }
   mgmtvm: []
-    # - { alias: "mgmtvm", ip: "10.42.0.x" }
+    # - { alias: "mgmtvm", ip: "10.42.10.x" }
   proxmox: []
-    # - { alias: "pve1", ip: "10.42.0.10" }
-    # - { alias: "pve2", ip: "10.42.0.11" }
-    # - { alias: "pve3", ip: "10.42.0.12" }
+    # - { alias: "pve1", ip: "10.42.10.10" }
+    # - { alias: "pve2", ip: "10.42.10.11" }
+    # - { alias: "pve3", ip: "10.42.10.12" }
   control_plane: []
     # - { alias: "k8s-cp-1", ip: "10.42.20.10" }
     # - { alias: "k8s-cp-2", ip: "10.42.20.11" }

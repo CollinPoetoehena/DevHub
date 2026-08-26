@@ -63,8 +63,8 @@ dnsmasq is configured via a single file (or a directory of files). The main conf
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `3` | Default gateway | `dhcp-option=3,10.42.0.1` |
-| `6` | DNS server(s) | `dhcp-option=6,10.42.0.1` |
+| `3` | Default gateway | `dhcp-option=3,10.42.10.1` |
+| `6` | DNS server(s) | `dhcp-option=6,10.42.10.1` |
 | `15` | Domain name | `dhcp-option=15,lab` |
 | `28` | Broadcast address | `dhcp-option=28,10.42.15.255` |
 

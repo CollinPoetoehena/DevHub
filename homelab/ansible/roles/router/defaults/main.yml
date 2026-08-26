@@ -30,12 +30,29 @@ router_lan_connection_name: "lab-lan"
 # LAN Network Configuration (Lab Network)
 # --- REQUIRED: override in group_vars/router/ ---
 ################################################################################
-# Static IP assigned to the LAN interface (becomes default gateway for lab devices).
-# router_lan_ip:
-# Subnet mask in CIDR notation (e.g. "20" for /20 = 4094 hosts).
-# router_lan_cidr:
-# Full CIDR notation for the lab subnet (e.g. "10.42.0.0/20").
+# Full CIDR notation for the overall lab supernet (e.g. "10.42.0.0/20").
+# All VLANs fit within this range.
 # router_lan_subnet:
+
+################################################################################
+# VLAN Configuration
+# --- REQUIRED: override in group_vars/router/ ---
+################################################################################
+# Physical eth1 has no IP (native VLAN 1 is unused for production traffic).
+# Each VLAN gets a sub-interface with its own gateway IP and DHCP range.
+# Format: list of dicts with id, name, interface, gateway_ip, cidr, netmask,
+#         dhcp_range_start, dhcp_range_end.
+# Example:
+#   router_vlans:
+#     - id: 10
+#       name: "Management"
+#       interface: "eth1.10"
+#       gateway_ip: "10.42.10.1"
+#       cidr: "24"
+#       netmask: "255.255.255.0"
+#       dhcp_range_start: "10.42.10.100"
+#       dhcp_range_end: "10.42.10.200"
+router_vlans: []
 
 ################################################################################
 # Home Network (for firewall blocking rules)
@@ -50,14 +67,7 @@ router_lan_connection_name: "lab-lan"
 # DHCP Configuration (dnsmasq)
 # --- REQUIRED: override in group_vars/router/ ---
 ################################################################################
-# Start of the DHCP range. Addresses below this are reserved for static leases.
-# router_dhcp_range_start:
-
-# End of the DHCP range. Addresses above this are reserved for dynamic leases.
-# router_dhcp_range_end:
-
-# Subnet mask handed out to DHCP clients (must match the CIDR above in `router_lan_cidr`).
-# router_dhcp_netmask:
+# DHCP ranges are defined per-VLAN in router_vlans above.
 
 # Domain name for the lab network (optional, used for local DNS resolution).
 # router_dhcp_domain:
@@ -85,7 +95,7 @@ router_dns_cache_size: 1000
 # Format: list of dicts with mac, ip, and hostname keys.
 # Example:
 #   router_static_leases:
-#     - { mac: "aa:bb:cc:dd:ee:01", ip: "10.42.0.2", hostname: "lab-switch" }
+#     - { mac: "aa:bb:cc:dd:ee:01", ip: "10.42.10.2", hostname: "lab-switch" }
 #     - { mac: "aa:bb:cc:dd:ee:02", ip: "10.42.10.10", hostname: "pve1" }
 #     - { mac: "aa:bb:cc:dd:ee:03", ip: "10.42.10.11", hostname: "pve2" }
 router_static_leases: []

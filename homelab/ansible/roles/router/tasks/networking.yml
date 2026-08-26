@@ -3,23 +3,23 @@
 #
 # This task file handles the foundational networking setup that turns the Pi
 # into a router:
-#   1. Assign a static IP to the LAN interface (eth1) so lab devices have a
-#      predictable gateway address.
-#   2. Enable IPv4 forwarding in the kernel so packets can flow between the
-#      WAN (eth0) and LAN (eth1) interfaces.
+#   1. Ensure the physical LAN interface (eth1) is up with no IP (native VLAN
+#      is unused for production traffic).
+#   2. Create VLAN sub-interfaces (eth1.10, eth1.20, eth1.30) with static IPs
+#      so each VLAN has a predictable gateway address.
+#   3. Enable IPv4 forwarding in the kernel so packets can flow between the
+#      WAN (eth0) and VLAN sub-interfaces.
 #
-# Without these two steps, the Pi is just a regular host — it cannot route
-# traffic between two subnets.
+# Without these steps, the Pi is just a regular host — it cannot route
+# traffic between VLANs or to the internet.
 
 ################################################################################
-# Static IP on LAN Interface (eth1)
+# Physical LAN Interface (eth1) — no IP, just link up
 ################################################################################
 # NetworkManager is the network daemon on Raspberry Pi OS (Trixie/Debian 13+).
-# We create a named connection profile (router_lan_connection_name) with a static
-# IP on the LAN interface so that:
-#   - Lab devices always know the gateway is at router_lan_ip (e.g. 10.42.0.1)
-#   - The DHCP server (dnsmasq) can bind to a known address
-#   - Firewall rules can reference a stable IP
+#
+# The physical eth1 interface must be up for VLAN sub-interfaces to work,
+# but carries no production traffic (native VLAN 1 is unused).
 #
 # The WAN interface (eth0) is left as DHCP — it gets its IP from the ISP modem.
 #
@@ -29,16 +29,40 @@
 # NOTE: older Raspberry Pi OS versions used dhcpcd instead of NetworkManager.
 # If your Pi uses dhcpcd, configure the static IP in /etc/dhcpcd.conf instead.
 
-- name: Configure static IP on LAN interface ({{ router_lan_interface }}) via NetworkManager
+- name: Ensure physical LAN interface ({{ router_lan_interface }}) is up with no IP
   community.general.nmcli:
     conn_name: "{{ router_lan_connection_name }}"
     ifname: "{{ router_lan_interface }}"
     type: ethernet
-    ip4: "{{ router_lan_ip }}/{{ router_lan_cidr }}"
-    method4: manual
+    method4: disabled
     autoconnect: true
     state: present
   notify: Activate LAN connection
+
+################################################################################
+# VLAN Sub-Interfaces
+################################################################################
+# Create a VLAN sub-interface for each VLAN defined in router_vlans.
+# Each sub-interface gets a static IP (the gateway for that VLAN).
+#
+# The community.general.nmcli module is idempotent: it creates the connection
+# on first run and only modifies it if parameters change on subsequent runs.
+
+- name: Create VLAN sub-interface {{ item.interface }} (VLAN {{ item.id }} — {{ item.name }})
+  community.general.nmcli:
+    conn_name: "vlan-{{ item.name | lower }}"
+    ifname: "{{ item.interface }}"
+    type: vlan
+    vlanid: "{{ item.id }}"
+    vlandev: "{{ router_lan_interface }}"
+    ip4: "{{ item.gateway_ip }}/{{ item.cidr }}"
+    method4: manual
+    autoconnect: true
+    state: present
+  loop: "{{ router_vlans }}"
+  loop_control:
+    label: "{{ item.interface }} ({{ item.name }})"
+  notify: Activate VLAN connections
 
 # NetworkManager auto-creates "Wired connection N" profiles for detected
 # interfaces. These conflict with our managed profile and can cause the

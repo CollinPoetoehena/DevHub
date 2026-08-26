@@ -8,13 +8,41 @@
 ################################################################################
 # LAN Network Configuration (Lab Network): See explanation of these vars in roles/router/defaults/main.yml.
 ################################################################################
-router_lan_ip: "10.42.0.1"
-
+# Overall lab supernet (all VLANs fit within this range).
 # See details in ../docs/2_Network/2_1_Network_Setup.md on why /20 and not /24 or /16.
-router_lan_cidr: "20"
-
 # See details in ../docs/2_Network/2_1_Network_Setup.md on why 10.42.x.x and not 10.0.x.x.
 router_lan_subnet: "10.42.0.0/20"
+
+################################################################################
+# VLAN Configuration: See docs/2_Network/2_1_Network_Design.md#subnet--vlan-design
+################################################################################
+# Physical eth1 has no IP (native VLAN 1 is unused).
+# Each VLAN gets a sub-interface with its own gateway IP and DHCP range.
+router_vlans:
+  - id: 10
+    name: "Management"
+    interface: "eth1.10"
+    gateway_ip: "10.42.10.1"
+    cidr: "24"
+    netmask: "255.255.255.0"
+    dhcp_range_start: "10.42.10.100"
+    dhcp_range_end: "10.42.10.200"
+  - id: 20
+    name: "Services"
+    interface: "eth1.20"
+    gateway_ip: "10.42.20.1"
+    cidr: "24"
+    netmask: "255.255.255.0"
+    dhcp_range_start: "10.42.20.100"
+    dhcp_range_end: "10.42.20.200"
+  - id: 30
+    name: "IoT"
+    interface: "eth1.30"
+    gateway_ip: "10.42.30.1"
+    cidr: "24"
+    netmask: "255.255.255.0"
+    dhcp_range_start: "10.42.30.100"
+    dhcp_range_end: "10.42.30.200"
 
 ################################################################################
 # Home Network (for firewall blocking rules): See explanation of these vars in roles/router/defaults/main.yml.
@@ -25,9 +53,6 @@ router_home_gateway: "192.168.2.254"
 ################################################################################
 # DHCP Configuration (dnsmasq): See explanation of these vars in roles/router/defaults/main.yml.
 ################################################################################
-router_dhcp_range_start: "10.42.0.100"
-router_dhcp_range_end: "10.42.0.200"
-router_dhcp_netmask: "255.255.240.0"
 router_dhcp_domain: "lab.local"
 
 ################################################################################
@@ -35,7 +60,7 @@ router_dhcp_domain: "lab.local"
 ################################################################################
 # Assigns fixed (static) IPs to lab infrastructure devices so their addresses are
 # predictable (for SSH tunnels, firewall rules, monitoring, etc.).
-# IPs are chosen below the DHCP dynamic range (see `router_dhcp_range_start` and `router_dhcp_range_end`).
+# IPs are chosen below the DHCP dynamic range (see VLAN dhcp_range_start/end above).
 router_static_leases:
-  - { mac: "28:94:01:8a:ec:28", ip: "10.42.0.2", hostname: "lab-switch" }
+  - { mac: "28:94:01:8a:ec:28", ip: "10.42.10.2", hostname: "lab-switch" }
   # TODO: later add here the MAC addresses of the Proxmox physical nodes!

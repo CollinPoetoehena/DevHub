@@ -14,10 +14,12 @@
 ################################################################################
 # Interface binding
 ################################################################################
-# Only listen on the LAN interface (eth1). NEVER serve DHCP or DNS on the WAN
+# Only listen on VLAN sub-interfaces. NEVER serve DHCP or DNS on the WAN
 # interface (eth0) — doing so would conflict with the ISP modem and break the
 # home network for everyone in the house.
-interface={{ router_lan_interface }}
+{% for vlan in router_vlans %}
+interface={{ vlan.interface }}
+{% endfor %}
 
 # This is an extra safety measure in addition to the "interface" directive above. 
 # bind-interfaces or bind-dynamic ensures dnsmasq only binds to the specified interface, 
@@ -90,27 +92,22 @@ expand-hosts
 # leases so clients retry and get a fresh address quickly.
 dhcp-authoritative
 
-# Define the DHCP range: the pool of IP addresses that dnsmasq hands out to
-# lab devices that connect and request an address.
+# Define per-VLAN DHCP ranges. Each VLAN sub-interface has its own IP range.
+# dnsmasq matches requests to the correct range based on the receiving interface's
+# subnet. Tags (set:vlanXX) allow per-VLAN gateway and DNS options below.
 #
-# Format: dhcp-range=<start>,<end>,<netmask>,<lease-time>
-#   - start/end: the IP range available for dynamic assignment
-#   - netmask: subnet mask given to clients (must match the /{{ router_lan_cidr }} CIDR)
-#   - lease-time: how long a client keeps its assigned IP before it must renew
-#
-# Addresses outside this range (e.g. 10.42.0.1–10.42.0.99) are reserved for
-# static assignments (the router itself, switches, servers with fixed IPs).
-dhcp-range={{ router_dhcp_range_start }},{{ router_dhcp_range_end }},{{ router_dhcp_netmask }},{{ router_dhcp_lease_time }}
+# Addresses below dhcp_range_start (e.g. .1–.99) are reserved for static
+# assignments (router, switches, servers with fixed IPs).
+{% for vlan in router_vlans %}
+dhcp-range=set:vlan{{ vlan.id }},{{ vlan.dhcp_range_start }},{{ vlan.dhcp_range_end }},{{ vlan.netmask }},{{ router_dhcp_lease_time }}
+{% endfor %}
 
-# Tell DHCP clients to use this router (the Pi) as their default gateway.
-# Option 3 = router/gateway in DHCP options.
-dhcp-option=3,{{ router_lan_ip }}
-
-# Tell DHCP clients to use this router as their DNS server.
-# Option 6 = DNS server in DHCP options.
-# Lab devices will send DNS queries to the Pi, and dnsmasq handles them
-# (either from cache, local hostnames, or forwarded to upstream DNS).
-dhcp-option=6,{{ router_lan_ip }}
+# Tell DHCP clients which gateway and DNS server to use (per VLAN).
+# Option 3 = router/gateway, Option 6 = DNS server.
+{% for vlan in router_vlans %}
+dhcp-option=tag:vlan{{ vlan.id }},3,{{ vlan.gateway_ip }}
+dhcp-option=tag:vlan{{ vlan.id }},6,{{ vlan.gateway_ip }}
+{% endfor %}
 
 ################################################################################
 # Static DHCP leases (MAC → IP reservations)
@@ -126,7 +123,7 @@ dhcp-host={{ lease.mac }},{{ lease.ip }},{{ lease.hostname }}
 {% else %}
 # No static leases defined. Add them in router_static_leases variable. Example:
 #   router_static_leases:
-#     - { mac: "aa:bb:cc:dd:ee:01", ip: "10.42.0.2", hostname: "lab-switch" }
+#     - { mac: "aa:bb:cc:dd:ee:01", ip: "10.42.10.2", hostname: "lab-switch" }
 #     - { mac: "aa:bb:cc:dd:ee:02", ip: "10.42.10.10", hostname: "pve1" }
 #     - { mac: "aa:bb:cc:dd:ee:03", ip: "10.42.10.11", hostname: "pve2" }
 {% endif %}

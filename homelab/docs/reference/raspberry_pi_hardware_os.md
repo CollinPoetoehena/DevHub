@@ -184,7 +184,7 @@ ISP Modem LAN port → Pi eth0 (WAN side)
 Pi eth1 (LAN side) → Lab switch or directly to lab devices
 ```
 
-The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's `eth1` is the gateway for the lab network (e.g. `10.42.0.1`).
+The Pi's `eth0` receives an IP from the ISP modem (e.g. `192.168.2.x`). The Pi's `eth1` is the gateway for the lab network (e.g. `10.42.10.1`).
 
 ### Built-in Ethernet (`eth0`)
 

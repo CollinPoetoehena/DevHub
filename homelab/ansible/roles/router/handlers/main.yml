@@ -13,6 +13,15 @@
     cmd: "nmcli connection up {{ router_lan_connection_name }}"
   changed_when: true
 
+# Bring up VLAN sub-interface connections after they are created or modified.
+- name: Activate VLAN connections
+  ansible.builtin.command:
+    cmd: "nmcli connection up vlan-{{ item.name | lower }}"
+  loop: "{{ router_vlans }}"
+  loop_control:
+    label: "{{ item.interface }}"
+  changed_when: true
+
 # Restart dnsmasq when its configuration file changes.
 # This applies new DHCP ranges, DNS settings, static leases, etc.
 - name: Restart dnsmasq

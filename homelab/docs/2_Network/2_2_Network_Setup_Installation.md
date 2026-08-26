@@ -228,7 +228,7 @@ From this step onwards you can use another device to SSH into the Pi.
 
 ## Step 6: Ensure eth1 Has Carrier
 
-Ensure `eth1` has a cable connected to an active device (the switch in this case!) before running the router playbook. NetworkManager only assigns the static IP (`10.42.0.1/20`) to `eth1` when the interface has **carrier** (link detected). Without carrier, the IP is never assigned, dnsmasq cannot bind to it, and the router does not function.
+Ensure `eth1` has a cable connected to an active device (the switch in this case!) before running the router playbook. NetworkManager only assigns the static IP (`10.42.10.1/20`) to `eth1` when the interface has **carrier** (link detected). Without carrier, the IP is never assigned, dnsmasq cannot bind to it, and the router does not function.
 
 **Why carrier is required:** Ethernet link detection is a physical-layer handshake — both ends of the cable must be connected to active Ethernet ports that exchange electrical link pulses (auto-negotiation). If the other end is disconnected, unpowered, or missing, the Pi's Ethernet PHY reports `NO-CARRIER` and NetworkManager treats the interface as inactive (no IP assignment).
 
@@ -249,7 +249,7 @@ ip link show eth1
 
 # Once carrier is detected, verify NM assigned the IP:
 ip -4 addr show eth1
-# Should show: inet 10.42.0.1/20
+# Should show: inet 10.42.10.1/20
 ```
 
 ---
@@ -316,7 +316,7 @@ sudo systemctl restart dnsmasq
 Below are the steps to configure the switch. Unfortunately, the NETGEAR GS305E web UI is not scriptable (no CLI or API), so this must be done manually. This is fine since these are only a few steps and buying a switch with automation capabilities would be overkill and generally costs significantly more money. Furthermore, it will cost more time to build the automation for the switch from scratch than manually configuring it. The steps below are a guide to what to do in the web UI.
 
 ### Step 8.1: Assign a static IP to the switch
-The switch should have a fixed IP so SSH tunnels, documentation, and firewall rules don't break when leases change. This is done via a DHCP static lease (reservation) in dnsmasq on the Pi — the switch still uses DHCP, but dnsmasq always hands out the same IP for its MAC address.
+The switch should have a fixed IP so SSH tunnels, documentation, and firewall rules don't break when leases change. This is done via a DHCP static lease (reservation) in dnsmasq on the Pi — the switch still uses DHCP, but dnsmasq always hands out the same IP for its MAC address. The lease is served on the management VLAN (VLAN 10, via `eth1.10`).
 
 The static lease is defined in [`group_vars/router/main.yml`](../../ansible/group_vars/router/main.yml) (the `router_static_leases` variable) and deployed by the router playbook. The switch's MAC address is printed on the device itself.
 
@@ -325,17 +325,17 @@ The static lease is defined in [`group_vars/router/main.yml`](../../ansible/grou
 
 # Then on the Pi, verify the lease file shows the reservation:
 grep "lab-switch" /etc/dnsmasq.conf
-# Should show: dhcp-host=<MAC address>,10.42.0.2,lab-switch
+# Should show: dhcp-host=<MAC address>,10.42.10.2,lab-switch
 
 # Force the switch to pick up its new IP:
 # - reboot the switch: Unplug the switch's power cable, wait ~5 seconds, plug it back in. On boot it will send a new DHCP DISCOVER and get the reserved IP.
 # - Or wait for the DHCP lease to expire and renew automatically.
 # After that, verify from the Pi:
-ping -c 3 10.42.0.2
+ping -c 3 10.42.10.2
 ```
 
 ### Step 8.2: Access the switch's web UI via SSH tunnel
-Access the switch's web UI via SSH tunnel: The switch's web UI is on the lab network (`10.42.0.2`), which is not directly reachable from your home laptop because it is in the home network (e.g. `192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
+Access the switch's web UI via SSH tunnel: The switch's web UI is on the lab management network (`10.42.10.2`, VLAN 10), which is not directly reachable from your home laptop because it is in the home network (e.g. `192.168.2.x`). Use **SSH port forwarding** (SSH tunnel) through the Pi to access it.
 ```
 Traffic flow:
 
@@ -345,9 +345,9 @@ Home Laptop browser → localhost:8080
     ▼
 Pi (192.168.2.59) — decrypts and forwards →
     │
-    │  (over lab network)
+    │  (over lab management VLAN 10)
     ▼
-Switch web UI (10.42.0.2:80)
+Switch web UI (10.42.10.2:80)
 ```
 - **Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
 - **Alternatives (and why SSH forwarding is preferred):**
@@ -358,9 +358,9 @@ Follow these steps to set up the SSH tunnel and access the switch's web UI:
 ```bash 
 # From your home laptop, open an SSH tunnel that forwards local port 8080
 # to the switch's web UI (port 80) through the Pi:
-#   -L 8080:10.42.0.2:80  = "listen on localhost:8080 on my laptop, and
-#      forward connections through the Pi to 10.42.0.2:80"
-ssh -L 8080:10.42.0.2:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
+#   -L 8080:10.42.10.2:80  = "listen on localhost:8080 on my laptop, and
+#      forward connections through the Pi to 10.42.10.2:80"
+ssh -L 8080:10.42.10.2:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 
 # While the SSH session is open, open a browser on your home laptop and go to:
 #   http://localhost:8080
@@ -383,27 +383,33 @@ The NETGEAR GS305E ships with a well-known default password (`password`). Change
 5. Navigate to **System → Maintenance → Switch Information** and add `lab-switch` as the Switch Name.
 
 ### Step 8.4: Configure VLANs on the switch
-VLANs segment the lab network into isolated broadcast domains — devices in different VLANs cannot communicate without going through the router (which can apply firewall rules). See [Network Design — Subnet & VLAN Design](2_1_Network_Design.md#subnet--vlan-design) for the full rationale (why management stays on the native VLAN) and [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for the port-to-VLAN mapping.
+VLANs segment the lab network into isolated broadcast domains — devices in different VLANs cannot communicate without going through the router (which can apply firewall rules). See [Network Design — Subnet & VLAN Design](2_1_Network_Design.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for the port-to-VLAN mapping.
 
 **Steps in the NETGEAR web UI:**
 
 1. Navigate to **VLAN → 802.1Q (not Port-based!) → Advanced → VLAN Configuration**
-2. Add VLAN 10 (name: `Monitoring`), VLAN 20 (name: `Workloads`)
-3. For VLAN 10 and VLAN 20, go to **VLAN Membership** and set (see [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for what tagged/untagged means and why each VLAN uses that mode):
+2. Add VLAN 10 (name: `Management`), VLAN 20 (name: `Services`), VLAN 30 (name: `IoT`)
+3. For VLAN 10, VLAN 20, and VLAN 30, go to **VLAN Membership** and set (see [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for what tagged/untagged means and why each VLAN uses that mode):
    - Port 1 (router): **T** (tagged)
    - Port 2 (PVE1): **T** (tagged)
    - Port 3 (PVE2): **T** (tagged)
    - Ports 4–5: leave as not a member
-4. Verify VLAN 1 (default) membership — all ports should remain **U** (untagged) for VLAN 1 (this is the native/management VLAN that carries untagged traffic)
+4. Verify VLAN 1 (default) membership — all ports should remain **U** (untagged) for VLAN 1 (native VLAN — unused for production traffic, serves only as a fallback recovery path)
 5. Set the **PVID** (Port VLAN ID) for all ports to 1 (this is typically the default — it means untagged frames arriving on any port are assigned to VLAN 1)
-6. Click **Apply** to save the configuration
+6. Set the switch's **Management VLAN** to VLAN 10 — this moves the switch's management interface from the native VLAN to the management VLAN (navigate to **System → Management → Management VLAN**, select VLAN 10). After this, the switch is reachable at `10.42.10.2` on VLAN 10.
+7. Click **Apply** to save the configuration
 
 > **Note:** The NETGEAR GS305E saves configuration immediately when you click Apply — there is no separate "save to startup" step. However, verify after a power cycle that VLANs persist.
+>
+> **Recovery:** If you lose access after moving management to VLAN 10, factory reset the switch (hold the reset button for 10 seconds). This restores management to VLAN 1 — connect a laptop directly to a switch port, assign a static IP, and reconfigure.
 
 ### Step 8.5: Configure VLAN sub-interfaces on the Pi router
-After the switch is configured with VLANs, the Pi router needs VLAN sub-interfaces on `eth1` to route traffic between VLANs and serve DHCP/DNS per VLAN. Management traffic stays on the physical `eth1` interface (native/untagged) — only workload VLANs need sub-interfaces.
+After the switch is configured with VLANs, the Pi router needs VLAN sub-interfaces on `eth1` to route traffic between VLANs and serve DHCP/DNS per VLAN. The physical `eth1` interface has no IP (native VLAN is unused) — all production traffic flows on tagged sub-interfaces:
+- `eth1.10` — Management (10.42.10.1/24)
+- `eth1.20` — Services (10.42.20.1/24)
+- `eth1.30` — IoT (10.42.30.1/24)
 
-> **TODO:** This requires updates to the router Ansible role — adding VLAN sub-interfaces (`eth1.10`, `eth1.20`) via NetworkManager, per-VLAN DHCP ranges in dnsmasq, and inter-VLAN firewall rules. Implement this once the Proxmox hosts are ready to connect.
+> **TODO:** This requires updates to the router Ansible role — adding VLAN sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) via NetworkManager, per-VLAN DHCP ranges in dnsmasq, and inter-VLAN firewall rules (deny by default, allow IoT → Services, block IoT → Management). Implement this once the Proxmox hosts are ready to connect.
 
 TODO: add above in the Ansible router role as a switch/vlan playbook with AI.
 
@@ -419,7 +425,7 @@ After configuring the switch, back up its configuration to a file. This allows y
 
 ## Step 9: Connect Lab Devices
 
-Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached to `eth1`. Devices will receive IPs in `10.42.0.0/20` from the Pi's DHCP server and route internet traffic through the Pi Router.
+Connect all lab devices to the Pi's LAN side (`eth1`) through a switch attached to `eth1`. Devices are placed into VLANs via tagged ports — management devices (Proxmox hosts) get IPs on VLAN 10 (`10.42.10.0/24`), services on VLAN 20 (`10.42.20.0/24`), and IoT devices on VLAN 30 (`10.42.30.0/24`). All traffic routes through the Pi Router as the gateway for each VLAN.
 
 ---
 
@@ -432,23 +438,23 @@ See [Network Commands](../reference/network/Network_Commands.md) for detailed ex
 From the Pi:
 
 ```bash
-nmcli connection show   # eth0, eth1, and lo should each show a DEVICE assigned
-ip a                    # eth0: 192.168.2.x/24 (DHCP from ISP modem); eth1: 10.42.0.1/20 (static)
-ip r                    # default via 192.168.2.254 dev eth0; 10.42.0.0/20 dev eth1
+nmcli connection show   # eth0, eth1.10, eth1.20, eth1.30, and lo should each show a DEVICE assigned
+ip a                    # eth0: 192.168.2.x/24 (DHCP from ISP modem); eth1.10: 10.42.10.1/24; eth1.20: 10.42.20.1/24; eth1.30: 10.42.30.1/24
+ip r                    # default via 192.168.2.254 dev eth0; 10.42.10.0/24 dev eth1.10; 10.42.20.0/24 dev eth1.20; 10.42.30.0/24 dev eth1.30
 ping -c 3 192.168.2.1   # Test ISP modem reachability
 ping -c 3 8.8.8.8       # Test internet from Pi
-ip neigh                # 192.168.2.254 on eth0 REACHABLE; lab devices on eth1 REACHABLE
+ip neigh                # 192.168.2.254 on eth0 REACHABLE; lab devices on eth1.10/eth1.20/eth1.30 REACHABLE
 arp -n                  # Same information as ip neigh, in older format
 ```
 
 ### Lab Device Connectivity
 
-From a lab device:
+From a lab device (e.g. Proxmox host on VLAN 10):
 
 ```bash
-ip a                    # Should show an IP in 10.42.0.x
-ip r                    # Should show: default via 10.42.0.1
-ping -c 3 10.42.0.1     # Test gateway (Pi) reachability
+ip a                    # Should show an IP in 10.42.10.x (management VLAN)
+ip r                    # Should show: default via 10.42.10.1
+ping -c 3 10.42.10.1    # Test gateway (Pi) reachability
 ping -c 3 8.8.8.8       # Test internet connectivity
 ping -c 3 google.com    # Test DNS resolution
 ```

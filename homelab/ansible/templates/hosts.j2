@@ -19,17 +19,18 @@
 #   - ansible_host: the actual IP address Ansible connects to via SSH
 #
 # Network layout (from homelab/docs/2_Network/2_1_Network_Setup.md):
-#   Home network:   192.168.2.0/24 (ISP modem)
-#   Lab network:    10.42.0.0/20   (Pi router)
-#   VLAN 10 Mon:    10.42.10.0/24
-#   VLAN 20 K8s:    10.42.20.0/24
+#   Home network:       192.168.2.0/24 (ISP modem)
+#   Lab network:        10.42.0.0/20   (Pi router)
+#   VLAN 10 Management: 10.42.10.0/24
+#   VLAN 20 Services:   10.42.20.0/24
+#   VLAN 30 IoT:        10.42.30.0/24
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
 # Lab Router (Raspberry Pi)
 # ---------------------------------------------------------------------------
 # Connected via WAN IP (eth0) from the home network.
-# eth1 (LAN) serves the lab network at {{ router_lan_ip | default('10.42.0.1') }}.
+# eth1 (LAN) serves the lab network at {{ router_lan_ip | default('10.42.10.1') }}.
 [router]
 {% if inventory_hosts.router is defined and inventory_hosts.router | length > 0 %}
 {% for host in inventory_hosts.router %}

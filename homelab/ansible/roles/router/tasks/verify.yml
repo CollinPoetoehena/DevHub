@@ -22,22 +22,25 @@
   changed_when: false
   failed_when: false
 
-- name: Verify LAN interface has correct static IP
+- name: Verify VLAN sub-interface {{ item.interface }} has correct IP
   ansible.builtin.command:
-    cmd: "ip -4 addr show {{ router_lan_interface }}"
-  register: verify_lan_ip
+    cmd: "ip -4 addr show {{ item.interface }}"
+  register: verify_vlan_ips
   changed_when: false
-  failed_when: "(router_lan_ip ~ '/' ~ router_lan_cidr) not in verify_lan_ip.stdout"
   # NetworkManager only assigns the IP when the interface has link (cable connected).
   # Skip this check if no cable is plugged in — the NM profile is still correct.
+  failed_when: "(item.gateway_ip ~ '/' ~ item.cidr) not in verify_vlan_ips.stdout"
+  loop: "{{ router_vlans }}"
+  loop_control:
+    label: "{{ item.interface }} ({{ item.name }})"
   when: verify_lan_carrier.stdout | trim == '1'
 
 - name: Warn if LAN interface has no carrier (no cable connected)
   ansible.builtin.debug:
     msg: >-
       WARNING: {{ router_lan_interface }} has no carrier (no cable connected).
-      The static IP ({{ router_lan_ip }}/{{ router_lan_cidr }}) will be assigned
-      automatically by NetworkManager once a cable is plugged in.
+      VLAN sub-interface IPs will be assigned automatically by NetworkManager
+      once a cable is plugged in.
   when: verify_lan_carrier.stdout | trim != '1'
 
 - name: Verify WAN interface has an IP (DHCP from ISP modem)
@@ -66,14 +69,14 @@
     that: ansible_facts.services['dnsmasq.service'].state == 'running'
     fail_msg: "dnsmasq is not running"
 
-- name: Verify dnsmasq is listening on LAN interface (port 53)
+- name: Verify dnsmasq is listening on VLAN interfaces (port 53)
   ansible.builtin.command:
     cmd: "ss -ulnp"
   register: verify_dns_listen
   changed_when: false
   failed_when: "':53 ' not in verify_dns_listen.stdout"
-  # dnsmasq binds DNS to the LAN IP ({{router_lan_ip}}); without carrier NM never
-  # assigns that IP, so port 53 won't appear until a cable is connected.
+  # dnsmasq binds DNS to the VLAN sub-interface IPs; without carrier NM never
+  # assigns those IPs, so port 53 won't appear until a cable is connected.
   when: verify_lan_carrier.stdout | trim == '1'
 
 - name: Verify dnsmasq is serving DHCP (port 67)
@@ -133,7 +136,7 @@
 
 - name: Verify DNS resolution works via dnsmasq
   ansible.builtin.command:
-    cmd: "nslookup google.com {{ router_lan_ip }}"
+    cmd: "nslookup google.com {{ router_vlans[0].gateway_ip }}"
   register: verify_dns_resolve
   changed_when: false
   failed_when: verify_dns_resolve.rc != 0
@@ -142,9 +145,8 @@
 # The Pi's /etc/resolv.conf is managed by NetworkManager and points to the ISP
 # modem (e.g. 192.168.2.254) — the upstream DNS from the WAN DHCP lease.
 # This is CORRECT and EXPECTED for a router: the Pi itself resolves DNS via the
-# ISP modem directly, while LAB DEVICES use the Pi's dnsmasq ({{router_lan_ip}}) as
-# their DNS server (configured via DHCP option 6 in dnsmasq.conf).
-# The Pi does NOT need to route its own DNS through dnsmasq.
+# ISP modem directly, while LAB DEVICES use the Pi's dnsmasq (VLAN gateway IPs)
+# as their DNS server (configured via DHCP option 6 in dnsmasq.conf).
 - name: Verify /etc/resolv.conf nameserver matches WAN gateway
   ansible.builtin.command:
     cmd: "grep -q '^nameserver {{ router_home_gateway }}' /etc/resolv.conf"

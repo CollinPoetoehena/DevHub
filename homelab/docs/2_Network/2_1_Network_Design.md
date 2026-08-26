@@ -139,70 +139,59 @@ ISP Modem/Router
             │
       Managed Switch (expands LAN ports; router only has one LAN port)
             │
-            ├─ Native VLAN (untagged)  — Management (10.42.0.0/24)
-            │    ├─ 10.42.0.1   Router (Raspberry Pi — gateway for all VLANs)
-            │    ├─ 10.42.0.2   Switch (NETGEAR GS305E — management interface)
-            │    ├─ 10.42.0.10  PVE1 (physical machine: Proxmox VE host 1)
-            │    └─ 10.42.0.11  PVE2 (physical machine: Proxmox VE host 2)
+            ├─ VLAN 1  Native (unused — no production traffic)
             │
-            ├─ VLAN 10 Monitoring      (10.42.10.0/24)
-            │    ├─ 10.42.10.10  Monitoring VM1
-            │    └─ ...          (other monitoring VMs, Prometheus, Grafana, alerting, etc.)
+            ├─ VLAN 10 Management      (10.42.10.0/24)
+            │    ├─ 10.42.10.1   Router (Raspberry Pi — gateway for all VLANs)
+            │    ├─ 10.42.10.2   Switch (NETGEAR GS305E — management interface)
+            │    ├─ 10.42.10.10  PVE1 (physical machine: Proxmox VE host 1)
+            │    └─ 10.42.10.11  PVE2 (physical machine: Proxmox VE host 2)
             │
-            └─ VLAN 20 Workloads       (10.42.20.0/24)
-                 ├─ 10.42.20.x   Kubernetes nodes, application VMs, databases, or any non-monitoring service
-                 └─ ...          (other workload VMs, Kubernetes pods, etc.)
+            ├─ VLAN 20 Services        (10.42.20.0/24)
+            │    ├─ 10.42.20.x   Kubernetes nodes, application VMs
+            │    └─ ...          (Grafana, Prometheus, Home Assistant, ArgoCD, etc.)
+            │
+            └─ VLAN 30 IoT            (10.42.30.0/24)
+                 ├─ 10.42.30.x   Smart plugs, sensors, Zigbee gateways
+                 └─ ...          (all smart/IoT devices)
 ```
 
 ### Subnet & VLAN Design
 
 | Subnet | VLAN | Purpose |
 |--------|------|---------|
-| 10.42.0.0/24 | Native (untagged, VLAN 1) | Management — router, switch, Proxmox host management IPs |
-| 10.42.10.0/24 | 10 | Monitoring — Grafana, Prometheus, alerting VMs |
-| 10.42.20.0/24 | 20 | Workloads — Kubernetes, application VMs, databases, and other services |
+| — | 1 (native) | Unused — no production traffic, fallback recovery only |
+| 10.42.10.0/24 | 10 | Management — router, switch, Proxmox host management IPs |
+| 10.42.20.0/24 | 20 | Services — Kubernetes, application VMs, monitoring, databases |
+| 10.42.30.0/24 | 30 | IoT — smart plugs, sensors, Zigbee gateways, energy meters |
 
-### Why Monitoring Lives on a Separate VM (Not Inside Kubernetes)
+### IoT Isolation
 
-There are three common approaches to deploying a monitoring stack (Prometheus, Grafana, Alertmanager, Loki):
+IoT devices are often the least secure devices in a home. By isolating them on VLAN 30:
 
-**Option 1 — Monitoring inside Kubernetes:** Deploy the entire monitoring stack as pods in the same Kubernetes cluster it monitors. This is easy (Helm charts, Kubernetes-native service discovery, scaling) but has a fatal flaw: if the cluster goes down, monitoring goes down with it. You cannot observe a dead cluster from inside itself.
-
-**Option 2 — External monitoring on a dedicated VM (chosen approach):** Run the monitoring stack on a standalone VM outside Kubernetes, on its own VLAN. The VM scrapes metrics from all infrastructure — Proxmox hosts, Kubernetes nodes and pods (via node-exporter, kube-state-metrics, cAdvisor), the Pi router, the switch (SNMP), and any future NAS. Kubernetes only runs lightweight exporters that expose metrics; the external Prometheus collects them.
-
-**Option 3 — Hybrid (common in large enterprises):** A dedicated observability Kubernetes cluster (or VMs) runs the central monitoring stack, while each production cluster runs a local Prometheus that federates or remote-writes to the central one. Overkill for a homelab with a single cluster.
-
-**Why Option 2 for this homelab:**
-
-1. **Survives cluster outages:** If Kubernetes crashes, Grafana dashboards and alerts still work — you can diagnose what happened from the monitoring VM instead of being blind.
-2. **Monitors the full stack:** A VM-based Prometheus can scrape everything in the lab — not just Kubernetes, but also Proxmox hypervisors, the Pi router, the switch, and bare-metal hosts. Running monitoring inside Kubernetes makes it awkward to monitor the infrastructure that Kubernetes itself runs on.
-3. **Matches enterprise patterns:** Many organizations run monitoring as a shared service external to the application platform. Learning this pattern is more broadly applicable than learning in-cluster-only monitoring.
-4. **Separate failure domain:** Placing monitoring on its own VLAN (10) isolates it from workload issues — a misbehaving application flooding VLAN 20 does not affect the monitoring VM's ability to scrape and alert.
-5. **Lightweight compared to hybrid:** Option 3 requires a second Kubernetes cluster (or multiple VMs) just for observability — that means additional CPU, memory, and storage on hardware that is already limited in a homelab. A monitoring VM achieves the same resilience at a fraction of the resource cost.
-
-Inside Kubernetes, only run the metric exporters:
 ```
-Kubernetes (VLAN 20)                    Monitoring VM (VLAN 10)
-├─ node-exporter                        ├─ Prometheus  ──scrapes──→  Kubernetes exporters
-├─ kube-state-metrics         ←─────    ├─ Grafana                   Proxmox hosts
-├─ cAdvisor                             ├─ Alertmanager              Pi router
-└─ application metrics                  └─ Loki                      Switch (SNMP)
+IoT (VLAN 30) → Services (VLAN 20) = Allowed (sensors push data to Home Assistant)
+IoT (VLAN 30) → Management (VLAN 10) = Blocked (a compromised smart bulb cannot probe Proxmox)
 ```
 
-**Why management lives on the native (untagged) VLAN instead of a dedicated tagged VLAN:**
+Firewall rules on the router enforce this — inter-VLAN traffic is denied by default, then specific flows are allowed explicitly.
 
-1. **Always-reachable recovery path:** The router's physical `eth1` interface must have an IP on the native VLAN for the trunk to function. If the VLAN configuration on the switch ever breaks (bad config, firmware bug), tagged traffic stops flowing — but untagged (native) traffic still works. Keeping management on the native VLAN means you can always reach the router and switch to fix things, even when VLANs are misconfigured.
-2. **Switch management defaults to VLAN 1:** The NETGEAR GS305E's management interface lives on the default/native VLAN (VLAN 1). While it *can* be moved to a tagged VLAN, doing so means a VLAN misconfiguration locks you out of the switch entirely — requiring a factory reset (hold the reset button for 10 seconds) to regain access.
-3. **Less complexity for a homelab:** A dedicated management VLAN adds value in enterprise environments where hundreds of ports exist and you need to restrict which physical ports can reach management interfaces. In a 5-port switch where all ports are already trusted (physically in your home), it adds configuration without meaningful security gain.
-4. **The router and switch already have their IPs on 10.42.0.x:** The router is `10.42.0.1` (its `eth1` static IP) and the switch is `10.42.0.2` (DHCP static lease). Moving them to a VLAN would require changing established addressing and SSH tunnel configurations.
+**Why a dedicated Management VLAN (VLAN 10) instead of native VLAN (VLAN 1):**
+
+1. **Closer to enterprise practice:** In production environments, the native VLAN is left unused or disabled entirely. All real traffic — including management — is explicitly tagged. Learning this pattern now means fewer surprises when working with enterprise infrastructure.
+2. **Easier to expand later:** Adding new VLANs is uniform — every VLAN is tagged, every subnet has a matching VLAN ID (VLAN 10 → 10.42.10.0/24, VLAN 20 → 10.42.20.0/24, VLAN 30 → 10.42.30.0/24). No special case for "the one VLAN that happens to be untagged."
+3. **Cleaner trunk configuration:** All production VLANs are tagged on trunk ports. The native VLAN exists only as a fallback: if VLAN tagging breaks entirely, you can still reach the switch management interface on VLAN 1 to fix the configuration (connect a laptop directly to a port, assign a static IP, access the switch web UI).
+4. **Security:** Native VLAN hopping attacks (802.1Q double-tagging) exploit the fact that the native VLAN is untagged. By not carrying any production traffic on the native VLAN, this attack vector is eliminated.
+
+TODO: document the recovery procedure — connect laptop directly to switch, assign static IP on the switch's VLAN 1 default, access switch web UI to fix VLAN config.
 
 ### Switch Port Assignments (NETGEAR GS305E — 5 ports)
 
 | Port | Connected Device | VLAN Membership |
 |------|-----------------|-----------------|
-| 1 | Pi Router (eth1) | Untagged: 1 (native) + Tagged: 10, 20 (trunk port) |
-| 2 | PVE1 (Proxmox host 1) | Untagged: 1 (native) + Tagged: 10, 20 |
-| 3 | PVE2 (Proxmox host 2) | Untagged: 1 (native) + Tagged: 10, 20 |
+| 1 | Pi Router (eth1) | Untagged: 1 (native, unused) + Tagged: 10, 20, 30 (trunk port) |
+| 2 | PVE1 (Proxmox host 1) | Untagged: 1 (native, unused) + Tagged: 10, 20, 30 |
+| 3 | PVE2 (Proxmox host 2) | Untagged: 1 (native, unused) + Tagged: 10, 20, 30 |
 | 4 | (spare) | Untagged: 1 (native) |
 | 5 | (spare) | Untagged: 1 (native) |
 
@@ -212,28 +201,29 @@ Kubernetes (VLAN 20)                    Monitoring VM (VLAN 10)
 
 Each port can be a member of multiple VLANs simultaneously. The "VLAN Membership" column lists **all** VLANs that a port participates in, separated by `+`. The keyword before each VLAN entry tells the switch how to handle frames for that VLAN on that port:
 
-- **Untagged: 1** — Frames for VLAN 1 are sent/received **without** a VLAN tag in the [Ethernet frame header](../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2). The device on the other end of the cable sees plain Ethernet frames with no VLAN information — it doesn't need to know VLANs exist. This is how the management interfaces work: the Pi's `eth1` has IP `10.42.0.1`, the Proxmox hosts have `10.42.0.10`/`.11` — all on plain, untagged Ethernet.
+- **Untagged: 1** — Frames for VLAN 1 are sent/received **without** a VLAN tag in the [Ethernet frame header](../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2). In this design, the native VLAN carries no production traffic — it exists only as a fallback recovery path. If all VLAN tagging breaks, untagged frames still flow, allowing you to reach the switch management interface.
 
-- **Tagged: 10, 20** — Frames for VLANs 10 and 20 are sent/received **with** an 802.1Q VLAN tag in the [Ethernet frame header](../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2) (a 4-byte field that says "this frame belongs to VLAN X"). The device on the other end must understand VLAN tags and process them — the Pi router uses sub-interfaces (`eth1.10`, `eth1.20`) and Proxmox uses VLAN-aware bridges to separate tagged traffic into the correct virtual networks.
+- **Tagged: 10, 20, 30** — Frames for VLANs 10, 20, and 30 are sent/received **with** an 802.1Q VLAN tag in the [Ethernet frame header](../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2) (a 4-byte field that says "this frame belongs to VLAN X"). The device on the other end must understand VLAN tags and process them — the Pi router uses sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) and Proxmox uses VLAN-aware bridges to separate tagged traffic into the correct virtual networks.
 
-**The `+` does NOT mean "10 and 20 are untagged from VLAN 1"** — it means the port carries three independent traffic streams: one untagged (VLAN 1) and two tagged (VLAN 10, VLAN 20). They coexist on the same physical cable but are completely separate at the logical level.
+**The `+` does NOT mean "10, 20, and 30 are untagged from VLAN 1"** — it means the port carries four independent traffic streams: one untagged (VLAN 1, unused) and three tagged (VLAN 10, VLAN 20, VLAN 30). They coexist on the same physical cable but are completely separate at the logical level.
 
 #### Per-port explanation
 
 **Port 1 — Pi Router (eth1):**
-The router is the gateway for all VLANs. It receives untagged management traffic on `eth1` (VLAN 1, IP `10.42.0.1`) and tagged traffic on sub-interfaces `eth1.10` (VLAN 10, IP `10.42.10.1`) and `eth1.20` (VLAN 20, IP `10.42.20.1`). The router forwards traffic between VLANs (inter-VLAN routing) and applies firewall rules. This is a "trunk port" — it carries all VLANs.
+The router is the gateway for all VLANs. Its physical `eth1` interface is on the native VLAN (unused — no IP assigned). Tagged traffic arrives on sub-interfaces `eth1.10` (VLAN 10, IP `10.42.10.1`), `eth1.20` (VLAN 20, IP `10.42.20.1`), and `eth1.30` (VLAN 30, IP `10.42.30.1`). The router forwards traffic between VLANs (inter-VLAN routing) and applies firewall rules. This is a "trunk port" — it carries all VLANs.
 
 **Ports 2–3 — Proxmox hosts (PVE1, PVE2):**
-Each Proxmox host has one physical NIC connected to the switch. Management traffic (SSH to the host, Proxmox web UI) flows untagged on VLAN 1 — so the host's management IP (`10.42.0.10` or `.11`) works without any VLAN configuration on the base interface. VMs running on the host are placed into VLANs via Proxmox's VLAN-aware bridge (`vmbr0`): a monitoring VM gets tagged into VLAN 10, a workload VM into VLAN 20. The switch delivers tagged frames for those VLANs to the port, and Proxmox's bridge routes them to the correct VM.
+Each Proxmox host has one physical NIC connected to the switch. Management traffic (SSH to the host, Proxmox web UI) flows tagged on VLAN 10 — the host's management IP (`10.42.10.10` or `.11`) is on a VLAN-aware bridge tagged to VLAN 10. VMs running on the host are placed into VLANs via Proxmox's VLAN-aware bridge (`vmbr0`): a service VM gets tagged into VLAN 20, an IoT gateway VM into VLAN 30. The switch delivers tagged frames for those VLANs to the port, and Proxmox's bridge routes them to the correct VM.
 
 **Ports 4–5 — Spare:**
-Simple access ports — only untagged VLAN 1. Any device plugged in gets a management network IP via DHCP. No VLAN awareness required on the connected device.
+Simple access ports — only untagged VLAN 1. Any device plugged in lands on the native VLAN (no production access by default). To give a device access to a specific VLAN, reconfigure the port.
 
-#### Why tagged for workload VLANs instead of untagged (access ports)?
+#### Why tagged for service VLANs instead of untagged (access ports)?
 
-An alternative design would be to assign each port to a single VLAN as untagged (e.g. port 2 = untagged VLAN 10, port 3 = untagged VLAN 20). This is simpler per-port but has a critical limitation: **you only get 5 ports total**, and each device would be locked to a single VLAN. Since Proxmox hosts run VMs in multiple VLANs simultaneously (monitoring VMs + workload VMs on the same physical machine), the host's port MUST carry multiple VLANs — which requires tagging. The management VLAN stays untagged so you can always reach the host even if VLAN tagging breaks.
+An alternative design would be to assign each port to a single VLAN as untagged (e.g. port 2 = untagged VLAN 10, port 3 = untagged VLAN 20). This is simpler per-port but has a critical limitation: **you only get 5 ports total**, and each device would be locked to a single VLAN. Since Proxmox hosts run VMs in multiple VLANs simultaneously (management + services + IoT on the same physical machine), the host's port MUST carry multiple VLANs — which requires tagging.
 
 **Summary of the tagging logic:**
-- **VLAN 1 (management): untagged** — ensures infrastructure is always reachable; no VLAN-aware config needed on base interfaces.
-- **VLAN 10 (monitoring): tagged** — VMs in this VLAN are placed there by Proxmox/router; requires VLAN-aware bridge/sub-interface.
-- **VLAN 20 (workloads): tagged** — same reasoning as VLAN 10.
+- **VLAN 1 (native): untagged** — carries no production traffic; exists as a fallback recovery path if VLAN tagging breaks.
+- **VLAN 10 (management): tagged** — router, switch, Proxmox hosts; requires VLAN-aware sub-interface/bridge.
+- **VLAN 20 (services): tagged** — Kubernetes, all hosted applications; requires VLAN-aware bridge/sub-interface.
+- **VLAN 30 (IoT): tagged** — smart devices, sensors; isolated from management for security.

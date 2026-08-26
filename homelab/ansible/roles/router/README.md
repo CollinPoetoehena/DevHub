@@ -7,9 +7,9 @@ Configures a Raspberry Pi as a dedicated lab router providing network isolation,
 | Task File | Purpose |
 |-----------|---------|
 | `packages.yml` | Install utility packages (dnsutils, tcpdump, curl) for debugging |
-| `networking.yml` | Static IP on LAN interface (`eth1`) via NetworkManager, enable IPv4 forwarding |
-| `dhcp_dns.yml` | Install and configure `dnsmasq` for DHCP + DNS on the lab network |
-| `firewall.yml` | NAT (masquerading), forwarding rules, lab→home blocking, INPUT protection |
+| `networking.yml` | Physical LAN interface (no IP), VLAN sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) via NetworkManager, enable IPv4 forwarding |
+| `dhcp_dns.yml` | Install and configure `dnsmasq` for per-VLAN DHCP + DNS on the lab network |
+| `firewall.yml` | NAT (masquerading), forwarding rules, lab→home blocking, inter-VLAN routing, INPUT protection |
 | `verify.yml` | Post-configuration checks: networking, DHCP/DNS, firewall, connectivity |
 
 ## Network Topology
@@ -17,10 +17,11 @@ Configures a Raspberry Pi as a dedicated lab router providing network isolation,
 ```
 ISP Modem (192.168.2.0/24)
     │
-    └── eth0 (WAN) ─── Raspberry Pi Router ─── eth1 (LAN) → Lab Switch
-                         10.42.0.1/20                        │
-                                                             ├── Lab devices
-                                                             └── (get DHCP from Pi)
+    └── eth0 (WAN) ─── Raspberry Pi Router ─── eth1 (LAN, no IP) → Lab Switch
+                                                   │
+                                                   ├── eth1.10 (VLAN 10 — Management, 10.42.10.1/24)
+                                                   ├── eth1.20 (VLAN 20 — Services,   10.42.20.1/24)
+                                                   └── eth1.30 (VLAN 30 — IoT,        10.42.30.1/24)
 ```
 
 ## Requirements
@@ -36,14 +37,10 @@ ISP Modem (192.168.2.0/24)
 
 | Variable | Description |
 |----------|-------------|
-| `router_lan_ip` | Gateway IP for the lab network (e.g. `10.42.0.1`) |
-| `router_lan_cidr` | Subnet mask in CIDR notation (e.g. `20`) |
-| `router_lan_subnet` | Full CIDR notation (e.g. `10.42.0.0/20`) |
+| `router_lan_subnet` | Full CIDR for the lab supernet (e.g. `10.42.0.0/20`) |
+| `router_vlans` | List of VLAN dicts with `id`, `name`, `interface`, `gateway_ip`, `cidr`, `netmask`, `dhcp_range_start`, `dhcp_range_end` |
 | `router_home_subnet` | Home network to block from lab (e.g. `192.168.2.0/24`) |
 | `router_home_gateway` | ISP modem/gateway IP (e.g. `192.168.2.254`) |
-| `router_dhcp_range_start` | DHCP pool start (e.g. `10.42.0.100`) |
-| `router_dhcp_range_end` | DHCP pool end (e.g. `10.42.0.200`) |
-| `router_dhcp_netmask` | Subnet mask for DHCP clients (e.g. `255.255.240.0`) |
 | `router_dhcp_domain` | DNS search domain (e.g. `lab.local`) |
 | `router_static_leases` | Static MAC→IP reservations (list of `{mac, ip, hostname}`) |
 
