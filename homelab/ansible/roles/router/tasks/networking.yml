@@ -16,17 +16,17 @@
 ################################################################################
 # Physical LAN Interface (eth1) — no IP, just link up
 ################################################################################
-# NetworkManager is the network daemon on Raspberry Pi OS (Trixie/Debian 13+).
-#
 # The physical eth1 interface must be up for VLAN sub-interfaces to work,
 # but carries no production traffic (native VLAN 1 is unused).
+# See 2_1_Network_Design.md for why it is unused.
 #
 # The WAN interface (eth0) is left as DHCP — it gets its IP from the ISP modem.
 #
 # The community.general.nmcli module is idempotent: it creates the connection
 # on first run and only modifies it if parameters change on subsequent runs.
 #
-# NOTE: older Raspberry Pi OS versions used dhcpcd instead of NetworkManager.
+# NOTE: # NetworkManager is the network daemon on Raspberry Pi OS (Trixie/Debian 13+).
+# older Raspberry Pi OS versions used dhcpcd instead of NetworkManager.
 # If your Pi uses dhcpcd, configure the static IP in /etc/dhcpcd.conf instead.
 
 - name: Ensure physical LAN interface ({{ router_lan_interface }}) is up with no IP
