@@ -1,6 +1,8 @@
-# Network Design
+# Network & Hosts Design
 
 A stable network is the foundation of a reliable homelab. This document covers the design decisions: the setup options available, why a dedicated lab router behind the ISP modem is the right choice, the subnet design, and the target network topology.
+
+TODO: this is now host and networking because these steps are right after each other and connected a lot, etc.
 
 > See the [Network Reference](../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
 

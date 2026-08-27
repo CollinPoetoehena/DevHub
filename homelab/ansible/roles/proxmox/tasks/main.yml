@@ -1,0 +1,6 @@
+---
+# tasks file for proxmox
+#
+# TODO
+
+# TODO: add here similar to the router role splitting in task files and adding a verify at the end, etc.

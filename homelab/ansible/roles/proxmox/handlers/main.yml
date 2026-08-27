@@ -1,0 +1,8 @@
+---
+# handlers file for proxmox
+#
+# Handlers are triggered by "notify" in tasks and run once at the end of the play
+# (or when explicitly flushed). They ensure services are restarted/reloaded only
+# when their configuration has actually changed, avoiding unnecessary restarts.
+
+# TODO

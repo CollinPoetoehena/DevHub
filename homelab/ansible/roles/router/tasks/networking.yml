@@ -17,7 +17,7 @@
 # WAN Interface (eth0) — DHCP, rename auto-created profile
 ################################################################################
 # NetworkManager auto-creates "Wired connection 1" for eth0. Rename it to something meaningful so `nmcli connection show` is readable.
-# Functionally this does not change anything, however it improves readability and management of  the network connections 
+# Functionally this does not change anything, however it improves readability and management of  the network connections
 # (e.g. can distinguish between WAN and LAN interfaces, etc.). So, this is still an important step to perform!
 
 - name: Find current NM connection name for WAN interface ({{ router_wan_interface }})
@@ -42,7 +42,7 @@
 ################################################################################
 # The physical eth1 interface must be up for VLAN sub-interfaces to work,
 # but carries no production traffic (native VLAN 1 is unused).
-# See 2_1_Network_Design.md for why it is unused.
+# See 2_1_Network_Hosts_Design.md for why it is unused.
 #
 # The WAN interface (eth0) is left as DHCP — it gets its IP from the ISP modem.
 #

@@ -7,7 +7,7 @@ TODO: explain here the design, refer to networking setup.
 
 There are three common approaches to deploying a monitoring stack (e.g. Prometheus, Grafana, Alertmanager, Loki):
 
-**Option 1 — Monitoring inside Kubernetes (chosen approach):** Deploy the entire monitoring stack as pods in the same Kubernetes cluster it monitors. This is the simplest approach — Helm charts, Kubernetes-native service discovery, and scaling work out of the box. The monitoring stack runs in a dedicated `monitoring` namespace on the Services VLAN (VLAN 20), alongside all other hosted applications. Application segmentation is done via namespaces, not separate VLANs (see [Network Design — Kubernetes Networking](../2_Network/2_1_Network_Design.md#kubernetes-networking)).
+**Option 1 — Monitoring inside Kubernetes (chosen approach):** Deploy the entire monitoring stack as pods in the same Kubernetes cluster it monitors. This is the simplest approach — Helm charts, Kubernetes-native service discovery, and scaling work out of the box. The monitoring stack runs in a dedicated `monitoring` namespace on the Services VLAN (VLAN 20), alongside all other hosted applications. Application segmentation is done via namespaces, not separate VLANs (see [Network Design — Kubernetes Networking](../2_Network_Hosts/2_1_Network_Hosts_Design.md#kubernetes-networking)).
 
 **Option 2 — External monitoring on a dedicated VM:** Run the monitoring stack on a standalone VM outside Kubernetes. The VM scrapes metrics from all infrastructure — Proxmox hosts, Kubernetes nodes and pods (via node-exporter, kube-state-metrics, cAdvisor), the Pi router, the switch (SNMP), and any future NAS. Kubernetes only runs lightweight exporters that expose metrics; the external Prometheus collects them.
 
@@ -38,7 +38,7 @@ TODO: use tmux (see [tmux reference](./reference/tmux.md)) to manage multiple te
 
 # TODO: what to run on the home lab cluster:
 TODO: for services/workloads do energy monitoring to add value in the home
-TODO: the IoT devices can run in VLAN 30 IoT, see [networking design](../2_Network/2_1_Network_Design.md#network-topology)
+TODO: the IoT devices can run in VLAN 30 IoT, see [networking design](../2_Network_Hosts/2_1_Network_Hosts_Design.md#network-topology)
 
 **TODO: MetalLB for VIPs and load balancing. TODO: also how to securely expose services to the outside world (e.g., via Ingress, Traefik, or NGINX), etc., so that I can use the service from outside the home network for example, etc.**
 
