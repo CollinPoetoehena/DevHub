@@ -156,6 +156,27 @@ ISP Modem/Router
                  └─ ...          (all smart/IoT devices)
 ```
 
+### Why VLAN 1 (native) is not used — all traffic is explicitly VLAN-tagged
+
+The native VLAN (VLAN 1) carries no production traffic in this design. Every device — router, switch, Proxmox hosts, services, IoT — communicates exclusively on tagged VLANs (10, 20, 30). The Pi router's physical `eth1` interface has no IP address; all traffic flows through VLAN sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`). VLAN 1 exists on the switch only because 802.1Q requires a native VLAN — it cannot be deleted, but it carries nothing.
+
+Why this is the right approach:
+
+1. **Everything is explicit:** When all traffic is tagged, every frame on the wire declares which VLAN it belongs to. There is no ambiguity about where untagged traffic ends up. Debugging is simpler — a packet capture shows the VLAN tag immediately, and you never have to wonder "is this untagged frame on VLAN 1 or did something strip the tag?"
+2. **Closer to enterprise practice:** In production environments, the native VLAN is left unused or disabled entirely. All real traffic — including management — is explicitly tagged. Learning this pattern now means fewer surprises when working with enterprise infrastructure.
+3. **Security — prevents VLAN hopping:** Native VLAN hopping attacks (802.1Q double-tagging) exploit the fact that the native VLAN is untagged. An attacker on the native VLAN can craft a double-tagged frame: the switch strips the outer (native) tag and forwards the inner tag to a different VLAN. By not carrying any production traffic on the native VLAN, this attack vector is eliminated — there is nothing to hop from.
+4. **Easier to expand later:** Adding new VLANs is uniform — every VLAN is tagged, every subnet has a matching VLAN ID (VLAN 10 → 10.42.10.0/24, VLAN 20 → 10.42.20.0/24, VLAN 30 → 10.42.30.0/24). No special case for "the one VLAN that happens to be untagged."
+5. **Cleaner trunk configuration:** All production VLANs are tagged on trunk ports. No confusion about which VLAN carries untagged traffic on which port.
+6. **Fallback recovery still works:** Even though VLAN 1 is unused, it remains configured as untagged on all ports. If VLAN tagging breaks entirely (firmware bug, misconfiguration), untagged frames still flow on VLAN 1 — you can connect a laptop directly to the switch, assign a static IP, and access the switch web UI to fix the configuration.
+
+### Why a dedicated Management VLAN (VLAN 10)
+
+Management traffic (SSH to hosts, Proxmox web UI, switch admin, router access) is on its own VLAN rather than being mixed in with services or IoT. This provides:
+
+1. **Isolation from workloads:** If a service on VLAN 20 misbehaves (broadcast storm, saturated bandwidth, compromised container), management access to the infrastructure remains unaffected — you can still SSH into hosts and access the Proxmox UI to diagnose and fix the problem.
+2. **Access control:** Firewall rules on the router restrict which VLANs can reach management interfaces. IoT devices (VLAN 30) are blocked from reaching VLAN 10 entirely — a compromised smart bulb cannot probe Proxmox or SSH into the router. Only traffic that explicitly needs management access (e.g. your laptop via SSH tunnel) reaches VLAN 10.
+3. **Audit clarity:** All management traffic lives on a single, known subnet (10.42.10.0/24). Log analysis, packet captures, and firewall auditing are simpler when management is cleanly separated from application and IoT traffic.
+
 ### Subnet & VLAN Design
 
 | Subnet | VLAN | Purpose |
@@ -175,15 +196,6 @@ IoT (VLAN 30) → Management (VLAN 10) = Blocked (a compromised smart bulb canno
 ```
 
 Firewall rules on the router enforce this — inter-VLAN traffic is denied by default, then specific flows are allowed explicitly.
-
-**Why a dedicated Management VLAN (VLAN 10) instead of native VLAN (VLAN 1):**
-
-1. **Closer to enterprise practice:** In production environments, the native VLAN is left unused or disabled entirely. All real traffic — including management — is explicitly tagged. Learning this pattern now means fewer surprises when working with enterprise infrastructure.
-2. **Easier to expand later:** Adding new VLANs is uniform — every VLAN is tagged, every subnet has a matching VLAN ID (VLAN 10 → 10.42.10.0/24, VLAN 20 → 10.42.20.0/24, VLAN 30 → 10.42.30.0/24). No special case for "the one VLAN that happens to be untagged."
-3. **Cleaner trunk configuration:** All production VLANs are tagged on trunk ports. The native VLAN exists only as a fallback: if VLAN tagging breaks entirely, you can still reach the switch management interface on VLAN 1 to fix the configuration (connect a laptop directly to a port, assign a static IP, access the switch web UI).
-4. **Security:** Native VLAN hopping attacks (802.1Q double-tagging) exploit the fact that the native VLAN is untagged. By not carrying any production traffic on the native VLAN, this attack vector is eliminated.
-
-TODO: document the recovery procedure — connect laptop directly to switch, assign static IP on the switch's VLAN 1 default, access switch web UI to fix VLAN config.
 
 ### Switch Port Assignments (NETGEAR GS305E — 5 ports)
 
