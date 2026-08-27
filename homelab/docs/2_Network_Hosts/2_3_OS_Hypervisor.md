@@ -1,5 +1,15 @@
 # OS and Hypervisor Installation
 
+
+TODO: split this up into /reference for the general things like bootable USB, Hypervisor and Ubuntu, etc.
+TODO: then setup and installation for this file and the specific steps here for the hosts, run with Ansible again, etc.
+
+
+
+
+
+
+
 TODO: this below document is done and checked, only update some parts with some specific steps I do where necessary, etc. After that this part is done!
 
 This document is split into three chapters:

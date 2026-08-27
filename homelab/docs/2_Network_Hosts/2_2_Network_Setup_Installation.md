@@ -1,4 +1,4 @@
-# Network Setup
+# Network Setup & Installation
 
 This document covers the specific steps to set up the homelab network using the setup explained in [Network Design](2_1_Network_Hosts_Design.md).
 
