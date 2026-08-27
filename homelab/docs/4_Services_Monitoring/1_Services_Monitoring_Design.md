@@ -39,7 +39,16 @@ TODO: use tmux (see [tmux reference](./reference/tmux.md)) to manage multiple te
 # TODO: what to run on the home lab cluster:
 TODO: for services/workloads do energy monitoring to add value in the home
 TODO: the IoT devices can run in VLAN 30 IoT, see [networking design](../2_Network/2_1_Network_Design.md#network-topology)
-TODO: such as from AI:
+
+**TODO: MetalLB for VIPs and load balancing. TODO: also how to securely expose services to the outside world (e.g., via Ingress, Traefik, or NGINX), etc., so that I can use the service from outside the home network for example, etc.**
+
+**TODO: 1: Something with cooking and groceries: TODO: make a separate repo here as well because this is a separate service/project and deploy as a container.**
+TODO: then add something like make your grocery shop list that exports to a PDF/PNG that automatically sorts it for you into sections (e.g. fruits, vegetables, dairy, meat, pantry), etc.
+TODO: and also make it read a Word document and extract the "benodigdheden" automatically and put it into a DB, etc.
+TODO: that will save a lot of time when doing grocery shopping, etc.!
+
+**TODO: 2: Energy Monitoring: TODO: make in separate repo (NOT in DevHub/Homelab, it is a separate service/project, so build it into a container and then deploy it in homelab, etc.!)**
+Content of energy monitoring: such as from AI:
 Energy Monitoring (Highest Practical Value)
 
 If you're in the Netherlands, energy prices and consumption are worth tracking.

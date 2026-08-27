@@ -227,89 +227,7 @@ From this step onwards you can use another device to SSH into the Pi.
 
 ---
 
-## Step 6: Configure the Managed Switch (via Laptop)
-
-**Why configure the switch before the router?** The router's Ansible playbook creates VLAN sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) and configures dnsmasq to serve DHCP per VLAN. For these to work, the switch must already have VLANs configured and be passing tagged frames. If you connect an unconfigured switch to the Pi and run the router playbook, the VLAN sub-interfaces come up but have no corresponding VLANs on the switch — tagged frames are dropped, dnsmasq cannot reach clients, and you cannot access the switch's web UI via the Pi (because the switch's management interface is on a VLAN the unconfigured switch does not understand). Configuring the switch first via a direct laptop connection avoids this chicken-and-egg problem entirely.
-
-**Why not just give `eth1` an IP on VLAN 1 and configure the switch through the Pi?** An alternative would be to assign an IP to the Pi's physical `eth1` interface (on the native VLAN 1), connect the unconfigured switch, and configure it from there — the switch defaults to VLAN 1 for management, so it would be reachable. However, this is rejected because VLAN 1 is deliberately unused in this design: all production traffic must be explicitly VLAN-tagged. Adding an IP to `eth1` — even temporarily — breaks that principle and introduces the exact ambiguity the design avoids. See [Network Design — Why VLAN 1 is not used](2_1_Network_Design.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged) for the full rationale. Configuring the switch via a direct laptop connection is simpler and keeps the router configuration clean.
-
-Additionally, because all production traffic is explicitly VLAN-tagged in this design, the switch must have VLANs 10, 20, and 30 created and its management moved to VLAN 10 before it can participate in the lab network. Without this, the switch only speaks on the native VLAN (VLAN 1), which carries no production traffic.
-
-Unfortunately, the NETGEAR GS305E web UI is not scriptable (no CLI or API), so this must be done manually. This is fine since these are only a few steps and buying a switch with automation capabilities would be overkill and generally costs significantly more money.
-
-### Step 6.1: Connect the switch to your laptop and find its IP
-
-Connect an Ethernet cable directly from your laptop to any port on the switch. The switch ships with DHCP enabled on VLAN 1 — it will get an IP from your home network if your laptop is also on the home network, or use its default IP.
-
-```bash
-# Find the switch's IP on your local network:
-# Option 1: Check your router/modem's DHCP lease table for a new device
-# Option 2: Use arp/ip neigh to find it
-ip neigh | grep -i "28:94"  # Use the first bytes of the switch's MAC (printed on the device)
-# Option 3: The NETGEAR GS305E defaults to 192.168.0.239 if no DHCP server is found.
-#            In that case, assign your laptop a static IP on 192.168.0.x/24 to reach it.
-
-# Open a browser and go to the switch's IP:
-#   http://<switch-ip>
-```
-
-### Step 6.2: Configure the switch (password, name, VLANs)
-
-Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](2_1_Network_Design.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for the port-to-VLAN mapping.
-
-**In the NETGEAR web UI:**
-
-1. **Log in** — Default credentials: no username, password is `password`
-2. **Change password** — Navigate to **System → Maintenance → Change Password** (or the switch may force you on first login). Set a strong, unique password and store it in your password manager
-3. **Set switch name** — Navigate to **System → Maintenance → Switch Information** and set the Switch Name to `lab-switch`
-4. **Create VLANs** — Navigate to **VLAN → 802.1Q (not Port-based!) → Advanced → VLAN Configuration**. Add VLAN 10 (name: `Management`), VLAN 20 (name: `Services`), VLAN 30 (name: `IoT`)
-5. **Set VLAN membership** — For VLAN 10, VLAN 20, and VLAN 30, go to **VLAN Membership** and set:
-   - Port 1 (router): **T** (tagged)
-   - Port 2 (PVE1): **T** (tagged)
-   - Port 3 (PVE2): **T** (tagged)
-   - Ports 4–5: leave as not a member
-6. **Verify VLAN 1** — All ports should remain **U** (untagged) for VLAN 1 (native VLAN — unused for production traffic, serves only as a fallback recovery path)
-7. **Set PVID** — Set the **PVID** (Port VLAN ID) for all ports to 1 (typically the default — untagged frames arriving on any port are assigned to VLAN 1)
-8. **Set Management VLAN** — Navigate to **System → Management → Management VLAN**, select VLAN 10. This moves the switch's management interface to the management VLAN
-9. **Apply** — Click **Apply** to save
-
-> **Note:** After setting the Management VLAN to 10, the switch is only reachable on VLAN 10. If your laptop is still connected directly, you may lose access — this is expected. The switch is now configured and ready to be connected to the Pi.
->
-> **If you need to reconfigure later:** See [Step 9 — Recovery](#step-93-recovery-if-locked-out-of-the-switch) for how to regain access.
-
-### Step 6.3: Backup the switch configuration
-
-Before disconnecting from the switch (if you still have access), back up its configuration:
-
-1. Navigate to **System → Maintenance → Save Configuration → Save**
-2. Save the configuration file in [homelab/files](../../files) with the name `lab-switch.cfg` for version control and future reference
-3. If you ever need to restore the switch, upload this file via **System → Maintenance → Restore Configuration**
-
----
-
-## Step 7: Connect Switch to Pi & Ensure eth1 Has Carrier
-
-Connect the switch to the Pi's `eth1` (LAN) interface. This provides carrier on `eth1`, which NetworkManager needs to bring up the VLAN sub-interfaces.
-
-**Why carrier is required:** Ethernet link detection is a physical-layer handshake — both ends of the cable must be connected to active Ethernet ports that exchange electrical link pulses (auto-negotiation). If the other end is disconnected, unpowered, or missing, the Pi's Ethernet PHY reports `NO-CARRIER` and NetworkManager treats the interface as inactive (no IP assignment on sub-interfaces).
-
-A switch port is always electrically active — it provides carrier immediately, even if no other devices are plugged into the switch yet. So once the Pi is cabled to the switch, `eth1` gets carrier → the router playbook (next step) can create VLAN sub-interfaces → dnsmasq binds → everything works.
-
-```bash
-# Verify carrier status on the Pi:
-cat /sys/class/net/eth1/carrier
-# 1 = cable connected to active device (carrier detected)
-# 0 or "No such file" = no carrier (cable missing or other end inactive)
-
-# Or check via ip command:
-ip link show eth1
-# Look for: state UP + LOWER_UP = carrier present
-#           state DOWN or NO-CARRIER = no active link
-```
-
----
-
-## Step 8: Configure the Pi with Ansible
+## Step 6: Configure the Pi with Ansible
 
 ```bash
 # Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
@@ -373,11 +291,80 @@ ip -4 addr show eth1.30  # Should show: inet 10.42.30.1/24
 
 ---
 
-## Step 9: Access Switch Management via SSH Tunnel
+## Step 7: Configure Switch & Ensure eth1 of the Router Has Carrier
 
-Now that the router is configured and the switch is connected to the Pi, the switch should have received its static IP (`10.42.10.2`) on the management VLAN (VLAN 10) via DHCP from dnsmasq. The static lease is defined in [`group_vars/router/main.yml`](../../ansible/group_vars/router/main.yml) (the `router_static_leases` variable).
+### Step 7.1: Configure the Managed Switch (via Laptop)
 
-### Step 9.1: Verify the switch is reachable
+**Why not just give `eth1` an IP on VLAN 1 and configure the switch through the Pi?** An alternative would be to assign an IP to the Pi's physical `eth1` interface (on the native VLAN 1), connect the unconfigured switch, and configure it from there — the switch defaults to VLAN 1 for management, so it would be reachable. However, this is rejected because VLAN 1 is deliberately unused in this design: all production traffic must be explicitly VLAN-tagged. Adding an IP to `eth1` — even temporarily — breaks that principle and introduces the exact ambiguity the design avoids. See [Network Design — Why VLAN 1 is not used](2_1_Network_Design.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged) for the full rationale. Configuring the switch via a direct laptop connection is simpler and keeps the router configuration clean.
+
+Additionally, because all production traffic is explicitly VLAN-tagged in this design, the switch must have VLANs 10, 20, and 30 created and its management moved to VLAN 10 before it can participate in the lab network. Without this, the switch only speaks on the native VLAN (VLAN 1), which carries no production traffic.
+
+Unfortunately, the NETGEAR GS305E web UI is not scriptable (no CLI or API), so this must be done manually. This is fine since these are only a few steps and buying a switch with automation capabilities would be overkill and generally costs significantly more money.
+
+The switch ships with DHCP enabled on VLAN 1 — **but it only receives a DHCP address if it is connected to a router or DHCP server via Ethernet**.  However, a laptop connected over Wi‑Fi does *not* provide DHCP to the switch. Therefore, in a direct laptop‑to‑switch setup, the switch falls back to its default IP (typically **192.168.0.239** on NETGEAR Plus switches, check the switch’s manual for confirmation). The below approach works **without a router** and on **any laptop**, because you can temporarily assign your laptop’s Ethernet interface a static IP in the same subnet as the switch’s fallback IP. This creates a small, isolated two‑device network that allows you to reach the management UI and change the IP configuration of the switch:
+1. Connect an Ethernet cable directly from your laptop to any port on the switch.
+2. Assign a static IP to your laptop’s Ethernet interface in the same subnet as the switch’s fallback IP (e.g., `192.168.0.x`), see the switch’s manual for its static IP. To assign the static IP on your laptop:
+    - **Windows:**
+        1. Open Settings → Network & Internet → Ethernet → Click your Ethernet adapter → Scroll to IP assignment → Edit → Choose Manual → Enable IPv4
+        2. Enter:
+            - IP: 192.168.0.10
+            - Subnet mask: 255.255.255.0
+            - Gateway: (leave blank)
+        3. Save
+        4. Disable Wi‑Fi (important)
+    - **Linux:**
+        1. Open a terminal
+        2. Assign a static IP to your Ethernet interface (replace `eth0` with your interface name if different) and bring the interface up: `sudo ip addr flush dev eth0; sudo ip addr add 192.168.0.10/24 dev eth0; sudo ip link set eth0 up`
+        3. Disable Wi‑Fi (important)
+3. Verify that your laptop can ping the switch’s IP (e.g., `ping 192.168.0.239`).
+4. Open a web browser and navigate to the switch’s IP (e.g., `http://192.168.0.239`) to access the management UI.
+5. Follow the next steps below, such as configuring the switch, etc. Any errors related to internet connectivity can be ignored at this stage, as the switch is not yet connected to the network.
+6. Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](2_1_Network_Design.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](2_1_Network_Design.md#switch-port-assignments-netgear-gs305e--5-ports) for the port-to-VLAN mapping. **In the NETGEAR web UI:**
+    1. **Log in** — Default credentials: no username, password is `password` (unless specified otherwise by your switch, check the switch's manual)
+    2. **Change password** — Navigate to **System → Maintenance → Change Password** (or the switch may force you on first login). Set a strong, unique password and store it in your password manager
+    3. **Set switch name** — Navigate to **System → Maintenance → Switch Information** and set the Switch Name to `lab-switch`
+    4. **Create VLANs** — Navigate to **VLAN → 802.1Q (not Port-based!) → Advanced → VLAN Configuration**. Add VLAN 10 (name: `Management`), VLAN 20 (name: `Services`), VLAN 30 (name: `IoT`)
+    5. **Set VLAN membership** — For VLAN 10, VLAN 20, and VLAN 30, go to **VLAN Membership** and set:
+        - Port 1 (router): **T** (tagged)
+        - Port 2 (PVE1): **T** (tagged)
+        - Port 3 (PVE2): **T** (tagged)
+        - Ports 4–5: leave as not a member
+    6. **Verify VLAN 1** — All ports should remain **U** (untagged) for VLAN 1 (native VLAN — unused for production traffic, serves only as a fallback recovery path)
+    7. **Set PVID** — Set the **PVID** (Port VLAN ID) for all ports to 1 (typically the default — untagged frames arriving on any port are assigned to VLAN 1)
+    8. **Set Management VLAN (VERY IMPORTANT)** — Navigate to **System → Management → Management VLAN**, select VLAN 10. This moves the switch's management interface to the management VLAN. The switch will be assigned a static IP later based on its MAC address by the Pi router after [Step 8: Configure the Pi with Ansible](#step-8-configure-the-pi-with-ansible). If the switch is not in the Management VLAN, the router cannot assign it an IP, and you may lose access to the switch. That is why this step is critical.
+        - **Alternative (the switch I bought (GS305E) did not have the above option)** — Some switches do not have the option to change the management interface VLAN. In that case, you need to manually update the switch's IP address to be within the management VLAN subnet: Navigate to **System → Maintenance → Switch Information → Disable DHCP** and set the IP address to an address within the management VLAN subnet (e.g., `10.42.10.2`), the corresponding subnet mask (e.g., `255.255.255.0`) and the gateway to the Pi router's IP (e.g. `10.42.10.1`).
+9. **Apply** — Click **Apply** to save
+7. Once the switch is configured fully with all the steps explained in the other sections, revert your laptop’s Ethernet interface back to DHCP so your Wi‑Fi and normal networking continue to work as before:
+    - **Windows:** Settings → Network & Internet → Ethernet → IP assignment → Edit → Automatic (DHCP). Then re-enable Wi‑Fi.
+    - **Linux:** `sudo ip addr flush dev eth0; sudo dhclient eth0`
+
+> **If you need to reconfigure later:** See [Step 9 — Recovery](#step-93-recovery-if-locked-out-of-the-switch) for how to regain access.
+
+### Step 7.2: Connect Switch to Pi's LAN Interface to ensure carrier is detected
+
+**Why connect the switch after the initial configuration?** The router's Ansible playbook creates VLAN sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) and configures dnsmasq to serve DHCP per VLAN. For these to work, the switch must already have VLANs configured and be passing tagged frames. If you connect an unconfigured switch to the configured Pi router, the VLAN sub-interfaces come up but have no corresponding VLANs on the switch — tagged frames are dropped, dnsmasq cannot reach clients, and you cannot access the switch's web UI via the Pi (because the switch's management interface is on a VLAN the unconfigured switch does not understand). Configuring the switch first via a direct laptop connection avoids this chicken-and-egg problem entirely.
+
+Connect the switch to the Pi's `eth1` (LAN) interface (you can disconnect it from your laptop, which was only necessary for [Step 6: Configure the Managed Switch via Laptop](#step-6-configure-the-managed-switch-via-laptop)). This provides carrier on `eth1`, which NetworkManager needs to bring up the VLAN sub-interfaces.
+
+**Why carrier is required:** Ethernet link detection is a physical-layer handshake — both ends of the cable must be connected to active Ethernet ports that exchange electrical link pulses (auto-negotiation). If the other end is disconnected, unpowered, or missing, the Pi's Ethernet PHY reports `NO-CARRIER` and NetworkManager treats the interface as inactive (no IP assignment on sub-interfaces).
+
+A switch port is always electrically active — it provides carrier immediately, even if no other devices are plugged into the switch yet. So once the Pi is cabled to the switch, `eth1` gets carrier → the router can use the VLAN sub-interfaces → dnsmasq binds → everything works.
+
+```bash
+# Verify carrier status on the Pi:
+cat /sys/class/net/eth1/carrier
+# 1 = cable connected to active device (carrier detected)
+# 0 or "No such file" = no carrier (cable missing or other end inactive)
+
+# Or check via ip command:
+ip link show eth1
+# Look for: state UP + LOWER_UP = carrier present
+#           state DOWN or NO-CARRIER = no active link
+```
+
+### Step 7.3: Access Switch Management via SSH Tunnel & Perform Final Switch Configurations
+Now that the router is configured and running, the final steps for the switch can be performed.
+#### Step 7.3.1: **Verify the switch is reachable:**
 
 ```bash
 # From the Pi, verify the static lease is in the dnsmasq config:
@@ -391,9 +378,7 @@ grep "lab-switch" /etc/dnsmasq.conf
 # Verify from the Pi:
 ping -c 3 10.42.10.2
 ```
-
-### Step 9.2: Access the switch web UI via SSH tunnel
-
+#### Step 7.3.2: Access the switch web UI via SSH tunnel
 The switch's web UI is on the lab management network (`10.42.10.2`, VLAN 10), which is not directly reachable from your home laptop. Use **SSH port forwarding** through the Pi to access it.
 
 ```
@@ -410,13 +395,13 @@ Pi (192.168.2.59) — decrypts and forwards →
 Switch web UI (10.42.10.2:80)
 ```
 
-**Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
+**Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at your Pi's IP, such as `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
 
 ```bash
 # From your home laptop, open an SSH tunnel:
 #   -L 8080:10.42.10.2:80  = "listen on localhost:8080 on my laptop, and
 #      forward connections through the Pi to 10.42.10.2:80"
-ssh -L 8080:10.42.10.2:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
+ssh -L 8080:10.42.10.2:80 <username>@<Pi_IP> -i ~/.ssh/id_homelab
 
 # Then open a browser: http://localhost:8080
 # You should see the NETGEAR switch management interface.
@@ -424,19 +409,29 @@ ssh -L 8080:10.42.10.2:80 <username>@192.168.2.59 -i ~/.ssh/id_homelab
 
 # This same technique works for any web UI on the lab network. For example,
 # to access the Proxmox web UI (port 8006) later:
-#   ssh -L 8006:10.42.10.10:8006 <username>@192.168.2.59 -i ~/.ssh/id_homelab
+#   ssh -L 8006:10.42.10.10:8006 <username>@<Pi_IP> -i ~/.ssh/id_homelab
 #   Then browse to: https://localhost:8006
 ```
 
 Use this access to verify the switch configuration, update settings, or download a backup of the configuration.
+#### Step 7.3.3: Enable DHCP on the switch
+In the switch's management interface, make sure the DHCP client is enabled so it can obtain the reserved IP (`10.42.10.2`) from the router's dnsmasq server.
+Now that the router is configured and the switch is connected to the Pi, the switch should have received its static IP (`10.42.10.2`) on the management VLAN (VLAN 10) via DHCP from dnsmasq. The static lease is defined in [`group_vars/router/main.yml`](../../ansible/group_vars/router/main.yml) (the `router_static_leases` variable).
+#### Step 7.3.4: Backup the switch configuration
 
-### Step 9.3: Recovery — if locked out of the switch
+Before disconnecting from the switch, back up its configuration:
+
+1. Navigate to **System → Maintenance → Save Configuration → Save**
+2. Save the configuration file in [homelab/files](../../files) with the name `lab-switch.cfg` for version control and future reference
+3. If you ever need to restore the switch, upload this file via **System → Maintenance → Restore Configuration**
+
+### Step 7.4: Recovery — if locked out of the switch
 
 If you lose access to the switch (e.g. management VLAN misconfigured, SSH tunnel not working, switch not getting DHCP), you can always reconfigure it directly from your laptop:
 
 1. **Factory reset the switch** — hold the reset button on the switch for 10 seconds. This restores the switch to factory defaults (management on VLAN 1, password `password`)
-2. **Connect your laptop directly** to any switch port with an Ethernet cable
-3. **Follow [Step 6](#step-6-configure-the-managed-switch-via-laptop)** to find the switch's IP and reconfigure it (password, name, VLANs, management VLAN)
+2. **Follow [Step 6](#step-6-configure-the-managed-switch-via-laptop)** to connect your laptop and find the switch's IP and reconfigure it (password, name, VLANs, management VLAN). 
+3. Optionally, restore the configuration by the backup file saved earlier (e.g., `lab-switch.cfg`) via **System → Maintenance → Restore Configuration**.
 
 ---
 

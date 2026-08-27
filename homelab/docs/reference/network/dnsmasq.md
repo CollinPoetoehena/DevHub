@@ -35,7 +35,7 @@ For background on DNS and DHCP concepts, see [DHCP & DNS](DHCP_and_DNS.md).
 
 dnsmasq is configured via a single file (or a directory of files). The main config file is typically:
 
-```
+```bash
 /etc/dnsmasq.conf           # main config
 /etc/dnsmasq.d/             # drop-in directory (files here are included automatically)
 ```
