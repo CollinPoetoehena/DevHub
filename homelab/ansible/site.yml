@@ -84,12 +84,7 @@
   post_tasks:
     - name: Display router information
       ansible.builtin.debug:
-        msg:
-          - "Lab router configuration completed successfully"
-          - "WAN interface ({{ router_wan_interface }}): connected to ISP modem"
-          - "LAN interface ({{ router_lan_interface }}): serving lab network at {{ router_lan_ip }}/{{ router_lan_cidr }}"
-          - "DHCP range: {{ router_dhcp_range_start }} - {{ router_dhcp_range_end }}"
-          - "Lab devices can now get IPs and reach the internet through this router"
+        msg: "Lab router configuration completed successfully. See displayed summary by the router role."
 
 # TODO: this below is for testing, see comment later below.
 # TODO: all roles in roles folder should be removed later, these should be split into separate repos later, see Issues in Git.

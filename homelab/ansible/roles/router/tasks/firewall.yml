@@ -84,10 +84,10 @@
 
 - name: Configure NAT (MASQUERADE) on WAN interface
   ansible.builtin.iptables:
-    table: nat
-    chain: POSTROUTING
-    out_interface: "{{ router_wan_interface }}"
-    jump: MASQUERADE
+    table: nat # The "nat" table handles address translation (separate from the default "filter" table)
+    chain: POSTROUTING # POSTROUTING = after routing decision, just before packet leaves the interface
+    out_interface: "{{ router_wan_interface }}" # Only rewrite packets exiting via WAN (eth0)
+    jump: MASQUERADE # Replace source IP with the WAN interface's current IP
     comment: "NAT: masquerade lab traffic going out to internet via WAN"
   when: router_enable_nat
   notify: Save iptables rules
@@ -106,10 +106,10 @@
 # the firewall explicitly blocks this traffic.
 - name: Block lab network from reaching home network
   ansible.builtin.iptables:
-    chain: FORWARD
-    in_interface: "{{ router_lan_wildcard }}"
-    destination: "{{ router_home_subnet }}"
-    jump: DROP
+    chain: FORWARD # FORWARD = packets passing THROUGH the router (not destined for the router itself)
+    in_interface: "{{ router_lan_wildcard }}" # Match traffic arriving from any lab VLAN
+    destination: "{{ router_home_subnet }}" # Headed for the home network
+    jump: DROP # Silently discard — no response sent back
     comment: "SECURITY: block lab devices from reaching home network"
   when: router_block_lab_to_home
   notify: Save iptables rules
@@ -119,10 +119,10 @@
 # destination that is NOT the home network, since that's blocked above).
 - name: Allow forwarding from LAN to WAN (lab → internet)
   ansible.builtin.iptables:
-    chain: FORWARD
-    in_interface: "{{ router_lan_wildcard }}"
-    out_interface: "{{ router_wan_interface }}"
-    jump: ACCEPT
+    chain: FORWARD # Packets passing through the router
+    in_interface: "{{ router_lan_wildcard }}" # From any lab VLAN
+    out_interface: "{{ router_wan_interface }}" # Heading to the internet via WAN
+    jump: ACCEPT # Allow the packet through
     comment: "Allow lab devices to reach the internet via WAN"
   notify: Save iptables rules
 
@@ -134,9 +134,9 @@
     chain: FORWARD
     in_interface: "{{ router_wan_interface }}"
     out_interface: "{{ router_lan_wildcard }}"
-    ctstate:
-      - ESTABLISHED
-      - RELATED
+    ctstate: # conntrack state — only allow packets belonging to
+      - ESTABLISHED # an existing connection (response to outbound request)
+      - RELATED # or related to one (e.g. ICMP error for an active conn)
     jump: ACCEPT
     comment: "Allow return traffic for connections initiated by lab devices"
   notify: Save iptables rules
@@ -147,8 +147,8 @@
 - name: Allow inter-VLAN forwarding
   ansible.builtin.iptables:
     chain: FORWARD
-    in_interface: "{{ router_lan_wildcard }}"
-    out_interface: "{{ router_lan_wildcard }}"
+    in_interface: "{{ router_lan_wildcard }}" # From any lab VLAN sub-interface
+    out_interface: "{{ router_lan_wildcard }}" # To any lab VLAN sub-interface
     jump: ACCEPT
     comment: "Allow inter-VLAN routing between lab VLANs"
   notify: Save iptables rules
@@ -160,14 +160,15 @@
 ################################################################################
 # INPUT chain — Protect the router itself
 ################################################################################
-# These rules control what traffic is allowed to reach the Pi router itself
-# (not forwarded traffic, but traffic destined for the Pi's own services).
+# INPUT controls traffic destined for the Pi itself (its own services: SSH,
+# DNS, DHCP). This is separate from FORWARD which handles traffic passing
+# through the router to other networks.
 
 # Allow all traffic on loopback (required for local services to communicate)
 - name: Allow loopback traffic
   ansible.builtin.iptables:
-    chain: INPUT
-    in_interface: lo
+    chain: INPUT # Packets destined for the router itself
+    in_interface: lo # Loopback interface (127.0.0.1)
     jump: ACCEPT
     comment: "Allow loopback traffic (required for local services)"
   notify: Save iptables rules
@@ -188,9 +189,9 @@
 - name: Allow SSH from LAN
   ansible.builtin.iptables:
     chain: INPUT
-    in_interface: "{{ router_lan_wildcard }}"
-    protocol: tcp
-    destination_port: "22"
+    in_interface: "{{ router_lan_wildcard }}" # From any lab VLAN
+    protocol: tcp # SSH uses TCP
+    destination_port: "22" # Standard SSH port
     jump: ACCEPT
     comment: "Allow SSH access from lab network"
   notify: Save iptables rules
@@ -199,33 +200,31 @@
 - name: Allow SSH from WAN
   ansible.builtin.iptables:
     chain: INPUT
-    in_interface: "{{ router_wan_interface }}"
+    in_interface: "{{ router_wan_interface }}" # From the home network side
     protocol: tcp
     destination_port: "22"
     jump: ACCEPT
     comment: "Allow SSH access from home network"
   notify: Save iptables rules
 
-# Allow DHCP requests on LAN (lab devices requesting IP addresses via DHCP)
-# DHCP uses UDP port 67 (server) and 68 (client)
+# Allow DHCP requests on LAN (lab devices requesting IP addresses)
 - name: Allow DHCP on LAN interface
   ansible.builtin.iptables:
     chain: INPUT
     in_interface: "{{ router_lan_wildcard }}"
-    protocol: udp
-    destination_port: "67"
+    protocol: udp # DHCP uses UDP
+    destination_port: "67" # Port 67 = DHCP server; clients send from port 68
     jump: ACCEPT
     comment: "Allow DHCP requests from lab devices"
   notify: Save iptables rules
 
 # Allow DNS queries on LAN (lab devices resolving domain names via dnsmasq)
-# DNS uses UDP and TCP port 53
 - name: Allow DNS (UDP) on LAN interface
   ansible.builtin.iptables:
     chain: INPUT
     in_interface: "{{ router_lan_wildcard }}"
     protocol: udp
-    destination_port: "53"
+    destination_port: "53" # DNS uses port 53 for both UDP (most queries) and TCP (zone transfers, large responses)
     jump: ACCEPT
     comment: "Allow DNS queries (UDP) from lab devices"
   notify: Save iptables rules
@@ -244,7 +243,7 @@
 - name: Allow ICMP (ping) from anywhere
   ansible.builtin.iptables:
     chain: INPUT
-    protocol: icmp
+    protocol: icmp # ICMP = Internet Control Message Protocol (ping, traceroute, etc.)
     jump: ACCEPT
     comment: "Allow ping for network troubleshooting"
   notify: Save iptables rules

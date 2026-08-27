@@ -14,6 +14,30 @@
 # traffic between VLANs or to the internet.
 
 ################################################################################
+# WAN Interface (eth0) — DHCP, rename auto-created profile
+################################################################################
+# NetworkManager auto-creates "Wired connection 1" for eth0. Rename it to something meaningful so `nmcli connection show` is readable.
+# Functionally this does not change anything, however it improves readability and management of  the network connections 
+# (e.g. can distinguish between WAN and LAN interfaces, etc.). So, this is still an important step to perform!
+
+- name: Find current NM connection name for WAN interface ({{ router_wan_interface }})
+  ansible.builtin.command:
+    cmd: "nmcli -t -f NAME,DEVICE connection show --active"
+  register: wan_conn_check
+  changed_when: false
+
+- name: Rename WAN connection to {{ router_wan_connection_name }}
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection modify "{{ item.split(':')[0] }}"
+      connection.id "{{ router_wan_connection_name }}"
+  loop: "{{ wan_conn_check.stdout_lines }}"
+  when:
+    - item.split(':')[1] == router_wan_interface
+    - item.split(':')[0] != router_wan_connection_name
+  changed_when: true
+
+################################################################################
 # Physical LAN Interface (eth1) — no IP, just link up
 ################################################################################
 # The physical eth1 interface must be up for VLAN sub-interfaces to work,
@@ -29,14 +53,31 @@
 # older Raspberry Pi OS versions used dhcpcd instead of NetworkManager.
 # If your Pi uses dhcpcd, configure the static IP in /etc/dhcpcd.conf instead.
 
+- name: Check if LAN connection profile already exists
+  ansible.builtin.command:
+    cmd: "nmcli -t -f ipv4.addresses connection show {{ router_lan_connection_name }}"
+  register: lan_conn_check
+  changed_when: false
+  failed_when: false
+
+# If migrating from the old single-IP config (no VLANs, only the physical LAN interface with a
+# static IP (eth1)), the existing profile has ipv4.addresses set.
+# NM rejects method=disabled with addresses present, and rejects clearing addresses while method=manual. Must set both atomically.
+- name: Clear stale IPv4 address on LAN connection (migration from old config)
+  ansible.builtin.command:
+    cmd: "nmcli connection modify {{ router_lan_connection_name }} ipv4.method disabled ipv4.addresses ''"
+  when: lan_conn_check.rc == 0 and lan_conn_check.stdout | trim != ''
+  changed_when: true
+
 - name: Ensure physical LAN interface ({{ router_lan_interface }}) is up with no IP
-  community.general.nmcli:
+  community.general.nmcli: # https://docs.ansible.com/projects/ansible/latest/collections/community/general/nmcli_module.html
     conn_name: "{{ router_lan_connection_name }}"
     ifname: "{{ router_lan_interface }}"
-    type: ethernet
-    method4: disabled
-    autoconnect: true
-    state: present
+    type: ethernet # Physical Ethernet connection (not VLAN)
+    method4: disabled # No IPv4 — native VLAN 1 carries no production traffic
+    method6: disabled # No IPv6 — lab is IPv4-only
+    autoconnect: true # Bring up automatically on boot / cable insert
+    state: present # Create or update the NM profile (idempotent)
   notify: Activate LAN connection
 
 ################################################################################
@@ -48,15 +89,16 @@
 # The community.general.nmcli module is idempotent: it creates the connection
 # on first run and only modifies it if parameters change on subsequent runs.
 
-- name: Create VLAN sub-interface {{ item.interface }} (VLAN {{ item.id }} — {{ item.name }})
+- name: Create VLAN sub-interfaces
   community.general.nmcli:
-    conn_name: "vlan-{{ item.name | lower }}"
-    ifname: "{{ item.interface }}"
-    type: vlan
-    vlanid: "{{ item.id }}"
-    vlandev: "{{ router_lan_interface }}"
-    ip4: "{{ item.gateway_ip }}/{{ item.cidr }}"
-    method4: manual
+    conn_name: "vlan-{{ item.name | lower }}" # NM profile name (e.g. "vlan-management")
+    ifname: "{{ item.interface }}" # Kernel interface name (e.g. "eth1.10")
+    type: vlan # 802.1Q VLAN sub-interface — creates a virtual interface (e.g. eth1.20@eth1) that tags/untags Ethernet frames with the VLAN ID on the parent interface
+    vlanid: "{{ item.id }}" # VLAN tag ID (e.g. 10)
+    vlandev: "{{ router_lan_interface }}" # Parent physical interface (eth1)
+    ip4: "{{ item.gateway_ip }}/{{ item.cidr }}" # Static gateway IP for this VLAN
+    method4: manual # Static IPv4 (not DHCP) — the router IS the gateway
+    method6: disabled # No IPv6 — lab is IPv4-only
     autoconnect: true
     state: present
   loop: "{{ router_vlans }}"

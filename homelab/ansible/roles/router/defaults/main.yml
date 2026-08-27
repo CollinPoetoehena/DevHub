@@ -17,6 +17,9 @@
 # The Pi's built-in Ethernet port is used for the WAN side.
 router_wan_interface: "eth0"
 
+# NetworkManager connection profile name for the WAN interface.
+router_wan_connection_name: "lab-wan"
+
 # LAN interface: connects to the lab switch (downstream/lab network).
 # A USB-to-Ethernet adapter provides the LAN interface.
 router_lan_interface: "eth1"
