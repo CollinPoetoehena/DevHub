@@ -10,7 +10,7 @@ This document is split into 2 main parts: Creating a `boot device` (USB) and Boo
 1. [Create a bootable USB (general process)](#bootable-usb-general)
 2. [Booting from USB (Hypervisor or OS)](#booting-from-usb-hypervisor-or-os)
     - [Install a hypervisor (Proxmox VE)](#hypervisor-installation-proxmox-ve)
-    - [Install a Linux OS for worker nodes (example: Ubuntu Server LTS)](#linux-os-installation-worker-node-example)
+    - [Install a Linux OS](#linux-os-installation)
 
 ---
 
@@ -81,9 +81,9 @@ After that, the USB is completely normal again.
 
 # Booting from USB (Hypervisor or OS)
 
-## Hypervisor Installation (Proxmox VE)
+This chapter covers the steps to boot from a USB drive and install either a hypervisor (Proxmox VE) or a Linux OS on your target machine.
 
-Use this chapter for your virtualization host nodes.
+## Hypervisor Installation (Proxmox VE)
 
 A hypervisor is software that lets one physical machine run multiple virtual machines. Proxmox VE is the platform that manages those VMs, storage, and virtual networking. 
 
@@ -105,7 +105,7 @@ Proxmox VE is chosen because it is currently the main open-source hypervisor tha
 
 --- 
 
-## Linux OS Installation (Worker Node Example)
+## Linux OS Installation
 
 A regular OS node is a regular Linux server that runs workloads or supporting services, rather than hosting virtual machines for other systems. 
 
@@ -123,19 +123,17 @@ A regular OS node is a regular Linux server that runs workloads or supporting se
 5. Partition disk:
    - Recommended for dedicated worker node: erase disk and install clean.
    - Manual option example:
-
 ```text
 /boot/efi   512MB   FAT32   (UEFI systems)
 /           30GB+   ext4    (root)
 swap        2-8GB   swap    (or based on RAM/usage)
 /var        remaining ext4  (optional split for workloads/logs)
 ```
-
 6. Create admin user.
 7. Enable OpenSSH during install.
 8. Complete install, remove USB, and reboot.
 
-### Post-Install Baseline (Linux Worker)
+### Post-Install Baseline
 
 ```bash
 sudo apt update
@@ -249,7 +247,9 @@ Check thermal throttling, disk health, and running services (`htop`, `iostat`, `
 - [Ubuntu Documentation](https://documentation.ubuntu.com/)
 - [Ubuntu Server Install Tutorial](https://ubuntu.com/tutorials/install-ubuntu-server)
 
-### Useful Commands Reference
+## Useful Commands Reference
+
+Below are some useful commands, but also see other reference documentation for more details, such as [Networking Commands](../network/commands/README.md) and [Storage Commands](../Storage_Background_Commands.md).
 
 ```bash
 # System information

@@ -1,6 +1,6 @@
 # Operating System (OS)
 
-The software that manages the hardware and provides a foundation for running programs. Without an OS, the Pi is just bare hardware with no way to interact with it. For a router, the OS runs the kernel that handles networking, the DHCP server, the firewall, etc.
+The software that manages the hardware and provides a foundation for running programs. Without an OS, the hardware (e.g. a Raspberry Pi) is just bare hardware with no way to interact with it. For a router, the OS runs the kernel that handles networking, the DHCP server, the firewall, etc.
 
 ## Kernel
 
@@ -35,15 +35,15 @@ When you run `iptables -A FORWARD ...`, the `iptables` user-space tool sends ins
 
 It refers to the CPU's architecture instruction set — the width of the CPU's registers and memory addresses. Practically:
 
-- **Memory:** A 32-bit OS can address at most 4 GB of RAM. A 64-bit OS can address vastly more (theoretically 16 exabytes, practically limited by the hardware). The Pi 4 comes in 2 GB, 4 GB, and 8 GB variants — the 4 GB and 8 GB models benefit from a 64-bit OS.
+- **Memory:** A 32-bit OS can address at most 4 GB of RAM. A 64-bit OS can address vastly more (theoretically 16 exabytes, practically limited by the hardware). For example, the Raspberry Pi 4 comes in 2 GB, 4 GB, and 8 GB variants — the 4 GB and 8 GB models benefit from a 64-bit OS.
 - **Software:** 64-bit binaries can use wider registers for arithmetic, which can improve performance for certain workloads. Increasingly, software is built and tested primarily for 64-bit, and some packages may drop 32-bit support.
-- **Recommendation:** Always use the 64-bit version of Raspberry Pi OS on a Pi 4 or later.
+- **Recommendation:** Always use the 64-bit version for your host.
 
 ---
 
 ## Init System (systemd)
 
-Raspberry Pi OS (and most modern Linux distributions) use **systemd** as the init system — the first process started by the kernel (PID 1). It manages:
+Most modern Linux distributions (including Raspberry Pi OS) use **systemd** as the init system — the first process started by the kernel (PID 1). It manages:
 
 - **Service lifecycle:** Starting, stopping, restarting, and monitoring services (e.g. `sshd`, `dnsmasq`, `iptables-persistent`).
 - **Boot order:** Ensuring services start in the correct order (e.g. networking before DHCP server).

@@ -7,7 +7,7 @@ TODO: then setup and installation for this file and the specific steps here for 
 # TODO: for Proxmox creating VMs:
 TODO: use Ubuntu Server, TODO: add here why with AI.
 TODO: nodes I want: mgmtvm, then 1 control plane for now and 2 workers. Later can expand when I have more hardware than only my laptop, etc.!
-TODO: selecting the speccs (for now manual, but later do with automation!)
+TODO: selecting the speccs (for now manual, but later do with automation!).
 ## TODO: explanation about specs and things, add this in /reference for explanation of what each part is, this is now from AI:
 Proxmox CPU Options Explained
 1. Cores
@@ -174,6 +174,8 @@ CPU Limit: none
 
 # TODO: for setup:
 TODO: started on Proxmox VE setup after booting it with a bootable USB.
+TODO: refer to [Booting OS: Hypervisor Installation (Proxmox VE)](../../../reference/os_hardware/Booting_OS.md#hypervisor-installation-proxmox-ve)
+TODO: add steps here to install Proxmox VE on the host and then after that just use the basic steps, maybe I need to manually add vmbr0.10 to add connectivity.
 TODO: after adding in /etc/network/interfaces the correct ones such as vmbr0.10, etc., for the VLANs, it had connection, see [network interfaces template](../../ansible/roles/proxmox/templates/network-interfaces.j2).
 **TODO: maybe add that with Ansible now via Ansible modules for the network interfaces and NOT as a template!!! This is hardcoded and ideally you want Ansible to automate this! TODO: then add in comments why the setup, such as vlan-aware, etc.**
 
@@ -201,6 +203,4 @@ TODO: then with Terraform can automate the provisioning and management of VMs on
 TODO: for automated VM setup, use Terraform with a cloud image (avoids having to manually configure the OS on each VM), can just use an existing cloud image from Ubuntu. See example: https://github.com/marcmassoteau-jpg/massoteau-homelab-devops/tree/main/terraform/proxmox-vms
 TODO: add the Terraform module as a separate repo in DevHub!
 **TODO: I think same design as azure with the separate things, such as terraform-proxmox-vms, terraform-proxmox-hardening, etc.**
-
-
 
