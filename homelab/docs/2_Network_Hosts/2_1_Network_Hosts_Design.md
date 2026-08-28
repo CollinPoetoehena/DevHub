@@ -77,7 +77,7 @@ ISP Modem (192.168.2.0/24) → Lab Router → Lab Devices (10.42.0.0/20)
 
 ### Background Knowledge: Raspberry Pi, Hardware & OS
 
-> See [Raspberry Pi: Hardware & OS Background](../../../reference/raspberry_pi_hardware_os.md) for detailed background on the Raspberry Pi hardware, ARM vs x86 architecture, SD cards, the operating system and kernel, the boot process, flashing, network interfaces, GPIO, `raspi-config`, and headless operation.
+> See [Raspberry Pi](../../../reference/os_hardware/Raspberry_pi.md) for detailed background on the Raspberry Pi hardware, ARM vs x86 architecture, SD cards, the operating system and kernel, the boot process, flashing, network interfaces, GPIO, `raspi-config`, and headless operation.
 
 ### Lab Router
 
@@ -130,32 +130,75 @@ For a homelab router that just needs to hand out leases on one subnet and forwar
 
 Full network topology (in .md diagram format to save space (no image file needed for this setup)):
 ```
-Internet
-    │
-ISP Modem/Router
-(192.168.2.0/24)
-    │
-    ├── Home devices
-    │
-    └── Raspberry Pi Router (Homelab Network: 10.42.0.0/20) `eth0` (WAN; connected to ISP Modem) → `eth1` (LAN; connected to switch)
-            │
-      Managed Switch (expands LAN ports; router only has one LAN port)
-            │
-            ├─ VLAN 1  Native (unused — no production traffic)
-            │
-            ├─ VLAN 10 Management      (10.42.10.0/24)
-            │    ├─ 10.42.10.1   Router (Raspberry Pi — gateway for all VLANs)
-            │    ├─ 10.42.10.2   Switch (NETGEAR GS305E — management interface)
-            │    ├─ 10.42.10.10  PVE1 (physical machine: Proxmox VE host 1)
-            │    └─ 10.42.10.11  PVE2 (physical machine: Proxmox VE host 2)
-            │
-            ├─ VLAN 20 Services        (10.42.20.0/24)
-            │    ├─ 10.42.20.x   Kubernetes nodes, application VMs
-            │    └─ ...          (Grafana, Prometheus, Home Assistant, ArgoCD, etc.)
-            │
-            └─ VLAN 30 IoT            (10.42.30.0/24)
-                 ├─ 10.42.30.x   Smart plugs, sensors, Zigbee gateways
-                 └─ ...          (all smart/IoT devices)
+TODO: later I do want to move this to Drawio because it is easier to visualize and extend, etc. Drawback is more size consumption, but that is fine!
+TODO: make this NOT network topology but then the design of the whole homelab network and K8s cluster!
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                        Internet                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+                                            ⇵
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                             ISP Home Modem/Router (192.168.1.1)                        │
+│                             Home devices (192.168.2.0/24)                              │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+                                            ⇵
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                             Lab Router (Homelab Network: 10.42.0.0/20)                 │
+│                             eth0 (WAN; connected to ISP Modem)                         │
+|                             eth1.x (LAN (VLAN subinterface); connected to switch)      │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+                                            ⇵
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                             Managed Switch (expands LAN ports)                         │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+  ├─ VLAN 1  Native (unused — no production traffic)
+  │
+  ├─ VLAN 10 Management      (10.42.10.0/24)
+  │    ├─ 10.42.10.1   Router (Raspberry Pi — gateway for all VLANs)
+  │    ├─ 10.42.10.2   Switch (NETGEAR GS305E — management interface)
+  │    ├─ 10.42.10.10  PVE1 (physical machine: Proxmox VE host 1)
+  │    └─ 10.42.10.11  PVE2 (physical machine: Proxmox VE host 2)
+  │
+  ├─ VLAN 20 Services        (10.42.20.0/24)
+  │    ├─ 10.42.20.x   Kubernetes nodes, application VMs
+  │    └─ ...          (Grafana, Prometheus, Home Assistant, ArgoCD, etc.)
+  │
+  └─ VLAN 30 IoT            (10.42.30.0/24)
+      ├─ 10.42.30.x   Smart plugs, sensors, Zigbee gateways
+      └─ ...          (all smart/IoT devices)          │
+
+TODO: later add K8s as well, such as:
+┌─────────────────────────────────────────────────────────────┐
+│          Proxmox VE (10.42.10.10:8006)                      │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │           Kubernetes Cluster                        │    │
+│  │                                                     │    │
+│  │  Control Plane:                                     │    │
+│  │  ├─ k8s-cp-01 (10.42.10.241)                        │    │
+│  │  │   2 vCPU / 2GB RAM / 50GB Disk                   │    │
+│  │  └─ k8s-worker-02 (10.42.10.242)                    │    │
+│  │      2 vCPU / 2GB RAM / 50GB Disk                   │    │
+│  │                                                     │    │
+│  │  Worker Nodes:                                      │    │
+│  │  ├─ k8s-worker-01 (10.42.10.243)                    │    │
+│  │  │   2 vCPU / 4GB RAM / 100GB Disk                  │    │
+│  │  ├─ k8s-worker-02 (10.42.10.244)                    │    │
+│  │  │   2 vCPU / 4GB RAM / 100GB Disk                  │    │
+│  │  └─ k8s-worker-03 (10.42.10.245)                    │    │
+│  │      2 vCPU / 4GB RAM / 100GB Disk                  │    │
+│  │                                                     │    │
+│  │  Running Workloads:                                 │    │
+│  │  ├─ Traefik Ingress Controller                      │    │
+│  │  ├─ GitLab CE + Runners                             │    │
+│  │  ├─ Jenkins CI Server                               │    │
+│  │  ├─ ArgoCD GitOps Engine                            │    │
+│  │  ├─ Prometheus + Grafana + Loki                     │    │
+│  │  └─ Application Workloads                           │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  Storage: local-lvm (pve)                                   │
+│  Network: Calico CNI (10.244.0.0/16)                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Why VLAN 1 (native) is not used — all traffic is explicitly VLAN-tagged
