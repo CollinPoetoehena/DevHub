@@ -137,7 +137,7 @@ Suppresses the header, question, authority, and additional sections — shows on
 
 ```bash
 dig google.com @8.8.8.8          # ask Google's public DNS directly
-dig google.com @10.42.0.1        # ask the router's DNS (e.g. the homelab router)
+dig google.com @10.42.10.1        # ask the router's DNS (e.g. the homelab router)
 ```
 
 Useful for verifying whether the lab's local DNS server resolves differently from a public one. For example, if `dig lab-node1.lab @10.42.0.1` returns an answer but `dig lab-node1.lab @8.8.8.8` returns `NXDOMAIN`, your local DNS is working correctly — public resolvers have no knowledge of private hostnames.

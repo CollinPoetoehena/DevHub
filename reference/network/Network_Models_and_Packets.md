@@ -86,7 +86,7 @@ This is where **switches operate**. A switch reads the destination MAC in each f
 
 ### Layer 3 — Network
 
-Responsible for delivering packets between devices on **different** networks. Uses **IP addresses** (logical addresses like `10.42.0.1`) to identify source and destination across network boundaries.
+Responsible for delivering packets between devices on **different** networks. Uses **IP addresses** (logical addresses like `10.42.10.1`) to identify source and destination across network boundaries.
 
 See for more details about what *local network* and *remote/different networks* mean in section: [Understanding Local and Remote Network Communication](#understanding-local-and-remote-network-communication).
 
@@ -291,7 +291,7 @@ An IP packet is the unit of data routed between networks. It's what routers forw
 | TTL (Time To Live) | 8 bits (1 byte) | Decremented by each router; packet is dropped when it reaches 0 (prevents infinite loops) |
 | Protocol | 8 bits (1 byte) | Layer 4 protocol: `6` = TCP, `17` = UDP, `1` = ICMP |
 | Header Checksum | 16 bits (2 bytes) | Error-detection checksum over the header only (recalculated at each hop) |
-| Source IP | 32 bits (4 bytes) | IP address of the sender (e.g. `10.42.0.10`) |
+| Source IP | 32 bits (4 bytes) | IP address of the sender (e.g. `10.42.10.10`) |
 | Destination IP | 32 bits (4 bytes) | IP address of the target (e.g. `8.8.8.8`) |
 | Options | 0–320 bits (0–40 bytes) | Optional fields (e.g. record route, timestamp). Present when IHL > 5. Padded to 32-bit boundary. |
 | Data | Variable | The layer 4 segment/datagram being carried (TCP segment, UDP datagram, ICMP message, etc.). Size = Total Length − (IHL × 4). |
@@ -300,7 +300,7 @@ An IP packet is the unit of data routed between networks. It's what routers forw
 ```
 Version: 4, IHL: 5 (20 bytes), Total Length: 60
 TTL: 64, Protocol: 6 (TCP)
-Source IP:      10.42.0.10
+Source IP:      10.42.10.10
 Destination IP: 8.8.8.8
 Data:           [TCP segment: src port 54321, dst port 80, seq 1, "GET / HTTP/1.1..."]
 ```
@@ -491,7 +491,7 @@ Data: [DNS query: A record for "google.com"] (37 bytes)
 
 ### Full Example: HTTP Request Through the Layers
 
-A device at `10.42.0.10` (on the lab network) opens `http://google.com` in a browser. Here's what happens at each layer:
+A device at `10.42.10.10` (on the lab network) opens `http://google.com` in a browser. Here's what happens at each layer:
 
 #### 1. Application Layer (HTTP)
 
@@ -515,7 +515,7 @@ Payload: "GET / HTTP/1.1\r\nHost: google.com\r\n\r\n"
 
 IP wraps the TCP segment in a packet. DNS has already resolved `google.com` → `142.250.179.110`:
 ```
-Source IP: 10.42.0.10
+Source IP: 10.42.10.10
 Destination IP: 142.250.179.110
 TTL: 64, Protocol: TCP (6)
 Payload: [TCP segment from above]
@@ -523,7 +523,7 @@ Payload: [TCP segment from above]
 
 #### 4. Data Link Layer (Ethernet)
 
-The device's IP stack checks: "Is `142.250.179.110` on my local subnet (`10.42.0.0/20`)?" — No. So it sends the frame to its **default gateway** (`10.42.0.1` = the router). It looks up the router's MAC via ARP:
+The device's IP stack checks: "Is `142.250.179.110` on my local subnet (`10.42.0.0/20`)?" — No. So it sends the frame to its **default gateway** (`10.42.10.1` = the router). It looks up the router's MAC via ARP:
 ```
 Destination MAC: dc:a6:32:xx:xx:xx  (router's MAC)
 Source MAC: aa:bb:cc:dd:ee:ff       (this device's MAC)
@@ -546,7 +546,7 @@ The router receives the frame, strips the Ethernet header, and reads the IP pack
 
 The router:
 1. Decrements TTL (64 → 63)
-2. Applies NAT: rewrites source IP from `10.42.0.10` → `192.168.2.59` (router's WAN IP) and tracks the mapping
+2. Applies NAT: rewrites source IP from `10.42.10.10` → `192.168.2.59` (router's WAN IP) and tracks the mapping
 3. Builds a new Ethernet frame with the ISP modem's MAC as destination
 4. Sends it out `eth0`
 

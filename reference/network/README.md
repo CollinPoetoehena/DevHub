@@ -1,6 +1,6 @@
 # Network Reference
 
-Background knowledge and command reference for networking. These documents explain the concepts and commands used throughout the homelab documentation, avoiding repetition in setup and operational docs.
+Background knowledge and command reference for networking. These documents explain the concepts and commands used throughout the projects, such as the homelab documentation, avoiding repetition in setup and operational docs.
 
 ## Concepts
 
@@ -15,4 +15,4 @@ Background knowledge and command reference for networking. These documents expla
 
 ## Other References
 
-- [dnsmasq](dnsmasq.md) — Configuration and commands for the dnsmasq DHCP/DNS server running on the lab router.
+- [dnsmasq](dnsmasq.md) — Configuration and commands for the dnsmasq DHCP/DNS server running on the homelab's lab router.

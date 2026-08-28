@@ -79,8 +79,6 @@ In practice the recursive resolver almost always has `.com` and many popular dom
 
 - **DNS server (resolver):** The server your device queries. Provided by DHCP (the DHCP server tells devices which DNS server to use) or configured manually. On Linux, see `/etc/resolv.conf` for the configured nameserver(s).
 - **DNS forwarding:** A local DNS server (e.g. `dnsmasq` on the lab router) that receives queries from local devices and forwards them upstream to a public resolver. Useful when you want to add local hostname resolution on top of regular internet DNS.
-- **Local DNS:** A DNS server that resolves names for hosts within a private network (e.g. `pi.lab` → `10.42.0.1`). Public resolvers have no knowledge of private hostnames; a local resolver handles them.
+- **Local DNS:** A DNS server that resolves names for hosts within a private network (e.g. `pi.lab` → `10.42.10.1`). Public resolvers have no knowledge of private hostnames; a local resolver handles them.
 - **TTL (Time To Live):** How long a DNS response may be cached before it must be re-queried. Set by the domain owner. Short TTL = more DNS queries but faster propagation of IP changes; long TTL = fewer queries but slower propagation.
 - **Common record types:** `A` = hostname → IPv4; `AAAA` = hostname → IPv6; `CNAME` = hostname alias → another hostname; `PTR` = IP → hostname (reverse DNS); `MX` = mail server for a domain.
-
-**DNS in the homelab:** The lab router runs [dnsmasq](dnsmasq.md), which acts as both the DHCP server and a local DNS forwarder. It forwards external queries upstream (to the ISP modem or a public resolver) and can resolve local hostnames for lab devices by reading its own DHCP lease database. See the dnsmasq reference for configuration and DNS/DHCP commands.

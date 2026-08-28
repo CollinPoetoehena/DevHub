@@ -2,7 +2,7 @@
 
 TODO: here network verification.
 
-See [Network Commands](../reference/network/Network_Commands.md) for detailed explanations of each command and its output used below. The following commands are used for verification, specifying only the expected outputs, the commands themselves are explained in the document above.
+See [Network Commands](../../../reference/network/commands/README.md) for detailed explanations of each command and its output used below. The following commands are used for verification, specifying only the expected outputs, the commands themselves are explained in the document above.
 
 > **Note:** The [router playbook/verify.yml](../../ansible/roles/router/tasks/verify.yml) already performs these connectivity checks automatically. The checks below are just basic manual verification steps for reference, see the playbook for the full automated verification and detailed checks for more comprehensive testing.
 

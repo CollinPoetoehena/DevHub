@@ -28,7 +28,7 @@ Modem is short for *modulator-demodulator*. It converts digital signals from you
 - **WiFi access point** (on combined units): Provides wireless connectivity for home devices.
 - **Admin interface:** Accessible via a browser at its LAN IP (typically `192.168.2.1` or `192.168.1.1`). Used to view connected devices, DHCP leases, port forwarding rules, and static IP reservations.
 
-**Double NAT (IPv4 only):** If you place a second router (e.g. a Raspberry Pi) behind the ISP modem, you create a *double NAT* situation — the ISP modem NATs to the Pi's WAN IP, and the Pi NATs again to lab devices. This is fine for outbound internet access but complicates inbound connections (e.g. accessing lab services from outside). For the homelab, double NAT is an acceptable trade-off for full isolation. Note that double NAT is an IPv4 concept — with IPv6 there is no NAT at all, so the Pi router would simply route IPv6 traffic (if IPv6 forwarding is enabled) and rely on firewall rules for security.
+**Double NAT (IPv4 only):** If you place a second router (e.g. a Raspberry Pi) behind the ISP modem, you create a *double NAT* situation — the ISP modem NATs to the second router's WAN IP, and the router NATs again to other devices. This is fine for outbound internet access but complicates inbound connections (e.g. accessing lab services from outside). Note that double NAT is an IPv4 concept — with IPv6 there is no NAT at all, so the router would simply route IPv6 traffic (if IPv6 forwarding is enabled) and rely on firewall rules for security.
 
 ### Router
 

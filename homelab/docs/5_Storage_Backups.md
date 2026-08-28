@@ -7,4 +7,4 @@ TODO: here add not using NAS with RAID, I do not need 24/7 uptime, but if you do
 TODO: add here with an explanation that I do find it interesting and useful to know how that works, but I do not need it for my personal home lab, which is why I just added this in the cloud, etc.
 
 
-TODO: refer to [Storage_Background_Commands.md](../reference/Storage_Background_Commands.md) for theory and background!
+TODO: refer to [Storage_Background_Commands.md](../../reference/Storage_Background_Commands.md) for theory and background!

@@ -1,6 +1,6 @@
 # Raspberry Pi: Hardware & OS Background
 
-Background reference for Raspberry Pi hardware concepts, operating system fundamentals, storage, boot process, and networking interfaces. This document is referenced from the [Network Setup guide](../2_Network/2_2_Network_Setup.md) and other homelab documentation.
+Background reference for Raspberry Pi hardware concepts, operating system fundamentals, storage, boot process, and networking interfaces. This document is referenced from the [Homelab Network Design ](../homelab/docs/2_Network_Hosts/2_1_Network_Hosts_Design.md) and other homelab documentation.
 
 ---
 

@@ -15,7 +15,7 @@ Usage:
     If output.docx is omitted, the output file is the input filename with .docx extension.
 
 Examples:
-    python3 convert_md_to_docx.py ../homelab/docs/reference/network/Subnets_and_IP_Addresses.md /mnt/c/Users/poeto501/Downloads/Subnets_and_IP_Addresses.docx
+    python3 convert_md_to_docx.py ../reference/network/Subnets_and_IP_Addresses.md /mnt/c/Users/poeto501/Downloads/Subnets_and_IP_Addresses.docx
     python3 convert_md_to_docx.py ../README.md
 """
 

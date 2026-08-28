@@ -4,10 +4,7 @@ A concise guide for installing tmux, applying a practical personal configuration
 
 tmux is a terminal multiplexer: it lets you keep shell sessions running in the background, detach from them, and reconnect later. It is especially useful for operational tasks such as long-running upgrades, troubleshooting sessions, or commands that must continue even if your SSH connection drops.
 
-See for more details for example:
-- <https://github.com/tmux/tmux/wiki>
-- <https://linuxize.com/post/getting-started-with-tmux/>
-- <https://www.geeksforgeeks.org/linux-unix/tmux-in-linux/>
+See for more details for example: [tmux Wiki](https://github.com/tmux/tmux/wiki), [Getting Started with tmux](https://linuxize.com/post/getting-started-with-tmux/), [tmux in Linux](https://www.geeksforgeeks.org/linux-unix/tmux-in-linux/)
 
 ## Installation
 

@@ -9,7 +9,7 @@
 #   - Automatically adds DHCP hostnames to local DNS (lab devices can resolve
 #     each other by name, e.g. "ping pve1.lab.local")
 # See for more details dnsmasq documentation: https://dnsmasq.org/doc.html and https://docs.opnsense.org/manual/dnsmasq.html
-# And see docs/reference/dnsmasq.md.
+# And see devhub/reference/dnsmasq.md.
 #
 # What this task file does:
 #   1. Installs dnsmasq

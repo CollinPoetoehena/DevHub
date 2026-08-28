@@ -4,7 +4,7 @@ A stable network is the foundation of a reliable homelab. This document covers t
 
 TODO: this is now host and networking because these steps are right after each other and connected a lot, etc.
 
-> See the [Network Reference](../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
+> See the [Network Reference](../../../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
 
 ## Table of Contents
 
@@ -77,7 +77,7 @@ ISP Modem (192.168.2.0/24) → Lab Router → Lab Devices (10.42.0.0/20)
 
 ### Background Knowledge: Raspberry Pi, Hardware & OS
 
-> See [Raspberry Pi: Hardware & OS Background](../reference/raspberry_pi_hardware_os.md) for detailed background on the Raspberry Pi hardware, ARM vs x86 architecture, SD cards, the operating system and kernel, the boot process, flashing, network interfaces, GPIO, `raspi-config`, and headless operation.
+> See [Raspberry Pi: Hardware & OS Background](../../../reference/raspberry_pi_hardware_os.md) for detailed background on the Raspberry Pi hardware, ARM vs x86 architecture, SD cards, the operating system and kernel, the boot process, flashing, network interfaces, GPIO, `raspi-config`, and headless operation.
 
 ### Lab Router
 
@@ -211,13 +211,13 @@ Firewall rules on the router enforce this — inter-VLAN traffic is denied by de
 
 #### How to read this table
 
-> See [Network Devices — Tagged vs Untagged](../reference/network/Network_Devices.md#tagged-vs-untagged-8021q-vlan-tagging) for a full explanation of what tagged and untagged mean, how frames flow through the switch, and when to use each mode.
+> See [Network Devices — Tagged vs Untagged](../../../reference/network/Network_Devices.md#tagged-vs-untagged-8021q-vlan-tagging) for a full explanation of what tagged and untagged mean, how frames flow through the switch, and when to use each mode.
 
 Each port can be a member of multiple VLANs simultaneously. The "VLAN Membership" column lists **all** VLANs that a port participates in, separated by `+`. The keyword before each VLAN entry tells the switch how to handle frames for that VLAN on that port:
 
-- **Untagged: 1** — Frames for VLAN 1 are sent/received **without** a VLAN tag in the [Ethernet frame header](../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2). In this design, the native VLAN carries no production traffic — it exists only as a fallback recovery path. If all VLAN tagging breaks, untagged frames still flow, allowing you to reach the switch management interface.
+- **Untagged: 1** — Frames for VLAN 1 are sent/received **without** a VLAN tag in the [Ethernet frame header](../../../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2). In this design, the native VLAN carries no production traffic — it exists only as a fallback recovery path. If all VLAN tagging breaks, untagged frames still flow, allowing you to reach the switch management interface.
 
-- **Tagged: 10, 20, 30** — Frames for VLANs 10, 20, and 30 are sent/received **with** an 802.1Q VLAN tag in the [Ethernet frame header](../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2) (a 4-byte field that says "this frame belongs to VLAN X"). The device on the other end must understand VLAN tags and process them — the Pi router uses sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) and Proxmox uses VLAN-aware bridges to separate tagged traffic into the correct virtual networks.
+- **Tagged: 10, 20, 30** — Frames for VLANs 10, 20, and 30 are sent/received **with** an 802.1Q VLAN tag in the [Ethernet frame header](../../../reference/network/Network_Models_and_Packets.md#anatomy-of-a-frame-layer-2) (a 4-byte field that says "this frame belongs to VLAN X"). The device on the other end must understand VLAN tags and process them — the Pi router uses sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) and Proxmox uses VLAN-aware bridges to separate tagged traffic into the correct virtual networks).
 
 **The `+` does NOT mean "10, 20, and 30 are untagged from VLAN 1"** — it means the port carries four independent traffic streams: one untagged (VLAN 1, unused) and three tagged (VLAN 10, VLAN 20, VLAN 30). They coexist on the same physical cable but are completely separate at the logical level.
 

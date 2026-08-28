@@ -1,6 +1,6 @@
 # dnsmasq
 
-`dnsmasq` is a lightweight DNS forwarder and DHCP server designed for small networks. It is the tool used in this homelab to provide DNS forwarding and DHCP services on the lab router (e.g. a Raspberry Pi).
+`dnsmasq` is a lightweight DNS forwarder and DHCP server designed for small networks. It is the tool used in the [Homelab](../../homelab/README.md) to provide DNS forwarding and DHCP services on the lab router (e.g. a Raspberry Pi).
 
 - **Official site:** [https://dnsmasq.org/doc.html](https://dnsmasq.org/doc.html) and [https://docs.opnsense.org/manual/dnsmasq.html](https://docs.opnsense.org/manual/dnsmasq.html)
 - **Man page:** `man dnsmasq` (on the host where it is installed)
@@ -108,20 +108,18 @@ Note: not all config changes take effect with `SIGHUP` — a full `systemctl res
 sudo ss -tulpn | grep dnsmasq
 ```
 
-The [configuration](../../../ansible/roles/router/templates/dnsmasq.conf.j2) explicitly binds dnsmasq only to the LAN interface (eth1) and excludes lo using interface=eth1 and except-interface=lo. As a result, DNS queries must be sent to the router’s LAN IP (e.g., 10.42.0.1) instead of 127.0.0.1 (localhost). This is intentional (as explained in the [configuration](../../../ansible/roles/router/templates/dnsmasq.conf.j2)): binding only to eth1 prevents dnsmasq from answering DNS or DHCP requests on unintended interfaces (like WAN (breaking the home network) or localhost), which keeps the router safe and avoids conflicts with other local DNS services. As a result, DNS queries must be sent to the router’s LAN IP (e.g., 10.42.0.1) instead of 127.0.0.1.
-
 See [ss](Network_Commands.md#ss--socket-statistics) for details about the `ss` command.
 
 ### Query the local DNS server
 
-> See [Check which interface dnsmasq is serving DNS on](#check-which-interface-dnsmasq-is-serving-dns-on) above to verify the correct interface and IP address to use below (e.g. `10.42.0.1`).
+> See [Check which interface dnsmasq is serving DNS on](#check-which-interface-dnsmasq-is-serving-dns-on) above to verify the correct interface and IP address to use below (e.g. `10.42.10.1`).
 
 Use `dig` or `nslookup` to test that dnsmasq is resolving correctly (see [dig / nslookup](Network_Commands.md#dig--nslookup--dns-lookup) for full details):
 
 ```bash
-dig google.com @10.42.0.1              # external query via dnsmasq
-dig node1.lab @10.42.0.1               # local hostname via dnsmasq
-dig google.com @10.42.0.1 +short       # quick check
+dig google.com @10.42.10.1              # external query via dnsmasq
+dig node1.lab @10.42.10.1               # local hostname via dnsmasq
+dig google.com @10.42.10.1 +short       # quick check
 ```
 
 ### View DNS cache statistics
@@ -157,8 +155,8 @@ Shows which upstream DNS servers are configured and their query counts.
 If `expand-hosts` and `domain=lab` are configured, devices with DHCP leases or `/etc/hosts` entries should resolve:
 
 ```bash
-dig node1.lab @10.42.0.1 +short
-dig -x 10.42.0.10 @10.42.0.1 +short   # reverse lookup
+dig node1.lab @10.42.10.1 +short
+dig -x 10.42.10.10 @10.42.10.1 +short   # reverse lookup
 ```
 
 ---
@@ -191,8 +189,8 @@ cat /var/lib/misc/dnsmasq.leases
 
 Example:
 ```
-1723680000 28:94:01:8a:ec:28 10.42.0.168 proxmox-node1 *
-1723680000 aa:bb:cc:dd:ee:ff 10.42.0.169 proxmox-node2 *
+1723680000 28:94:01:8a:ec:28 10.42.10.168 proxmox-node1 *
+1723680000 aa:bb:cc:dd:ee:ff 10.42.10.169 proxmox-node2 *
 ```
 
 ### View DHCP lease log

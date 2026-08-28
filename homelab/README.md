@@ -79,4 +79,6 @@ TODO: update with latest documentation setup at the end.
 
 ## Reference
 
-The [reference/](docs/reference/README.md) folder contains theoretical knowledge, useful commands, and quick-reference information that complements the setup documentation above. Topics include:
+The [DevHub Reference](../reference/README.md) documentation in `DevHub` serves as a central repository and contains theoretical knowledge, useful commands, and quick-reference information that complements the setup documentation above.
+
+> **Note:** The reference documentation is not in `homelab/docs/` because it is centralized in the `reference/` folder within `DevHub` for easier maintenance and reuse across multiple projects. See [DevHub Reference](../reference/README.md) for the full index and details.

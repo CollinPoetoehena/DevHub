@@ -33,7 +33,7 @@ There are three common approaches to deploying a monitoring stack (e.g. Promethe
 
 ## Services Design & Usage
 **TODO: here again use mgmtvm to manage the homelab, etc.!?!?**
-TODO: use tmux (see [tmux reference](./reference/tmux.md)) to manage multiple terminal sessions and keep them running in the background (avoids breaking SSH connections stopping halfway an upgrade which might corrupt state, etc.), etc.
+TODO: use tmux (see [tmux reference](../../../reference/tmux.md)) to manage multiple terminal sessions and keep them running in the background (avoids breaking SSH connections stopping halfway an upgrade which might corrupt state, etc.), etc.
 
 
 # TODO: what to run on the home lab cluster:

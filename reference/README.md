@@ -4,7 +4,9 @@ This folder contains theoretical knowledge, useful commands, quick references, a
 
 The goal of this folder is to provide a central place for technical knowledge and quick-reference information that complements the implementation and getting-started documentation. 
 
-It is not intended to be a complete guide of Software Engineering/IT in general and all technologies and tools used in this project, but rather a curated collection of information that is relevant to this project and important to know for myself (see [Goals of this project for myself](../1_Goals_Hardware_LocalEnvSetup.md#goals)), etc.
+It is not intended to be a complete guide of Software Engineering/IT in general and all technologies and tools used in this project, but rather a curated and carefully selected collection of information that is highly relevant for myself and some of the projects I work on (e.g. homelab, Python packages, etc.).
+
+**Why not in specific projects like `homelab/docs/`?** This documentation is all generic and not tied to any single project, making it reusable across multiple projects and contexts. This avoids having to duplicate the same reference material in each project, and keeps the information centralized and easier to maintain. Finally, the project-specific documentation can focus on implementation details and use cases, while this reference folder provides the foundational and general knowledge.
 
 ## Contents
 
