@@ -62,7 +62,7 @@ When creating a new module repository, use the following template as the startin
 ```markdown
 # terraform-<PROVIDER>-<NAME>
 
-> Part of [dev-hub/Terraform](https://github.com/CollinPoetoehena/dev-hub/blob/main/Terraform.md) — see that file for conventions, structure guidelines, and the full module index.
+> Part of [dev-hub/Terraform](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Terraform.md) — see that file for conventions, structure guidelines, and the full module index.
 
 <Short description of what this module does.>
 

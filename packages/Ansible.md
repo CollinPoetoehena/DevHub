@@ -85,7 +85,7 @@ When creating a new role repository, use the following template as the starting 
 ```markdown
 # <role-name>
 
-> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 <Short description of what this role does.>
 

@@ -61,7 +61,7 @@ helm install <release-name> .
 
 | Chart | Repository | Description |
 |-------|------------|-------------|
-| _(none yet)_ | | Roles will be listed here as they are added |
+| _(none yet)_ | | Helm Charts will be listed here as they are added |
 
 ## README Template
 
@@ -70,7 +70,7 @@ When creating a new chart repository, use the following template as the starting
 ```markdown
 # <chart-name>
 
-> Part of [dev-hub/Helm](https://github.com/CollinPoetoehena/dev-hub/blob/main/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
+> Part of [dev-hub/Helm](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
 
 <Short description of what this chart deploys.>
 

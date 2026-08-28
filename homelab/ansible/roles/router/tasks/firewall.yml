@@ -126,19 +126,56 @@
     comment: "Allow lab devices to reach the internet via WAN"
   notify: Save iptables rules
 
+################################################################################
+# RULE 3 + RULE 3b — WAN → LAN/VLAN return traffic handling and WAN isolation
+#
+# These two rules together define how the router handles traffic coming *from*
+# the WAN (home network) toward the LAN/VLANs (lab network). They ensure that:
+#   1. Lab devices can receive return traffic from the internet (ESTABLISHED,
+#      RELATED connections only).
+#   2. The router NEVER forwards any *new* traffic from the home network into
+#      the lab VLANs — providing strong isolation and preventing accidental
+#      disruption of the home network.
+#
+# Why this matters:
+#   - Linux forwarding is global (ip_forward=1), so iptables must enforce
+#     interface-level forwarding rules.
+#   - Without RULE 3, lab devices could reach the internet but never receive
+#     responses.
+#   - Without RULE 3b, future firewall changes could accidentally allow WAN →
+#     LAN/VLAN forwarding, which risks: DHCP conflicts, ARP pollution, Broadcast storms,
+#     Routing loops, NAT misfires, Accidental bridging between home and lab networks, etc.
+#
+# Together, these rules form a hard safety barrier:
+#   - LAN/VLAN → WAN is allowed (internet access)
+#   - WAN → LAN/VLAN is allowed ONLY for ESTABLISHED/RELATED return traffic
+#   - All NEW WAN → LAN/VLAN forwarding is explicitly blocked
+#
+# This guarantees the Pi router cannot disrupt home WiFi, home DHCP, or home
+# routing — even if NetworkManager or iptables rules are modified later.
+################################################################################
 # RULE 3: Allow return traffic (WAN → LAN for established connections)
 # This allows response packets from the internet back to lab devices, but ONLY
 # for connections that were initiated from the lab side (RELATED,ESTABLISHED).
 - name: Allow return traffic from WAN to LAN (established/related connections only)
   ansible.builtin.iptables:
     chain: FORWARD
-    in_interface: "{{ router_wan_interface }}"
-    out_interface: "{{ router_lan_wildcard }}"
+    in_interface: "{{ router_wan_interface }}"    # Traffic entering from WAN (home network)
+    out_interface: "{{ router_lan_wildcard }}"    # Any lab VLAN (eth1+ wildcard)
     ctstate: # conntrack state — only allow packets belonging to
       - ESTABLISHED # an existing connection (response to outbound request)
       - RELATED # or related to one (e.g. ICMP error for an active conn)
     jump: ACCEPT
     comment: "Allow return traffic for connections initiated by lab devices"
+  notify: Save iptables rules
+# RULE 3b: Explicitly block any NEW forwarding from WAN → LAN/VLANs
+- name: Explicitly block WAN → LAN/VLAN forwarding
+  ansible.builtin.iptables:
+    chain: FORWARD
+    in_interface: "{{ router_wan_interface }}"     # Traffic entering from WAN (home network)
+    out_interface: "{{ router_lan_wildcard }}"     # Any lab VLAN (eth1+ wildcard)
+    jump: DROP                                     # Block NEW forwarding attempts
+    comment: "SECURITY: explicitly block WAN → LAN/VLAN forwarding (defense-in-depth)"
   notify: Save iptables rules
 
 # RULE 4: Allow inter-VLAN forwarding (traffic between VLAN sub-interfaces)

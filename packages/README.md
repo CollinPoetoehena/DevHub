@@ -37,6 +37,7 @@ DevHub remains the central index—the [Repositories Section](#repositories) lin
 | Terraform | [Terraform.md](./Terraform.md) | Reusable Terraform modules (IaC) |
 | Ansible | [Ansible.md](./Ansible.md) | Reusable Ansible roles and playbooks |
 | Helm | [Helm.md](./Helm.md) | Reusable Helm charts |
+| Python | [Python.md](./Python.md) | Reusable Python packages |
 | _(future)_ | | Add more here as needed |
 
 ---
@@ -94,11 +95,11 @@ The releases are created by creating a Git tag with the version number. This ser
 git log --oneline
 # Create an annotated tag with a message (recommended for releases)
 git tag -a <tagname> <commit-hash> -m "<release message>"
-git push origin <tagname>
+git push --tags
 
 # Example:
 git tag -a 1.0.0 abc123 -m "Initial release"
-git push origin 1.0.0
+git push --tags
 ```
 
 Pin to a tag to get a stable, reproducible reference. Each ecosystem uses the Git tag slightly differently, see the specific instructions for each type below.
