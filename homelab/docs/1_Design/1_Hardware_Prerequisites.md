@@ -1,12 +1,13 @@
-# Goals & Hardware
+# Design: Hardware & Prerequisites
 
-This document covers the goals for this home lab and all decisions around choosing and buying hardware — including hardware types, purchasing strategy, recommended shops, and node setup.
+This document covers the decisions around choosing and buying hardware and prerequisites — including hardware types, purchasing strategy, recommended shops, and node setup.
+
+>**IMPORTANT NOTE:** This guide is focused on my personal homelab goals (see [Personal Goals](0_Goals.md)), the purchasing strategy and hardware choices may not be suitable for everyone. So, make sure to adapt it to your own needs and constraints.
 
 ---
 
 ## Table of Contents
 
-- [Goals](#goals)
 - [Hardware Purchasing Strategy](#hardware-purchasing-strategy)
   - [New vs. Refurbished vs. Second-Hand](#new-vs-refurbished-vs-second-hand)
   - [Refurbished Shops in Europe](#refurbished-shops-in-europe)
@@ -25,20 +26,16 @@ This document covers the goals for this home lab and all decisions around choosi
     - [When Does This Matter?](#when-does-this-matter)
   - [Recommended Node Composition](#recommended-node-composition)
   - [Start Small, Expand Later](#start-small-expand-later)
-  - [Current Personal Setup](#current-personal-setup)
-- [Next Step: Local Environment Setup](#next-step-local-environment-setup)
+- [How to Check Your Hardware Specs](#how-to-check-your-hardware-specs)
 
 ---
 
-## Goals
-
-This is a reference section — the full goal is described in the [Home Lab README](../README.md#personal-goal). In short:
-
-- **Goal:** Learn DevOps fundamentals (Kubernetes, networking, Linux, monitoring, automation) through hands-on experimentation — because it's fun and directly relevant to daily engineering work.
-- **What I am not:** I'm a DevOps Engineer, not a hardware, network, or storage specialist. This lab broadens my knowledge in those areas but doesn't aim for deep specialist mastery.
-- **What this lab is not:** Not a self-hosting / home data centre project. Not production, not an obligation. No 24/7 uptime required, no self-hosted cloud replacements, no advanced hardware tinkering. If it breaks, nothing in the house stops working. The hardware choices below are driven by this: affordable, real-world-grade, and sufficient for a small homelab.
-
-See further details in the [Home Lab README](../README.md#what-this-is-not) and [Home Lab Design](../README.md#home-lab-design).
+## Current Personal Setup
+My current home lab setup consists of:
+| Role | Device | CPU | RAM | Storage | Source | Why chosen |
+|------|--------|-----|-----|---------|--------|------------|
+| Compute node 1 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | TODO: 32 or 64 GB | TODO: 512 GB or 1 TB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
+| Compute node 2 | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to add a second physical host to experiment with, without extra purchasing cost. |
 
 ---
 
@@ -85,13 +82,11 @@ Best for: maximum buyer protection and peace of mind across the EU.
 
 ### Tip: Ask Your Employer
 
-Companies replace hardware on a fixed cycle — often every 3–5 years, regardless of whether a device still works perfectly. Before spending money on a refurbished shop, it's worth simply asking your manager or IT department whether any old devices are being decommissioned. Many companies are happy to give them away for learning purposes to employees rather than deal with disposal.
+Companies replace hardware on a fixed cycle — often every 3–5 years, regardless of whether a device still works perfectly. Before spending money on a refurbished shop, it's worth simply asking your manager or IT department whether any old devices are being decommissioned. Many companies are happy to give them away for learning purposes to employees rather than deal with disposal. If not, that is also fine of course — you can always turn to refurbished shops or other sources.
 
 > **Important:** Before using any company device for personal purposes, make sure you have explicit permission from your manager or IT department. Do not assume it is allowed — company hardware is company property until formally decommissioned and released.
 >
 > Once you have a device: **ensure all company data has been fully wiped and the device has been factory reset or re-imaged before use.** This protects both you and your employer. A full disk wipe (e.g. `shred`, `dd`, or a secure erase tool) or reinstalling the OS from scratch is the safest approach, your IT department can provide guidance on the best method to ensure data security and compliance.
-
----
 
 ### What to Check When Buying Refurbished
 
@@ -257,15 +252,9 @@ If you want to practice clustering or quorum without buying extra hardware, see 
 
 That's how I started: my old Acer laptop. Later I expanded to the full setup described in [Current Personal Setup](#current-personal-setup).
 
-### Current Personal Setup
-My current home lab setup consists of:
+---
 
-| Role | Device | CPU | RAM | Storage | Source | Why chosen |
-|------|--------|-----|-----|---------|--------|------------|
-| Compute node 1 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | TODO: 32 or 64 GB | TODO: 512 GB or 1 TB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
-| Compute node 2 | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to add a second physical host to experiment with, without extra purchasing cost. |
-
-#### How to Check Your Hardware Specs
+## How to Check Your Hardware Specs
 
 **On Linux** (after OS is installed, or from a live USB):
 
@@ -302,56 +291,3 @@ Get-PhysicalDisk | Select-Object FriendlyName, Size, MediaType
 Alternatively, on Windows you can open **Task Manager → Performance** for a quick visual overview of CPU cores/threads, RAM, and disk.
 
 ---
-
-## Next Step: Local Environment Setup
-
-Once you've determined your goals and purchased your hardware, the first step is to set up the local development environment on your laptop (the Ansible controller). This is a one-time setup that generates an SSH key, installs dependencies, generates the inventory, and configures the Ansible Vault for secrets management.
-
-### Prerequisites
-
-- **Python 3** — required to run Ansible (comes pre-installed on most Linux distributions and macOS; on Windows use WSL)
-- **Git** — to clone this repository
-
-## Step 1: Generate an SSH Key Pair
-
-Ansible connects to remote hosts via SSH. You need an Ed25519 key pair on your laptop — this is used for all homelab hosts (the Pi, future VMs, etc.). Generate it once and reuse it everywhere.
-
-```bash
-# Generate a new Ed25519 key (modern, compact, fast; recommended over RSA):
-ssh-keygen -t ed25519 -C "your-email@example.com"
-# Save with appropriate name (e.g., ~/.ssh/id_homelab).
-# NOTE: you cannot use "~" in the path prompt — type the full path, e.g. /home/youruser/.ssh/id_homelab
-# Enter a passphrase (strongly recommended — protects the key if your laptop is stolen).
-#
-# This creates two files:
-#   ~/.ssh/id_homelab       — private key (NEVER share this)
-#   ~/.ssh/id_homelab.pub   — public key  (safe to share; goes on remote hosts)
-#
-# Make sure to save these files and the passphrase securely (e.g., in a password manager
-# like KeePassXC). If you lose the private key, you lose SSH access to all hosts.
-```
-
-This key is referenced in `ansible.cfg` as `private_key_file = ~/.ssh/id_homelab` and stored in the Ansible Vault as `vault_ssh_private_key_src_ansibleremote` so the `users` role can deploy the public key to remote hosts.
-
-## Step 2: Install Python venv with Ansible and Run Setup Playbook
-
-```bash
-# Go to the Homelab directory:
-cd homelab
-# NOTE: The venv should be created in the root of this homelab directory so it can be used for all Python related tasks in this repo (not only Ansible, such as if it would be in the ansible directory).
-
-# Create a Python virtual environment and install Ansible:
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install ansible
-ansible --version
-
-# Run the local environment setup playbook. See details in the playbook itself, it describes what it does exactly.
-# Safe to re-run — skips steps that are already done.
-# --diff: show file changes made on the host
-cd ansible # Should run playbooks from this directory because this is where ansible.cfg is located
-ansible-playbook setup_local_env.yml --diff
-```
-
-After this completes, your environment is ready to run playbooks. See the setup playbook itself (`ansible/setup_local_env.yml`) for full details on what each step does, and `ansible/vars/setup_local_env.yml` for how to add new hosts or vault secrets.

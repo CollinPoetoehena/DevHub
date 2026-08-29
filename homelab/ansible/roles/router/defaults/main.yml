@@ -6,7 +6,7 @@
 
 ################################################################################
 # Reference: Where to find these variables and documentation:
-# See docs/2_Network_Hosts/2_1_Network_Hosts_Design.md for details on the network design and used
+# See docs/2_Network_Hosts/TODO.md for details on the network design and used
 # variables, such as the LAN subnet, DHCP range, and static leases.
 ################################################################################
 

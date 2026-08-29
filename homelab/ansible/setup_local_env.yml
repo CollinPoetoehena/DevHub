@@ -33,7 +33,7 @@
 #   4. Creates the Ansible Vault password file (vars/setup_local_env.yml/vault_pass_file)
 #   5. Creates and encrypts the Ansible Vault secrets file (vars/setup_local_env.yml/vault_file)
 #
-# Usage (from the homelab/ directory (see 1_Goals_Hardware_LocalEnvSetup.md for details)):
+# Usage (from the homelab/ directory (see docs/design/Goals.md for details)):
 #   cd homelab
 #   source venv/bin/activate
 #   cd ansible # Should run the playbook from this dir because this is where ansible.cfg is located

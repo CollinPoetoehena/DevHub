@@ -9,12 +9,12 @@
 #   - VLAN-aware bridges (vmbr0 with vlan-aware yes)
 #   - VLAN sub-interfaces (vmbr0.10, vmbr0.20, vmbr0.30)
 #
-# The homelab design uses VLANs for segmentation (see docs/2_Network_Hosts/2_1_Network_Hosts_Design.md):
+# The homelab design uses VLANs for segmentation (see docs/2_Network_Hosts/TODO.md):
 #   - VLAN 10 → Management (router, switch, PVE host management IPs)
 #   - VLAN 20 → Services (Kubernetes, VMs, containers)
 #   - VLAN 30 → IoT (smart devices, sensors)
 #
-# See docs/2_Network_Hosts/2_1_Network_Hosts_Design.md for full details on VLAN layout,
+# See docs/2_Network_Hosts/TODO.md for full details on VLAN layout,
 # subnetting, and how Proxmox bridges map to VLAN-tagged traffic.
 #
 # NOTES:
@@ -48,7 +48,7 @@ iface {{ pve_physical_interface }} inet manual
 ################################################################################
 # Main bridge (vmbr0)
 ################################################################################
-# vmbr0 is the parent bridge for all VLANs. It carries (see docs/2_Network_Hosts/2_1_Network_Hosts_Design.md):
+# vmbr0 is the parent bridge for all VLANs. It carries (see docs/2_Network_Hosts/TODO.md):
 #   - VLAN 10 (management)
 #   - VLAN 20 (services)
 #   - VLAN 30 (IoT)
@@ -70,7 +70,7 @@ iface vmbr0 inet manual
 ################################################################################
 # This is the management interface for the Proxmox host.
 #
-# It receives (see docs/2_Network_Hosts/2_1_Network_Hosts_Design.md):
+# It receives (see docs/2_Network_Hosts/TODO.md):
 #   - A static IP (e.g., 10.42.10.10)
 #   - A /24 netmask
 #   - The router (10.42.10.1) as the gateway

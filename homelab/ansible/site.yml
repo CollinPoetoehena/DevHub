@@ -30,7 +30,7 @@
 # WHY ansibleremote? See group_vars/all/users.yml for the full explanation.
 ################################################################################
 - name: Bootstrap OS users on all hosts
-  hosts: all
+  hosts: all # TODO: all except hypervisor nodes because that has different user handling.
   become: true
   gather_facts: false
   # No remote_user set here — use -u <initial-user> on the CLI. Play-level remote_user overrides the CLI -u 

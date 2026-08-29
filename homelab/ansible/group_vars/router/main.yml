@@ -1,7 +1,7 @@
 ---
 # Router group variables — site-specific values for THIS lab.
 # Overrides roles/router/defaults/main.yml.
-# See docs/2_Network_Hosts/2_1_Network_Hosts_Design.md for the network design behind these choices.
+# See docs/2_Network_Hosts/TODO.md for the network design behind these choices.
 #
 # The explanations of the variables are in roles/router/defaults/main.yml, so you can see what each variable does.
 
@@ -14,7 +14,7 @@
 router_lan_subnet: "10.42.0.0/20"
 
 ################################################################################
-# VLAN Configuration: See docs/2_Network_Hosts/2_1_Network_Hosts_Design.md#subnet--vlan-design
+# VLAN Configuration: See docs/2_Network_Hosts/TODO.md#subnet--vlan-design
 ################################################################################
 # Physical eth1 has no IP (native VLAN 1 is unused).
 # Each VLAN gets a sub-interface with its own gateway IP and DHCP range.

@@ -18,6 +18,7 @@ TODO: this is now host and networking because these steps are right after each o
   - [Managed Switch](#managed-switch)
   - [Ethernet Cables](#ethernet-cables)
 - [Network Topology](#network-topology)
+- [Jumphost: Secure Access to Lab Network](#jumphost-secure-access-to-lab-network)
 
 ---
 
@@ -57,7 +58,7 @@ ISP Modem (192.168.2.0/24) → Lab Router → Lab Devices (10.42.0.0/20)
 
 **Full isolation (maintaining home network is not in my homelab's scope):** The lab runs on its own subnet with its own DHCP and firewall. Lab mistakes — DHCP conflicts, Proxmox bridge issues, Kubernetes networking — are contained within the lab network and never reach home devices. Avoid changing the ISP Modem's core configuration when others in the house depend on it for internet access. Changing the home network configuration can break connectivity for everyone, so it's best to leave it as-is and put your own router behind it for the lab. Furthermore, the ISP modem may have limited or no VLAN support, making it unsuitable for isolating your lab network. Finally, it is not in my homelab's scope to maintain the home network, so I want to keep it untouched and let the ISP modem handle the home network while I experiment freely in my lab network.
 
-**Keeps the ISP modem intact:** Other people in the house depend on the ISP modem for WiFi and internet. Replacing it or changing its configuration would mean taking ownership of the entire home network. Keeping it untouched means home connectivity stays stable regardless of what happens in the lab. See [Goals](../1_Goals_Hardware_LocalEnvSetup.md#goals), in short: I am NOT planning to self-host everything and make the home network dependent on my lab!
+**Keeps the ISP modem intact:** Other people in the house depend on the ISP modem for WiFi and internet. Replacing it or changing its configuration would mean taking ownership of the entire home network. Keeping it untouched means home connectivity stays stable regardless of what happens in the lab. See [Goals](../1_Design/0_Goals.md), in short: I am NOT planning to self-host everything and make the home network dependent on my lab!
 
 **Learn networking:** Building and running your own router is a hands-on way to learn subnetting, routing, DHCP, firewall rules, and VLANs in a real environment.
 
@@ -95,7 +96,7 @@ A Raspberry Pi is used as the dedicated lab router. It is cost-effective, educat
 
 Raspberry Pi OS is the officially supported OS for the Pi, maintained by the Raspberry Pi Foundation. It is based on Debian, well-tested on Pi hardware, and includes Pi-specific optimisations and drivers out of the box (e.g. the `r8152` USB-Ethernet driver, GPU memory split, hardware interfaces). "Lite" means no desktop environment — just a minimal command-line system, which is exactly what you want for a headless appliance like a router. Ubuntu Server also works on the Pi, but it requires more manual configuration for Pi-specific hardware, has a larger footprint, and offers no real advantage for this use case. Stick with Raspberry Pi OS Lite.
 
-**Why not pfSense or OpenWRT?** Both are purpose-built router/firewall OSes with polished web UIs and pre-configured networking stacks. However, the goal of this homelab ([see personal goals](../1_Goals_Hardware_LocalEnvSetup.md)) is to learn Linux networking by doing it yourself — configuring IP forwarding, DHCP, NAT, and firewall rules manually gives you a much deeper understanding than clicking through a GUI. You can always switch to OpenWRT or pfSense later once you understand what they are doing under the hood. Additionally, pfSense (FreeBSD-based) has limited ARM/Pi support, and OpenWRT replaces the entire OS — losing the familiar Debian/apt ecosystem and Pi-specific driver support that Raspberry Pi OS provides.
+**Why not pfSense or OpenWRT?** Both are purpose-built router/firewall OSes with polished web UIs and pre-configured networking stacks. However, the goal of this homelab ([see personal goals](../1_Design/0_Goals.md)) is to learn Linux networking by doing it yourself — configuring IP forwarding, DHCP, NAT, and firewall rules manually gives you a much deeper understanding than clicking through a GUI. You can always switch to OpenWRT or pfSense later once you understand what they are doing under the hood. Additionally, pfSense (FreeBSD-based) has limited ARM/Pi support, and OpenWRT replaces the entire OS — losing the familiar Debian/apt ecosystem and Pi-specific driver support that Raspberry Pi OS provides.
 
 #### Routing Software Stack: dnsmasq + iptables/nftables
 
@@ -126,12 +127,13 @@ For a homelab router that just needs to hand out leases on one subnet and forwar
 
 ## Network Topology
 
-> See [Node Setup](../1_Goals_Hardware_LocalEnvSetup.md#node-setup) for the physical nodes in the homelab. The network topology diagram below shows how the nodes are connected to the lab router and switch, and how the lab network is isolated from the home network.
+> See [Node Setup](../1_Design/1_Hardware_Prerequisites.md#node-setup) for the physical nodes in the homelab. The network topology diagram below shows how the nodes are connected to the lab router and switch, and how the lab network is isolated from the home network.
 
 Full network topology (in .md diagram format to save space (no image file needed for this setup)):
 ```
 TODO: later I do want to move this to Drawio because it is easier to visualize and extend, etc. Drawback is more size consumption, but that is fine!
 TODO: make this NOT network topology but then the design of the whole homelab network and K8s cluster!
+TODO: also add jumphost in the image.
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                        Internet                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -200,6 +202,20 @@ TODO: later add K8s as well, such as:
 │  Network: Calico CNI (10.244.0.0/16)                        │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Jumphost: Secure Access to Lab Network
+
+A jumphost is a single, controlled entry point into a protected network, used to securely access management interfaces and internal systems.
+
+The lab router (Raspberry Pi) is used as the jumphost for accessing all management interfaces inside the homelab. This is both intentional and beneficial for stability, security, and operational simplicity:
+- **Central position in the network:** The lab router sits at the heart of VLAN 10 (Management) and has routed visibility into all VLANs (see [Network Topology](#network-topology)). This makes it the most reliable and consistent entry point into the homelab network.
+- **Always reachable:** As the gateway (`10.42.10.1`), the lab router remains accessible even if Proxmox, Kubernetes, or VLAN tagging break. It provides a stable fallback path during outages or misconfigurations.
+- **Strong isolation guarantees:** Firewall rules already isolate management traffic. IoT devices cannot reach VLAN 10, and inter‑VLAN traffic is denied by default. Using the router as the jumphost preserves this isolation while still allowing controlled access.
+- **Safe entry from the home network:** SSH access enters through the router’s WAN interface, keeping the home network (e.g. 192.168.2.0/24) fully separated from the lab network (e.g. 10.42.0.0/20). No lab device is directly exposed to the home LAN.
+- **Centralized authentication & logging:** The router is the only device exposed to the home network, making it the ideal place to centralize SSH keys, access control, and audit logs — similar to enterprise bastion host patterns.
+- **Minimal overhead:** The router is lightweight and hardened. Running a jumphost on it adds negligible load while significantly improving operational safety.
+- **No extra hardware or services needed:** The homelab has limited physical machines and capacity; using the router as the jumphost avoids the need for a dedicated bastion VM or additional hardware, keeping the design simple and resource‑efficient.
+- **Enterprise‑aligned design:** Using the router as the bastion mirrors how real networks operate: a single controlled gateway that provides secure access to management infrastructure.
 
 ### Why VLAN 1 (native) is not used — all traffic is explicitly VLAN-tagged
 
