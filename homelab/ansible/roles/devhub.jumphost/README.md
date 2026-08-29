@@ -12,7 +12,7 @@ It has the following features:
 - **Minimal Attack Surface**: Keep installed packages and services to a minimum to reduce potential vulnerabilities
 
 > **User, group, sudo, and SSH key management are not part of this role.**  
-> Use the [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users) role for that. Apply it alongside this role in your playbook (see example below).
+> Use the [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) role for that. Apply it alongside this role in your playbook (see example below).
 
 ## Requirements
 
@@ -51,13 +51,13 @@ Requirements file example (same directory as ansible.cfg, create a file called r
 ```yaml
 ---
 roles:
-  - name: jumphost
-    src: https://github.com/CollinPoetoehena/ansible-role-jumphost.git
+  - name: devhub.jumphost
+    src: https://github.com/CollinPoetoehena/devhub-ansible-jumphost.git
     scm: git
     version: 1.0.0
   # User/group/sudo/SSH key management is handled by a separate role:
-  - name: users
-    src: https://github.com/CollinPoetoehena/ansible-role-users.git
+  - name: devhub.users
+    src: https://github.com/CollinPoetoehena/devhub-ansible-users.git
     scm: git
     version: 1.0.0
 ```
@@ -70,7 +70,7 @@ ansible-galaxy install -r requirements.yml -p <path/to/roles>
 
 Example playbook using this role (e.g. site.yml):
 
-> **Note:** User, group, sudo, and SSH key management are handled by [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users).  
+> **Note:** User, group, sudo, and SSH key management are handled by [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users).  
 > Variables and usage examples for that role are intentionally omitted here — keeping them in one place avoids duplication and means only that role's README needs updating if its interface changes.
 
 ```yaml
@@ -82,8 +82,8 @@ Example playbook using this role (e.g. site.yml):
     ssh_allowed_ip: "{{ vault_ssh_allowed_ip }}"  # load from vault
 
   roles:
-    - role: jumphost  # hardens SSH, firewall, audit logging
-    - role: users     # manages OS users, groups, sudo, and SSH keys (see ansible-role-users)
+    - role: devhub.jumphost  # hardens SSH, firewall, audit logging
+    - role: devhub.users     # manages OS users, groups, sudo, and SSH keys (see devhub-ansible-users)
 ```
 
 ### Example 

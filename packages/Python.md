@@ -15,11 +15,11 @@ This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the ce
 All packages use the [src-layout](https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#src-layout) required by setuptools:
 
 ```
-<package_root>/           # e.g. devhub_<name>/
+<package_root>/           # e.g. devhub_python_<name>/
 ├── pyproject.toml
 ├── README.md
 └── src/
-    └── devhub_<name>/
+    └── devhub_python_<name>/
         ├── __init__.py   # re-exports public API
         ├── module_a.py
         ├── module_b.py
@@ -41,7 +41,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "devhub_<name>"       # underscore — publishes as devhub-<name>
+name = "devhub_python_<name>"       # underscore — publishes as devhub-<name>
 version = "1.0.0"
 description = "Short description of the package."
 requires-python = ">=3.8"
@@ -53,16 +53,16 @@ Homepage = "https://github.com/CollinPoetoehena/<package_root>"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["devhub_<name>*"]   # matches package + all sub-packages
+include = ["devhub_python_<name>*"]   # matches package + all sub-packages
 ```
 
-> **Naming:** Use underscores (e.g. `devhub_<name>`) in `pyproject.toml`. Artifactory automatically normalises to hyphens (e.g. `devhub-<name>`) on publish. Consumers install with either form via `pip`.
+> **Naming:** See [Naming Convention](#naming-convention)
 
 ### Dependencies
 
 - Declare dependencies in `pyproject.toml` under `[project] dependencies`.
 - Use **broad version ranges** (`>=x.y`) rather than pinned versions. The consuming project pins its own versions.
-- Internal packages (e.g. `devhub_<name>`) are listed as dependencies using their underscore name and a minimum version: `"devhub_<name>>=1.0.0"`.
+- Internal packages (e.g. `devhub_python_<name>`) are listed as dependencies using their underscore name and a minimum version: `"devhub_python_<name>>=1.0.0"`.
 - Do **not** pin transitive dependencies inside the package itself to avoid conflicts and versioning issues (e.g. a package requiring a specific version of another internal package that is already pinned by the consuming project which could lead to version conflicts).
 
 ## Python Reference & Best Practices
@@ -71,7 +71,7 @@ See [Python Reference & Best Practices](../reference/python/README.md).
 
 ## Naming Convention
 
-Python package repositories are named using the pattern `python-<type>-<topic>`, where `<type>` matches the package type (e.g. `pypi`) and `<topic>` matches the package name (e.g. `python-pypi-k8s`).
+See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. Specifically for Python packages, should use underscores in the package name (e.g. `devhub_python_<name>`) rather than hyphens (this is the convention for Python package names).
 
 ## Usage
 
@@ -90,7 +90,7 @@ TODO: later add here how to publish (e.g. via twine, etc.)!
 When creating a new package repository, use the following template as the starting point for its `README.md`:
 
 ```markdown
-# <package-name>
+# <package-name following the naming convention>
 
 > Part of [DevHub/Python](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Python.md) — see that file for conventions, structure guidelines, and the full package index.
 
@@ -104,13 +104,13 @@ List any dependencies or prerequisites here.
 
 Installation and usage instructions for the Python package:
 ```bash
-pip install devhub-<name>
+pip install <name>
 ```
 
 Then import and use it in your Python code:
 ```python
-import devhub_<name>
+import devhub_python_<name>
 
 # Example usage
-devhub_<name>.<function_or_class>()
+devhub_python_<name>.<function_or_class>()
 ```

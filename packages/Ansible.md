@@ -40,11 +40,9 @@ ansible-galaxy role init <role-name>
 
 This generates the full directory layout with placeholder files. Remove any directories not needed by the role after initializing, and/or add your own custom directories and files as needed.
 
-## Role Naming Convention
+## Naming Convention
 
-Roles follow the [Ansible Galaxy naming convention](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html): lowercase letters, digits, and underscores only. Names should be descriptive and scoped to what the role configures, e.g. `docker`, `nginx`, `java_install`.
-
-Role repositories are named using the pattern `ansible-role-<topic>`, where `<topic>` matches the role name (e.g. `ansible-role-docker`, `ansible-role-nginx`, `ansible-role-java_install`).
+See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. No exceptions should be made for Ansible roles.
 
 ## Usage
 
@@ -58,7 +56,7 @@ Or declare it in a `requirements.yml` file:
 
 ```yaml
 roles:
-  - name: <role-name>
+  - name: devhub.<role-name>
     src: https://github.com/CollinPoetoehena/<role-repo>.git
     scm: git
     version: main
@@ -74,16 +72,16 @@ ansible-galaxy install -r requirements.yml
 
 | Role | Repository | Description |
 |------|------------|-------------|
-| ansible-role-users | [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users) | Configures OS users and groups, including sudo policies and SSH key management. |
-| ansible-role-jumphost | [ansible-role-jumphost](https://github.com/CollinPoetoehena/ansible-role-jumphost) | Configures a jumphost for secure access to internal networks. |
-| ansible-role-mgmtvm | [ansible-role-mgmtvm](https://github.com/CollinPoetoehena/ansible-role-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
+| devhub-ansible-users | [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) | Configures OS users and groups, including sudo policies and SSH key management. |
+| devhub-ansible-jumphost | [devhub-ansible-jumphost](https://github.com/CollinPoetoehena/devhub-ansible-jumphost) | Configures a jumphost for secure access to internal networks. |
+| devhub-ansible-mgmtvm | [devhub-ansible-mgmtvm](https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
 
 ## README Template
 
 When creating a new role repository, use the following template as the starting point for its `README.md`:
 
 ```markdown
-# <role-name>
+# <package-name following the naming convention>
 
 > Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
@@ -105,7 +103,7 @@ Requirements file example (same directory as ansible.cfg, create a file called r
 ```yaml
 ---
 roles:
-  - name: <role-name>
+  - name: devhub.<role-name>
     src: https://github.com/CollinPoetoehena/<role-name>.git
     scm: git
     version: <version or branch>
@@ -121,5 +119,5 @@ Example playbook using this role (e.g. site.yml):
 ```yaml
 - hosts: all
   roles:
-    - role: <role-name>
+    - role: devhub.<role-name>
 ```

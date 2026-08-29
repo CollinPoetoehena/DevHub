@@ -28,23 +28,23 @@ See for more details on logging best practices in Python: [Logging HowTo](https:
 
 A library should follow the [standard Python library logging pattern](https://docs.python.org/3/howto/logging.html#configuring-logging-for-a-library):
 
-1. **Always use `logging.getLogger(__name__)`** at module level. `__name__` resolves to the dotted import path (e.g. `devhub_<name>.tooling.git`), which places the logger correctly in the hierarchy.
+1. **Always use `logging.getLogger(__name__)`** at module level. `__name__` resolves to the dotted import path (e.g. `devhub_python_<name>_<name>.tooling.git`), which places the logger correctly in the hierarchy.
 2. **Never configure handlers, formatters, or levels** (no `basicConfig`, no `addHandler`, no `setLevel`). That is the application's responsibility — interfering would cause duplicate log entries, incorrect levels, or output going to unexpected destinations.
 3. **Add a `NullHandler` to the top-level package logger.** This prevents a `No handlers could be found` warning if the application has not configured logging at all. It is a single line in the package's top-level `__init__.py` and has no other effect. You also see this pattern in popular libraries such as `requests` and `urllib3` where they have this in the top-level package `__init__.py`.
 
 **What `NullHandler` does:** it is a do-nothing handler — it accepts log records and discards them silently. Without it, if a library emits a log record and the application has not set up any handlers, Python falls back to `logging.lastResort` (a `WARNING`-level `StreamHandler` that prints to `stderr`) and also emits a `No handlers could be found for logger "..."` warning to `stderr`. Adding `NullHandler` satisfies Python's requirement that at least one handler exists, so neither the warning nor the fallback output appears. The application can still attach its own handlers and receive the library's log records normally — `NullHandler` never interferes with that.
 
 ```python
-# devhub_<name>/__init__.py  (top-level package only — not in every sub-module)
+# devhub_python_<name>_<name>/__init__.py  (top-level package only — not in every sub-module)
 import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 ```
 
 ```python
-# devhub_<name>/git.py  (sub-modules: just getLogger, no NullHandler needed (already covered by the top-level package (e.g. devhub_<name> logger)))
+# devhub_python_<name>_<name>/git.py  (sub-modules: just getLogger, no NullHandler needed (already covered by the top-level packagedevhub_devhub_python_<name>_<name> logger)))
 import logging
 
-logger = logging.getLogger(__name__)  # "devhub_<name>.tooling.git"
+logger = logging.getLogger(__name__)  # "devhub_python_<name>_<name>.tooling.git"
 
 def get(url: str) -> ...:
     logger.debug("debug log")
@@ -158,21 +158,21 @@ grep -RIn "logging" ./venv/lib/python3.14/site-packages/urllib3/
 ...
 ```
 
-Example outputs using the `devhub_<name>` and `urllib3` packages as an example:
+Example outputs using the `devhub_python_<name>_<name>` and `urllib3` packages as an example:
 ```
-# devhub_<name> loggers:
+# devhub_python_<name>_<name> loggers:
 ./CHANGELOG.md:17:  - **`logger` constructor parameter removed from all modules.** Every module now declares `logger = logging.getLogger(__name__)` at module level. Callers that previously passed a logger instance must configure the logger hierarchy externally via `logging.basicConfig` or `logging.config.dictConfig`. See the [Python Logging Design](../docs/design/python/Logging.md#logging-configuration--philosophy-and-devhub-setup) for full documentation.
 ./test/test_get_class_logger.py:141:        """Python's logging.getLogger caches by name — same inputs → same object."""
-./src/devhub_<name>/utils/logging_utils.py:205:    ``logging.getLogger(name)`` to retrieve the actual object.
-./src/devhub_<name>/utils/proxy_utils.py:7:logger = logging.getLogger(__name__)
-./src/devhub_<name>/tooling/git.py:64:logger = logging.getLogger(__name__)
-./src/devhub_<name>/__init__.py:24:logging.getLogger(__name__).addHandler(logging.NullHandler())
-./src/devhub_<name>/clients/client_utils.py:27:    return logging.getLogger(f"{cls.__module__}.{name}")
-./src/devhub_<name>/clients/metrics_alerting/email_client.py:7:logger = logging.getLogger(__name__)
-./src/devhub_<name>/clients/metrics_alerting/parser.py:6:logger = logging.getLogger(__name__)
+./src/devhub_python_<name>_<name>/utils/logging_utils.py:205:    ``logging.getLogger(name)`` to retrieve the actual object.
+./src/devhub_python_<name>/utils/proxy_utils.py:7:logger = logging.getLogger(__name__)
+./src/devhub_python_<name>/tooling/git.py:64:logger = logging.getLogger(__name__)
+./src/devhub_python_<name>_<name>/__init__.py:24:logging.getLogger(__name__).addHandler(logging.NullHandler())
+./src/devhub_python_<name>/clients/client_utils.py:27:    return logging.getLogger(f"{cls.__module__}.{name}")
+./src/devhub_python_<name>_<name>/clients/metrics_alerting/email_client.py:7:logger = logging.getLogger(__name__)
+./src/devhub_python_<name>/clients/metrics_alerting/parser.py:6:logger = logging.getLogger(__name__)
 
 # urllib3 client loggers:
-(venv) poetoec@<client>:~/projects/devhub_<name>$ grep -RIn "getLogger" ./venv/lib/python3.14/site-packages/urllib3
+(venv) poetoec@<client>:~/projects/devhub_python_<name>$ grep -RIn "getLogger" ./venv/lib/python3.14/site-packages/urllib3
 ./venv/lib/python3.14/site-packages/urllib3/util/retry.py:29:log = logging.getLogger(__name__)
 ./venv/lib/python3.14/site-packages/urllib3/http2/connection.py:23:log = logging.getLogger(__name__)
 ./venv/lib/python3.14/site-packages/urllib3/poolmanager.py:35:log = logging.getLogger(__name__)
@@ -193,14 +193,14 @@ The value of `__name__` in each file is its dotted import path, so `urllib3/conn
 python -c "import logging; import <package>; [print(name) for name in sorted(logging.Logger.manager.loggerDict)]"
 ```
 
-Example outputs to illustrate what loggers live in each package (can be used to configure your logging more precisely), uses the `devhub_<name>` and `urllib3` packages as an example:
+Example outputs to illustrate what loggers live in each package (can be used to configure your logging more precisely), uses the `devhub_python_<name>` and `urllib3` packages as an example:
 ```
-# (devhub_<name>) loggers:
-(venv) poetoec@<client>:~/projects/devhub_<name>$ python -c "import logging; import devhub_<name>; [print(name) for name in sorted(logging.Logger.manager.loggerDict)]"
+# (devhub_python_<name>) loggers:
+(venv) poetoec@<client>:~/projects/devhub_python_<name>$ python -c "import logging; import devhub_python_<name>; [print(name) for name in sorted(logging.Logger.manager.loggerDict)]"
 charset_normalizer
-devhub_<name>
-devhub_<name>.utils
-devhub_<name>.utils.proxy_utils
+devhub_python_<name>
+devhub_python_<name>.utils
+devhub_python_<name>.utils.proxy_utils
 requests
 urllib3
 urllib3.connection
@@ -211,7 +211,7 @@ urllib3.util
 urllib3.util.retry
 
 # urllib3 loggers:
-(venv) poetoec@<client>:~/projects/devhub_<name>$ python -c "import logging; import urllib3; [print(name) for name in sorted(logging.Logger.manager.loggerDict)]"
+(venv) poetoec@<client>:~/projects/devhub_python_<name>$ python -c "import logging; import urllib3; [print(name) for name in sorted(logging.Logger.manager.loggerDict)]"
 urllib3
 urllib3.connection
 urllib3.connectionpool
@@ -234,7 +234,7 @@ The module-level `logger = logging.getLogger(__name__)` rule covers the vast maj
 | Situation | What changes | What stays the same |
 |---|---|---|
 | Function that must produce output in two modes (e.g. colored terminal vs. logger) | Declare module-level logger; expose a `use_logger: bool = False` flag to control an output adapter | All output is routed through the adapter — no direct `logger.X()` calls at call sites |
-| Base class whose methods are called from subclasses in other packages | Import and call shared `get_class_logger(cls)` from `devhub_<name>.clients.client_utils`; `__init__` calls `get_class_logger(self.__class__)` | Subclasses need no logger setup at all |
+| Base class whose methods are called from subclasses in other packages | Import and call shared `get_class_logger(cls)` from `devhub_python_<name>.clients.client_utils`; `__init__` calls `get_class_logger(self.__class__)` | Subclasses need no logger setup at all |
 | `@classmethod` on a class hierarchy | Call `get_class_logger(cls)` — reuses the shared function | Module-level logger still available for non-classmethod code in the same module |
 | `@staticmethod` | Must use the module-level logger — no `cls` or `self` available | Module-level `logger = logging.getLogger(__name__)` |
 | Module that is also a utility for the logging system itself (e.g. configures loggers) | May import `Logger` type for its own API | Still declares its own module-level logger |
@@ -276,7 +276,7 @@ class OutputAdapter:
     ....
 ```
 
-`False` is the correct default because these functions are primarily CLI tools; library use is the opt-in. The caller enables library mode by passing `use_logger=True` and then for example configures the `devhub_<name>.scripts.*` logger namespace via the standard logging hierarchy — no logger instance needs to be constructed or threaded through the call.
+`False` is the correct default because these functions are primarily CLI tools; library use is the opt-in. The caller enables library mode by passing `use_logger=True` and then for example configures the `devhub_python_<name>.scripts.*` logger namespace via the standard logging hierarchy — no logger instance needs to be constructed or threaded through the call.
 
 **Why a flag rather than passing a `Logger` instance:**
 
@@ -345,7 +345,7 @@ The logger is still set up once in one place (the base class `__init__`) and sub
 
 `@classmethod` and `@staticmethod` cannot use `self.logger` from Exception 2 — there is no instance. Each requires a different approach.
 
-**`@classmethod`** — receives `cls` as its first argument, which is the actual class the method is called on (including subclasses). Because `get_class_logger` is defined once in a shared utilities module (Exception 2), classmethods simply call `get_class_logger(cls, cls.__name__)` from `devhub_<name>.clients.client_utils` — no separate logger setup needed, and the naming convention stays in one place:
+**`@classmethod`** — receives `cls` as its first argument, which is the actual class the method is called on (including subclasses). Because `get_class_logger` is defined once in a shared utilities module (Exception 2), classmethods simply call `get_class_logger(cls, cls.__name__)` from `devhub_python_<name>.clients.client_utils` — no separate logger setup needed, and the naming convention stays in one place:
 
 ```python
 # mylib/users_client.py
@@ -425,15 +425,15 @@ def log_active_loggers(
     ``logging.config.dictConfig(...)`` to confirm the configuration took effect::
 
         import logging, logging.config
-        from devhub_<name>.logging_utils import build_logging_config, log_active_loggers
+        from devhub_python_<name>.logging_utils import build_logging_config, log_active_loggers
 
         cfg = build_logging_config(extra_logger_names=["my_service"])
         logging.config.dictConfig(cfg)
         log_active_loggers(list(cfg["loggers"]))
         # prints, e.g.:
         # [DEBUG] Active loggers (filtered to configured namespaces):
-        #   devhub_<name>                   level=INFO    effective=INFO   handlers=[StreamHandler(<stdout>), RotatingFileHandler(/var/log/app.log)]
-        #   devhub_<name>.tooling.git       level=(unset) effective=INFO   handlers=(none — propagates to parent)
+        #   devhub_python_<name>                   level=INFO    effective=INFO   handlers=[StreamHandler(<stdout>), RotatingFileHandler(/var/log/app.log)]
+        #   devhub_python_<name>.tooling.git       level=(unset) effective=INFO   handlers=(none — propagates to parent)
         #   my_service                      level=INFO    effective=INFO   handlers=[StreamHandler(<stdout>)]
 
     Args:
@@ -450,8 +450,8 @@ def log_active_loggers(
     all_names = _get_registered_logger_names()
 
     # Filter to only the namespaces we care about if the caller specified any.
-    # A logger matches if its name equals a namespace exactly (e.g. "devhub_<name>")
-    # or is a child of it (e.g. "devhub_<name>.tooling.git" starts with "devhub_<name>.").
+    # A logger matches if its name equals a namespace exactly (e.g. "devhub_python_<name>")
+    # or is a child of it (e.g. "devhub_python_<name>.tooling.git" starts with "devhub_python_<name>.").
     if configured_namespaces is not None:
         names = [
             n for n in all_names

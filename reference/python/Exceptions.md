@@ -52,7 +52,7 @@ This was abandoned because:
 
 ## Pattern: per-package exceptions
 
-Each package defines its own exception type in its own `exceptions.py`. Callers only need to import from the package they use — no transitive dependency on `devhub_<name>.exceptions` required. This follows the same convention as Python's standard library and popular third-party packages (e.g. `requests` raises `requests.exceptions.RequestException`, not `urllib.error.URLError`): each library owns its exception surface and does not expose its dependency's types. This ensures loose coupling between packages and allows each package to evolve its exceptions independently without risk of breaking dependent packages, and also clarifies which exception occurs in which package (e.g. a `K8sPodError` is clearly from a K8s-related component), etc.
+Each package defines its own exception type in its own `exceptions.py`. Callers only need to import from the package they use — no transitive dependency on `devhub_python_<name>.exceptions` required. This follows the same convention as Python's standard library and popular third-party packages (e.g. `requests` raises `requests.exceptions.RequestException`, not `urllib.error.URLError`): each library owns its exception surface and does not expose its dependency's types. This ensures loose coupling between packages and allows each package to evolve its exceptions independently without risk of breaking dependent packages, and also clarifies which exception occurs in which package (e.g. a `K8sPodError` is clearly from a K8s-related component), etc.
 
 All specific exception types can be seen in the `exceptions.py` files in each package. One file per package keeps things organized and discoverable, and avoids scattering exception definitions across the codebase. This follows the same convention as Python's standard library and popular third-party packages such as `requests` (`requests.exceptions`), `kubernetes` (`kubernetes.client.exceptions`), etc.
 
@@ -60,11 +60,11 @@ See [Python Documentation for User-defined Exceptions](https://docs.python.org/3
 
 ### Note on catching HTTP client exceptions
 
-`BaseHTTPClient._make_request()` raises `APIError` and `ClientTimeoutError` from `devhub_<name>`. In the rare case where a subclass method needs to catch those specifically before wrapping in its own exception type, it may still import from `devhub_<name>.exceptions` for the `except` clause only. Example in `authoritative_dns_client.py`:
+`BaseHTTPClient._make_request()` raises `APIError` and `ClientTimeoutError` from `devhub_python_<name>`. In the rare case where a subclass method needs to catch those specifically before wrapping in its own exception type, it may still import from `devhub_python_<name>.exceptions` for the `except` clause only. Example in `authoritative_dns_client.py`:
 
 ```python
-from devhub_<name>.exceptions import APIError           # caught, not raised
-from devhub_<name>.clients.powerdns.exceptions import DNSError, DNSClientError
+from devhub_python_<name>.exceptions import APIError           # caught, not raised
+from devhub_python_<name>.clients.powerdns.exceptions import DNSError, DNSClientError
 
 except (DNSError, APIError):
     raise  # re-raise already-formatted exceptions unchanged
@@ -100,14 +100,14 @@ Only add a custom parameter when a caller **needs to inspect the value programma
 When you need to distinguish *kinds* of errors (e.g. pod vs. service), use a subclass rather than a parameter. Callers can then catch exactly what they care about:
 
 ```python
-# devhub_<name>/clients/k8s/exceptions.py
+# devhub_python_<name>/clients/k8s/exceptions.py
 class K8sError(Exception): pass        # catch-all for the whole package
 class K8sPodError(K8sError): pass      # pod list/delete failures
 class K8sServiceError(K8sError): pass  # service/endpoint failures
 class K8sConfigError(K8sError): pass   # secret/configmap failures
 class K8sConnectionError(K8sError): pass  # cluster connect/config load
 
-# devhub_<name>/clients/powerdns/exceptions.py
+# devhub_python_<name>/clients/powerdns/exceptions.py
 class DNSError(Exception): pass            # catch-all; named after the domain, not the supplier
 class DNSResolutionError(DNSError): pass   # dnspython resolver failures
 class DNSClientError(DNSError): pass       # DNS API client failures

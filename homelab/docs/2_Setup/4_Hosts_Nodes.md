@@ -191,5 +191,5 @@ CPU Limit: none
 
 TODO: for automated VM setup, use Terraform with a cloud image (avoids having to manually configure the OS on each VM), can just use an existing cloud image from Ubuntu. See example: https://github.com/marcmassoteau-jpg/massoteau-homelab-devops/tree/main/terraform/proxmox-vms
 TODO: add the Terraform module as a separate repo in DevHub!
-**TODO: I think same design as azure with the separate things, such as terraform-proxmox-vms, terraform-proxmox-hardening, etc.**
+**TODO: I think same design as azure with the separate things, such as devhub-terraform-proxmox-vms, devhub-terraform-proxmox-hardening, etc.**
 

@@ -29,9 +29,9 @@ Where:
 - `README.md` provides documentation specific to the chart, including usage instructions, values descriptions, and any other relevant information.
 - `templates/` contains the Kubernetes manifest templates rendered by Helm.
 
-## Chart Naming Convention
+## Naming Convention
 
-Chart names use lowercase letters, digits, and hyphens only, following [Helm best practices](https://helm.sh/docs/chart_best_practices/conventions/#chart-names). Names should be descriptive and scoped to what the chart deploys, e.g. `nginx`, `prometheus-stack`, `cert-manager`.
+See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. Specifically for Helm, you can find some general tips in the [Helm best practices](https://helm.sh/docs/chart_best_practices/conventions/#chart-names). 
 
 ## Usage
 
@@ -68,7 +68,7 @@ helm install <release-name> .
 When creating a new chart repository, use the following template as the starting point for its `README.md`:
 
 ```markdown
-# <chart-name>
+# <package-name following the naming convention>
 
 > Part of [DevHub/Helm](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
 

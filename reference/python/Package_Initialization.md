@@ -6,7 +6,7 @@ Package initialisation in Python is handled through the `__init__.py` file. This
 
 ## What it does
 
-A directory with an `__init__.py` file is a **Python package**. When Python imports a package (e.g. `from devhub_<name>.clients.k8s import K8sPodClient`), it runs `__init__.py` in that directory first. Whatever names exist in that module after it runs become the package's public API — callers can import them directly from the package instead of from the individual module files.
+A directory with an `__init__.py` file is a **Python package**. When Python imports a package (e.g. `from devhub_python_<name>.clients.k8s import K8sPodClient`), it runs `__init__.py` in that directory first. Whatever names exist in that module after it runs become the package's public API — callers can import them directly from the package instead of from the individual module files.
 
 A directory **without** `__init__.py` is a namespace package (PEP 420): importable, but it exposes nothing by default and behaves differently from a regular package. Always add `__init__.py` to every directory that should be importable as a package.
 
@@ -14,18 +14,18 @@ A directory **without** `__init__.py` is a namespace package (PEP 420): importab
 
 ## The two patterns
 
-The confusion between the two patterns is that both look the same when you write an import statement, because **importing a package and accessing its contents are two separate things**. When you write `import devhub_<name>.clients.k8s`, Python loads and runs `__init__.py` in every directory along the path — that always succeeds. But what you can *do afterwards* depends entirely on whether `__init__.py` re-exported anything.
+The confusion between the two patterns is that both look the same when you write an import statement, because **importing a package and accessing its contents are two separate things**. When you write `import devhub_python_<name>.clients.k8s`, Python loads and runs `__init__.py` in every directory along the path — that always succeeds. But what you can *do afterwards* depends entirely on whether `__init__.py` re-exported anything.
 
 ### Pattern 1 — Marker only
 The marker only pattern is used for internal grouping directories that are not part of the public import surface:
 ```python
-# devhub_<name>/clients/__init__.py is empty
-import devhub_<name>.clients           # ✅ works — Python sees a package
-devhub_<name>.clients.K8sPodClient    # ❌ AttributeError — nothing was exposed
+# devhub_python_<name>/clients/__init__.py is empty
+import devhub_python_<name>.clients           # ✅ works — Python sees a package
+devhub_python_<name>.clients.K8sPodClient    # ❌ AttributeError — nothing was exposed
 ```
 The directory is a package container. Nothing inside it is accessible as an attribute; callers must go deeper themselves:
 ```python
-from devhub_<name>.clients.k8s import K8sPodClient  # must spell out the full path
+from devhub_python_<name>.clients.k8s import K8sPodClient  # must spell out the full path
 ```
 
 ### Pattern 2 — Re-export facade
@@ -33,21 +33,21 @@ from devhub_<name>.clients.k8s import K8sPodClient  # must spell out the full pa
 
 The Re-export facade pattern is used for public API directories:
 ```python
-# devhub_<name>/clients/k8s/__init__.py
-from devhub_<name>.clients.k8s.exceptions import *
-from devhub_<name>.clients.k8s.k8s_pod_client import *
+# devhub_python_<name>/clients/k8s/__init__.py
+from devhub_python_<name>.clients.k8s.exceptions import *
+from devhub_python_<name>.clients.k8s.k8s_pod_client import *
 ```
 ```python
-import devhub_<name>.clients.k8s
-devhub_<name>.clients.k8s.K8sPodClient  # ✅ works — __init__ created this attribute
-from devhub_<name>.clients.k8s import K8sPodClient  # ✅ clean, stable import
+import devhub_python_<name>.clients.k8s
+devhub_python_<name>.clients.k8s.K8sPodClient  # ✅ works — __init__ created this attribute
+from devhub_python_<name>.clients.k8s import K8sPodClient  # ✅ clean, stable import
 ```
 
 ### Comparison
 | Behaviour | Marker only | Re-export facade |
 |---|---|---|
-| `import devhub_<name>.clients.k8s` | ✅ | ✅ |
-| `devhub_<name>.clients.k8s.K8sPodClient` | ❌ `AttributeError` | ✅ |
+| `import devhub_python_<name>.clients.k8s` | ✅ | ✅ |
+| `devhub_python_<name>.clients.k8s.K8sPodClient` | ❌ `AttributeError` | ✅ |
 | Callers need to know internal file layout | ✅ yes | ❌ no |
 | Stable API survives internal refactoring | ❌ | ✅ |
 
@@ -55,7 +55,7 @@ Think of the two patterns as:
 - **Empty `__init__.py`** → "this is a package container"
 - **Re-exporting `__init__.py`** → "this is the public interface"
 
-The practical consequence for a team: without re-exports, callers must know the internal file structure (`from devhub_<name>.clients.k8s.k8s_pod_client import K8sPodClient`). If you later rename or reorganise that file, every caller breaks. With a re-export facade, callers only know the package name (`from devhub_<name>.clients.k8s import K8sPodClient`), and internal refactoring is safe as long as `__init__.py` keeps exporting the same names.
+The practical consequence for a team: without re-exports, callers must know the internal file structure (`from devhub_python_<name>.clients.k8s.k8s_pod_client import K8sPodClient`). If you later rename or reorganise that file, every caller breaks. With a re-export facade, callers only know the package name (`from devhub_python_<name>.clients.k8s import K8sPodClient`), and internal refactoring is safe as long as `__init__.py` keeps exporting the same names.
 
 ---
 
