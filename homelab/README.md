@@ -2,6 +2,8 @@
 
 This is the central documentation for my personal home lab. It covers the goals, design, and step-by-step setup from buying hardware to a running cluster with Kubernetes, monitoring, and GitOps automation.
 
+> **Why in DevHub?**: The `homelab` is basically my *development platform* at home, which closely relates to `DevHub`: my central development hub. Therefore, everything related to my `homelab` is documented and managed within the `DevHub` repository for consistency and centralization.
+
 ---
 
 ## Table of Contents
