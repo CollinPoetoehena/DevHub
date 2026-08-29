@@ -1,6 +1,6 @@
 # users
 
-> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 Generic OS user, group, sudo, and SSH key management for Linux hosts. Designed to be reused across any host type (mgmtvm, jumphost, workload VMs, etc.).
 

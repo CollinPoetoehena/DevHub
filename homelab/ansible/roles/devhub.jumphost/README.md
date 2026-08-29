@@ -1,6 +1,6 @@
 # jumphost
 
-> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 Configures the bastion/jump host VM that serves as the secure entry point to the infrastructure. This role sets up SSH forwarding, access controls, and security hardening to provide safe gateway access to the private Kubernetes cluster network.
 

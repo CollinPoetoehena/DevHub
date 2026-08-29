@@ -4,9 +4,9 @@ Reusable [Helm](https://helm.sh/) charts, used for packaging and deploying Kuber
 
 Each chart lives in its own dedicated repository. This file serves as the index and reference for all Helm charts, and documents conventions shared across them.
 
-## Dev-Hub
+## DevHub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Helm charts, see [README.md](README.md) for the full design and index of all component types.
+This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Helm charts, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -70,7 +70,7 @@ When creating a new chart repository, use the following template as the starting
 ```markdown
 # <chart-name>
 
-> Part of [dev-hub/Helm](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
+> Part of [DevHub/Helm](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
 
 <Short description of what this chart deploys.>
 

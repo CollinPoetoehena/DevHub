@@ -6,9 +6,9 @@ Each role lives in its own dedicated repository. This file serves as the index a
 
 For the official Python packaging reference, see [Python Packaging Projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/).
 
-## Dev-Hub
+## DevHub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Python packages, see [README.md](README.md) for the full design and index of all component types.
+This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Python packages, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -96,7 +96,7 @@ When creating a new package repository, use the following template as the starti
 ```markdown
 # <package-name>
 
-> Part of [dev-hub/Python](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Python.md) — see that file for conventions, structure guidelines, and the full package index.
+> Part of [DevHub/Python](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Python.md) — see that file for conventions, structure guidelines, and the full package index.
 
 <Short description of what this package provides.>
 

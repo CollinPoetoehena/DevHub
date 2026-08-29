@@ -4,9 +4,9 @@ Reusable [Ansible](https://docs.ansible.com/) roles and playbooks, used for conf
 
 Each role lives in its own dedicated repository. This file serves as the index and reference for all Ansible roles, and documents conventions shared across them.
 
-## Dev-Hub
+## DevHub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Ansible roles, see [README.md](README.md) for the full design and index of all component types.
+This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Ansible roles, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -85,7 +85,7 @@ When creating a new role repository, use the following template as the starting 
 ```markdown
 # <role-name>
 
-> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 <Short description of what this role does.>
 

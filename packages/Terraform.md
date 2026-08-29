@@ -4,9 +4,9 @@ Reusable [Terraform](https://developer.hashicorp.com/terraform) modules, used as
 
 Each module lives in its own dedicated repository. This file serves as the index and reference for all Terraform modules, and documents conventions shared across them.
 
-## Dev-Hub
+## DevHub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
+This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -62,7 +62,7 @@ When creating a new module repository, use the following template as the startin
 ```markdown
 # terraform-<PROVIDER>-<NAME>
 
-> Part of [dev-hub/Terraform](https://github.com/CollinPoetoehena/dev-hub/blob/main/packages/Terraform.md) — see that file for conventions, structure guidelines, and the full module index.
+> Part of [DevHub/Terraform](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Terraform.md) — see that file for conventions, structure guidelines, and the full module index.
 
 <Short description of what this module does.>
 

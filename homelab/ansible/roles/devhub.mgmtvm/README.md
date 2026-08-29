@@ -1,6 +1,6 @@
 # mgmtvm
 
-> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 Configures a Management VM that serves as the access point to workloads (typically residing in a Management DMZ). The role installs and configures all tooling required to manage infrastructure.
 

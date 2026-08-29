@@ -34,9 +34,9 @@ fi
 SCRIPTS_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Name of the calling project, derived from the current working directory so this shared
-# script works correctly when invoked from any project (e.g. k8s-lab, dev-hub, etc.).
+# script works correctly when invoked from any project (e.g. k8s-lab, DevHub, etc.).
 # Using $PWD rather than PROJECT_ROOT because PROJECT_ROOT always resolves to the directory
-# where this script lives (dev-hub), not the project the caller is operating on.
+# where this script lives (DevHub), not the project the caller is operating on.
 PROJECT_NAME="$(basename "$PWD")"
 
 # Colors for output
