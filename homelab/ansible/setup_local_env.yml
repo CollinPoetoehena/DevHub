@@ -85,10 +85,12 @@
     # =========================================================================
     # Installs external roles defined in requirements.yml (e.g. devhub.users, devhub.jumphost).
     # These are pulled from Git repositories and placed in the roles/ directory.
-    # No --force: skips roles that are already installed at the correct version.
+    # --force is added only if galaxy_force_install is true, which allows reinstallation of roles even if they are already present.
     - name: "GALAXY ROLES | Install roles from requirements.yml"
       ansible.builtin.command:
-        cmd: "ansible-galaxy install -r {{ requirements_file }}"
+        cmd: >
+          ansible-galaxy install -r {{ requirements_file }}
+          {% if galaxy_force_install %} --force {% endif %}
       register: galaxy_result
       changed_when: "'was installed successfully' in galaxy_result.stdout"
 

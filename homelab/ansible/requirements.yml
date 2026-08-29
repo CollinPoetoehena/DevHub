@@ -2,14 +2,14 @@
 roles:
   # TODO: these roles I want to keep, such as users to create users on all hosts, jumphost and mgmtvm to interact with all the clusters (e.g. with the monitoring VMs, run Ansible, etc.)
   - name: devhub.users # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
-    src: https://github.com/CollinPoetoehena/ansible-role-users.git
+    src: https://github.com/CollinPoetoehena/devhub-ansible-users.git
     scm: git
     version: 1.0.0
   - name: devhub.jumphost # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
-    src: https://github.com/CollinPoetoehena/ansible-role-jumphost.git
+    src: https://github.com/CollinPoetoehena/devhub-ansible-jumphost.git
     scm: git
     version: 1.0.0
   - name: devhub.mgmtvm # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
-    src: https://github.com/CollinPoetoehena/ansible-role-mgmtvm.git
+    src: https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm.git
     scm: git
     version: 1.0.0

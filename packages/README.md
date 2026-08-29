@@ -136,4 +136,9 @@ git push origin -d <tagname>
 # Example:
 git tag -d 1.0.0
 git push origin -d 1.0.0
+
+# Full sequence example: Deleting and recreating a release (picks the latest commit):
+git tag -d 1.0.0 && git push origin --delete 1.0.0
+git add -A && git commit --amend -m "Initial release" && git push -f
+git tag -a 1.0.0 -m "Initial release" && git push --tags
 ```

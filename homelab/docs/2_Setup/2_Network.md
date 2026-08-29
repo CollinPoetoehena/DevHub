@@ -151,9 +151,11 @@ ssh <username>@lab-router.local
 
 ## Step 3: Security & Hardening
 
-TODO: this is now about SSH manually, but this should be automated via Ansible in a role called `hardening`. 
-TODO: add this in that role with AI later and replace below steps with the automated hardening role.
+TODO: this is now about SSH manually, but this should be automated via Ansible in a role. 
+TODO: I already have a role for configuring a jumphost, so use that since it already contains the SSH hardening part, etc.: https://github.com/CollinPoetoehena/devhub-ansible-role-jumphost
+TODO: check the role and make changes where needed!
 
+TODO: this below can be removed, this will be in the jumphost role!
 Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
 
 > **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1](../0_Local_Environment_Setup.md#step-1-generate-an-ssh-key-pair) if you haven't done this yet.

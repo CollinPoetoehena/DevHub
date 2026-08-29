@@ -1,11 +1,10 @@
-# mgmtvm
+# devhub-ansible-mgmtvm
 
-> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 Configures a Management VM that serves as the access point to workloads (typically residing in a Management DMZ). The role installs and configures all tooling required to manage infrastructure.
 
-> **User, group, sudo, and SSH key management are not part of this role.**  
-> Use the [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users) role for that. Apply it alongside this role in your playbook (see example below).
+> **User, group, sudo, and SSH key management are not part of this role.** Use the [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) role for that. Apply it alongside this role in your playbook (see example below).
 
 ## Requirements
 
@@ -62,13 +61,13 @@ Configures a Management VM that serves as the access point to workloads (typical
 ```yaml
 ---
 roles:
-  - name: mgmtvm
-    src: https://github.com/CollinPoetoehena/ansible-role-mgmtvm.git
+  - name: devhub.mgmtvm
+    src: https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm.git
     scm: git
     version: 1.0.0
   # User/group/sudo/SSH key management is handled by a separate role:
-  - name: users
-    src: https://github.com/CollinPoetoehena/ansible-role-users.git
+  - name: devhub.users
+    src: https://github.com/CollinPoetoehena/devhub-ansible-users.git
     scm: git
     version: 1.0.0
 ```
@@ -82,7 +81,7 @@ ansible-galaxy install -r requirements.yml -p <path/to/roles>
 
 ### Example playbook
 
-> **Note:** User, group, sudo, and SSH key management are handled by [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users).  
+> **Note:** User, group, sudo, and SSH key management are handled by [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users).  
 > Variables and usage examples for that role are intentionally omitted here — keeping them in one place avoids duplication and means only that role's README needs updating if its interface changes.
 
 ```yaml
@@ -98,8 +97,8 @@ ansible-galaxy install -r requirements.yml -p <path/to/roles>
       - azure-mgmt-compute
 
   roles:
-    - role: mgmtvm   # installs tooling
-    - role: users    # manages OS users, groups, sudo, and SSH keys (see ansible-role-users)
+    - role: devhub.mgmtvm   # installs tooling
+    - role: devhub.users    # manages OS users, groups, sudo, and SSH keys (see devhub-ansible-users)
 ```
 
 ### Selective execution with tags

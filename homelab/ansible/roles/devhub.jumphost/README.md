@@ -1,6 +1,6 @@
-# jumphost
+# devhub-ansible-jumphost
 
-> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 Configures the bastion/jump host VM that serves as the secure entry point to the infrastructure. This role sets up SSH forwarding, access controls, and security hardening to provide safe gateway access to the private Kubernetes cluster network.
 
@@ -11,8 +11,7 @@ It has the following features:
 - **Firewall Rules**: Restrict inbound/outbound traffic to essential SSH connections only
 - **Minimal Attack Surface**: Keep installed packages and services to a minimum to reduce potential vulnerabilities
 
-> **User, group, sudo, and SSH key management are not part of this role.**  
-> Use the [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) role for that. Apply it alongside this role in your playbook (see example below).
+> **User, group, sudo, and SSH key management are not part of this role.** Use the [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) role for that. Apply it alongside this role in your playbook (see example below).
 
 ## Requirements
 

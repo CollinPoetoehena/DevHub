@@ -89,3 +89,8 @@ vault_variables:
     prompt: "Path to the SSH public key for dummy (e.g. ~/.ssh/id_homelab.pub)"
   - name: vault_ssh_public_key_src_testuser
     prompt: "Path to the SSH public key for testuser (e.g. ~/.ssh/id_homelab.pub)"
+
+# =============================================================================
+# Other Variables
+# =============================================================================
+galaxy_force_install: true
