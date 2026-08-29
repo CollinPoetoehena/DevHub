@@ -12,7 +12,7 @@ This document covers the specific steps to set up the homelab network using the 
 
 - [Step 1: Reserve a Static IP for the Pi on the ISP Modem](#step-1-reserve-a-static-ip-for-the-pi-on-the-isp-modem)
 - [Step 2: Assemble and Boot the Pi & Prepare the Pi for Headless Operation](#step-2-assemble-and-boot-the-pi--prepare-the-pi-for-headless-operation)
-- [Step 3: Security & Hardening](#step-3-security--hardening)
+- [Step 3: User Setup & Jumphost and Security Hardening](#step-3-user-setup--jumphost-and-security-hardening)
 - [Step 4: Configure the Pi with Ansible](#step-4-configure-the-pi-with-ansible)
 - [Step 5: Configure Switch & Ensure eth1 of the Router Has Carrier](#step-5-configure-switch--ensure-eth1-of-the-router-has-carrier)
 
@@ -149,57 +149,39 @@ ssh <username>@<pi-ip>
 ssh <username>@lab-router.local
 ```
 
-## Step 3: Security & Hardening
+## Step 3: User Setup & Jumphost and Security Hardening
 
-TODO: this is now about SSH manually, but this should be automated via Ansible in a role. 
-TODO: I already have a role for configuring a jumphost, so use that since it already contains the SSH hardening part, etc.: https://github.com/CollinPoetoehena/devhub-ansible-role-jumphost
-TODO: check the role and make changes where needed!
-
-TODO: this below can be removed, this will be in the jumphost role!
-Password login is convenient initially but is weaker than key-based auth — a key cannot be brute-forced over the network. Once a key is in place, disable passwords so only key holders can log in.
+This step does the following:
+1. Sets up the `ansibleremote` user and other users on the lab router for secure Ansible management. After this, the lab router can be managed remotely using Ansible with the `ansibleremote` user. This step needs to happen first because the Pi comes with a default user that has limited privileges and is not suitable for secure remote management.
+2. Configures the lab router as a secure *jumphost*, enabling safe access to the home lab network while enforcing security hardening measures. 
+    - **Jumphost role:** The lab router is also used as a secure entry point to the home lab network (jumphost), providing SSH forwarding, access controls, and security hardening for safe gateway access to the private network. See details in [Network Design](../1_Design/2_Network.md#jumphost-secure-access-to-lab-network).
+    - **`devhub-ansible-jumphost` role usage:** The `devhub-ansible-jumphost` role contains the necessary tasks and configurations for setting up the lab router as a secure jumphost, including SSH hardening, access controls, and security measures. 
 
 > **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1](../0_Local_Environment_Setup.md#step-1-generate-an-ssh-key-pair) if you haven't done this yet.
 
 ```bash
-# ========================== Copy your public key to the Pi ==========================
-# ssh-copy-id is the simplest method — it appends your public key to ~/.ssh/authorized_keys on the Pi:
-ssh-copy-id -i ~/.ssh/id_homelab.pub <username>@<pi-ip>
-# Example: ssh-copy-id pi@192.168.2.123
-# You will be prompted for the Pi user's password one last time.
+# Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
+cd homelab; source venv/bin/activate; cd ansible
 
-# If ssh-copy-id is not available (e.g. on Windows without Git Bash), do it manually:
-cat ~/.ssh/id_homelab.pub | ssh <username>@<pi-ip> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+# ========================== Bootstrap the ansibleremote user ==========================
+# Run the users play to create the ansibleremote service account on the Pi.
+# --diff: show file changes made on the remote host
+# -u <username>: connect as the initial OS user (the one you created during Pi setup)
+# -K: prompt for the sudo password (needed because <username> requires a password for sudo)
+ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <username> -K
+# Check users with a few of the commands provided by the users role: see ./roles/devhub.users/tasks/main.yml
+# Furthermore, you can check logs on the Pi if you have authentication problems:
+sudo journalctl | grep -i "sshd" | tail -30
 
-# ========================== Verify key login works BEFORE disabling passwords ==========================
-# Open a NEW terminal and test key login (do NOT close the current session yet!):
-ssh <username>@<pi-ip> -i ~/.ssh/id_homelab
-# If you log in without being asked for a password (or only asked for your key passphrase), key auth works.
-# Only proceed to disable passwords once this succeeds.
+# After the initial setup (ansibleremote added), you need to run without -K on the router (ansibleremote has passwordless sudo):
+ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u ansibleremote
 
-# ========================== On the Pi: disable password authentication ==========================
-# Edit the SSH daemon configuration:
-sudo su # Need to become root to edit the config file
-vim /etc/ssh/sshd_config
+# ========================== Verify connectivity with ansibleremote ==========================
+# Test that Ansible can reach the Pi using the newly created ansibleremote user:
+ansible all -i hosts -m ping -l lab-router -u ansibleremote
 
-# Find and set (or add) these lines (excluding the explanations!):
-#   PasswordAuthentication no
-#     → Disables password-based login entirely. Only SSH keys can authenticate.
-#       Without this, attackers can still brute-force passwords over the network.
-#   ChallengeResponseAuthentication no
-#     → Disables challenge-response mechanisms (e.g. one-time passwords, keyboard-interactive prompts).
-#       If left enabled, PAM or other modules can still prompt for a password even when
-#       PasswordAuthentication is off, bypassing your key-only policy.
-#   UsePAM yes
-#     → Keep PAM enabled (this is the Debian default). Do NOT set this to "no".
-#       On Debian-based systems (including Raspberry Pi OS), OpenSSH 10.x rejects
-#       pubkey login for accounts without a password (locked accounts like ansibleremote)
-#       when PAM is disabled. With UsePAM yes + PasswordAuthentication no, PAM does NOT
-#       allow password login — it only handles account validation and session setup,
-#       which correctly permits key-based auth for locked service accounts.
-# Save and exit (Esc, :wq, Enter in vim).
-
-# Apply the new config by restarting SSH:
-sudo systemctl restart ssh
+# ========================== Run Jumphost role for hardening and SSH setup ==========================
+TODO: update the jumphost role where needed and run that here, implement in site.yml as well!
 
 # ========================== Verify from your laptop ==========================
 # From a new terminal, confirm key login still works:
@@ -226,23 +208,6 @@ cd homelab; source venv/bin/activate; cd ansible
 # interactively prompt for the key's passphrase like a manual ssh command can.
 eval $(ssh-agent) && ssh-add ~/.ssh/id_homelab
 # Enter your passphrase once — it stays cached for this shell session.
-
-# ========================== Bootstrap the ansibleremote user ==========================
-# Run the users play to create the ansibleremote service account on the Pi.
-# --diff: show file changes made on the remote host
-# -u <username>: connect as the initial OS user (the one you created during Pi setup)
-# -K: prompt for the sudo password (needed because <username> requires a password for sudo)
-ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <username> -K
-# Check users with a few of the commands provided by the users role: see ./roles/devhub.users/tasks/main.yml
-# Furthermore, you can check logs on the Pi if you have authentication problems:
-sudo journalctl | grep -i "sshd" | tail -30
-
-# After the initial setup (ansibleremote added), you need to run without -K on the router (ansibleremote has passwordless sudo):
-ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u ansibleremote
-
-# ========================== Verify connectivity with ansibleremote ==========================
-# Test that Ansible can reach the Pi using the newly created ansibleremote user:
-ansible all -i hosts -m ping -l lab-router -u ansibleremote
 
 # ========================== Configure the Pi as a router ==========================
 # First do a dry run (-C) to preview changes without applying them:
