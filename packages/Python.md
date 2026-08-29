@@ -71,11 +71,7 @@ See [Python Reference & Best Practices](../reference/python/README.md).
 
 ## Naming Convention
 
-| Context | Convention | Example |
-|---|---|---|
-| Python package name (import) | `devhub_<name>` | `devhub_<name>` |
-| Published package name (pip/Artifactory) | `devhub-<name>` | `devhub-<name>` |
-| Repository folder | `devhub_<name>/` | `devhub_<name>/` |
+Python package repositories are named using the pattern `python-<type>-<topic>`, where `<type>` matches the package type (e.g. `pypi`) and `<topic>` matches the package name (e.g. `python-pypi-k8s`).
 
 ## Usage
 
