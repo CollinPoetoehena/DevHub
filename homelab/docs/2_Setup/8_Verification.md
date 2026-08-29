@@ -1,6 +1,4 @@
-# Verification
-
-TODO: here network verification.
+# # Setup & Installation: Verification
 
 See [Network Commands](../../../reference/network/commands/README.md) for detailed explanations of each command and its output used below. The following commands are used for verification, specifying only the expected outputs, the commands themselves are explained in the document above.
 

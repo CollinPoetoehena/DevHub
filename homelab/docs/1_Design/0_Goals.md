@@ -1,6 +1,8 @@
 # Personal Goals
 
-The goal of this home lab is simple: **learn the fundamentals of DevOps and Software Engineering, and have fun doing it — while building a cool and satisfying home lab to experiment with.** Topics include networking, Linux, Kubernetes, monitoring (Grafana, Prometheus), infrastructure automation, and more — because I genuinely enjoy experimenting with these things and want to advance my Engineering skills.
+> **Why goals matter:** The first step of your home lab journey is to define clear goals. These goals will be your guiding principles, helping you define your design/architecture, determine what hardware to acquire, and prioritize your learning objectives. There is no one-size-fits-all approach — your goals should reflect your personal interests and learning priorities. In a homelab, you are free to pursue what excites you the most.
+
+The personal goal of my home lab is simple: **learn the fundamentals of DevOps and Software Engineering, and have fun doing it — while building a cool and satisfying home lab to experiment with.** Topics include networking, Linux, Kubernetes, monitoring (Grafana, Prometheus), infrastructure automation, and more — because I genuinely enjoy experimenting with these things and want to advance my Engineering skills.
 
 There's something genuinely cool and satisfying about having a real home lab cluster sitting on your desk: physical nodes, real networking, services you deployed yourself, dashboards showing live metrics from your own hardware. It's not just a learning environment — it's a playground to break things, try out new tools before using them at work, and experiment without any consequences. And it just looks and feels awesome.
 

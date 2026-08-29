@@ -1,6 +1,8 @@
 # Troubleshooting
 
-This document provides guidance for diagnosing and resolving common network issues, particularly those that arise when running a homelab environment.
+This document provides guidance for diagnosing and resolving common issues during setup, such as network issues.
+
+---
 
 ## Some home network devices cannot connect to the internet
 

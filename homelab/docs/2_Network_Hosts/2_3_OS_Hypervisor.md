@@ -1,6 +1,0 @@
-# OS and Hypervisor Installation
-
-
-
-
-
