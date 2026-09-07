@@ -196,7 +196,7 @@ from example_package.models import * # exports example_package/models/__init__.p
 from example_package.services import * # exports example_package/services/__init__.py.__all__
 from example_package.clients import * # exports example_package/clients/__init__.py.__all__
 
-...
+# NOTE: The top-level package re-exports all domain sub-packages using `*`, relying on their `__all__` declarations to control the public API. It does not re-export private modules or symbols that are not included in the sub-packages' `__all__`.
 ```
 
 ### Domain sub-package
