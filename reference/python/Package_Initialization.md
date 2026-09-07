@@ -113,8 +113,7 @@ What does not belong here:
 from example_package.models.environment import Environment
 from example_package.models.resources import ResourceCollection, ResourceInventory
 
-# Explicit public API, so an `import *` of this package cannot leak imported helpers (dataclass,
-# Enum, TypeVar, ...) from the model modules into the caller's namespace.
+# Explicit public API, so an `import *` of this package cannot leak imported helpers (dataclass, Enum, TypeVar, ...) from the model modules into the caller's namespace.
 __all__ = [
     "Environment",
     "ResourceCollection",
@@ -231,7 +230,7 @@ from example_package.services.interfaces import PrimaryService, SecondaryService
 from example_package.services.models import ServiceBackend, ServiceRecordSet
 from example_package.services.transports import HTTPTransport
 
-# Explicit public API, so an `import *` of this package cannot leak imported helpers (dataclass, Optional, requests, ...) from the sub-modules into the caller's namespace.
+# Explicit public API, so an `import *` of this package cannot leak imported helpers (dataclass, Enum, TypeVar, ...) from the model modules into the caller's namespace.
 __all__ = [
     "PrimaryService",
     "ServiceBackend",
