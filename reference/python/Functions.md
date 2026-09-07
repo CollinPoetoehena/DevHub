@@ -34,6 +34,7 @@ Only the conventions that need extra attention, or that are specific to this cod
 - **Prefix implementation details with `_`.** Public API stays small and intentional; shared internals are private helpers.
 - **Logging.** Logging is centralised and documented in [Logging](./Logging.md).
 - **Exception/error handling.** Error handling is centralised and documented in [Exceptions](./Exceptions.md).
+- **Classes & Generics.** These rules apply to methods too; class-specific conventions are documented in [Classes & Generics](./Classes_Generics.md).
 
 ---
 

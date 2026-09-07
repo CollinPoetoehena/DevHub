@@ -10,5 +10,6 @@ For packaging Python projects, see [Python Packages Documentation](../../package
 - [Logging](./Logging.md)
 - [Exceptions](./Exceptions.md)
 - [Functions](./Functions.md)
+- [Classes & Generics](./Classes_Generics.md)
 
 Further reading can be found in the [official Python documentation](https://www.python.org/doc/).
