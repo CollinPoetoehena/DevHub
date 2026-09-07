@@ -13,5 +13,6 @@ For packaging Python projects, see [Python Packages Documentation](../../package
 - [Exceptions](./Exceptions.md)
 - [Functions](./Functions.md)
 - [Classes & Generics](./Classes_Generics.md)
+- [Static Code Analysis](./StaticCodeAnalysis.md)
 
 Further reading can be found in the [official Python documentation](https://www.python.org/doc/).
