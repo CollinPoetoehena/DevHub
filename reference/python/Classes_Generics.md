@@ -10,12 +10,22 @@ All packages should follow the best practices/conventions from Python itself:
 - [`abc`](https://docs.python.org/3/library/abc.html) — abstract base classes.
 - [`typing`](https://docs.python.org/3/library/typing.html) — [`TypeVar`](https://docs.python.org/3/library/typing.html#typing.TypeVar), [`Generic`](https://docs.python.org/3/library/typing.html#typing.Generic), [`Protocol`](https://docs.python.org/3/library/typing.html#typing.Protocol), [`ClassVar`](https://docs.python.org/3/library/typing.html#typing.ClassVar).
 - [Type hints for generics — `typing` HOWTO](https://typing.python.org/en/latest/reference/generics.html) — the reference for the generics rules summarised below.
+- [A First Look at Classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) and [Private Variables](https://docs.python.org/3/tutorial/classes.html#private-variables) — the reference for the OOP fundamentals summarised below.
 
 Only the conventions that need extra attention, or that are specific to this codebase, are documented below.
 
 ## Table of Contents
 
 - [General principles](#general-principles)
+- [Object-Oriented Programming — fundamentals](#object-oriented-programming--fundamentals)
+  - [Class](#class)
+  - [Object](#object)
+  - [The four pillars](#the-four-pillars)
+    - [Encapsulation](#encapsulation)
+    - [Abstraction](#abstraction)
+    - [Inheritance](#inheritance-pillar)
+    - [Polymorphism](#polymorphism)
+  - [Further reading on OOP](#further-reading-on-oop)
 - [Choosing the right kind of class](#choosing-the-right-kind-of-class)
   - [Why a class instead of a `Dict`](#why-a-class-instead-of-a-dict)
   - [Data classes](#data-classes)
@@ -55,6 +65,200 @@ Only the conventions that need extra attention, or that are specific to this cod
 - **Logging.** Use one logger per class where a class hierarchy needs it; see [Logging](./Logging.md).
 - **Exception/error handling.** Error handling is centralised and documented in [Exceptions](./Exceptions.md).
 - **Functions.** The rules in [Functions](./Functions.md) apply to methods as well.
+
+---
+
+## Object-Oriented Programming — fundamentals
+
+Object-Oriented Programming (OOP) is a paradigm built around **objects**: bundles of data (**attributes**) together with the behaviour that operates on that data (**methods**). Python supports OOP fully, but it is *multi-paradigm* — a module-level function is often the better answer, and the rest of this document assumes a class has earned its place.
+
+The language-agnostic design principles behind these ideas (SOLID, composition over inheritance, low coupling) are documented in [Coding & Software Engineering Principles](../Software_Engineering_Principles.md).
+
+| Concept | Meaning |
+|---|---|
+| **Class** | Blueprint that defines the structure and behaviour of its instances |
+| **Object** | A concrete instance of a class, holding its own attribute values |
+| **Attribute** | Data held by an object (instance) or shared by the class (`ClassVar`) |
+| **Method** | A function defined on a class and bound to an instance (`self`) |
+| **Encapsulation** | Restricting direct access to internal state; exposing a controlled surface |
+| **Abstraction** | Exposing *what* an object does, hiding *how* it does it |
+| **Inheritance** | A class deriving attributes and behaviour from another class |
+| **Polymorphism** | One interface, many behaviours — the same call dispatches to different implementations |
+
+### Class
+
+A class defines the attributes and methods its instances will have. `__init__` receives the new instance as `self` and assigns its state:
+
+```python
+class Car:
+    """
+    A car in the fleet.
+
+    Attributes:
+        model: Manufacturer model name
+        year: Model year of the vehicle
+    """
+
+    WHEELS: ClassVar[int] = 4   # shared by every instance
+
+    def __init__(self, model: str, year: int):
+        self.model = model      # instance attribute, one per object
+        self.year = year
+
+    def drive(self) -> None:
+        """Start driving the car."""
+        print(f"Driving the {self.year} {self.model}...")
+```
+
+- **`self` is explicit** in Python and is always the first parameter of an instance method; it is passed automatically at the call site.
+- **Instance attributes are created in `__init__`**, not declared at class level — a bare class-level assignment is *shared state*, which is a common source of bugs (see [`ClassVar`](#class-level-constants--classvar)).
+- **There is no `new` keyword.** Calling the class constructs the object.
+
+### Object
+
+An object is an instance of a class with its own state:
+
+```python
+my_car = Car(model="Toyota", year=2022)
+my_car.drive()          # "Driving the 2022 Toyota..."
+
+isinstance(my_car, Car) # True
+type(my_car)            # <class 'Car'>
+```
+
+In Python **everything is an object** — including functions, modules, and classes themselves — which is why classes can be passed around as values (`Type[ModelT]`, see [Bounded type variables](#bounded-and-constrained-type-variables)).
+
+### The four pillars
+
+#### Encapsulation
+
+Encapsulation keeps internal state out of the public surface, so the object controls how it is read and changed and its invariants cannot be broken from outside.
+
+Python enforces this **by convention rather than by keyword** — there is no `private`/`public`:
+
+| Name | Meaning | Enforced? |
+|---|---|---|
+| `name` | Public API | — |
+| `_name` | Internal; not part of the contract, may change without notice | No, convention only |
+| `__name` | Name-mangled to `_ClassName__name`; avoids collisions in subclasses | Only against accidental access |
+
+```python
+class User:
+    def __init__(self, name: str):
+        self._name = name          # internal state
+
+    @property
+    def name(self) -> str:
+        """Display name of the user."""
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        if not value.strip():
+            raise ValueError("name must not be empty")
+        self._name = value
+```
+
+**Do not write Java-style `get_name()`/`set_name()` pairs.** Start with a plain public attribute and promote it to a `@property` only when access needs validation or derivation — the call site stays `user.name` either way, so no caller has to change (see [Properties instead of getters and setters](#properties-instead-of-getters-and-setters)).
+
+#### Abstraction
+
+Abstraction exposes the essential operations and hides the implementation, so callers depend on *what* is offered rather than *how* it is done. In Python it is expressed with `ABC` (nominal) or `Protocol` (structural):
+
+```python
+from abc import ABC, abstractmethod
+
+
+class Shape(ABC):
+    """A drawable shape, independent of how it is rendered."""
+
+    @abstractmethod
+    def draw(self) -> None:
+        """Render the shape on the current surface."""
+
+
+class Circle(Shape):
+    def draw(self) -> None:
+        print("Drawing a circle")
+
+
+Shape()     # ❌ TypeError: Can't instantiate abstract class Shape
+Circle()    # ✅
+```
+
+The caller works against `Shape` and never needs to know which concrete class it holds. This is the same idea as [Dependency Inversion](../Software_Engineering_Principles.md#d--dependency-inversion); the details and the `ABC`-vs-`Protocol` choice are covered in [Inheritance](#inheritance).
+
+#### Inheritance<a id="inheritance-pillar"></a>
+
+Inheritance lets a subclass reuse and extend a parent's attributes and methods, expressing an *"is a"* relationship:
+
+```python
+class Vehicle:
+    def __init__(self, model: str):
+        self.model = model
+
+    def start(self) -> None:
+        print(f"{self.model} starting...")
+
+
+class Car(Vehicle):
+    def __init__(self, model: str, doors: int):
+        super().__init__(model)     # always initialise the parent
+        self.doors = doors
+
+    def honk(self) -> None:
+        print("Honk!")
+```
+
+- **Always call `super().__init__(...)`** rather than the parent class by name — `super()` follows the method resolution order (`Car.__mro__`) and keeps multiple inheritance working.
+- **Python supports multiple inheritance**; use it only for narrow mixins, never to merge two stateful base classes.
+- **Inheritance is the most tightly coupled relationship in OOP.** Prefer composition unless the subclass genuinely fulfils the parent's contract — see [Composition over inheritance](#composition-over-inheritance) and [Liskov Substitution](../Software_Engineering_Principles.md#l--liskov-substitution).
+
+#### Polymorphism
+
+Polymorphism means one interface with many behaviours. Classic OOP splits it into two kinds; Python handles them differently from Java or C#:
+
+**Runtime polymorphism (method overriding)** — a subclass replaces the parent's implementation, and the call dispatches on the actual type:
+
+```python
+class Animal:
+    def make_sound(self) -> str:
+        return "Some sound"
+
+
+class Dog(Animal):
+    def make_sound(self) -> str:      # override
+        return "Bark"
+
+
+for animal in [Animal(), Dog()]:
+    print(animal.make_sound())        # "Some sound", then "Bark"
+```
+
+**Compile-time polymorphism (method overloading) does not exist in Python.** Defining the same method twice simply replaces the first definition. The equivalents are:
+
+| Goal | Python approach |
+|---|---|
+| Same operation, different argument counts | Default arguments, `*args`/`**kwargs` |
+| Same operation, genuinely different types | [`functools.singledispatch`](https://docs.python.org/3/library/functools.html#functools.singledispatch) / `singledispatchmethod` |
+| Different *static* signatures, one implementation | [`typing.overload`](https://docs.python.org/3/library/typing.html#typing.overload) — type-checker only, no runtime dispatch (see [Functions](./Functions.md#option-2--typingoverload)) |
+| Different construction sources | Named `classmethod` factories (see [Alternative constructors](#alternative-constructors-instead-of-mode-flags)) |
+
+**Duck typing** is Python's most common form of polymorphism: any object that provides the required methods can be used, with no shared base class at all. Make that requirement explicit and checkable with a [`Protocol`](#protocol--structural-contracts):
+
+```python
+def shutdown(resource: SupportsClose) -> None:
+    resource.close()    # anything with close() works — no inheritance needed
+```
+
+**Operator/protocol overloading** is the third form: implementing dunder methods (`__eq__`, `__len__`, `__iter__`, `__enter__`) makes a class work with built-in syntax and functions. Implement them only when the semantics are obvious — see the [data model reference](https://docs.python.org/3/reference/datamodel.html#special-method-names).
+
+### Further reading on OOP
+
+- [Python Tutorial — Classes](https://docs.python.org/3/tutorial/classes.html) — the authoritative introduction: scopes, `self`, inheritance, MRO, private conventions.
+- [Python Data Model](https://docs.python.org/3/reference/datamodel.html) — how objects, attributes, and special methods actually work.
+- [`abc`](https://docs.python.org/3/library/abc.html) and [`typing.Protocol`](https://docs.python.org/3/library/typing.html#typing.Protocol) — abstraction in Python.
+- [Coding & Software Engineering Principles](../Software_Engineering_Principles.md) — SOLID, composition over inheritance, coupling/cohesion, and when *not* to reach for a class.
 
 ---
 

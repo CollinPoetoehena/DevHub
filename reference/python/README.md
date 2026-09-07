@@ -4,6 +4,8 @@ Reference documentation and guidelines for Python packages within the DevHub pro
 
 For packaging Python projects, see [Python Packages Documentation](../../packages/Python.md).
 
+> **NOTE:** A lot of principles and best practices mentioned here are generic and can be applied to other programming languages as well (e.g. Java, Go, etc.). The language-agnostic ones (DRY, KISS, YAGNI, SOLID, Clean Architecture, etc.) are documented in [Coding & Software Engineering Principles](../Software_Engineering_Principles.md).
+
 ## Table of Contents
 
 - [`__init__.py` — Package Initialisation](./Package_Initialization.md)
