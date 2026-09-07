@@ -22,6 +22,12 @@ Only the conventions that need extra attention, or that are specific to this cod
   - [Pattern 2 — Re-export facade](#pattern-2--re-export-facade)
   - [Comparison](#comparison)
 - [`*` imports and `__all__`](#-imports-and-__all__)
+- [Importing the package from the outside](#importing-the-package-from-the-outside)
+  - [The layout at a glance](#the-layout-at-a-glance)
+  - [Which pattern to use where](#which-pattern-to-use-where)
+  - [Top-level package](#top-level-package)
+  - [Domain sub-package](#domain-sub-package)
+  - [Internal grouping / nested sub-package](#internal-grouping--nested-sub-package)
 - [Importing from within the package itself](#importing-from-within-the-package-itself)
   - [The facade chain above a module](#the-facade-chain-above-a-module)
   - [Rule 1 — inside your own facade chain, import from the defining module](#rule-1--inside-your-own-facade-chain-import-from-the-defining-module)
@@ -29,12 +35,6 @@ Only the conventions that need extra attention, or that are specific to this cod
   - [Why apply this even when Python does not fail](#why-apply-this-even-when-python-does-not-fail)
   - [Circular imports](#circular-imports)
   - [Breaking a cycle](#breaking-a-cycle)
-- [Importing the package from the outside](#importing-the-package-from-the-outside)
-  - [The layout at a glance](#the-layout-at-a-glance)
-  - [Which pattern to use where](#which-pattern-to-use-where)
-  - [Top-level package](#top-level-package)
-  - [Domain sub-package](#domain-sub-package)
-  - [Internal grouping / nested sub-package](#internal-grouping--nested-sub-package)
 
 ---
 
@@ -169,92 +169,6 @@ __all__ = ["SomeException"]
 A facade may re-export either by name (`from ... import A, B`) or with `*`. Use explicit names when the list is short and stable, and `*` when the sub-package already declares its own `__all__` — the sub-package then owns its surface, and the parent does not have to be updated whenever it changes. 
 
 **NEVER duplicate the `__all__` list from the sub-package in the parent module (DRY), write it once:** Always try to import the sub-package with `*` and rely on its own `__all__`, ensuring you only define `__all__` once (e.g. in the sub-package itself).
-
----
-
-## Importing from within the package itself
-
-This is the maintainer's perspective: code that lives *inside* the distribution. The goal of the facade pattern is to make the public API as easy, usable, and maintainable as possible: one obvious import path per name, short enough to write from memory (`from example_package.domain_b import SomeRecord`), and stable when the file layout behind it changes.
-
-That goal only holds if a facade is never consumed by the code it exports. A facade that is also used from below stops being a thin, freely re-organisable layer and becomes a load-bearing part of the implementation — at which point moving a class between files can break the package itself, not just its callers.
-
-Which import path is correct therefore depends on one thing only: **whether the facade you want to import already imports you.**
-
-### The facade chain above a module
-
-Every name is defined in exactly one module, and each `__init__.py` above that module that re-exports it — the domain facade, then the top-level facade — already depends on it. Those files are the module's **own facade chain**:
-
-```
-example_package/__init__.py                                   top-level facade   from example_package.domain_b import *
-└── example_package/domain_b/__init__.py                      domain facade      from example_package.domain_b.models.some_record import SomeRecord
-    └── example_package/domain_b/models/__init__.py           marker only        docstring only — exports nothing
-        └── example_package/domain_b/models/some_record.py    defining module    class SomeRecord: ...
-```
-
-For `some_record.py` the chain is `example_package.domain_b` and `example_package`; the marker-only `models` package imports nothing, so nothing depends on it (see [Which pattern to use where](#which-pattern-to-use-where) for what each level is). Anything *not* in the chain — `example_package.domain_a`, `example_package.models`, another distribution — does not depend on the module and is free to import.
-
-### Rule 1 — inside your own facade chain, import from the defining module
-
-When the name you need is exported by a facade that also sits above **you**, bypass that facade and import from the module that defines the name:
-
-```python
-# example_package/domain_b/providers/provider_x/some_client.py
-from example_package.domain_b.models.some_record import SomeRecord  # ✅ the defining module
-from example_package.domain_b import SomeRecord                     # ❌ a facade that imports this module
-from example_package import SomeRecord                              # ❌ the top-level facade, same problem
-```
-
-Below a facade, import direction therefore always points **downwards**, from the facade towards the modules, never back up or sideways through it.
-
-### Rule 2 — everywhere else, import from the facade
-
-Every other position is that of an ordinary caller, and callers use the public path:
-
-- **Application/client code** consuming the distribution.
-- **Tests** for the package, which should exercise the same surface a consumer gets.
-- **Another domain or sub-package** in the same distribution, whose facade chain is separate from yours.
-
-```python
-# example_package/domain_b/providers/provider_x/helpers.py — lives below the example_package.domain_b chain
-from example_package.domain_a import SomeClient  # ✅ different domain — its facade does not import us
-from example_package.models import SharedModel   # ✅ shared models — same reasoning
-from example_package.domain_b.providers.provider_x.models import ProviderXType  # ✅ own chain — defining module
-```
-
-So `from example_package.domain_a import ...` inside `example_package.domain_b` is not an exception to Rule 1 — it is Rule 2 — and it is the *preferred* form: short, stable, and identical to the line an external caller writes, so there is no second import style for code that happens to ship in the same distribution.
-
-It works because the dependency runs one way only: `domain_a` knows nothing about `domain_b` and never imports it. Keep that direction deliberate — two domains importing each other's facades is a real cycle, and usually means a shared model is in the wrong place (see [Breaking a cycle](#breaking-a-cycle)).
-
-### Why apply this even when Python does not fail
-
-Breaking Rule 1 often *appears* to work. A package being imported is registered in `sys.modules` while it is still initialising, so a facade import from below is frequently satisfied from that half-finished module without raising anything. It fails only when the name is read before the facade has assigned it — which depends on *which module the process imports first*, something a library cannot control.
-
-Apply the rules regardless of whether the current import order happens to succeed:
-
-- The failure mode is an `ImportError`/`AttributeError` at import time in an unrelated part of the codebase, triggered by a change that touched neither module.
-- Whether it fails differs per entry point, so an application, a script, and the test suite can disagree about whether the package imports at all.
-- The facade stops being safe to reorganise, which is the entire reason it exists.
-
-Treat the rules as structural rather than as a fix for an error you have already seen, and verify them with the static check below instead of with a passing import.
-
-### Circular imports
-
-A circular import is two or more modules that import each other, directly or through an `__init__.py`. `__init__.py` is the *leaf importer* — it imports from the modules below it, never the other way around — so importing a package facade from one of its own modules closes a loop:
-
-```
-example_package/domain_b/__init__.py       imports  interfaces/some_interface.py
-interfaces/some_interface.py               imports  example_package.domain_b    ← back to the facade
-```
-
-For the reasons above, such a cycle can sit in the codebase unnoticed until an unrelated change alters the import order. Verify statically instead of trusting that imports currently succeed — see [Checking circular imports](./StaticCodeAnalysis.md#checking-circular-imports).
-
-### Breaking a cycle
-
-In order of preference:
-
-1. **Import from the defining module** instead of from the facade. This is the fix for nearly every cycle Pylint reports, and it costs nothing.
-2. **Move the shared type up** into a package both sides may import, when two domains genuinely need the same model — that is what `example_package/models/` is for. A cycle between two domains is usually a misplaced model, not an import problem.
-3. **Import only for type checking** with `if typing.TYPE_CHECKING:` and a string annotation, when the import exists purely for annotations. This removes the import at runtime and with it the cycle, but it hides the design problem instead of fixing it, so use it last.
 
 ---
 
@@ -400,3 +314,89 @@ A directory that exists to group files for the maintainers is not part of the pu
 Its `__init__.py` therefore holds only a docstring: which pattern it uses, where its contents are re-exported, and what the grouping is for (see the example under [Pattern 1 — Marker only](#pattern-1--marker-only)).
 
 > **Exception — a nested package with its own dependencies.** A nested package that callers must name explicitly, such as a provider package (`example_package/domain_b/providers/provider_x/`), is a public surface in its own right and uses the facade pattern instead (e.g. `from example_package.domain_b.providers.provider_x import ProviderXClient`). It is not re-exported upwards precisely so that its supplier-specific dependencies are only imported when that provider is actually used.
+
+---
+
+## Importing from within the package itself
+
+This is the *maintainer's perspective*: code that lives *inside* the distribution. The goal of the facade pattern is to make the public API as easy, usable, and maintainable as possible: one obvious import path per name, short enough to write from memory (`from example_package.domain_b import SomeRecord`), and stable when the file layout behind it changes.
+
+That goal only holds if a facade is never consumed by the code it exports. A facade that is also used from below stops being a thin, freely re-organisable layer and becomes a load-bearing part of the implementation — at which point moving a class between files can break the package itself, not just its callers.
+
+Which import path is correct therefore depends on one thing only: **WHETHER THE FACADE YOU WANT TO IMPORT FROM ALREADY IMPORTS YOU.**
+
+### The facade chain above a module
+
+Every name is defined in exactly one module, and each `__init__.py` above that module that re-exports it — the domain facade, then the top-level facade (see for details [Importing the package from the outside](#importing-the-package-from-the-outside)) — already depends on it. Those files are the module's **own facade chain**:
+
+```
+example_package/__init__.py                                   top-level facade   from example_package.domain_b import *
+└── example_package/domain_b/__init__.py                      domain facade      from example_package.domain_b.models.some_record import SomeRecord
+    └── example_package/domain_b/models/__init__.py           marker only        docstring only — exports nothing
+        └── example_package/domain_b/models/some_record.py    defining module    class SomeRecord: ...
+```
+
+For `some_record.py` the chain is `example_package.domain_b` and `example_package`; the marker-only `models` package imports nothing, so nothing depends on it (see [Which pattern to use where](#which-pattern-to-use-where) for what each level is). Anything *not* in the chain — `example_package.domain_a`, `example_package.models`, another distribution — does not depend on the module and is free to import.
+
+### Rule 1 — inside your own facade chain, import from the defining module
+
+When the name you need is exported by a facade that also sits above **you**, bypass that facade and import from the module that defines the name:
+
+```python
+# example_package/domain_b/providers/provider_x/some_client.py
+from example_package.domain_b.models.some_record import SomeRecord  # ✅ the defining module
+from example_package.domain_b import SomeRecord                     # ❌ a facade that imports this module
+from example_package import SomeRecord                              # ❌ the top-level facade, same problem
+```
+
+Below a facade, import direction therefore always points **downwards**, from the facade towards the modules, never back up or sideways through it.
+
+### Rule 2 — everywhere else, import from the facade
+
+Every other position is that of an ordinary caller, and callers use the public path:
+
+- **Application/client code** consuming the distribution.
+- **Tests** for the package, which should exercise the same surface a consumer gets.
+- **Another domain or sub-package** in the same distribution, whose facade chain is separate from yours.
+
+```python
+# example_package/domain_b/providers/provider_x/helpers.py — lives below the example_package.domain_b chain
+from example_package.domain_a import SomeClient  # ✅ different domain — its facade does not import us
+from example_package.models import SharedModel   # ✅ shared models — same reasoning
+from example_package.domain_b.providers.provider_x.models import ProviderXType  # ✅ own chain — defining module
+```
+
+So `from example_package.domain_a import ...` inside `example_package.domain_b` is not an exception to Rule 1 — it is Rule 2 — and it is the *preferred* form: short, stable, and identical to the line an external caller writes, so there is no second import style for code that happens to ship in the same distribution.
+
+It works because the dependency runs one way only: `domain_a` knows nothing about `domain_b` and never imports it. Keep that direction deliberate — two domains importing each other's facades is a real cycle, and usually means a shared model is in the wrong place (see [Breaking a cycle](#breaking-a-cycle)).
+
+### Why apply this even when Python does not fail
+
+Breaking Rule 1 often *appears* to work. A package being imported is registered in `sys.modules` while it is still initialising, so a facade import from below is frequently satisfied from that half-finished module without raising anything. It fails only when the name is read before the facade has assigned it — which depends on *which module the process imports first*, something a library cannot control.
+
+Apply the rules regardless of whether the current import order happens to succeed:
+
+- The failure mode is an `ImportError`/`AttributeError` at import time in an unrelated part of the codebase, triggered by a change that touched neither module.
+- Whether it fails differs per entry point, so an application, a script, and the test suite can disagree about whether the package imports at all.
+- The facade stops being safe to reorganise, which is the entire reason it exists.
+
+Treat the rules as structural rather than as a fix for an error you have already seen, and verify them with the static check below instead of with a passing import.
+
+### Circular imports
+
+A circular import is two or more modules that import each other, directly or through an `__init__.py`. `__init__.py` is the *leaf importer* — it imports from the modules below it, never the other way around — so importing a package facade from one of its own modules closes a loop:
+
+```
+example_package/domain_b/__init__.py       imports  interfaces/some_interface.py
+interfaces/some_interface.py               imports  example_package.domain_b    ← back to the facade
+```
+
+For the reasons above, such a cycle can sit in the codebase unnoticed until an unrelated change alters the import order. Verify statically instead of trusting that imports currently succeed — see [Checking circular imports](./StaticCodeAnalysis.md#checking-circular-imports).
+
+### Breaking a cycle
+
+In order of preference:
+
+1. **Import from the defining module** instead of from the facade. This is the fix for nearly every cycle Pylint reports, and it costs nothing.
+2. **Move the shared type up** into a package both sides may import, when two domains genuinely need the same model — that is what `example_package/models/` is for. A cycle between two domains is usually a misplaced model, not an import problem.
+3. **Import only for type checking** with `if typing.TYPE_CHECKING:` and a string annotation, when the import exists purely for annotations. This removes the import at runtime and with it the cycle, but it hides the design problem instead of fixing it, so use it last.
