@@ -9,5 +9,6 @@ For packaging Python projects, see [Python Packages Documentation](../../package
 - [`__init__.py` — Package Initialisation](./Package_Initialization.md)
 - [Logging](./Logging.md)
 - [Exceptions](./Exceptions.md)
+- [Functions](./Functions.md)
 
 Further reading can be found in the [official Python documentation](https://www.python.org/doc/).
