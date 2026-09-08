@@ -123,24 +123,24 @@ The docstring therefore carries the whole file; see [the docstring template](#th
 
 #### Local facade
 
-The package *is* the supported import path for the names its own modules define, and declares them in `__all__`:
+The package *is* the supported import path for the names its own modules define, and declares them in `__all__`, such as (see [template](#the-__init__py-docstring-template)):
 
 ```python
 """
-Local facade for example_package.models; it owns the shared model types.
+Local facade for `example_package.models`.
 
-See <link to this document> for the pattern and rules.
+The shared models are a surface callers depend on by name, so this package owns them and is the one
+supported path to each of them.
 
-The models are re-exported here so callers can import them from the package and stay unaffected by
-which file each model lives in:
-    from example_package.models import SharedModel, OtherModel
+See <link to this document> for the patterns and rules.
 
-What belongs here:
-    Models that are not owned by one domain, so no domain has to import another domain just to
-    reuse a concept common to all of them.
+How to use it: import the models from this package, so a caller stays unaffected by which file each
+model lives in:
+    from example_package.models import OtherModel, SharedModel
 
-What does not belong here:
-    Anything a single domain owns — those live in that domain's package.
+What this package is for: models that are not owned by one domain, so no domain has to import
+another domain just to reuse a concept common to all of them. Anything a single domain owns does not
+belong here — that lives in the domain's own package.
 """
 from example_package.models.other_model import OtherModel
 from example_package.models.shared_model import SharedModel
@@ -198,28 +198,30 @@ Once the decision is made, it has to be written down in the file that implements
 
 See <link to this document> for the patterns and rules.
 
-<How callers import from here — the supported path(s), or, for a marker, where the contents are
+How to use it: <How callers import from here — the supported path(s), or, for a marker, where the contents are
 exported instead:>
     from <full.dotted.package> import SomeName
 
-<What this package is for: what belongs in it, what does not, and any import deliberately skipped.>
+What this package is for: <what belongs in it, what does not, and any import deliberately skipped.>
 """
 ```
 
-Filled in for a [marker](#marker), where the docstring *is* the whole file:
+**Example:** Filled in for a [marker](#marker), where the docstring *is* the whole file:
 
 ```python
 """
-Marker `__init__.py` for `example_package.domain_b.models`; it exposes nothing.
+Marker for `example_package.domain_b.models`.
 
 The records are owned one level up, so there is exactly one supported path to each of them.
 
 See <link to this document> for the patterns and rules.
 
-Callers import them from the owning facade:
+How to use it: nothing is exported here; the records are imported from the facade that owns them:
     from example_package.domain_b import SomeRecord
 
-This package exists to keep one module per model concern instead of one growing models.py.
+What this package is for: one module per model concern instead of one growing models.py. A new
+record gets its own module here and is exported by `example_package.domain_b`; nothing is added to
+this file.
 """
 ```
 
@@ -401,19 +403,25 @@ class _RetryState:  # private and not in __all__: internal helper, never forward
     ...
 ```
 
+The root then forwards that module together with every sub-package, such as (see [template](#the-__init__py-docstring-template)):
+
 ```python
 """
-Top-level aggregation facade for example_package.
+Aggregation facade for `example_package`.
 
-See <link to this document> for the pattern and rules.
+It is the distribution root, so everything public has to be reachable from it in a single import.
 
-Everything public is forwarded here so callers can import from the distribution root:
+See <link to this document> for the patterns and rules.
+
+How to use it: callers import from the distribution root instead of reaching into sub-modules:
     from example_package import SomeClient
-instead of reaching into sub-modules:
-    from example_package.domain_a.some_client import SomeClient
+    from example_package.domain_a.some_client import SomeClient  # not this
 
-Each import below relies on the `__all__` of the package or module it forwards, so this file
-declares no `__all__` of its own and cannot expose anything its owners did not.
+What this package is for: forwarding the public surface of every sub-package and top-level module,
+and attaching the logging NullHandler. It owns no names and declares no `__all__` of its own, so it
+cannot expose anything its owners did not. `example_package.domain_b.providers.*` is deliberately
+not forwarded — provider packages pull in supplier-specific dependencies and are named explicitly by
+the caller.
 """
 import logging
 
@@ -430,7 +438,7 @@ from example_package.models import *    # forwards example_package/models/__init
 from example_package.domain_a import *  # forwards example_package/domain_a/__init__.py.__all__
 from example_package.domain_b import *  # forwards example_package/domain_b/__init__.py.__all__
 
-# NOTE: example_package.domain_b.providers.* is deliberately not forwarded — provider packages pull in supplier-specific dependencies and are named explicitly by the caller.
+# NOTE: example_package.domain_b.providers.* is deliberately not forwarded, see the docstring above.
 ```
 
 ### Nested sub-packages
@@ -479,17 +487,22 @@ The three outcomes, with what each `__init__.py` looks like:
 
 ##### Outcome 2.1 — a domain directly under the root
 
-The parent is the root, which owns nothing and declares no `__all__`, so forwarding costs one line and stops there:
+The parent is the root, which owns nothing and declares no `__all__`, so forwarding costs one line and stops there, such as (see [template](#the-__init__py-docstring-template)):
 
 ```python
 """
-Local facade for example_package.domain_a; it owns the clients its own modules define.
+Local facade for `example_package.domain_a`.
 
-See <link to this document> for the pattern and rules.
+The domain is a surface callers name directly, so it owns the clients its own modules define.
 
-Callers can import them from here, or from the distribution root:
+See <link to this document> for the patterns and rules.
+
+How to use it: import from this package, or from the distribution root, which forwards it:
     from example_package.domain_a import SomeClient
     from example_package import SomeClient
+
+What this package is for: everything the domain publishes, defined in one module per client. The
+modules stay free to move, because this file is the only thing a caller sees.
 """
 from example_package.domain_a.some_client import SomeClient
 
@@ -505,20 +518,24 @@ from example_package.domain_a import *
 
 ##### Outcome 2.2 — a package nested inside a domain
 
-The package itself looks exactly like 2.1 — it owns what its modules define and declares it:
+The package itself looks exactly like 2.1 — it owns what its modules define and declares it, such as (see [template](#the-__init__py-docstring-template)):
 
 ```python
 """
-Local facade for example_package.domain_b.interfaces; it owns the domain's interfaces.
+Local facade for `example_package.domain_b.interfaces`.
 
-See <link to this document> for the pattern and rules.
+"interfaces" is a concept callers depend on by name, so this package is promoted from a marker to a
+surface of its own.
 
-Callers can import them from here, or from the domain facade one level up:
+See <link to this document> for the patterns and rules.
+
+How to use it: import from this package, or from the domain facade one level up, which forwards it:
     from example_package.domain_b.interfaces import SomeInterface
     from example_package.domain_b import SomeInterface
 
-The interfaces define the roles of the domain's components independently of their implementations,
-so application code can talk to a component generically and implementations can be swapped.
+What this package is for: the interfaces define the roles of the domain's components independently
+of their implementations, so application code can talk to a component generically and
+implementations can be swapped. The implementations themselves belong in `providers/`, never here.
 """
 from example_package.domain_b.interfaces.some_interface import OtherInterface, SomeInterface
 
@@ -528,23 +545,27 @@ __all__ = [
 ]
 ```
 
-**The difference is the level above.** `domain_b` is not the root: it owns names of its own *and* is forwarded to the root, so a bare `import *` would leave the interfaces stranded at that level. It has to bind *and* re-declare — see [A facade that owns *and* forwards](#a-facade-that-owns-and-forwards):
+**The difference is the level above.** `domain_b` is not the root: it owns names of its own *and* is forwarded to the root, so a bare `import *` would leave the interfaces stranded at that level. It has to bind *and* re-declare — see [A facade that owns *and* forwards](#a-facade-that-owns-and-forwards), such as (see [template](#the-__init__py-docstring-template)):
 
 ```python
 """
-Facade for example_package.domain_b, organised by responsibility rather than by supplier:
+Local *and* aggregation facade for `example_package.domain_b`.
+
+It owns the models and helpers its own modules define, and forwards `interfaces`, which is a surface
+callers name in its own right.
+
+See <link to this document> for the patterns and rules.
+
+How to use it: roles, models, and helpers are all reachable from this package in one line:
+    from example_package.domain_b import SomeInterface, SomeRecord
+
+What this package is for: the domain, organised by responsibility rather than by supplier:
     interfaces/     the roles callers depend on, forwarded from their own facade
     models/         a marker grouping; the records are owned here
     some_module.py  the helpers shared by every implementation
     providers/      one package per supplier, named explicitly by the caller
-
-See <link to this document> for the pattern and rules.
-
-Roles, models, and helpers are all reachable from this package in one line:
-    from example_package.domain_b import SomeInterface, SomeRecord
-
-Provider packages are deliberately *not* forwarded, so importing this package does not pull in
-every supplier's dependencies and it stays obvious at the call site which supplier is used:
+Provider packages are deliberately *not* forwarded, so importing this package does not pull in every
+supplier's dependencies and it stays obvious at the call site which supplier is used:
     from example_package.domain_b.providers.provider_x import ProviderXClient
 """
 # Forwarded surface — the `*` binds the names here, the `__all__` import declares them further
@@ -567,23 +588,24 @@ __all__ = _interfaces_all + [
 
 #### Outcome 3 — local facade, not forwarded
 
-**An opt-in surface.** A package with dependencies of its own, such as a supplier adapter, is a public surface but is left out of the aggregation above it, so its dependencies are only imported when that supplier is actually used and the call site names it. It is an ordinary [local facade](#local-facade) — the only difference is the absence of a forward one level up, which the docstring has to state so the next reader does not "fix" it:
+**An opt-in surface.** A package with dependencies of its own, such as a supplier adapter, is a public surface but is left out of the aggregation above it, so its dependencies are only imported when that supplier is actually used and the call site names it. It is an ordinary [local facade](#local-facade) — the only difference is the absence of a forward one level up, which the docstring has to state so the next reader does not "fix" it, such as (see [template](#the-__init__py-docstring-template)):
 
 ```python
 """
-Local facade for example_package.domain_b.providers.provider_x; it owns this supplier's clients.
+Local facade for `example_package.domain_b.providers.provider_x`.
 
-It is deliberately NOT forwarded upwards, so provider_x's dependencies are only imported when this
-supplier is actually used and the call site always names the supplier it is bound to.
+The supplier is an opt-in surface: this package owns its clients but is deliberately NOT forwarded
+upwards, so its dependencies are only imported when the supplier is actually used.
 
-See <link to this document> for the pattern and rules.
+See <link to this document> for the patterns and rules.
 
-Callers name the supplier explicitly:
+How to use it: callers name the supplier explicitly, because no facade above forwards this package:
     from example_package.domain_b.providers.provider_x import ProviderXClient
 
-Everything supplier-specific lives here: endpoints, payload shapes, authentication. The clients
-implement the roles in example_package.domain_b.interfaces and return the provider-neutral models
-in example_package.domain_b.models, so a supplier can be replaced without a call site changing.
+What this package is for: everything supplier-specific — endpoints, payload shapes, authentication.
+The clients implement the roles in `example_package.domain_b.interfaces` and return the
+provider-neutral models in `example_package.domain_b.models`, so a supplier can be replaced without
+a call site changing.
 """
 from example_package.domain_b.providers.provider_x.some_client import ProviderXClient
 
