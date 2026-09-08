@@ -64,7 +64,7 @@ The message reports the *cycle*, not the offending line: `example_package.dns ->
 
 ### Resolving a cyclic import
 
-The cause is almost always a module importing from its own package facade rather than from the module that defines the name. See [Importing from within the package itself](./Package_Initialization.md#importing-from-within-the-package-itself) for the rule that `__init__.py` is the leaf importer: it imports from the modules below it, never the other way around.
+The cause is almost always a module importing from its own package facade rather than from the module that defines the name. See [Importing from within the package itself](./Package_Initialization_Importing.md#importing-from-within-the-package-itself) for the rule that `__init__.py` is the leaf importer: it imports from the modules below it, never the other way around.
 
 **Solution for above example:**
 - **Inside a package, import from the defining module** (`from example_package.dns.models.dns_record import DNSRecordSet`), not from the package facade (`from example_package.dns import DNSRecordSet`). The facade is for callers outside the package.
