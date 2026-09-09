@@ -53,6 +53,11 @@ See for more details the [General Official Python Documentation](https://docs.py
     - [Fix 1 — import from the defining module](#fix-1--import-from-the-defining-module)
     - [Fix 2 — give the shared concept a proper owner](#fix-2--give-the-shared-concept-a-proper-owner)
     - [Fix 3 — import only for type checking](#fix-3--import-only-for-type-checking)
+- [Applications that consume packages but publish none](#applications-that-consume-packages-but-publish-none)
+  - [What changes and what does not](#what-changes-and-what-does-not)
+  - [Why markers are the default here](#why-markers-are-the-default-here)
+  - [Layout and entry point](#layout-and-entry-point)
+  - [When an application still wants a facade](#when-an-application-still-wants-a-facade)
 
 ---
 
@@ -65,6 +70,7 @@ See for more details the [General Official Python Documentation](https://docs.py
 - **Every `__init__.py` starts with a docstring** that follows [the docstring template](#the-__init__py-docstring-template): which of the three patterns it uses, why, how to import from it, and what the package is for. In a marker file the docstring *is* the file, so it is the only thing telling the next reader why nothing is exported here.
 - **`__init__.py` contains no logic.** It imports, it declares `__all__`, and nothing else. Behaviour belongs in a module, not in the file that runs on every import.
 - **Import from the defining module when you sit below the facade that exports you, from the owning facade everywhere else.** A module that imports a facade which imports it back imports itself. See [Importing from within the package itself](#importing-from-within-the-package-itself).
+- **An application publishes nothing.** Code that is run rather than imported has no external caller, so every package in it defaults to a marker and its modules import each other by defining module; see [Applications that consume packages but publish none](#applications-that-consume-packages-but-publish-none).
 - **Document skipped imports.** If a module is intentionally excluded from `__init__.py` (e.g. because it requires an optional binary such as `git`), explain why in the docstring so the next reader does not add it by mistake.
 - **Logging.** The top-level package is the only `__init__.py` that runs code, to attach a `NullHandler`; see [Logging](./Logging.md).
 - **Functions, Classes & Generics.** What is exported here is defined elsewhere; see [Functions](./Functions.md) and [Classes & Generics](./Classes_Generics.md).
@@ -738,3 +744,100 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from example_package.a import A
 ```
+
+---
+
+## Applications that consume packages but publish none
+
+Everything above assumes a **distribution**: code someone else imports, so every `__init__.py` has to answer *"which import path do we want callers to write?"*. An **application** — a CLI, a service, a scheduled job, a deployment script — is the other case: it is *run*, not imported. Nothing outside it ever writes `from example_app import X`, so the [ownership question](#the-ownership-question) has the same answer in every directory and the whole first half of this document collapses into one default: **marker**.
+
+> `example_app` stands for the application's top-level package — the import root of code that is executed rather than published.
+
+### What changes and what does not
+
+| | Distribution (`example_package`) | Application (`example_app`) |
+|---|---|---|
+| Who imports it | external callers | only the application itself |
+| Default pattern | decided per package, see [the ownership question](#the-ownership-question) | [marker](#marker) everywhere |
+| `__all__` | declared by every owner | only where something star-imports it — in practice, nowhere |
+| Import path used internally | [defining module below a facade, owning facade elsewhere](#which-path-to-use) | the defining module, always |
+| Imports of *other* distributions | through their owning facade | unchanged — the app is an ordinary external caller |
+| Code in `__init__.py` | only the root `NullHandler` | none at all; logging is *configured* in the entry point (see [Logging](./Logging.md)) |
+| Entry point | none | `__main__.py`, or a `main()` referenced by a console script |
+
+What does not change: every importable directory still has an `__init__.py` and is never left as a [namespace package](https://peps.python.org/pep-0420/), every one of those files still opens with the docstring from [the template](#the-__init__py-docstring-template), and none of them contains logic.
+
+### Why markers are the default here
+
+A facade earns its keep by decoupling a caller from a file layout the caller cannot see. In an application the caller *is* that layout — same repository, changed in the same commit — so a facade buys no decoupling and costs two things:
+
+- **A second path to every name**, so the codebase drifts into importing the same class two different ways.
+- **Cycles.** Every module of an application belongs to one chain rooted at the entry point, so importing a facade from inside the app is almost always the [import-your-own-facade](#circular-imports-and-how-to-break-them) mistake — and it fails or not depending on which module the interpreter happens to reach first.
+
+**So application code — including its tests — imports the defining module:**
+
+```python
+# example_app/cli.py
+from example_app.services.report_service import ReportService  # ✅ the defining module
+from example_app.services import ReportService                 # ❌ a facade with no caller to serve
+
+from example_package.domain_a import SomeClient                # ✅ another distribution: its owning facade
+```
+
+### Layout and entry point
+
+```
+example_app/               the application (import root, never published)
+├── __init__.py            marker           nothing is exported; the app is run, not imported
+├── __main__.py            entry point      `python -m example_app`; the only file with logic
+├── cli.py                 defining module  defines main(), also referenced by the console script
+├── config.py              defining module
+└── services/
+    ├── __init__.py        marker
+    └── report_service.py  defining module  class ReportService: ...
+```
+
+The root docstring, filled in from [the template](#the-__init__py-docstring-template):
+
+```python
+"""
+Marker for `example_app`.
+
+The application is executed and never imported from outside this repository, so it publishes no
+names at all and every package below it is a marker as well.
+
+See <link to this document> for the patterns and rules.
+
+How to use it: there is nothing to import from here — the application is started through its entry
+point, and its own modules import each other by defining module:
+    python -m example_app
+    from example_app.services.report_service import ReportService
+
+What this package is for: the application's own code only. Logging is configured in
+`example_app.__main__`, not here: a NullHandler belongs to a library that must stay silent, whereas
+an application is the process that decides how logging is set up.
+"""
+```
+
+The entry point is where the process-level setup a library is not allowed to do belongs:
+
+```python
+# example_app/__main__.py
+import logging
+import sys
+
+from example_app.cli import main
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    sys.exit(main())
+```
+
+### When an application still wants a facade
+
+Two cases justify promoting a package inside an application to a [local facade](#local-facade), and both put a real caller back in the picture:
+
+1. **A part that genuinely is someone else's dependency** — a plugin API, an extension point, a package a sibling repository imports. That part is a distribution living in an application's directory tree; decide it with [the ownership question](#the-ownership-question) like any other package.
+2. **A package the application intends to extract later.** Giving it a facade now, and importing it through that facade from the rest of the app, makes the extraction a move instead of a rewrite — provided the facade is only imported from *outside* its own chain, see [Which path to use](#which-path-to-use).
+
+Everything else stays a marker, and the docstring says so. Promoting later only adds an import path, so the asymmetry from [start at marker and promote later](#nested-sub-packages) applies here too — with even less reason to promote early, because in an application there is no caller to break either way.
