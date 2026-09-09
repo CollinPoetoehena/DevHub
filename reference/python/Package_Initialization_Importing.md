@@ -6,14 +6,17 @@ The first half is a design decision, and the question it answers is never *"how 
 
 The second half follows from it: given those surfaces, which one a module *inside* the distribution may import from without turning a facade into a load-bearing part of the implementation.
 
-All packages should follow the best practices/conventions from Python itself:
+**All packages should follow the best practices/conventions from Python itself, such as:**
 
+- [The Import System](https://docs.python.org/3/reference/import.html) — how Python finds and loads modules.
 - [Modules — Packages](https://docs.python.org/3/tutorial/modules.html#packages) and [Importing \* From a Package](https://docs.python.org/3/tutorial/modules.html#importing-from-a-package) — what a package is and how `__all__` controls `import *`.
 - [PEP 420 — Implicit Namespace Packages](https://peps.python.org/pep-0420/) — what a directory *without* `__init__.py` becomes.
 - [PEP 8 — Imports](https://peps.python.org/pep-0008/#imports) and [Public and Internal Interfaces](https://peps.python.org/pep-0008/#public-and-internal-interfaces) — import style and what belongs to the public surface.
 - [PEP 257 — Docstring Conventions](https://peps.python.org/pep-0257/) — every `__init__.py` starts with a module docstring.
 
-Only the conventions that need extra attention, or that are specific to this codebase, are documented below.
+See for more details the [General Official Python Documentation](https://docs.python.org/3/).
+
+**Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
 > Throughout this document, `example_package` stands for the distribution's top-level package. The other names are placeholders too: `domain_a`/`domain_b` are sub-packages, `provider_x` a supplier package, and `SomeClient`/`SomeRecord`/`SomeInterface` the objects they export.
 
@@ -47,6 +50,9 @@ Only the conventions that need extra attention, or that are specific to this cod
   - [Which path to use](#which-path-to-use)
   - [Why apply this even when Python does not fail](#why-apply-this-even-when-python-does-not-fail)
   - [Circular imports and how to break them](#circular-imports-and-how-to-break-them)
+    - [Fix 1 — import from the defining module](#fix-1--import-from-the-defining-module)
+    - [Fix 2 — give the shared concept a proper owner](#fix-2--give-the-shared-concept-a-proper-owner)
+    - [Fix 3 — import only for type checking](#fix-3--import-only-for-type-checking)
 
 ---
 
@@ -87,6 +93,8 @@ example_package.domain_b.interfaces.SomeInterface  # ✅ or ❌ AttributeError �
 Every import path a caller can write is therefore a deliberate choice, made in exactly one `__init__.py`.
 
 ### `*` imports and `__all__`
+
+> See for full details the [official Python docs on `*` and `__all__`](https://docs.python.org/3/tutorial/modules.html#importing-from-a-package)
 
 `from module import *` imports every name that does not start with `_`, **unless** the module defines `__all__` — then it imports only the names listed there. `__all__` is what makes a public API explicit and keeps imported helpers (`dataclass`, `Optional`, `requests`, …) from leaking into the caller's namespace:
 
@@ -145,7 +153,7 @@ belong here — that lives in the domain's own package.
 from example_package.models.other_model import OtherModel
 from example_package.models.shared_model import SharedModel
 
-# Explicit public API, so an `import *` of this package cannot leak imported helpers (dataclass, Enum, TypeVar, ...) from the model modules.
+# Explicit public API, so an `import *` of this package cannot leak imported helpers (e.g. a private function) from the model modules.
 __all__ = [
     "OtherModel",
     "SharedModel",
@@ -187,6 +195,8 @@ Two consequences are worth spelling out, because both are easy to get wrong:
 **When in doubt, start with a marker. Not exposing something is reversible; every supported import path is a promise you have to keep to the caller.**
 
 ### The `__init__.py` docstring template
+
+> See for docstring convention in Python: [PEP 257 — Docstring Conventions](https://peps.python.org/pep-0257/).
 
 Once the decision is made, it has to be written down in the file that implements it — the docstring is the only place a reader can see *why* a package exposes what it exposes. Every `__init__.py` uses the same four blocks, in this order:
 
@@ -659,8 +669,72 @@ example_package/domain_b/__init__.py       imports  interfaces/some_interface.py
 interfaces/some_interface.py               imports  example_package.domain_b    ← back to the facade
 ```
 
-Such a cycle can sit unnoticed until an unrelated change alters the import order, so verify it statically instead of trusting that imports currently succeed — see [Checking circular imports](./StaticCodeAnalysis.md#checking-circular-imports). Fix it in this order of preference:
+Such a cycle can sit unnoticed until an unrelated change alters the import order, so verify it statically instead of trusting that imports currently succeed — see [Checking circular imports](./StaticCodeAnalysis.md#checking-circular-imports).
 
-1. **Import from the defining module** instead of from the facade. This is the fix for nearly every cycle Pylint reports, and it costs nothing.
-2. **Move the shared type up** into a package both sides may import, when two sub-packages genuinely need the same model — that is what `example_package/models/` is for. A cycle between two domains is usually a misplaced model, not an import problem.
-3. **Import only for type checking** with `if typing.TYPE_CHECKING:` and a string annotation, when the import exists purely for annotations. This removes the import at runtime and with it the cycle, but it hides the design problem instead of fixing it, so use it last.
+**Three fixes exist, and they are tried in this order — the first one resolves nearly every cycle a linter reports:**
+
+| # | Fix | Use it when | Cost |
+|---|---|---|---|
+| 1 | [Import from the defining module](#fix-1--import-from-the-defining-module) | A module imports a facade that sits above it in its own chain — the default case | None; it is the import the module should have written anyway |
+| 2 | [Give the shared concept a proper owner](#fix-2--give-the-shared-concept-a-proper-owner) | The cycle spans several modules or packages, so no single import is "the wrong one" | A layout change, but it removes the whole class of cycles |
+| 3 | [Import only for type checking](#fix-3--import-only-for-type-checking) | The import exists purely for annotations, and 1 and 2 do not apply | Hides the design problem instead of fixing it — last resort |
+
+#### Fix 1 — import from the defining module
+
+**Replace the facade import with an import of the module where the name is actually defined**, see [Which path to use](#which-path-to-use).
+
+Why this works: the facade is the *leaf importer* of its own chain, so it is always loaded *after* the modules it exports. A module that imports its own facade therefore waits on a module that is waiting on it, while the defining module sits below it in the same chain and has no import of its own that points back up. Replacing the path removes the edge that closes the loop, and nothing about the public API changes — external callers keep importing from the facade.
+
+```python
+# example_package/domain_b/interfaces/some_interface.py
+from example_package.domain_b import SomeRecord                     # ❌ the facade imports this module — cycle
+from example_package.domain_b.models.some_record import SomeRecord  # ✅ the defining module, one level down
+```
+
+#### Fix 2 — give the shared concept a proper owner
+
+**Reconsider the package design when the cycle spans multiple modules or packages.** A cycle that long is rarely one bad import; it is a symptom that a type, an abstraction, or a responsibility is owned by the wrong package, so packages depend on each other instead of following one clear direction. Example:
+
+```text
+example_package.metrics
+    ↓
+example_package.models.result
+    ↓
+example_package.models
+    ↓
+example_package.models.check
+    ↓
+example_package.models.test
+    ↓
+example_package.models.service_context
+    ↓
+example_package.metrics
+```
+
+Here several runtime abstractions (`Check`, `Test`, `ServiceContext`) were put in `models/` even though they carry framework *behaviour* rather than data, so `models/` ended up depending on `metrics/` — which depends on `models/`. Moving them into a package that owns runtime behaviour restores a one-way dependency:
+
+```text
+example_package/
+├── models/     shared data structures
+├── runtime/    runtime abstractions and execution logic
+└── utils/      shared utility helpers
+```
+
+Data, runtime behaviour, and utilities become distinct layers, each depending only on the layer below it, which removes this class of cycle by design rather than per import. Now each layer has one job and the dependency direction stays one-way (e.g. `bootstrap` → `runtime` → `models`/`utils`). 
+
+**This illustrates that redesigning into a proper package ownership and clear layering can prevent import cycles and maintain a clean, one-way dependency structure.**
+
+#### Fix 3 — import only for type checking
+
+**Use `if typing.TYPE_CHECKING:` with a string annotation when the import exists purely for annotations** (see the [official Python docs on `TYPE_CHECKING`](https://typing.python.org/en/latest/spec/directives.html#type-checking) and on [`__future__`](https://docs.python.org/3/library/__future__.html)). The import disappears at runtime and the cycle with it, but the design problem stays — so reach for this only after 1 and 2 are ruled out (prefer [option 2: Design for proper package ownership and layering](#fix-2--give-the-shared-concept-a-proper-owner)).
+
+```python
+# Store annotations as strings instead of resolving them immediately.
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+# Only imported by type checkers; skipped at runtime.
+if TYPE_CHECKING:
+    from example_package.a import A
+```
