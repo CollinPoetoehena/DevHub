@@ -283,6 +283,7 @@ Passing raw dictionaries around is the most common way a codebase loses its type
 - **Documentation**: The class and its attributes can be documented clearly, improving code readability.
 - **Discoverability & IDE support**: Autocompletion, go-to-definition, and documentation work on attributes; they do not work on string keys. Furthermore, autocompletion and type checking work better with explicit classes than with generic dictionaries.
 - **Consistency.** One representation of the concept across the codebase, instead of "whatever this particular function happened to build".
+- **Vendor neutrality.** A dedicated class (e.g. `DNSRecordSet`) ensures that your code does not depend on the specific structure of dictionaries returned by different libraries or APIs (e.g. the provider `PowerDNS`), promoting a consistent and neutral interface across the codebase. If you change providers or underlying libraries, only the class and its converter methods need to be updated (instead of every call site), keeping the rest of the codebase unaffected.
 
 ```python
 # ❌ The shape is implicit, unchecked, and duplicated at every call site
