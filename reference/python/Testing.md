@@ -37,6 +37,7 @@ This document describes the testing design used in Python. All packages should f
 **The test tree mirrors the source tree**, one directory per source package and one test module per source module, so locating and maintaining a test is mechanical rather than a search. The test module keeps the source module's name with a test_ prefix, and sits at the same position in the tree — so the path of a test is derivable from the path of the code it covers, in both directions:
 
 ```
+example_package/:
 src/example_package/              test/
 ├── __init__.py                   ├── __init__.py                  required, see below
 ├── exceptions.py                 ├── conftest.py                  suite-wide fixtures
@@ -85,9 +86,12 @@ testpaths = ["test"]
 - **Run the whole suite, or one file:**
   ```bash
   cd example_package
-  pytest test/                       # everything
-  pytest test/test_domain_a.py       # one module
-  pytest test/ -k "timeout"          # one behaviour across modules
+  pytest test/                                                            # everything
+  pytest test/domain_a/                                                   # one entire module
+  pytest test/test_domain_a.py                                            # one module file
+  pytest test/test_domain_a.py::TestDomainA                               # one test class in one module file
+  pytest test/test_domain_a.py::TestDomainA::test_specific_behavior       # one test function in one module file
+  pytest test/ -k "timeout"                                               # one behaviour across modules
   ```
 - **Optional: Verify against the published artifact before a release.** Publish the version, install it into the venv (see [docs/1_LocalSetup_Prerequisites.md](../../1_LocalSetup_Prerequisites.md)), activate the venv, and run the suite from a directory *outside* `src/`. This catches what a `sys.path` run cannot: a module missing from the wheel, a package that was never declared, or a missing runtime dependency that only worked locally because it happened to be installed.
 - **Both modes run the same tests.** Nothing in the suite may depend on which of the two is in use — a test that imports through a relative path or reaches into `src/` breaks the installed run and defeats the check.
