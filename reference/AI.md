@@ -7,7 +7,7 @@ Practical reference on AI — what it is, agents, prompt engineering, and how I 
 ## Table of Contents
 
 - [AI & ML Background](#ai--ml-background)
-  - [What is AI?](#what-is-ai)
+  - [What is AI & ML?](#what-is-ai--ml)
   - [Models, Harnesses & Example Models](#models-harnesses--example-models)
   - [AI Agents](#ai-agents)
   - [Prompt Engineering](#prompt-engineering)
@@ -15,7 +15,10 @@ Practical reference on AI — what it is, agents, prompt engineering, and how I 
   - [Conclusion](#conclusion)
 - [Framework: Which AI Tool/Model for Which Task](#framework-which-ai-toolmodel-for-which-task)
   - [1. General purpose](#1-general-purpose)
+    - [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot)
   - [2. Specific](#2-specific)
+    - [Coding](#coding)
+    - [Other Specific applications](#other-specific-applications)
 - [4-Tier Model Framework (Credit Efficiency)](#4-tier-model-framework-credit-efficiency)
   - [Practical Rule of Thumb](#practical-rule-of-thumb)
 
@@ -25,9 +28,9 @@ Practical reference on AI — what it is, agents, prompt engineering, and how I 
 
 > **Note:** This section is deliberately short — AI/ML is a very large and fast-moving field. See the further reading links below each subsection for more depth and details, the section itself is kept concise.
 
-### What is AI?
+### What is AI & ML?
 
-Artificial Intelligence (AI) is, broadly, the field of building systems that perform tasks which normally require human intelligence — recognizing patterns, understanding language, reasoning, and generating content. **Machine Learning (ML)** is the main approach behind most modern AI: instead of hand-coded rules, a model learns patterns directly from large amounts of data. Most of the tools referenced on this page (ChatGPT, GitHub Copilot, Claude, Gemini, etc.) are built on **Large Language Models (LLMs)** — a type of ML model trained on huge amounts of text/code that predict and generate text, and that can be extended with tools/agents to take actions (search, run code, edit files, call APIs, etc.).
+**Artificial Intelligence (AI)** is, broadly, the field of building systems that perform tasks which normally require human intelligence — recognizing patterns, understanding language, reasoning, and generating content. **Machine Learning (ML)** is the main approach behind most modern AI: instead of hand-coded rules, a model learns patterns directly from large amounts of data. Most of the tools referenced on this page (ChatGPT, GitHub Copilot, Claude, Gemini, etc.) are built on **Large Language Models (LLMs)** — a type of ML model trained on huge amounts of text/code that predict and generate text, and that can be extended with tools/agents to take actions (search, run code, edit files, call APIs, etc.).
 
 **Further reading:**
 
@@ -125,18 +128,28 @@ AI is a game changer for Software Engineers and in general life — **but only i
 
 ### 1. General purpose
 
-Whatever general-purpose AI chat tool your company recommends/provides (e.g. ChatGPT, Microsoft Copilot, Google Gemini, etc.) — use this for general theory, explanations, learning, writing/documentation help, brainstorming, and any non-specific tasks (e.g. non-coding-specific tasks). This is typically already available to you at no extra effort/cost (e.g. it does not cost you *monthly credits* for GitHub Copilot if you use Microsoft Copilot for those tasks, etc.), so it's a good default for anything that isn't tied to a specific codebase or specific application.
+Whatever general-purpose AI chat tool your company recommends/provides (e.g. ChatGPT, Microsoft Copilot, Google Gemini, etc.) — use this for general theory, explanations, learning, writing/documentation help, brainstorming, design/architecture, thinking, and any non(-application)-specific tasks (e.g. non-coding-specific tasks). This is typically already available to you at no extra effort/cost (e.g. it does not cost you *monthly credits* for GitHub Copilot if you use Microsoft Copilot for those tasks (see [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot) below), etc.), so it's a good default for anything that isn't tied to a specific codebase or specific application.
+
+#### Billing/Cost of General‑purpose AI tools like Microsoft Copilot
+General‑purpose AI services like Microsoft Copilot are typically billed at the **subscription or platform level**, meaning the cost of running AI models is *covered by the plan or license* you’re on rather than charged per prompt or per individual user (unlike GitHub Copilot’s individually metered credits). **Microsoft Copilot example:**
+- **Personal Microsoft 365 subscription** — You personally have effectively unlimited Copilot usage because all AI compute is included in your license. Access to higher‑end reasoning models may still be **rate‑limited, feature‑restricted, or subject to fair‑use controls** depending on your subscription tier, but you are never billed per prompt or for selecting a more advanced model.
+- **Organizational Microsoft 365 account** — You likewise have effectively unlimited personal usage, but all backend AI compute — including the higher cost of advanced reasoning models — is billed at the **tenant/organization level**. Organizations may implement **usage monitoring, throttling, access controls, departmental restrictions, or governance policies** to manage compute spend, ensure compliance, protect data, and control who can use higher‑end models or resource‑intensive features.
 
 ### 2. Specific
 
-**Coding**
+These are AI tools that are designed for specific tasks or applications, rather than being general-purpose. They often have deeper integration with particular platforms or workflows, making them more efficient for those contexts. Below I explain two categories I focus on: coding and other specific applications (e.g. Atlassian products, Microsoft 365 apps, etc.).
 
-For coding specifically, my personal preference is **GitHub Copilot in VS Code**. This is usually available through your company because it helps engineers work faster and better — so what you actually use highly depends on what your company supports/provides. See the [4-Tier Model Framework](#4-tier-model-framework-credit-efficiency) below for how to pick a model tier within Copilot (or similar tools) efficiently and avoid wasting credits.
+#### Coding
+
+For coding specifically, my personal preference is **GitHub Copilot in VS Code**. This is usually available through your company because it helps engineers work faster and better — so what you actually use highly depends on what your company supports/provides. 
+
+These tools are usually billed at the **individual user level**, meaning each user consumes credits or incurs costs based on their own usage rather than being covered by a broader subscription or organizational plan like general-purpose AI tools like Microsoft Copilot (see [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot)).
+
+See the [4-Tier Model Framework](#4-tier-model-framework-credit-efficiency) below for how to pick a model tier within Copilot (or similar tools) efficiently and avoid wasting credits.
 
 > **Note:** This is just a reference with general explanation (as explained before), for the full tutorial and guide on how to use VS Code with GitHub Copilot, refer to the [official documentation and tutorials provided by GitHub](https://docs.github.com/en/copilot), such as [Getting Started with GitHub Copilot in VS Code](https://docs.github.com/en/copilot/get-started/quickstart?tool=vscode).
 
-**Other Specific applications**
-
+#### Other Specific applications
 Many tools you already use have their own built-in AI features, which are often the fastest way to get something done because they already have full context of that application/data. Examples:
 
 - **Atlassian products (Confluence, Jira)** — e.g. **Rovo**, for generating/summarizing documentation, searching across spaces, and answering questions grounded in your team's own content.
@@ -156,15 +169,16 @@ AI tools/assistants are usually metered by **credits** (a finite, often monthly,
 
 | Tier | Cost | Use for | Example models (Claude / GPT / Gemini) |
 |---|---|---|---|
-| **No cost** | Free / included in your license (no metered credits, unlike GitHub Copilot's coding credits) | General theory, explanations, and learning — anything not tied to your actual codebase (see [General purpose](#1-general-purpose) above). This also includes application‑integrated AI already covered by your license, such as Atlassian Confluence/Jira’s **Rovo** for generating, searching, and summarizing documentation (see [Specific applications](#2-specific) above). | Any general chat tool available to you (ChatGPT, Microsoft Copilot, Gemini, etc.), plus built‑in app AI like Confluence Rovo. **Tip:** In tools like Microsoft Copilot, you can manually switch to a higher‑tier reasoning model (e.g., `Claude Opus`, `Claude Sonnet`, `GPT‑5`, etc.) when needed, see details in the [*Practical Rule of Thumb*](#practical-rule-of-thumb) below for when to use higher‑tier reasoning models. |
-| **Low cost** | Cheapest coding tier | Docs, simple/small changes in your codebase, quick questions, small scripts, formatting/rewording/grammar, etc. | Claude Haiku / GPT-5 Mini / Gemini Flash |
-| **Medium cost** | Moderate | Most day-to-day coding tasks: features, Terraform/Kubernetes/Helm configs, CI/CD, troubleshooting, code review, refactoring, etc. | Claude Sonnet / GPT-5 / Gemini Pro |
-| **High cost** | Most expensive | ONLY for very large tasks and/or many things at once — large migrations, big multi-file/architectural changes, large-scale refactoring, deep root-cause debugging, security reviews, etc. Use sparingly. | Claude Opus / GPT-5 (deep reasoning) / Gemini Pro (advanced reasoning) |
+| **No cost** | **Free / included in your license** (see for how these are billed: [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot)) | General theory, explanations, brainstorming, design/architecture, thinking, learning, etc. — anything not tied to your actual codebase (you can of course still use it for coding-related tasks, but for actually changing the code these tools are less convenient than an integrated tool like GitHub Copilot), see [General purpose](#1-general-purpose) above. This also includes application‑integrated AI already covered by your license, such as Atlassian Confluence/Jira’s **Rovo** for generating, searching, and summarizing documentation (see [Specific applications](#2-specific) above). | Any general chat tool available to you (ChatGPT, Microsoft Copilot, Gemini, etc.), plus built‑in app AI like Confluence Rovo. **Tip:** In tools like Microsoft Copilot, you can manually switch to a higher‑tier reasoning model (e.g., `Claude Opus`, `Claude Sonnet`, `GPT‑5`, etc.) when needed (see details in the [*Practical Rule of Thumb*](#practical-rule-of-thumb) below for when to use higher‑tier reasoning models). |
+| **Low cost** | Cheapest coding tier (see for billing with these AI tools: [Specific AI: Coding](#coding)) | Docs, simple/small changes in your codebase, quick questions, small scripts, formatting/rewording/grammar, etc. | Claude Haiku / GPT-5 Mini / Gemini Flash |
+| **Medium cost** | Moderate (see for billing with these AI tools: [Specific AI: Coding](#coding)) | Most day-to-day coding tasks: features, Terraform/Kubernetes/Helm configs, CI/CD, troubleshooting, code review, refactoring, etc. | Claude Sonnet / GPT-5 / Gemini Pro |
+| **High cost** | Most expensive (see for billing with these AI tools: [Specific AI: Coding](#coding)) | ONLY for very large tasks and/or many things at once — large migrations, big multi-file/architectural changes, large-scale refactoring, deep root-cause debugging, security reviews, etc. Use sparingly. | Claude Opus / GPT-5 (deep reasoning) / Gemini Pro (advanced reasoning) |
 
 > **Personal experience:** for the **no cost** tier, it hasn't really mattered much which tool I use — for example Microsoft Copilot and ChatGPT are very comparable. But for all the **coding** tiers (low through high), I've generally found the **Claude models** perform noticeably better than the alternatives (at least as of 2026).
 
 ### Practical Rule of Thumb
 **Practical rule of thumb I use:** For *general, non-coding tasks*, stick with the **no-cost tier** (optionally switching to higher-reasoning models when needed). For *coding* tasks, start with a **lower or mid-tier** model and only move up to **higher tiers** if the task becomes more complex or the results aren't sufficient. The **no-cost** tier is also great for *general-purpose work* and serves as a useful *safety net* or fallback if you run out of coding credits.
 1. **General / non‑coding / not in your repository:** Use the **no‑cost** tier for anything that isn’t tied to your codebase — general theory, explanations, documentation, research, planning, and learning. The **default/automatic model** (e.g., Microsoft Copilot’s standard model) is usually sufficient here. When you need deeper reasoning — such as architectural exploration, algorithm design, or complex technical research — you can optionally switch to a **higher‑tier reasoning model** (e.g., `Claude Opus`, `Claude Sonnet`, `GPT‑5`, etc.) even in the no‑cost tier, since these tasks don’t consume coding credits from GitHub Copilot for example.
+  - **Note:** The *default/automatic* model is usually sufficient here and should generally be your starting point. While many tools allow you to manually select a more advanced reasoning model (e.g. Claude Opus, Claude Sonnet, GPT‑5, etc.), these models usually still have restricted or limited access. Because of this, it's usually best to stay on *default/automatic* and only switch when you have a clear need for deeper reasoning, such as architectural exploration, algorithm design, difficult root-cause analysis, or complex technical research. This gives you the best balance between capability, availability, and cost efficiency. See for details on how these AI tools are billed: [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot).
 2. **Coding / in your repository:** Start with the **low** or **medium** tier by default: **Low tier** for quick edits, formatting, small scripts, or simple changes; **Medium tier** for most day‑to‑day coding tasks, troubleshooting, refactoring, configs, CI/CD, etc. Escalate to the **high** tier only when the task genuinely requires it — large blast radius, deep complexity, or when a cheaper tier has already struggled in a previous prompt. If your coding credits still run out for some reason, fall back to the **no‑cost** tier and manually select a **higher‑tier reasoning model** like `Claude Opus` when needed. This still allows deep research, architectural planning, algorithm design, and drafting (complex) code *outside* your repository without consuming metered credits. 
-  - **Usage note and tip for coding:** You can still provide context in a similar way to GitHub Copilot, although the workflow is slightly different. With GitHub Copilot in editors such as VS Code, you can directly select files or add them as context from within the editor. Here, you achieve the same result by uploading the relevant files, or even an entire project/folder (e.g. .zip of the project), directly in the chat (no manual copy-pasting required). In my experience, it's often best to ask for file-based outputs when doing coding-related prompts (for example, `.py` files) rather than chat responses, as the model can validate and compile the code before returning it, which tends to produce more reliable results. Another advantage is that you can easily review the generated changes after applying them in your local development environment using the VS Code Git integration, git diff, or your preferred diff tool, making it straightforward to inspect exactly what was added, removed, or modified before committing the changes.
+  - **Usage note and tip for coding if using general-purpose AI like Microsoft Copilot:** You can still provide context in a similar way to GitHub Copilot, although the workflow is slightly different. With GitHub Copilot in editors such as VS Code, you can directly select files or add them as context from within the editor. Here, you achieve the same result by uploading the relevant files, or even an entire project/folder (e.g. .zip of the project), directly in the chat (no manual copy-pasting required). In my experience, it's often best to ask for file-based outputs when doing coding-related prompts (for example, `.py` files) rather than chat responses, as the model can validate and compile the code before returning it, which tends to produce more reliable results. Another advantage is that you can easily review the generated changes after applying them in your local development environment using the VS Code Git integration, git diff, or your preferred diff tool, making it straightforward to inspect exactly what was added, removed, or modified before committing the changes.
