@@ -9,7 +9,7 @@ All packages should follow the best practices/conventions from Python itself:
 - [PEP 257 — Docstring Conventions](https://peps.python.org/pep-0257/) — what a docstring must state.
 - [`typing`](https://docs.python.org/3/library/typing.html) — type hints, including [`typing.overload`](https://docs.python.org/3/library/typing.html#typing.overload) used below.
 
-Only the conventions that need extra attention, or that are specific to this codebase, are documented below.
+**Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
 ## Table of Contents
 

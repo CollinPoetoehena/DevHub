@@ -4,7 +4,9 @@ This document describes the exception design used across all `devhub_*` packages
 
 All packages should follow the best practices/conventions from Python, see [Python Errors and Exception Documentation](https://docs.python.org/3/tutorial/errors.html) for best practices and documentation.
 
-Patterns that need extra attention or specific information to this codebase are documented below:
+Patterns that need extra attention or specific information to this codebase are documented below.
+
+**Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
 ## Table of Contents
 

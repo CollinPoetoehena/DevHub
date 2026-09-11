@@ -8,11 +8,13 @@ For packaging Python projects, see [Python Packages Documentation](../../package
 
 ## Table of Contents
 
+- [Python DevHub Packages Setup](../../packages/Python.md)
 - [`__init__.py` — Package Initialisation & Importing](./Package_Initialization_Importing.md)
 - [Logging](./Logging.md)
 - [Exceptions](./Exceptions.md)
 - [Functions](./Functions.md)
 - [Classes & Generics](./Classes_Generics.md)
+- [Testing](./Testing.md)
 - [Static Code Analysis](./StaticCodeAnalysis.md)
 
 Further reading can be found in the [official Python documentation](https://www.python.org/doc/).

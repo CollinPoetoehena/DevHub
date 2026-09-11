@@ -100,6 +100,10 @@ When creating a new package repository, use the following template as the starti
 
 List any dependencies or prerequisites here.
 
+## Testing
+
+See for all details on **testing Python packages**: [DevHub/reference/python/Testing.md](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/python/Testing.md).
+
 ## Usage
 
 Installation and usage instructions for the Python package:

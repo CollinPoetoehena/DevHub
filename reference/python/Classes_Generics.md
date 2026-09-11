@@ -12,7 +12,7 @@ All packages should follow the best practices/conventions from Python itself:
 - [Type hints for generics — `typing` HOWTO](https://typing.python.org/en/latest/reference/generics.html) — the reference for the generics rules summarised below.
 - [A First Look at Classes](https://docs.python.org/3/tutorial/classes.html#a-first-look-at-classes) and [Private Variables](https://docs.python.org/3/tutorial/classes.html#private-variables) — the reference for the OOP fundamentals summarised below.
 
-Only the conventions that need extra attention, or that are specific to this codebase, are documented below.
+**Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
 ## Table of Contents
 

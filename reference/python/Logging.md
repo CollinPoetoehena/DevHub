@@ -6,6 +6,8 @@ This hierarchy is the core mechanism that separates **library code** (which shou
 
 See for more details on logging best practices in Python: [Logging HowTo](https://docs.python.org/3/howto/logging.html) and [Logging Cookbook](https://docs.python.org/3/howto/logging-cookbook.html).
 
+**Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
+
 ---
 
 ## Table of Contents
