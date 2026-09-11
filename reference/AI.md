@@ -78,14 +78,15 @@ In practice (e.g. GitHub Copilot's *agent mode*), this means you can give it a t
 
 Prompt engineering is simply the practice of writing your input to an AI tool in a way that gets you better, more accurate, and more usable output. A few techniques/tips that consistently help:
 
-- **Be specific and give context.** State the goal, relevant constraints (language, framework, versions), and what "done" looks like. Vague prompts get vague answers.
+- **VERY IMPORTANT: Provide the necessary context, let the AI analyze it and generate a plan & Break large tasks into smaller steps.** First provide the AI with all the context required (in a new chat of course to only focus on this task), let it analyze and generate a plan, then break the task into smaller steps and tackle them one by one. This is often much better because the AI first has a clear understanding of the overall goal before diving into individual steps, and it can now use the analyzed and full context along with the generated plan to guide its actions for all further requests effectively. For example, when generating tests for your code, first provide the AI with the full context (e.g. the full repository with the code, the project structure (e.g. via `tree`), any relevant project context, etc.), let it analyze the context generate a testing plan, and then implement the tests step by step (e.g. per domain/sub-package), see details on this example in [DevHub/reference/python/Testing.md](./python/Testing.md#generating-tests-with-ai). *Vague or incomplete prompts get vague, incorrect and incomplete answers!*
 - **Show, don't just tell.** Provide examples of the input/output format you want, or an existing piece of code/style to match.
-- **Break large tasks into smaller steps.** Ask for a plan first or provide a plan yourself, then execute step by step, rather than one giant ambiguous request.
-- **Give it a role, when useful.** E.g. "review this as a senior security engineer" shifts the kind of feedback you get.
-- **Iterate.** Treat the first answer as a draft — refine with follow-up questions instead of expecting a perfect result immediately.
-- **Ask it to reason/explain, for hard problems.** Asking for step-by-step reasoning or trade-offs (instead of just "the answer") improves quality on non-trivial tasks.
+Ask for a plan first or provide a plan yourself, then execute step by step, rather than one giant ambiguous request.
+- **Be specific and give context.** State the goal, relevant context (e.g. project requirements, source code, project structure, etc.) and constraints (language, framework, versions), and what "done" looks like. *Vague or incomplete prompts get vague, incorrect and incomplete answers!*
 - **Constrain the output** (format, length, style) when you need something specific, e.g. "respond only with a JSON object", "keep it to a short bullet list".
 - **State what NOT to do**, when relevant (e.g. "don't change unrelated files", "don't add new dependencies").
+- **Give it a role, when useful.** E.g. "review this as a senior security engineer" shifts the kind of feedback you get.
+- **Iterate & Refine.** Treat the first answer as a draft — refine with follow-up questions instead of expecting a perfect result immediately.
+- **Ask it to reason/explain, for hard problems.** Asking for step-by-step reasoning or trade-offs (instead of just "the answer") improves quality on non-trivial tasks.
 
 **Further reading:**
 

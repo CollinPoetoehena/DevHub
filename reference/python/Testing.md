@@ -15,8 +15,13 @@ This document describes the testing design used in Python. All packages should f
 - [Structure](#structure)
 - [Running against the latest source](#running-against-the-latest-source)
 - [Generating tests with AI](#generating-tests-with-ai)
+  - [General Workflow](#general-workflow)
+  - [Additional General Points](#additional-general-points)
+  - [What to check before finalizing the result](#what-to-check-before-finalizing-the-result)
 - [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered)
 - [Optional Extra Testing: Static Code Analysis; see Static_Code_Analysis.md](./StaticCodeAnalysis.md)
+
+---
 
 ## General principles
 - **Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered.** This is very important to save time and effort and therefore named explicitly, see details in [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered).
@@ -32,6 +37,8 @@ This document describes the testing design used in Python. All packages should f
 - **Never put real credentials, hostnames, or tokens in a test.** Use obvious placeholders, and assert that secrets do *not* appear in logs, command arguments, or error messages where the source code promises they do not.
 - **Shared fixtures live in `conftest.py`,** which pytest loads automatically — test modules request them by name and import nothing.
 - **Logging, functions, classes.** The conventions in [Logging](./Logging.md), [Functions](./Functions.md), and [Classes & Generics](./Classes_Generics.md) apply to test code as well, at the lighter bar described in [Important: application code first](#important-application-code-first).
+
+---
 
 ## Structure
 **The test tree mirrors the source tree**, one directory per source package and one test module per source module, so locating and maintaining a test is mechanical rather than a search. The test module keeps the source module's name with a test_ prefix, and sits at the same position in the tree — so the path of a test is derivable from the path of the code it covers, in both directions:
@@ -73,6 +80,8 @@ src/example_package/              test/
 - **Setup used by a single test module stays in that module,** so its whole context is visible on one screen. Promote it to a conftest.py or a root utility only when a second module needs it.
 - **Group within a file by the function or class under test,** in the same order as the source, with a comment banner per group. The test file then reads as a table of contents for the module it covers.
 
+---
+
 ## Running against the latest source
 - **By default, tests run directly against `src/` with no install step.** `pyproject.toml` puts `src/` on `sys.path` for pytest, so the suite always exercises the working copy — edit a module, run `pytest`, see the result:
 ```toml
@@ -96,17 +105,31 @@ testpaths = ["test"]
 - **Optional: Verify against the published artifact before a release.** Publish the version, install it into the venv (see [docs/1_LocalSetup_Prerequisites.md](../../1_LocalSetup_Prerequisites.md)), activate the venv, and run the suite from a directory *outside* `src/`. This catches what a `sys.path` run cannot: a module missing from the wheel, a package that was never declared, or a missing runtime dependency that only worked locally because it happened to be installed.
 - **Both modes run the same tests.** Nothing in the suite may depend on which of the two is in use — a test that imports through a relative path or reaches into `src/` breaks the installed run and defeats the check.
 
-## Generating tests with AI
-> **Tip — Test Generation:** Use AI to generate the tests (e.g. `Claude Opus` in GitHub Copilot or in Microsoft Copilot after providing the source files (see [DevHub AI Reference](../AI.md))) for the code in `src/`. Always review the generated tests for correctness and completeness before relying on them.
+---
 
-**Getting good output is mostly a matter of what you give the model and what you check afterwards:**
-- **Provide the full source file, not a fragment.** A model that cannot see the imports, the module docstring, or the exception types will invent them, and a test built on an invented API fails for the wrong reason.
+## Generating tests with AI
+> **Tip — Test Generation:** Use AI to generate the tests (e.g. `Claude Opus` in GitHub Copilot or in Microsoft Copilot after providing the source files (see [DevHub AI Reference](../AI.md))) for the code in `src/`. Always review the generated tests for correctness and completeness before relying on them. This will save you time and effort, and improve the overall quality of your test suite compared to writing all tests manually.
+
+### General Workflow
+**Apply a structured workflow; Start with a plan generation & Request incrementally (e.g. per domain/sub-package).** If the codebase is large, you can ask the model to generate tests for specific domains/sub-packages incrementally, rather than all at once. This can make the review and verification process more manageable and less overwhelming. This also often provides better output (i.e. higher quality and more focused tests) because the model has less context dilution (large code bases often have distinct domains/sub-packages that are generally irrelevant for other parts). **General workflow you can apply for this reason:** Provide the AI model with all the context (e.g. the full repository source code, any relevant project context, the project structure, etc.), and ask for it to analyze it and generate a short plan for generating tests (do not generate tests yet). Then you can ask the AI incrementally to generate tests for each part, with the model now having the full context ready to improve its answers.
+
+See for more information about *Prompt Engineering* to get the best possible answers: [DevHub AI Reference: Prompt Engineering](../AI.md#prompt-engineering).
+
+**See [general points](#additional-general-points) below, such as how to provide the context effectively, what to provide, etc., for more guidance.**
+
+### Additional General Points
+**Getting good output is mostly a matter of what you give the model and what you check afterwards (see [workflow](#general-workflow) above, below are just some additional general points):**
+- **Provide the full source files, not fragments.** A model that cannot see the imports, the module docstring, or the exception types will invent them, and a test built on an invented API fails for the wrong reason. So, provide the complete source files to the model, such as the files in `src/` that you want to generate tests for.
+**Provide any relevant context, such as the purpose of the project and individual modules, the project structure, etc.** This helps the model generate tests that are aligned with the actual usage and constraints of the code. For example, providing it the project structure via `tree` output gives the model a clear view of the file hierarchy and relationships. 
 - **Say what matters most about the module.** "This wraps a subprocess; the timeout and the secret-redaction are the parts that must not regress" produces a materially different suite than "write tests for this file".
 - **Ask for one test file per source module,** matching [Structure](#structure), and for shared setup to go in `conftest.py`. Without that instruction the default is one large file.
 - **Name the known bugs.** A model told "this previously raised `TypeError` because the exception was constructed with a keyword argument" writes the regression test that pins it; a model not told this has no way to know.
 - **Ask for the reasoning in the docstrings.** A test whose docstring explains *why* the behaviour matters stays maintainable; a bare `test_x_returns_y` gets deleted by the next person who sees it fail.
+- **Iterate and refine.** After generating tests, review them, run them, and refine the prompts and/or the generated tests with AI further as needed to improve coverage and correctness.
+- **Any other action that may be required for your specific situation.** Some situations require a specific addition, the above points and general points only. So, if your situation requires anything specific to be added, add it.
 
-**What to check before trusting the result** — this is the part that is not optional:
+### What to check before finalizing the result
+**What to check before finalizing the result** — this is the part that is not optional:
 - **Run it.** A generated suite that has never been executed proves nothing. All of it must pass.
 - **Verify it actually fails.** Break the source deliberately — remove the timeout, delete a validation, return the wrong value — and confirm the relevant test fails. A test that passes against broken code is worse than no test, because it reports safety that does not exist. This is the single most valuable review step.
 - **Check the assertions are real.** Watch for tests that assert a mock was called with what the same test just configured, or that re-implement the function's logic in the assertion. Both pass unconditionally.
@@ -114,6 +137,8 @@ testpaths = ["test"]
 - **Check for invented API.** A method, parameter, or exception the model assumed exists will show up as an error rather than a failure — which is easy to miss in a suite that is otherwise green.
 
 > **General rule:** Check for correctness, but do not over‑engineer the tests. They must be clear, stable, and focused on verifying behaviour and covering risk — not built to production‑grade standards. So, check for correctness and stop there. See details in [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered).
+
+---
 
 ## Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered
 Test code matters, but **the application code (in `src/`) is the code that runs in production and is actually consumed by downstream systems, and it is where code quality effort belongs.** The two are not held to the same bar, and deliberately so:
