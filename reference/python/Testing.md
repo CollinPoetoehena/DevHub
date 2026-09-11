@@ -1,4 +1,4 @@
-## Testing
+# Testing
 
 This document describes the testing design used in Python. All packages should follow the best practices/conventions from Python and pytest itself:
 - [unittest](https://docs.python.org/3/library/unittest.html) — the standard library test framework, and the vocabulary (fixture, test case, assertion) everything else builds on.
@@ -10,14 +10,15 @@ This document describes the testing design used in Python. All packages should f
 
 **Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
-### Table of Contents
+## Table of Contents
 - [General principles](#general-principles)
 - [Structure](#structure)
 - [Running against the latest source](#running-against-the-latest-source)
 - [Generating tests with AI](#generating-tests-with-ai)
 - [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered)
+- [Optional Extra Testing: Static Code Analysis; see Static_Code_Analysis.md](./StaticCodeAnalysis.md)
 
-### General principles
+## General principles
 - **Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered.** This is very important to save time and effort and therefore named explicitly, see details in [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered).
 - **Test the public surface, not the internals.** A test imports the way a consumer does — through the owning facade — so a refactor that moves a class between files does not break the suite; see [Package Initialization & Importing](./Package_Initialization_Importing.md#which-path-to-use).
 - **One test file per source module (even though it may become large),** named `test_<module>.py`. The mapping is mechanical, so the test for a module is found without searching; see [Structure](#structure), even though that test file may become quite large (see [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered)). 
@@ -32,26 +33,46 @@ This document describes the testing design used in Python. All packages should f
 - **Shared fixtures live in `conftest.py`,** which pytest loads automatically — test modules request them by name and import nothing.
 - **Logging, functions, classes.** The conventions in [Logging](./Logging.md), [Functions](./Functions.md), and [Classes & Generics](./Classes_Generics.md) apply to test code as well, at the lighter bar described in [Important: application code first](#important-application-code-first).
 
-### Structure
-The test tree mirrors the source tree, one test module per source module, so locating and maintaining a test is mechanical rather than a search:
+## Structure
+**The test tree mirrors the source tree**, one directory per source package and one test module per source module, so locating and maintaining a test is mechanical rather than a search. The test module keeps the source module's name with a test_ prefix, and sits at the same position in the tree — so the path of a test is derivable from the path of the code it covers, in both directions:
 
 ```
 src/example_package/              test/
-├── exceptions.py                 ├── test_exceptions.py
-├── domain_a/                     ├── test_domain_a_some_client.py
-│   └── some_client.py            │
-└── domain_b/                     ├── test_domain_b_ops_process.py
-    └── ops/                      ├── test_domain_b_ops_deploy.py
-        ├── process.py            └── conftest.py          shared fixtures
-        └── deploy.py
+├── __init__.py                   ├── __init__.py                  required, see below
+├── exceptions.py                 ├── conftest.py                  suite-wide fixtures
+├── models/                       ├── fakes.py                     optional shared test doubles (root-level utility)
+│   └── shared_model.py           ├── test_exceptions.py
+├── domain_a/                     ├── models/
+│   └── some_client.py            │   ├── __init__.py
+└── domain_b/                     │   └── test_shared_model.py
+    ├── some_module.py            ├── domain_a/
+    └── ops/                      │   ├── __init__.py
+        ├── process.py            │   └── test_some_client.py
+        └── deploy.py             └── domain_b/
+                                      ├── __init__.py
+                                      ├── conftest.py              fixtures for this subtree only
+                                      ├── test_some_module.py
+                                      └── ops/
+                                          ├── __init__.py
+                                          ├── test_process.py
+                                          └── test_deploy.py
 ```
 
-- **Flat file names with a path prefix** (`test_domain_b_ops_process.py`) are preferred over mirrored directories. Test directories need `__init__.py` files or an import-mode change to avoid basename collisions between two `test_process.py` files, and a flat name sidesteps that entirely ([Good Integration Practices](https://docs.pytest.org/en/stable/explanation/goodpractices.html#tests-outside-application-code)).
-- **A new source module means a new test module.** If a source file is worth its own file, its tests are worth theirs; appending them to a neighbouring test file is how a 2000-line test module starts.
-- **`conftest.py` holds only what more than one test module uses.** Setup used by a single module stays in that module, so its whole context is visible on one screen.
+- **Every test directory needs an `__init__.py`, including `test/` itself.** Mirroring means two different source modules can share a basename (domain_b/process.py and domain_b/ops/process.py → two test_process.py files). Under pytest's default prepend import mode, two test modules with the same basename and no package to distinguish them is a **collection error**, not a warning. The `__init__.py` files make each test module fully qualified (`test.domain_b.ops.test_process`), which removes the ambiguity. This is the documented requirement for mirrored layouts ([Choosing a test layout: Tests outside application code](https://docs.pytest.org/en/stable/explanation/goodpractices.html#choosing-a-test-layout)). The alternative — `--import-mode=importlib`, which handles duplicate basenames without `__init__.py` — also works, but prefer the `__init__.py` files: they keep the default import mode, and make the helper imports below behave predictably.
+- **A new source module means a new test module, in the mirrored position.** If a source file is worth its own file, its tests are worth theirs; appending them to a neighbouring test file is how a 10000-line test module starts (large test files are generally fine, but try to split them logically if they grow too big; see [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered)).
+- **Testing utilities go at the root of test/ when more than one subtree needs them** — test doubles, builders, sample payloads, small assertion helpers. They are ordinary modules (test/fakes.py, test/helpers.py, test/samples.py), imported by their fully qualified path because test/ is a package:
+
+  ```python
+  from test.fakes import RunToolRecorder   # ✅ shared utility at the test root
+  ```
+
+  Keep them plural and purpose-named (fakes.py, helpers.py) rather than named after the first class they hold — run_tool_recorder.py becomes a lie the moment a second double is added. A utility only one subtree uses can sit in that subtree instead, following the same rule one level down.
+- **Never name a utility module `test_*.py`.** pytest would collect it as a test module, and a class in it named `Test*` would trigger collection warnings. A helper is not a test.
+- **conftest.py holds fixtures, not utilities, and sits at the narrowest level that needs it.** The root test/conftest.py holds what the whole suite uses; a conftest.py inside a mirrored directory holds what only that subtree uses, so an unrelated test is not affected by it. pytest loads these automatically and test modules request fixtures by name — never import from a conftest.py directly, as that breaks under `--import-mode=importlib`.
+- **Setup used by a single test module stays in that module,** so its whole context is visible on one screen. Promote it to a conftest.py or a root utility only when a second module needs it.
 - **Group within a file by the function or class under test,** in the same order as the source, with a comment banner per group. The test file then reads as a table of contents for the module it covers.
 
-### Running against the latest source
+## Running against the latest source
 - **By default, tests run directly against `src/` with no install step.** `pyproject.toml` puts `src/` on `sys.path` for pytest, so the suite always exercises the working copy — edit a module, run `pytest`, see the result:
 ```toml
 [tool.pytest.ini_options]
@@ -71,7 +92,7 @@ testpaths = ["test"]
 - **Optional: Verify against the published artifact before a release.** Publish the version, install it into the venv (see [docs/1_LocalSetup_Prerequisites.md](../../1_LocalSetup_Prerequisites.md)), activate the venv, and run the suite from a directory *outside* `src/`. This catches what a `sys.path` run cannot: a module missing from the wheel, a package that was never declared, or a missing runtime dependency that only worked locally because it happened to be installed.
 - **Both modes run the same tests.** Nothing in the suite may depend on which of the two is in use — a test that imports through a relative path or reaches into `src/` breaks the installed run and defeats the check.
 
-### Generating tests with AI
+## Generating tests with AI
 > **Tip — Test Generation:** Use AI to generate the tests (e.g. `Claude Opus` in GitHub Copilot or in Microsoft Copilot after providing the source files (see [DevHub AI Reference](../AI.md))) for the code in `src/`. Always review the generated tests for correctness and completeness before relying on them.
 
 **Getting good output is mostly a matter of what you give the model and what you check afterwards:**
@@ -90,8 +111,7 @@ testpaths = ["test"]
 
 > **General rule:** Check for correctness, but do not over‑engineer the tests. They must be clear, stable, and focused on verifying behaviour and covering risk — not built to production‑grade standards. So, check for correctness and stop there. See details in [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered).
 
-
-### Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered
+## Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered
 Test code matters, but **the application code (in `src/`) is the code that runs in production and is actually consumed by downstream systems, and it is where code quality effort belongs.** The two are not held to the same bar, and deliberately so:
 - **Do not over-engineer the tests.** Time spent perfecting a fixture hierarchy, removing every duplicated line, or abstracting three similar tests into one parametrised helper is time not spent on the code that actually ships. A test suite that is slightly repetitive (i.e. `not DRY`) but obviously correct is a good suite.
 - **Duplication in tests is often a feature.** A test should be readable in isolation, without following a chain of helpers to find out what it actually asserts — so the DRY pressure that applies to `src/` is much weaker here. A shared helper that hides the setup makes a failure harder to diagnose, which is precisely when readability matters most.
