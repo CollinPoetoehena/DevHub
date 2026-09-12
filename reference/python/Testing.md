@@ -24,6 +24,7 @@ This document describes the testing design used in Python. All packages should f
 ---
 
 ## General principles
+
 - **Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered.** This is very important to save time and effort and therefore named explicitly, see details in [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered).
 - **Test the public surface, not the internals.** A test imports the way a consumer does — through the owning facade — so a refactor that moves a class between files does not break the suite; see [Package Initialization & Importing](./Package_Initialization_Importing.md#which-path-to-use).
 - **One test file per source module (even though it may become large),** named `test_<module>.py`. The mapping is mechanical, so the test for a module is found without searching; see [Structure](#structure), even though that test file may become quite large (see [Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered](#important-focus-on-highquality-application-code-keep-test-code-simple-stable-purposedriven--not-overengineered)). 
@@ -41,6 +42,7 @@ This document describes the testing design used in Python. All packages should f
 ---
 
 ## Structure
+
 **The test tree mirrors the source tree**, one directory per source package and one test module per source module, so locating and maintaining a test is mechanical rather than a search. The test module keeps the source module's name with a test_ prefix, and sits at the same position in the tree — so the path of a test is derivable from the path of the code it covers, in both directions:
 
 ```
@@ -83,6 +85,7 @@ src/example_package/              test/
 ---
 
 ## Running against the latest source
+
 - **By default, tests run directly against `src/` with no install step.** `pyproject.toml` puts `src/` on `sys.path` for pytest, so the suite always exercises the working copy — edit a module, run `pytest`, see the result:
 ```toml
 [tool.pytest.ini_options]
@@ -108,9 +111,11 @@ testpaths = ["test"]
 ---
 
 ## Generating tests with AI
+
 > **Tip — Test Generation:** Use AI to generate the tests (e.g. `Claude Opus` in GitHub Copilot or in Microsoft Copilot after providing the source files (see [DevHub AI Reference](../AI.md))) for the code in `src/`. Always review the generated tests for correctness and completeness before relying on them. This will save you time and effort, and improve the overall quality of your test suite compared to writing all tests manually.
 
 ### General Workflow
+
 **Apply a structured workflow; Start with a plan generation & Request incrementally (e.g. per domain/sub-package).** If the codebase is large, you can ask the model to generate tests for specific domains/sub-packages incrementally, rather than all at once. This can make the review and verification process more manageable and less overwhelming. This also often provides better output (i.e. higher quality and more focused tests) because the model has less context dilution (large code bases often have distinct domains/sub-packages that are generally irrelevant for other parts). **General workflow you can apply for this reason:** Provide the AI model with all the context (e.g. the full repository source code, any relevant project context, the project structure, etc.), and ask for it to analyze it and generate a short plan for generating tests (do not generate tests yet). Then you can ask the AI incrementally to generate tests for each part, with the model now having the full context ready to improve its answers. *Vague or incomplete prompts get vague, incorrect and incomplete answers!* It may seem like unnecessary additional effort, but it is more than worth it in terms of **time saved and quality of output** (especially for complex or large-scale tasks).
 
 See for more information about *Prompt Engineering* to get the best possible answers: [DevHub AI Reference: Prompt Engineering](../AI.md#prompt-engineering).
@@ -118,6 +123,7 @@ See for more information about *Prompt Engineering* to get the best possible ans
 **See [general points](#additional-general-points) below, such as how to provide the context effectively, what to provide, etc., for more guidance.**
 
 ### Additional General Points
+
 **Getting good output is mostly a matter of what you give the model and what you check afterwards (see [workflow](#general-workflow) above, below are just some additional general points):**
 - **Provide the full source files, not fragments.** A model that cannot see the imports, the module docstring, or the exception types will invent them, and a test built on an invented API fails for the wrong reason. So, provide the complete source files to the model, such as the files in `src/` that you want to generate tests for.
 **Provide any relevant context, such as the purpose of the project and individual modules, the project structure, etc.** This helps the model generate tests that are aligned with the actual usage and constraints of the code. For example, providing it the project structure via `tree` output gives the model a clear view of the file hierarchy and relationships. 
@@ -129,6 +135,7 @@ See for more information about *Prompt Engineering* to get the best possible ans
 - **Any other action that may be required for your specific situation.** Some situations require a specific addition, the above points and general points only. So, if your situation requires anything specific to be added, add it.
 
 ### What to check before finalizing the result
+
 **What to check before finalizing the result** — this is the part that is not optional:
 - **Run it.** A generated suite that has never been executed proves nothing. All of it must pass.
 - **Verify it actually fails.** Break the source deliberately — remove the timeout, delete a validation, return the wrong value — and confirm the relevant test fails. A test that passes against broken code is worse than no test, because it reports safety that does not exist. This is the single most valuable review step.
@@ -141,7 +148,9 @@ See for more information about *Prompt Engineering* to get the best possible ans
 ---
 
 ## Important: Focus on high‑quality application code; keep test code simple, stable, purpose‑driven — not over‑engineered
+
 Test code matters, but **the application code (in `src/`) is the code that runs in production and is actually consumed by downstream systems, and it is where code quality effort belongs.** The two are not held to the same bar, and deliberately so:
+
 - **Do not over-engineer the tests.** Time spent perfecting a fixture hierarchy, removing every duplicated line, or abstracting three similar tests into one parametrised helper is time not spent on the code that actually ships. A test suite that is slightly repetitive (i.e. `not DRY`) but obviously correct is a good suite.
 - **Duplication in tests is often a feature.** A test should be readable in isolation, without following a chain of helpers to find out what it actually asserts — so the DRY pressure that applies to `src/` is much weaker here. A shared helper that hides the setup makes a failure harder to diagnose, which is precisely when readability matters most.
 - **AI-generated test code from a strong model is generally good enough to keep as-is** once you have checked it as described above. The reasons are structural, not a matter of trusting the model:
@@ -149,6 +158,7 @@ Test code matters, but **the application code (in `src/`) is the code that runs 
   - **Tests have no downstream callers.** Nothing imports the test suite, so a clumsy fixture or an awkward name imposes no cost on anyone else. A clumsy abstraction in `src/` propagates to every consumer and every future change.
   - **Test code is highly patterned,** which is exactly what these models are strongest at: arrange/act/assert (AAA testing framework), parametrised variants, fixture setup, and standard assertion style are near-mechanical once the behaviour is decided.
   - **The cost of an imperfect test is bounded and visible.** It fails, and you fix it. The cost of an imperfect abstraction in application code is unbounded and shows up much later.
+  - **Maintaining the tests is the same exercise again.** The usual objection — "someone has to live with this code for years" — is much weaker for tests. When behaviour changes and a test needs updating, you simply reapply the steps above — hand the context (e.g. the source code and the current test, etc.) back to AI (see [Generating tests with AI: General Workflow](#general-workflow)) and verify and refine the results (see [What to check before finalizing the result](#what-to-check-before-finalizing-the-result), such as red against broken code, green against working code). Maintenance is not a separate, heavier activity that justifies polishing the test code up front; it is the same cheap, repeatable loop as explained in the rest of this document.
 - **The one exception is correctness.** None of the above applies to whether a test is *right*. A test that does not fail when the code breaks is worthless regardless of how clean it reads, which is why the verification step above is the part to spend your review time on.
 
-**The rule of thumb:** **treat source code (`src/`) as production‑grade code** with as good as possible code quality. It should follow the standards defined in our design documents and uphold solid engineering practices — DRY, KISS, clarity, maintainability, long‑term stability, etc. In contrast, test code serves a different purpose. **The goal for test code (`test/`) is to be correct, readable, and focused on covering the risk, and stop there**. They validate behaviour, and while they should absolutely maintain reasonable quality, they do not need to be elegant, abstract, or architecturally impressive. Their **primary objective is confidence in tested code (i.e. proving the source code is correct), not good code quality**. Avoid over‑engineering test code — the value lies in what the tests verify, not in how clever or intricate the test code is or how well it adheres to traditional software engineering principles. Unlike source code, test code is not shipped to production, is not consumed by downstream systems, does not need long‑term architectural stability, and should not consume engineering time that is better spent elsewhere. Keeping tests simple and almost fully [AI-generated](#generating-tests-with-ai) frees time and attention for the things that matter most: strengthening the application code, improving documentation, and reducing complexity across the system.
+**The rule of thumb:** **treat source code (`src/`) as production‑grade code** with as good as possible code quality. It should follow the standards defined in our design documents and uphold solid engineering practices — DRY, KISS, clarity, maintainability, long‑term stability, etc. In contrast, test code serves a different purpose. **The goal for test code (`test/`) is to be correct, readable, and focused on covering the risk, and stop there**. They validate behaviour, and while they should absolutely maintain reasonable quality, they do not need to be elegant, abstract, or architecturally impressive. Their **primary objective is confidence in tested code (i.e. proving the source code is correct), not good code quality**. Avoid over‑engineering test code — the value lies in what the tests verify, not in how clever or intricate the test code is or how well it adheres to traditional software engineering principles. Unlike source code, test code is not shipped to production, is not consumed by downstream systems, does not need long‑term architectural stability, and should not consume engineering time that is better spent elsewhere. Maintaining it is no different: the same steps apply again — hand the context (e.g. the source code and the current test, etc.) back to AI (see [Generating tests with AI: General Workflow](#general-workflow)) and verify and refine the results (see [What to check before finalizing the result](#what-to-check-before-finalizing-the-result), such as red against broken code, green against working code) — so long‑term maintenance is not a reason to invest extra polish up front; it is the same cheap, repeatable loop as explained in the rest of this document. Keeping tests simple and mainly [AI-generated](#generating-tests-with-ai) frees time and attention for the things that matter most: strengthening the application code, improving documentation, and reducing complexity across the system.
