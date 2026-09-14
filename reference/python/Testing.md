@@ -1,6 +1,10 @@
 # Testing
 
-This document describes the testing design used in Python. All packages should follow the best practices/conventions from Python and pytest itself:
+This document describes the testing design used in Python. 
+
+Testing is an essential part of the development process, ensuring that code behaves as expected and helping to catch regressions early (e.g. when a bug is introduced, testing the fix prevents it from reoccurring), etc.
+
+All packages should follow the best practices/conventions from Python and pytest itself:
 - [unittest](https://docs.python.org/3/library/unittest.html) — the standard library test framework, and the vocabulary (fixture, test case, assertion) everything else builds on.
 - [unittest.mock](https://docs.python.org/3/library/unittest.mock.html) — patching and test doubles, including [where to patch](https://docs.python.org/3/library/unittest.mock.html#where-to-patch), which is the single most common source of a test that silently tests nothing.
 - [pytest — Get Started](https://docs.pytest.org/en/stable/getting-started.html) and [How-to guides](https://docs.pytest.org/en/stable/how-to/index.html) — the framework used in this codebase.
