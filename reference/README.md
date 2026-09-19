@@ -17,4 +17,4 @@ It is not intended to be a complete guide of Software Engineering/IT in general 
 | [Network Reference](network/README.md) | Networking concepts (devices, subnets, IP addresses, DHCP, DNS, NAT, IPv6) and Linux networking commands. Split into multiple files — see the network README for the full index. |
 | [OS and Related Hardware Reference](./os_hardware/README.md) | OS and related hardware concepts and theory. |
 | [Storage_Background_Commands.md](Storage_Background_Commands.md) | Storage concepts (filesystems, mounting, LVM, RAID, NFS) and Kubernetes storage (Volumes, PV, PVC, StorageClass). |
-| [tmux.md](tmux.md) | tmux terminal multiplexer reference. |
+| [Other Reference](other/README.md) | Other general reference material, including tmux terminal multiplexer reference. |
