@@ -1,0 +1,91 @@
+# {{ ansible_managed }}
+#
+# 10-base.nft — Shared definitions, tables, chains and default policies.
+# This file is managed by Ansible — do not edit manually.
+#
+# Loaded FIRST, so everything defined here is available to the fragments that
+# follow (e.g. 20-nat, 30-default, 40-dynamic).
+
+################################################################################
+# Shared definitions
+################################################################################
+# `define` is a plain textual macro, expanded when the ruleset is parsed. Using
+# them keeps interface names and prefixes in exactly one place, so a change in
+# group_vars propagates to every rule instead of being copy-pasted.
+
+# WAN interface — faces the ISP modem / home network.
+define WAN = "{{ router_wan_interface }}"
+
+# All lab VLAN sub-interfaces as an anonymous set.
+# NOTE: the old iptables configuration used the "eth1+" wildcard for this.
+# nftables sets are explicit: only the interfaces that really exist are
+# matched, so a stray interface named e.g. eth1abc can never accidentally be
+# treated as a lab VLAN.
+define LAN_IFACES = { {{ router_vlans | map(attribute='interface') | map('to_json') | join(', ') }} }
+
+# Home network (the network this router hangs off) — never reachable from lab.
+define HOME_NET = {{ router_home_subnet }}
+
+# The lab supernet, used for NAT and coarse-grained rules.
+define LAB_NET = {{ router_lan_subnet }}
+{% if router_enable_ipv6 %}
+define LAB_NET6 = {{ router_lan_subnet_v6 }}
+{% endif %}
+
+{% for vlan in router_vlans %}
+# VLAN {{ vlan.id }} — {{ vlan.name }}
+define VLAN{{ vlan.id }}_IF = "{{ vlan.interface }}"
+define VLAN{{ vlan.id }}_NET = {{ vlan.subnet }}
+{% if router_enable_ipv6 and vlan.subnet6 is defined %}
+define VLAN{{ vlan.id }}_NET6 = {{ vlan.subnet6 }}
+{% endif %}
+{% endfor %}
+
+################################################################################
+# Filter table (packet filtering)
+################################################################################
+# Family `inet` = dual-stack: one table handles IPv4 and IPv6. With iptables
+# this needed two separate rule sets (iptables + ip6tables) that inevitably
+# drift apart — the classic way an "IPv6-ready" network ends up with an
+# IPv4-only firewall.
+#
+# Default policies:
+#   input   drop    — nothing reaches the router unless explicitly allowed
+#   forward drop    — nothing crosses the router unless explicitly allowed
+#   output  accept  — the router itself is trusted; filtering its own egress
+#                     adds maintenance cost (apt, DNS, NTP, RA) with little gain
+#
+# Default-deny matters much more now that the lab is dual-stack: IPv6 has no
+# NAT to accidentally hide behind, so the firewall is the only boundary.
+table inet filter {
+	chain input {
+		type filter hook input priority filter; policy drop;
+	}
+
+	chain forward {
+		type filter hook forward priority filter; policy drop;
+	}
+
+	chain output {
+		type filter hook output priority filter; policy accept;
+	}
+}
+
+################################################################################
+# NAT table (address translation)
+################################################################################
+# Chains are created here (empty) and filled in by 20-nat.nft. Priorities
+# `dstnat` and `srcnat` are the named equivalents of the classic -100 / 100
+# values and place the chains at the right point in the netfilter hook order.
+#
+# Policy accept: the NAT table decides *how* an address is translated, not
+# *whether* a packet is allowed — that is the filter table's job.
+table inet nat {
+	chain prerouting {
+		type nat hook prerouting priority dstnat; policy accept;
+	}
+
+	chain postrouting {
+		type nat hook postrouting priority srcnat; policy accept;
+	}
+}

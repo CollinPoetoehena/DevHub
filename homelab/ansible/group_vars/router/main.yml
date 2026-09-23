@@ -3,7 +3,9 @@
 # Overrides roles/router/defaults/main.yml.
 # See docs/2_Network_Hosts/TODO.md for the network design behind these choices.
 #
-# The explanations of the variables are in roles/router/defaults/main.yml, so you can see what each variable does.
+# The explanations of the variables are in roles/router/defaults/main.yml, so
+# you can see what each variable does (including the per-VLAN `firewall` dict
+# schema used below).
 
 ################################################################################
 # LAN Network Configuration (Lab Network): See explanation of these vars in roles/router/defaults/main.yml.
@@ -13,11 +15,33 @@
 # See details in ../docs/2_Network/2_1_Network_Setup.md on why 10.42.x.x and not 10.0.x.x.
 router_lan_subnet: "10.42.0.0/20"
 
+# IPv6 counterpart of the supernet above. fd42::/48 is a Unique Local Address
+# range (fd00::/8), deliberately mirroring the "42" of the IPv4 plan so the two
+# address families are trivially readable side by side:
+#   VLAN 10 -> 10.42.10.0/24  and  fd42:10::/64
+#   VLAN 20 -> 10.42.20.0/24  and  fd42:20::/64
+#   VLAN 30 -> 10.42.30.0/24  and  fd42:30::/64
+# NOTE: a "real" ULA prefix should be randomly generated (RFC 4193) to avoid
+# collisions when networks are ever merged. fd42 is chosen here for readability
+# in a lab that will never be merged with anything.
+router_lan_subnet_v6: "fd42::/48"
+
+################################################################################
+# IPv6: See explanation (and the full WHY) in roles/router/defaults/main.yml.
+################################################################################
+router_enable_ipv6: true
+router_ipv6_mode: "ula"
+router_enable_ipv6_nat: true
+
 ################################################################################
 # VLAN Configuration: See docs/2_Network_Hosts/TODO.md#subnet--vlan-design
 ################################################################################
 # Physical eth1 has no IP (native VLAN 1 is unused).
-# Each VLAN gets a sub-interface with its own gateway IP and DHCP range.
+# Each VLAN gets a sub-interface with its own gateway IP (v4 + v6), DHCP range
+# and its own firewall policy. The firewall policy below is what the nftables
+# rules in roles/router/tasks/firewall/dynamic.yml are generated from, so
+# adding a VLAN or changing an allow/deny is a data change only — no task or
+# template edits needed.
 router_vlans:
   - id: 10
     name: "Management"
@@ -25,24 +49,69 @@ router_vlans:
     gateway_ip: "10.42.10.1"
     cidr: "24"
     netmask: "255.255.255.0"
+    subnet: "10.42.10.0/24"
+    gateway_ip6: "fd42:10::1"
+    cidr6: "64"
+    subnet6: "fd42:10::/64"
     dhcp_range_start: "10.42.10.100"
     dhcp_range_end: "10.42.10.200"
+    firewall:
+      # Management needs internet (apt updates on Proxmox, container images).
+      allow_to_internet: true
+      # Management is the only VLAN allowed to SSH into the router itself.
+      router_services: [ssh, dns, dhcp, icmp, ntp]
+      inter_vlan:
+        # Management may reach everything — it is the admin network.
+        - { action: allow, to: 20, comment: "Management -> Services (admin access)" }
+        - { action: allow, to: 30, comment: "Management -> IoT (admin access)" }
+
   - id: 20
     name: "Services"
     interface: "eth1.20"
     gateway_ip: "10.42.20.1"
     cidr: "24"
     netmask: "255.255.255.0"
+    subnet: "10.42.20.0/24"
+    gateway_ip6: "fd42:20::1"
+    cidr6: "64"
+    subnet6: "fd42:20::/64"
     dhcp_range_start: "10.42.20.100"
     dhcp_range_end: "10.42.20.200"
+    firewall:
+      allow_to_internet: true
+      # Services do NOT get SSH to the router: they only need DNS/DHCP/ICMP.
+      router_services: [dns, dhcp, icmp, ntp]
+      inter_vlan:
+        # Services must never initiate connections into Management.
+        - { action: drop, to: 10, comment: "Services -> Management denied (protect admin plane)" }
+        # Services may talk to IoT devices (e.g. Home Assistant polling a device).
+        - { action: allow, to: 30, comment: "Services -> IoT (polling/control)" }
+
   - id: 30
     name: "IoT"
     interface: "eth1.30"
     gateway_ip: "10.42.30.1"
     cidr: "24"
     netmask: "255.255.255.0"
+    subnet: "10.42.30.0/24"
+    gateway_ip6: "fd42:30::1"
+    cidr6: "64"
+    subnet6: "fd42:30::/64"
     dhcp_range_start: "10.42.30.100"
     dhcp_range_end: "10.42.30.200"
+    firewall:
+      # IoT devices phone home to vendor clouds; keep internet but nothing else.
+      allow_to_internet: true
+      # Deliberately minimal: no SSH, no NTP to the router.
+      router_services: [dns, dhcp, icmp]
+      inter_vlan:
+        # A compromised smart bulb must not be able to probe Proxmox or the switch.
+        - { action: drop, to: 10, comment: "IoT -> Management denied (classic IoT isolation)" }
+        # Sensors push data to Home Assistant / MQTT on the Services VLAN.
+        - { action: allow, to: 20, proto: tcp, ports: [1883, 8123], comment: "IoT -> Services (MQTT + Home Assistant)" }
+
+# Anything not explicitly allowed above is dropped between VLANs.
+router_inter_vlan_default_policy: "drop"
 
 ################################################################################
 # Home Network (for firewall blocking rules): See explanation of these vars in roles/router/defaults/main.yml.
@@ -56,11 +125,25 @@ router_home_gateway: "192.168.2.254"
 router_dhcp_domain: "lab.local"
 
 ################################################################################
-# Static DHCP Leases (MAC → IP reservations): See explanation of these vars in roles/router/defaults/main.yml.
+# Static DHCP Leases (MAC -> IP reservations): See explanation of these vars in roles/router/defaults/main.yml.
 ################################################################################
 # Assigns fixed (static) IPs to lab infrastructure devices so their addresses are
 # predictable (for SSH tunnels, firewall rules, monitoring, etc.).
 # IPs are chosen below the DHCP dynamic range (see VLAN dhcp_range_start/end above).
+#
+# NOTE for IPv6: there is deliberately no static IPv6 reservation here. Devices
+# get a stable SLAAC address derived from the VLAN prefix, and dnsmasq adds
+# their AAAA record automatically via `ra-names`. Use DNS names, not literal
+# IPv6 addresses — that is the whole point of practising IPv6 properly.
 router_static_leases:
   - { mac: "28:94:01:8a:ec:28", ip: "10.42.10.2", hostname: "lab-switch" }
   # TODO: later add here the MAC addresses of the Proxmox physical nodes!
+
+################################################################################
+# Firewall (nftables): See explanation of these vars in roles/router/defaults/main.yml.
+################################################################################
+router_enable_nat: true
+router_block_lab_to_home: true
+router_nftables_persistent: true
+router_remove_legacy_iptables: true
+router_nftables_log_drops: true

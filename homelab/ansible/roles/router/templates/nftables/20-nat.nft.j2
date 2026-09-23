@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+#
+# 20-nat.nft — NAT / masquerading rules.
+# This file is managed by Ansible — do not edit manually.
+#
+# Re-opening `table inet nat` adds rules to the chains created in 10-base.nft.
+
+table inet nat {
+	chain postrouting {
+{% if router_enable_nat %}
+		# IPv4: rewrite the source address of lab traffic leaving via the WAN
+		# to the router's own WAN address. MASQUERADE (rather than SNAT) picks
+		# up whatever address eth0 currently has, so a new DHCP lease from the
+		# ISP modem does not break internet access for the lab.
+		ip saddr $LAB_NET oifname $WAN counter masquerade comment "NAT: masquerade lab IPv4 traffic to the internet"
+{% else %}
+		# NAT disabled via router_enable_nat=false — lab devices then need the
+		# upstream router to have a route back to {{ router_lan_subnet }}.
+{% endif %}
+{% if router_enable_ipv6 and router_enable_ipv6_nat %}
+
+		# IPv6 (NAT66): the lab uses ULA addressing (fd42::/48) because the ISP
+		# modem does not delegate a usable prefix. ULA is not globally routed,
+		# so egress is masqueraded to the WAN interface's IPv6 address.
+		#
+		# This is a deliberate lab compromise, not a production pattern: NAT66
+		# breaks end-to-end addressing and complicates logging, which is most
+		# of the point of IPv6. Set router_enable_ipv6_nat=false as soon as a
+		# real prefix delegation (DHCPv6-PD) is available, and the lab becomes
+		# properly routed dual-stack with no translation at all.
+		ip6 saddr $LAB_NET6 oifname $WAN counter masquerade comment "NAT66: masquerade lab IPv6 (ULA) traffic to the internet"
+{% elif router_enable_ipv6 %}
+
+		# IPv6 NAT disabled (router_enable_ipv6_nat=false): IPv6 egress is
+		# expected to use globally routable addresses from a delegated prefix.
+{% endif %}
+	}
+}

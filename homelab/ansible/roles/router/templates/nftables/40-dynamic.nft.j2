@@ -1,0 +1,155 @@
+{#-
+################################################################################
+ 40-dynamic.nft.j2 — per-VLAN rules generated from router_vlans[].firewall
+################################################################################
+ Everything below is DERIVED FROM DATA in group_vars/router/main.yml. Adding a
+ VLAN, opening a port or isolating two networks is a variable change — never an
+ edit to this template.
+
+ Emission order inside each chain (first match wins in nftables):
+   1. explicit inter-VLAN denies      (a deny must always beat an allow)
+   2. explicit inter-VLAN allows
+   3. internet access per VLAN
+   4. router service access per VLAN  (input chain)
+   5. custom rules per VLAN
+   6. inter-VLAN default policy
+   7. optional rate-limited logging of everything that falls through
+-#}
+# {{ ansible_managed }}
+#
+# 40-dynamic.nft — Per-VLAN rules generated from router_vlans[].firewall.
+# This file is managed by Ansible — do not edit manually.
+#
+# Source of truth: group_vars/router/main.yml -> router_vlans[].firewall
+# Schema documentation: roles/router/defaults/main.yml
+
+table inet filter {
+	chain forward {
+		#######################################################################
+		# 1. Inter-VLAN DENY rules (explicit denies win over any allow below)
+		#######################################################################
+{% for vlan in router_vlans %}
+{% set fw = vlan.firewall | default({}) %}
+{% for rule in fw.inter_vlan | default([]) if rule.action in ['drop', 'reject'] %}
+{% set target = (router_vlans | selectattr('id', 'equalto', rule.to) | first) %}
+		iifname "{{ vlan.interface }}" oifname "{{ target.interface }}"{{ (' ' ~ rule.proto) if rule.proto is defined else '' }}{{ (' dport { ' ~ (rule.ports | join(', ')) ~ ' }') if rule.ports is defined else '' }} counter {{ rule.action }} comment "VLAN{{ vlan.id }} ({{ vlan.name }}) -> VLAN{{ target.id }} ({{ target.name }}): {{ rule.comment | default(rule.action ~ ' by policy') }}"
+{% endfor %}
+{% endfor %}
+
+		#######################################################################
+		# 2. Inter-VLAN ALLOW rules
+		#######################################################################
+{% for vlan in router_vlans %}
+{% set fw = vlan.firewall | default({}) %}
+{% for rule in fw.inter_vlan | default([]) if rule.action == 'allow' %}
+{% set target = (router_vlans | selectattr('id', 'equalto', rule.to) | first) %}
+		iifname "{{ vlan.interface }}" oifname "{{ target.interface }}"{{ (' ' ~ rule.proto) if rule.proto is defined else '' }}{{ (' dport { ' ~ (rule.ports | join(', ')) ~ ' }') if rule.ports is defined else '' }} ct state new counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}) -> VLAN{{ target.id }} ({{ target.name }}): {{ rule.comment | default('allowed by policy') }}"
+{% endfor %}
+{% endfor %}
+
+		#######################################################################
+		# 3. Internet access per VLAN (VLAN -> WAN)
+		#######################################################################
+		# Return traffic is already handled by the conntrack rule in
+		# 30-default.nft, so only NEW outbound connections need a rule here.
+		# This is interface based and therefore covers IPv4 and IPv6 at once —
+		# one of the concrete reasons this role uses the nftables `inet`
+		# family instead of maintaining iptables + ip6tables side by side.
+{% for vlan in router_vlans %}
+{% set fw = vlan.firewall | default({}) %}
+{% if fw.allow_to_internet | default(false) %}
+		iifname "{{ vlan.interface }}" oifname $WAN ct state new counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}) -> internet"
+{% else %}
+		# VLAN{{ vlan.id }} ({{ vlan.name }}): no internet access (allow_to_internet is false)
+{% endif %}
+{% endfor %}
+
+		#######################################################################
+		# 4. Custom forward rules per VLAN
+		#######################################################################
+{% for vlan in router_vlans %}
+{% set fw = vlan.firewall | default({}) %}
+{% for rule in fw.custom | default([]) if (rule.chain | default('input')) == 'forward' %}
+{% set family = rule.family | default('both') %}
+{% if family in ['ip', 'both'] and (rule.saddr is defined or rule.daddr is defined) %}
+		iifname "{{ vlan.interface }}"{{ (' ip saddr ' ~ rule.saddr) if rule.saddr is defined else '' }}{{ (' ip daddr ' ~ rule.daddr) if rule.daddr is defined else '' }}{{ (' ' ~ rule.proto) if rule.proto is defined else '' }}{{ (' dport { ' ~ (rule.ports | join(', ')) ~ ' }') if rule.ports is defined else '' }} counter {{ 'accept' if rule.action == 'allow' else rule.action }} comment "VLAN{{ vlan.id }} custom (IPv4): {{ rule.comment | default('custom rule') }}"
+{% endif %}
+{% if family in ['ip6', 'both'] and router_enable_ipv6 and (rule.saddr6 is defined or rule.daddr6 is defined) %}
+		iifname "{{ vlan.interface }}"{{ (' ip6 saddr ' ~ rule.saddr6) if rule.saddr6 is defined else '' }}{{ (' ip6 daddr ' ~ rule.daddr6) if rule.daddr6 is defined else '' }}{{ (' ' ~ rule.proto) if rule.proto is defined else '' }}{{ (' dport { ' ~ (rule.ports | join(', ')) ~ ' }') if rule.ports is defined else '' }} counter {{ 'accept' if rule.action == 'allow' else rule.action }} comment "VLAN{{ vlan.id }} custom (IPv6): {{ rule.comment | default('custom rule') }}"
+{% endif %}
+{% if rule.saddr is not defined and rule.daddr is not defined and rule.saddr6 is not defined and rule.daddr6 is not defined %}
+		iifname "{{ vlan.interface }}"{{ (' ' ~ rule.proto) if rule.proto is defined else '' }}{{ (' dport { ' ~ (rule.ports | join(', ')) ~ ' }') if rule.ports is defined else '' }} counter {{ 'accept' if rule.action == 'allow' else rule.action }} comment "VLAN{{ vlan.id }} custom: {{ rule.comment | default('custom rule') }}"
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+		#######################################################################
+		# 5. Inter-VLAN DEFAULT policy (router_inter_vlan_default_policy)
+		#######################################################################
+		# Anything between lab VLANs that was not explicitly matched above
+		# lands here. Default is "drop": VLANs are isolated unless a flow is
+		# allowed on purpose.
+{% if router_inter_vlan_default_policy == 'allow' %}
+		iifname $LAN_IFACES oifname $LAN_IFACES ct state new counter accept comment "Inter-VLAN default policy: allow (DEBUG ONLY)"
+{% else %}
+{% if router_nftables_log_drops %}
+		iifname $LAN_IFACES oifname $LAN_IFACES limit rate {{ router_nftables_log_rate }} counter log prefix "nft inter-vlan drop: " comment "Log inter-VLAN traffic hitting the default policy"
+{% endif %}
+		iifname $LAN_IFACES oifname $LAN_IFACES counter drop comment "Inter-VLAN default policy: drop (VLANs isolated unless explicitly allowed)"
+{% endif %}
+
+{% if router_nftables_log_drops %}
+		#######################################################################
+		# 6. Log anything else that falls through to the chain policy (drop)
+		#######################################################################
+		limit rate {{ router_nftables_log_rate }} counter log prefix "nft forward drop: " comment "Log forwarded packets hitting the default DROP policy"
+{% endif %}
+	}
+
+	chain input {
+		#######################################################################
+		# Router services per VLAN (router_services)
+		#######################################################################
+		# What each VLAN may use ON THE ROUTER ITSELF. Anything not listed in
+		# a VLAN's router_services is dropped by the chain's default policy —
+		# which is why the IoT VLAN below has no way to SSH into the router.
+{% for vlan in router_vlans %}
+{% set fw = vlan.firewall | default({}) %}
+{% set services = fw.router_services | default([]) %}
+
+		# --- VLAN {{ vlan.id }} ({{ vlan.name }}) — services: {{ services | join(', ') if services else 'none' }}
+{% if 'ssh' in services %}
+		iifname "{{ vlan.interface }}" tcp dport 22 ct state new counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): SSH to the router"
+{% endif %}
+{% if 'dns' in services %}
+		iifname "{{ vlan.interface }}" udp dport 53 counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): DNS (UDP) via dnsmasq"
+		iifname "{{ vlan.interface }}" tcp dport 53 ct state new counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): DNS (TCP) via dnsmasq"
+{% endif %}
+{% if 'dhcp' in services %}
+		iifname "{{ vlan.interface }}" udp dport 67 counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): DHCPv4 requests"
+{% if router_enable_ipv6 %}
+		iifname "{{ vlan.interface }}" udp dport 547 counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): DHCPv6 / stateless info requests"
+{% endif %}
+{% endif %}
+{% if 'ntp' in services %}
+		iifname "{{ vlan.interface }}" udp dport 123 counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): NTP time sync from the router"
+{% endif %}
+{% if 'icmp' in services %}
+		iifname "{{ vlan.interface }}" icmp type echo-request counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): IPv4 ping to the router"
+{% if router_enable_ipv6 %}
+		iifname "{{ vlan.interface }}" icmpv6 type echo-request counter accept comment "VLAN{{ vlan.id }} ({{ vlan.name }}): IPv6 ping to the router"
+{% endif %}
+{% endif %}
+{% for rule in fw.custom | default([]) if (rule.chain | default('input')) == 'input' %}
+		iifname "{{ vlan.interface }}"{{ (' ip saddr ' ~ rule.saddr) if rule.saddr is defined else '' }}{{ (' ip6 saddr ' ~ rule.saddr6) if rule.saddr6 is defined else '' }}{{ (' ' ~ rule.proto) if rule.proto is defined else '' }}{{ (' dport { ' ~ (rule.ports | join(', ')) ~ ' }') if rule.ports is defined else '' }} counter {{ 'accept' if rule.action == 'allow' else rule.action }} comment "VLAN{{ vlan.id }} custom: {{ rule.comment | default('custom rule') }}"
+{% endfor %}
+{% endfor %}
+
+{% if router_nftables_log_drops %}
+		#######################################################################
+		# Log anything else that falls through to the chain policy (drop)
+		#######################################################################
+		limit rate {{ router_nftables_log_rate }} counter log prefix "nft input drop: " comment "Log packets to the router hitting the default DROP policy"
+{% endif %}
+	}
+}

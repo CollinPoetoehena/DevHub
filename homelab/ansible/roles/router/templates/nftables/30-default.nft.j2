@@ -1,0 +1,107 @@
+# {{ ansible_managed }}
+#
+# 30-default.nft — Static baseline rules (identical in every deployment).
+# This file is managed by Ansible — do not edit manually.
+#
+# Loaded BEFORE 40-dynamic.nft on purpose: the hard security boundaries here
+# (lab -> home, WAN -> lab) must win over any per-VLAN allow rule, and in
+# nftables the first matching verdict inside a chain wins.
+
+table inet filter {
+	chain input {
+		################################################################
+		# Stateful plumbing
+		################################################################
+		# Accept anything belonging to a connection the router itself
+		# started (apt, DNS lookups, NTP) or that is related to one.
+		ct state established,related counter accept comment "Allow return traffic for the router's own connections"
+
+		# Packets conntrack cannot classify are almost always spoofed or
+		# the result of a broken path. Dropping them early keeps the rest
+		# of the ruleset simpler.
+		ct state invalid counter drop comment "Drop invalid packets"
+
+		# Local services talk to each other over loopback (dnsmasq, etc.).
+		iif lo counter accept comment "Allow loopback traffic (required for local services)"
+
+		################################################################
+		# ICMP / ICMPv6
+		################################################################
+		# ICMPv6 is NOT optional. Neighbour Discovery replaces ARP,
+		# Router Solicitation/Advertisement replaces the "who is my
+		# gateway" part of DHCP, and Packet Too Big is what makes Path
+		# MTU Discovery work (IPv6 routers never fragment). Blocking
+		# ICMPv6 does not harden an IPv6 network — it breaks it.
+		#
+		# hoplimit 255 on the ND types is the standard anti-spoofing
+		# check: those messages must originate on-link, and a packet
+		# arriving from further away cannot still have a hop limit of 255.
+		icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert } ip6 hoplimit 255 counter accept comment "IPv6 Neighbour Discovery (on-link only)"
+		icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem } counter accept comment "IPv6 error messages (required for Path MTU Discovery)"
+		icmpv6 type { mld-listener-query, mld-listener-report, mld-listener-done } ip6 saddr fe80::/10 counter accept comment "IPv6 multicast listener discovery (link-local only)"
+
+		# Ping is allowed from everywhere for troubleshooting and for the
+		# monitoring probes that will be added later. Rate limited so it
+		# cannot be used to spin the CPU of a Raspberry Pi.
+		icmp type echo-request limit rate 10/second counter accept comment "Allow IPv4 ping (rate limited)"
+		icmpv6 type echo-request limit rate 10/second counter accept comment "Allow IPv6 ping (rate limited)"
+
+		################################################################
+		# Router management
+		################################################################
+		# SSH from the home network side. The router is the jumphost into the
+		# lab, so this is the only way in from a laptop on 192.168.2.0/24.
+		# Per-VLAN SSH access is granted in 40-dynamic.nft, driven by each
+		# VLAN's `router_services` policy — the Services and IoT VLANs do
+		# not get it.
+		iifname $WAN tcp dport 22 ct state new counter accept comment "Allow SSH to the router from the home network (jumphost access)"
+
+		# DHCPv6 replies and Router Solicitations arrive on link-local
+		# addresses; dnsmasq needs to receive them to answer SLAAC/RA on
+		# the VLANs. The per-VLAN `dhcp` service rule opens the ports, this
+		# rule makes sure link-local sourced traffic is not dropped first.
+{% if router_enable_ipv6 %}
+		ip6 saddr fe80::/10 udp dport { 546, 547 } counter accept comment "Allow DHCPv6 on link-local addresses"
+{% endif %}
+	}
+
+	chain forward {
+		################################################################
+		# Stateful plumbing
+		################################################################
+		# This single rule is what makes return traffic from the internet
+		# work for every lab device. It MUST come before the WAN -> LAN
+		# drop below, otherwise the lab can send but never receive.
+		ct state established,related counter accept comment "Allow return traffic for connections initiated from the lab"
+		ct state invalid counter drop comment "Drop invalid forwarded packets"
+
+		# Forwarded ICMPv6 error messages must survive, or Path MTU
+		# Discovery silently breaks for lab devices (connections hang on
+		# large packets instead of failing cleanly).
+		icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem } counter accept comment "Forward IPv6 error messages (Path MTU Discovery)"
+
+		################################################################
+		# Hard security boundaries (defence in depth)
+		################################################################
+{% if router_block_lab_to_home %}
+		# The lab must never reach the home network. NAT already makes
+		# this unlikely, but this is the rule that makes it impossible —
+		# including for IPv6, where there is no NAT at all.
+		iifname $LAN_IFACES ip daddr $HOME_NET counter drop comment "SECURITY: block lab devices from reaching the home network (IPv4)"
+{% if router_enable_ipv6 %}
+		iifname $LAN_IFACES oifname $WAN ip6 daddr fc00::/7 counter drop comment "SECURITY: block lab IPv6 from reaching ULA addresses on the home side"
+		iifname $LAN_IFACES oifname $WAN ip6 daddr fe80::/10 counter drop comment "SECURITY: block lab IPv6 from reaching link-local addresses on the home side"
+{% endif %}
+{% endif %}
+
+		# Nothing from the home network or the internet may open a NEW
+		# connection into the lab. Established/related traffic was already
+		# accepted at the top of this chain, so this only affects inbound
+		# connection attempts.
+		#
+		# This matters far more with IPv6 enabled: without NAT, every lab
+		# device would otherwise be directly reachable from the internet
+		# once the ISP routes a prefix.
+		iifname $WAN oifname $LAN_IFACES counter drop comment "SECURITY: block new WAN -> lab forwarding (defence in depth)"
+	}
+}

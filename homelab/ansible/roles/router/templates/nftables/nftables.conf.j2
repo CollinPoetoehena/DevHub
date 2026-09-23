@@ -1,0 +1,39 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+#
+# Main nftables configuration for the lab router.
+# This file is managed by Ansible — do not edit manually.
+#
+################################################################################
+# How this file works
+################################################################################
+# nftables.service loads exactly this file at boot. It deliberately contains no
+# rules of its own: it flushes the ruleset and then includes the numbered
+# fragments from {{ router_nftables_include_dir }}.
+#
+#   10-base.nft     tables, chains, hooks and default policies + shared defines
+#   20-nat.nft      NAT / masquerading (IPv4 and optionally IPv6)
+#   30-default.nft  static baseline rules (conntrack, ICMP(v6), hard denies)
+#   40-dynamic.nft  rules generated from router_vlans[].firewall
+#
+# The numbers matter: nftables evaluates rules inside a chain in the order they
+# were added, and the include glob expands in lexical order. So file order IS
+# policy order.
+#
+################################################################################
+# Why `flush ruleset` at the top
+################################################################################
+# Loading this file replaces the ENTIRE firewall in a single atomic
+# transaction: either the whole new ruleset becomes active, or the old one
+# stays untouched. There is never a moment where the router is half-configured.
+#
+# This is the main practical advantage over iptables, where every rule is
+# appended individually and a failure halfway through leaves an inconsistent
+# firewall behind. It also means re-running the playbook is genuinely
+# idempotent: the result depends only on the files, not on what was loaded
+# before.
+################################################################################
+
+flush ruleset
+
+include "{{ router_nftables_include_dir }}/*.nft"
