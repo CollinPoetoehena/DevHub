@@ -1,0 +1,13 @@
+galaxy_info:
+  author: CollinPoetoehena
+  description: Configure a host with Kubernetes (control plane or worker node)
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - homelab
+    - kubernetes
+
+dependencies: []

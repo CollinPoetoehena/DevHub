@@ -12,3 +12,5 @@ TODO: GitHub runner can be added later and use OUTBOUND connection so I do NOT e
 
 **TODO: I want to create VMs on Proxmox for the K8s cluster, explain here why VMs (extra layer, not on Bare Metal (BM)), such as more nodes available for the K8s cluster (segmentation, etc.), I want to learn VMs as well to get a deeper understanding, etc., TODO: explain with AI more and more reasons, etc.**
 TODO: for the monitoring separate dedicated monitoring VMs because this should be separate of the main cluster (it also monitors the cluster!), etc.! See [explanation in network design](../2_Network_Hosts/TODO.md#why-monitoring-lives-on-a-separate-vm-not-inside-kubernetes)
+
+TODO: use devhub.k8s role; see TODOs there.

@@ -98,7 +98,7 @@ ISP Modem (e.g. 192.168.2.0/24)
 - SSH enabled and an automation user (e.g. `ansibleremote`) user created (via the [users role: `devhub-ansible-users`](https://github.com/CollinPoetoehena/devhub-ansible-users) )
 - eth0 connected to ISP modem, eth1 connected to a switch
 
-Variables
+## Variables
 
 ### Required (no default — set in `group_vars/router/main.yml`)
 
@@ -152,6 +152,31 @@ firewall:
 Explicit denies are emitted before allows; anything unmatched falls through to `router_inter_vlan_default_policy` and then to the chain's `drop` policy. Invalid policy (non-dict `firewall`, or an `inter_vlan.to` that is not an existing VLAN id) fails early with a readable message instead of an `nft -f` syntax error.
 
 ## Usage
+
+Requirements file example (same directory as ansible.cfg, create a file called requirements.yml):
+```yaml
+---
+roles:
+  - name: devhub.router
+    src: https://github.com/CollinPoetoehena/devhub-ansible-router.git
+    scm: git
+    version: 1.0.0
+``` 
+
+Then install with: 
+```sh
+# NOTE: Example of roles path for -p is "roles/" (you can also specify this in ansible.cfg)
+ansible-galaxy install -r requirements.yml -p <path/to/roles>
+```
+
+Example playbook using this role (e.g. site.yml):
+```yaml
+- hosts: all
+  roles:
+    - role: devhub.router
+```
+
+Running the playbook with tags:
 
 ```bash
 # Run only the router role:

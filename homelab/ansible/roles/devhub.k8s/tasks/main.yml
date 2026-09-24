@@ -1,0 +1,5 @@
+---
+# tasks file for devhub-ansible-k8s
+
+# TODO: configure k8s here, can be either control-plane or worker node, but both in this single role!
+# TODO: can add all the different things here categorized, such as networking, storage, control-plane setup, worker node setup, etc.
