@@ -83,9 +83,15 @@
     # =========================================================================
     # PART 2 — Install Ansible Galaxy Roles
     # =========================================================================
+    # Show the value of galaxy_force_install before attempting to install roles (for observability purposes)
+    - name: "GALAXY ROLES | Show galaxy_force_install"
+      ansible.builtin.debug:
+        var: galaxy_force_install
+
     # Installs external roles defined in requirements.yml (e.g. devhub.users, devhub.jumphost).
     # These are pulled from Git repositories and placed in the roles/ directory.
     # --force is added only if galaxy_force_install is true, which allows reinstallation of roles even if they are already present.
+    # NOTE: For Git-based roles the ansible-galaxy install will re-clone the repository even if it already exists locally (so it will always install fresh copies).
     - name: "GALAXY ROLES | Install roles from requirements.yml"
       ansible.builtin.command:
         cmd: >

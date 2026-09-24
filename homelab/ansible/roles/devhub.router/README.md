@@ -1,6 +1,10 @@
-# Router Role
+# devhub-ansible-router
 
-Configures a Raspberry Pi as a dedicated lab router providing network isolation, DHCP, DNS, SLAAC/Router Advertisements, NAT and an **nftables** firewall for the homelab. The lab is **dual-stack (IPv4 + IPv6)**.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+
+Configures a Debian-based system (e.g. Raspberry Pi) as a dedicated lab router providing network isolation, DHCP, DNS, SLAAC/Router Advertisements, NAT and an nftables firewall (e.g. for a homelab). The lab is **dual-stack (IPv4 + IPv6)**. 
+
+Primarily used for my personal [homelab in DevHub](https://github.com/CollinPoetoehena/DevHub/blob/main/homelab/README.md) but also suitable for other small-scale lab environments.
 
 ## What This Role Does
 
@@ -59,7 +63,7 @@ This stays a directory (unlike the firewall) because each file registers variabl
 
 ## Why nftables (not iptables, not ufw)
 
-All three drive the same kernel subsystem (netfilter).
+All three drive the same kernel subsystem (netfilter). See for detailed explanation and setup [tasks/firewall.yml](tasks/firewall.yml).
 
 - **iptables** — legacy interface; separate rule sets for IPv4 (`iptables`) and IPv6 (`ip6tables`), no atomic apply, needs `iptables-persistent` to survive reboot, and on Debian today it is usually just a wrapper around nftables anyway.
 - **ufw** — a *frontend*, not a firewall. Great for a single-homed host ("which inbound ports are open"), but a router's NAT, per-interface forwarding and inter-VLAN policy end up as raw iptables in `before.rules` — you get two syntaxes and ufw's own chains in between.
@@ -77,23 +81,24 @@ Rule of thumb used in this homelab: **router → nftables**, **simple single-hos
 ## Network Topology
 
 ```
-ISP Modem (192.168.2.0/24)
+ISP Modem (e.g. 192.168.2.0/24)
     │
-    └── eth0 (WAN) ─── Raspberry Pi Router ─── eth1 (LAN, no IP) → Lab Switch
-                                                   │
+    └── eth0 (WAN) ─── Lab Router ─── eth1 (LAN, no IP) → Lab Switch
+                                                   │ VLANs, such as:
                                                    ├── eth1.10 (VLAN 10 — Management, 10.42.10.1/24, fd42:10::1/64)
                                                    ├── eth1.20 (VLAN 20 — Services,   10.42.20.1/24, fd42:20::1/64)
                                                    └── eth1.30 (VLAN 30 — IoT,        10.42.30.1/24, fd42:30::1/64)
 ```
 
+
 ## Requirements
 
 - Raspberry Pi 4 (or later) with Raspberry Pi OS Lite (64-bit)
 - Two Ethernet interfaces: built-in (eth0) + USB adapter (eth1)
-- SSH enabled and `ansibleremote` user created (via the users bootstrap play)
-- eth0 connected to ISP modem, eth1 connected to lab switch
+- SSH enabled and an automation user (e.g. `ansibleremote`) user created (via the [users role: `devhub-ansible-users`](https://github.com/CollinPoetoehena/devhub-ansible-users) )
+- eth0 connected to ISP modem, eth1 connected to a switch
 
-## Key Variables
+Variables
 
 ### Required (no default — set in `group_vars/router/main.yml`)
 

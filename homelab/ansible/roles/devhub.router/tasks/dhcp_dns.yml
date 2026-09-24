@@ -5,7 +5,7 @@
 # dnsmasq is a lightweight, easy-to-configure DHCP and DNS server. It is ideal
 # for a small homelab because:
 #   - Single package provides DHCP (v4), DHCPv6/RA (v6) and DNS
-#   - Minimal resource usage (perfect for a Raspberry Pi)
+#   - Minimal resource usage (perfect for a Debian-based system like Raspberry Pi)
 #   - Simple configuration file format
 #   - Automatically adds DHCP hostnames to local DNS (lab devices can resolve
 #     each other by name, e.g. "ping pve1.lab.local"), and with `ra-names` it

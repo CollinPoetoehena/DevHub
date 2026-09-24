@@ -110,8 +110,8 @@ table inet filter {
 		# rule comes next (in this case, eventually the chain's `policy drop`).
 		# This is what "rate limited" means in the comment: ping is allowed
 		# from everywhere for troubleshooting and for monitoring probes added
-		# later, but capped so it cannot be used to spin the CPU of a
-		# Raspberry Pi with a flood of ICMP echo requests.
+		# later, but capped so it cannot be used to spin the CPU with a flood 
+		# of ICMP echo requests.
 		icmp type echo-request limit rate 10/second counter accept comment "Allow IPv4 ping (rate limited)"
 		icmpv6 type echo-request limit rate 10/second counter accept comment "Allow IPv6 ping (rate limited)"
 

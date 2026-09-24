@@ -52,23 +52,11 @@
 ################################################################################
 # PLAY 1: Configure Lab Router (Raspberry Pi)
 ################################################################################
-# The lab router is the network foundation for the entire homelab. It provides:
-#   - Network isolation: lab runs on its own subnet (10.42.0.0/20), fully
-#     separated from the home network (192.168.2.0/24)
-#   - DHCP: automatically assigns IP addresses to lab devices
-#   - DNS: resolves domain names for lab devices (local + internet)
-#   - NAT: allows lab devices to access the internet through the ISP modem
-#   - Firewall: blocks lab → home network traffic for security
+# The lab router is the network foundation for the entire homelab. 
 #
-# The router is a Raspberry Pi with two Ethernet interfaces:
-#   - eth0 (WAN): connected to the ISP modem, gets IP via DHCP
-#   - eth1 (LAN): connected to the lab switch, static IP {{router_lan_ip}}
-#
-# Prerequisites before running this play:
-#   - Raspberry Pi OS Lite (64-bit) flashed and booted
-#   - SSH enabled and key-based auth configured
-#   - eth0 connected to ISP modem, eth1 (USB adapter) connected to lab switch
-#   - ansibleremote user created (by the Bootstrap OS Users play above)
+# See roles/devhub.router/README.md for detailed documentation on the lab router role.
+# In short, this setup configures the lab router to manage network traffic, provide DHCP 
+# and DNS services, and enforce network isolation for the homelab.
 #
 # Run: ansible-playbook site.yml --tags router
 ################################################################################
@@ -80,11 +68,11 @@
   tags:
     - router
   roles:
-    - role: router
+    - role: devhub.router
   post_tasks:
     - name: Display router information
       ansible.builtin.debug:
-        msg: "Lab router configuration completed successfully. See displayed summary by the router role."
+        msg: "Lab router configuration completed successfully. See displayed summary by the devhub.router role."
 
 # TODO: this below is for testing, see comment later below.
 # TODO: all roles in roles folder should be removed later, these should be split into separate repos later, see Issues in Git.
