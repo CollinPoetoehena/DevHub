@@ -137,6 +137,7 @@ router_dhcp_domain: "lab.local"
 # IPv6 addresses — that is the whole point of practising IPv6 properly.
 router_static_leases:
   - { mac: "28:94:01:8a:ec:28", ip: "10.42.10.2", hostname: "lab-switch" }
+  # - { mac: "<pve1 MAC>", ip: "10.42.10.10", hostname: "pve1" }
   # TODO: later add here the MAC addresses of the Proxmox physical nodes!
 
 ################################################################################
