@@ -135,10 +135,10 @@ sudo ss -tulpn | grep ssh
 # ========================== Find the Pi's IP address and hostname: ==========================
 # Find the Pi's IP address from the Pi itself:
 hostname -I
-# Example output: 192.168.2.123
+# Example output: 192.168.2.59
 # Or from the network interfaces on the Pi itself (assuming eth0 is the interface connected to the home network):
 ip a show eth0 | grep 'inet '
-# Example output: inet 192.168.2.123/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
+# Example output: inet 192.168.2.59/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
 # Or from another device on the same network (e.g., your laptop) one of these commands
 ip neigh # New version
 arp -a # Old version
@@ -156,7 +156,7 @@ ping <pi-hostname>.local
 
 # Connect from your laptop:
 ssh <username>@<pi-ip>
-# Example: ssh pi@192.168.2.123
+# Example: ssh pi@192.168.2.59
 # Use the username you set during Raspberry Pi OS setup (default is "pi").
 # On first connect you'll be asked to confirm the host fingerprint — type "yes".
 # NOTE: This should work from WSL as well, even with a VPN (unless you have a full VPN), check reachability via ping with IP (hostname usually does not work from WSL!)!
@@ -175,11 +175,17 @@ ssh <username>@lab-router.local
     - **Jumphost role:** The lab router is also used as a secure entry point to the home lab network (jumphost), providing SSH forwarding, access controls, and security hardening for safe gateway access to the private network. See details in [Network Design — Jumphost: Secure Access to Lab Network](../1_Design/2_Design_Network.md#jumphost-secure-access-to-lab-network).
     - **`devhub-ansible-jumphost` role usage:** The `devhub-ansible-jumphost` role contains the necessary tasks and configurations for setting up the lab router as a secure jumphost, including SSH hardening, access controls, and security measures. 
 
-> **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1](../0_Local_Environment_Setup.md#step-1-generate-an-ssh-key-pair) if you haven't done this yet.
+> **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1: Generate an SSH Key Pair](./1_Setup_Local_Environment.md) if you haven't done this yet.
 
 ```bash
 # Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
 cd homelab; source venv/bin/activate; cd ansible
+
+# Load the SSH key into the agent so Ansible can use it without prompting for the passphrase.
+# Without this, Ansible fails with "Permission denied (publickey)" because it cannot
+# interactively prompt for the key's passphrase like a manual ssh command can.
+eval $(ssh-agent) && ssh-add ~/.ssh/id_homelab
+# Enter your passphrase once — it stays cached for this shell session.
 
 # ========================== Bootstrap the ansibleremote user ==========================
 # Run the users play to create the ansibleremote service account on the Pi.
