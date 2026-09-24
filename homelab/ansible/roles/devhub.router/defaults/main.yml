@@ -7,8 +7,9 @@
 #
 ################################################################################
 # Reference: Where to find these variables and documentation:
-# See docs/2_Network_Hosts/TODO.md for details on the network design and used
-# variables, such as the LAN subnet, DHCP range, static leases and VLAN rules.
+# This role is generic, but it is mainly used for my homelab for which I can find
+# the documentation for the network design at (use as a reference for your network
+# design): https://github.com/CollinPoetoehena/DevHub/blob/main/homelab/docs/1_Design/2_Design_Network.md
 ################################################################################
 
 ################################################################################

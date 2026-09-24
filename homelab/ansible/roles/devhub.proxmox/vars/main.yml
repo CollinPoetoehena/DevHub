@@ -1,5 +1,5 @@
 ---
-# vars file for proxmox
+# vars file for devhub-ansible-proxmox
 #
 # Variables defined here have higher precedence than defaults/main.yml and
 # cannot be overridden by inventory variables. Use this for values that should

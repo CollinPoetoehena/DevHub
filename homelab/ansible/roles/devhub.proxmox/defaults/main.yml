@@ -1,13 +1,8 @@
 ---
-# defaults file for proxmox
+# defaults file for devhub-ansible-proxmox
+#
 # Generic defaults that work for any deployment. Site-specific values
-# (network addressing, home subnet, DHCP range) MUST be set in
-# group_vars/proxmox/ or host_vars/.
-
-################################################################################
-# Reference: Where to find these variables and documentation:
-# See docs/TODO
-################################################################################
+# MUST be set in group_vars/proxmox/ or host_vars/.
 
 ################################################################################
 # Network Interfaces

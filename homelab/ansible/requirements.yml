@@ -1,19 +1,23 @@
 ---
 roles:
-  # TODO: these roles I want to keep, such as users to create users on all hosts, jumphost and mgmtvm to interact with all the clusters (e.g. with the monitoring VMs, run Ansible, etc.)
-  - name: devhub.users # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
+  # Roles from my DevHub (prepended with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project)
+  - name: devhub.users 
     src: https://github.com/CollinPoetoehena/devhub-ansible-users.git
     scm: git
     version: 1.0.0
-  - name: devhub.jumphost # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
+  - name: devhub.jumphost
     src: https://github.com/CollinPoetoehena/devhub-ansible-jumphost.git
     scm: git
     version: 1.0.0
-  - name: devhub.mgmtvm # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
+  - name: devhub.mgmtvm
     src: https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm.git
     scm: git
     version: 1.0.0
-  - name: devhub.router # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
+  - name: devhub.router
     src: https://github.com/CollinPoetoehena/devhub-ansible-router.git
     scm: git
     version: 1.0.0
+  - name: devhub.proxmox
+    src: https://github.com/CollinPoetoehena/devhub-ansible-proxmox.git
+    scm: git
+    version: initial-setup # TODO: change to PRD version later when it is done and tested!

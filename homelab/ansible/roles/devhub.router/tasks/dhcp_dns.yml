@@ -11,7 +11,7 @@
 #     each other by name, e.g. "ping pve1.lab.local"), and with `ra-names` it
 #     does the same for SLAAC-derived IPv6 addresses
 # See for more details dnsmasq documentation: https://dnsmasq.org/doc.html and https://docs.opnsense.org/manual/dnsmasq.html
-# And see devhub/reference/dnsmasq.md.
+# See for more details about dnsmasq also my DevHub reference: https://github.com/CollinPoetoehena/DevHub/blob/main/reference/network/dnsmasq.md
 #
 # What this task file does:
 #   1. Installs dnsmasq

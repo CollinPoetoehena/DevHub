@@ -94,7 +94,8 @@
 ################################################################################
 # The physical eth1 interface must be up for VLAN sub-interfaces to work,
 # but carries no production traffic (native VLAN 1 is unused).
-# See TODO.md for why it is unused.
+# See for an example design where this is not used and why my homelab for reference:
+# https://github.com/CollinPoetoehena/DevHub/blob/main/homelab/docs/1_Design/2_Design_Network.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged
 #
 # The WAN interface (eth0) is left as DHCP — it gets its IP from the ISP modem.
 #
