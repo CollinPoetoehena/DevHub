@@ -13,3 +13,7 @@ roles:
     src: https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm.git
     scm: git
     version: 1.0.0
+  - name: devhub.router # Prepend with "devhub." to indicate this is a role from somewhere else (my DevHub), not specific to this project
+    src: https://github.com/CollinPoetoehena/devhub-ansible-router.git
+    scm: git
+    version: 1.0.0

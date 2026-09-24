@@ -2,10 +2,23 @@
 
 After preparing your hardware and prerequisites, the next step is to set up the local development environment on your laptop. This is a one-time setup that generates an SSH key, installs dependencies, generates the inventory, and configures the Ansible Vault for secrets management.
 
+---
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Step 1: Generate an SSH Key Pair](#step-1-generate-an-ssh-key-pair)
+- [Step 2: Install Python venv with Ansible and Run Setup Playbook](#step-2-install-python-venv-with-ansible-and-run-setup-playbook)
+- [Reusable Components](#reusable-components)
+
+---
+
 ## Prerequisites
 
 - **Python 3** — required to run Ansible (comes pre-installed on most Linux distributions and macOS; on Windows use WSL)
 - **Git** — to clone this repository
+
+---
 
 ## Step 1: Generate an SSH Key Pair
 
@@ -28,6 +41,8 @@ ssh-keygen -t ed25519 -C "your-email@example.com"
 
 This key is referenced in `ansible.cfg` as `private_key_file = ~/.ssh/id_homelab` and stored in the Ansible Vault as `vault_ssh_private_key_src_ansibleremote` so the `users` role can deploy the public key to remote hosts.
 
+---
+
 ## Step 2: Install Python venv with Ansible and Run Setup Playbook
 
 ```bash
@@ -47,6 +62,33 @@ ansible --version
 # --diff: show file changes made on the host
 cd ansible # Should run playbooks from this directory because this is where ansible.cfg is located
 ansible-playbook setup_local_env.yml --diff
+# Optionally, override variables in the ansible/vars/setup_local_env.yml, such as (-e/--extra-vars has the highest variable precedence in Ansible):
+ansible-playbook setup_local_env.yml --diff -e "galaxy_force_install=false"
 ```
 
 After this completes, your environment is ready to run playbooks. See the setup playbook itself (`ansible/setup_local_env.yml`) for full details on what each step does, and `ansible/vars/setup_local_env.yml` for how to add new hosts or vault secrets.
+
+---
+
+## Reusable Components
+
+This homelab repository focuses on describing the desired infrastructure and connecting reusable building blocks together. Infrastructure capabilities themselves should be maintained in dedicated repositories. Examples:
+- [`devhub-ansible-router`](https://github.com/CollinPoetoehena/devhub-ansible-router) → Router and network configuration role
+- [`devhub-ansible-proxmox`](https://github.com/CollinPoetoehena/devhub-ansible-proxmox) → Proxmox host installation and configuration role
+- [`devhub-terraform-proxmox`](https://github.com/CollinPoetoehena/devhub-terraform-proxmox) → Terraform modules for managing Proxmox resources
+- Etc...
+
+See for the exact details of the reusable components used the [Ansible requirements.yml](../ansible/requirements.yml) and the [Terraform modules](../terraform/modules/).
+
+**Why use separate repositories?** Even though it might seem convenient to keep all infrastructure code in a single repository and many of the reusable components are only used in this homelab, separating concerns into dedicated repositories provides numerous benefits:
+- **Clear separation of concerns**: the homelab defines *what* infrastructure is needed, while dedicated roles and modules define *how* it is implemented.
+- **Independent versioning**: roles and modules can be released, upgraded, and tested separately from the homelab repository (no additional unrelated history or changes are mixed in this homelab repository; each repository maintains its own versioning and history).
+- **Reusability**: components can be reused in other projects, environments, or future homelabs without copying code.
+- **Better maintainability**: changes to router, Proxmox, Kubernetes, or other capabilities are isolated and easier to review.
+- **Easier testing**: individual roles and modules can be validated independently before being consumed by the homelab.
+- **Reduced coupling**: infrastructure capabilities are not tied to a single homelab implementation.
+- **Scalability**: as the environment grows, new capabilities can be added as dedicated repositories without making the homelab repository overly complex.
+
+The homelab repository should therefore be viewed primarily as an integration layer that consumes reusable Ansible roles, Terraform modules, and other infrastructure components.
+
+**TODO: add in `setup_local_env.yml` also installing the Terraform modules automatically!!**.

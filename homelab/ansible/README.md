@@ -26,13 +26,7 @@ ansible/
 ├── group_vars/              # Global group variables
 ├── host_vars/               # Host-specific variables
 └── roles/                   # Ansible roles (reusable pieces of configuration) for different responsibilities
-    ├── common/              # Base configuration for all nodes
-    ├── jump_host/           # Jump host/bastion configuration for secure SSH access
-    ├── mgmt_vm/             # Management VM with tooling (kubectl, helm, ansible, Azure CLI, etc.)
-    ├── container_runtime/   # Container runtime installation
-    ├── k8s_control_plane/   # Kubernetes control plane setup
-    ├── k8s_worker/          # Kubernetes worker node setup
-    └── networking/          # CNI plugin configuration
+    └── ...
 ```
 **site.yml** is the conventional name for the top‑level playbook that defines and runs your entire infrastructure in one place. Historically, Ansible borrowed ideas from configuration‑management tools like Puppet and CFEngine, where the top‑level file described the entire site configuration, meaning all hosts, all roles, all environments, the whole infrastructure "site". So, `site.yml` is the **conventional name for the master playbook that orchtestrates everything in your infrastructure**. It is not about a wesbite, but about your "site" as in "your whole environment".
 
