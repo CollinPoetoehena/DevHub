@@ -79,7 +79,7 @@
 # WAN side genuinely is a client of the ISP modem, accept_ra must be forced to
 # 2 ("accept RA even when forwarding is enabled") or the router will never install
 # an IPv6 default route and IPv6 egress silently fails.
-- name: Accept Router Advertisements on WAN even though forwarding is enabled
+- name: Accept Router Advertisements (RAs) on WAN even though forwarding is enabled
   ansible.builtin.sysctl:
     name: "net.ipv6.conf.{{ router_wan_interface }}.accept_ra"
     value: "2"
@@ -152,7 +152,7 @@
     ifname: "{{ item.interface }}" # Kernel interface name (e.g. "eth1.10")
     type: vlan # 802.1Q VLAN sub-interface — creates a virtual interface (e.g. eth1.20@eth1) that tags/untags Ethernet frames with the VLAN ID on the parent interface
     vlanid: "{{ item.id }}" # VLAN tag ID (e.g. 10)
-    vlandev: "{{ router_lan_interface }}" # Parent physical interface (eth1)
+    vlandev: "{{ router_lan_interface }}" # Parent physical interface (the device, such as eth1)
     ip4: "{{ item.gateway_ip }}/{{ item.cidr }}" # Static IPv4 gateway IP for this VLAN
     method4: manual # Static IPv4 (not DHCP) — the router IS the gateway
     ip6: "{{ (item.gateway_ip6 ~ '/' ~ item.cidr6) if router_enable_ipv6 else omit }}"
