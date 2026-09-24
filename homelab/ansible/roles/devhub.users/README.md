@@ -98,7 +98,7 @@ Stale files are **removed** automatically to avoid orphaned sudo grants:
 
 ```yaml
 users_groups:
-  - groupname: as-admin
+  - groupname: admin
     use_sudo: true          # all members get passwordless sudo via group file
 
 users_list:
@@ -117,7 +117,7 @@ users_list:
 
   - username: poetoec
     desc: "Collin Poetoëhena"
-    group: as-admin         # sudo inherited from group; no per-user sudoers file added
+    group: admin         # sudo inherited from group; no per-user sudoers file added
     use_sudo: true
 
   - username: addmuser
@@ -158,7 +158,7 @@ ansible-galaxy install -r requirements.yml -p <path/to/roles>
   become: true
   vars:
     users_groups:
-      - groupname: as-admin
+      - groupname: admin
         use_sudo: true
 
     users_list:
@@ -179,7 +179,7 @@ ansible-galaxy install -r requirements.yml -p <path/to/roles>
       # Specific for a personal account, such as for an administrator, etc.
       - username: poetoec
         desc: "Collin Poetoëhena"
-        group: as-admin
+        group: admin
         use_sudo: true
       # Account for external monitoring tool; no sudo or SSH access needed since it only needs to run a local agent that doesn't connect anywhere or require elevated permissions.
       - username: addmuser

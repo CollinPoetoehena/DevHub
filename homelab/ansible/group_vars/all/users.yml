@@ -50,7 +50,7 @@ ssh_private_keys_ansibleremote: []
 _users_groups_base:
   # Shared admin group — sudo at group level so all members inherit it without
   # needing individual /etc/sudoers.d/ files (see users role README: Sudo behaviour).
-  - groupname: as-admin
+  - groupname: admin
     use_sudo: true
   # Non-privileged group for testing unprivileged access
   - groupname: testuser
@@ -77,20 +77,20 @@ _users_list_base:
     ssh_public_keys:
       - src: "{{ ssh_public_key_src_ansibleremote }}"
         comment: "Ansible controller key"
-  # Personal admin accounts — sudo inherited from as-admin group, so no redundant per-user sudoers file is created (see role/users role README).
+  # Personal admin accounts — sudo inherited from admin group, so no redundant per-user sudoers file is created (see role/users role README).
   # In practice, a team of people/administrators need access to the hosts (e.g. a mgmtvm or a different host, etc.), each with their
   # own account and SSH key, etc., and this setup below illustrates that is possible by just adding more entries to the list here.
   # NOTE: These admin accounts are added to all hosts (including non-mgmt hosts) because you may need to log in to any host to troubleshoot or perform a manual task, etc.
   - username: poetoec # My personal account
     desc: "Collin Poetoehena"
-    group: as-admin
+    group: admin
     use_sudo: true
     ssh_public_keys:
       - src: "{{ vault_ssh_public_key_src_poetoec }}" # Store the actual key src in vault.yml as vault_ssh_public_key_src_poetoec.
         comment: "poetoec personal key"
   - username: dummy # Dummy account for testing using the same setup as other admin accounts (e.g. to test with a different admin account than my personal account (with the same definition/privileges) or test other behavior, etc.)
     desc: "Dummy account for testing (using the same setup as other admin accounts)"
-    group: as-admin
+    group: admin
     use_sudo: true
     ssh_public_keys:
       - src: "{{ vault_ssh_public_key_src_dummy }}" # Store the actual key src in vault.yml as vault_ssh_public_key_src_dummy.
