@@ -86,17 +86,23 @@
     # Show the value of galaxy_force_install before attempting to install roles (for observability purposes)
     - name: "GALAXY ROLES | Show galaxy_force_install"
       ansible.builtin.debug:
-        var: galaxy_force_install
+        msg:
+          - "galaxy_force_install original value: {{ galaxy_force_install }}"
+          - "galaxy_force_install with type: {{ galaxy_force_install | type_debug }}"
+          # NOTE: this is specifically important because an extra var (e.g. -e "galaxy_force_install=false") is still true because it 
+          # is typed as a string and it only checks if it is "truthy" for string which is any non-empty string evaluates to true.
+          - "galaxy_force_install true or false (with original type): {% if galaxy_force_install %}true {% else %}false {% endif %}"
+          - "galaxy_force_install converted to bool: {{ galaxy_force_install | bool }}"
 
     # Installs external roles defined in requirements.yml (e.g. devhub.users, devhub.jumphost).
     # These are pulled from Git repositories and placed in the roles/ directory.
     # --force is added only if galaxy_force_install is true, which allows reinstallation of roles even if they are already present.
-    # NOTE: For Git-based roles the ansible-galaxy install will re-clone the repository even if it already exists locally (so it will always install fresh copies).
     - name: "GALAXY ROLES | Install roles from requirements.yml"
       ansible.builtin.command:
+        # Use "| bool" to convert the galaxy_force_install variable to a boolean before evaluating it (fixes an earlier bug of treating non-empty strings as true)
         cmd: >
           ansible-galaxy install -r {{ requirements_file }}
-          {% if galaxy_force_install %} --force {% endif %}
+          {% if galaxy_force_install | bool %} --force {% endif %}
       register: galaxy_result
       changed_when: "'was installed successfully' in galaxy_result.stdout"
 

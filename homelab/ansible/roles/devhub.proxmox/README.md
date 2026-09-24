@@ -9,7 +9,10 @@ Primarily used for my personal [homelab in DevHub](https://github.com/CollinPoet
 **TODO: fill this in below further when this role is fully done:**
 ## Requirements
 
-List any dependencies or prerequisites here.
+- Proxmox VE installed on the host machine via a boot device: see [DevHub/reference/os_hardware/Booting_OS.md](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/os_hardware/Booting_OS.md#hypervisor-installation-proxmox-ve)
+- A network connection for the control machine to communicate with the Proxmox host and SSH access.
+- Python and Ansible installed on the control machine to run the playbooks.
+- TODO: any others??
 
 ## Variables
 
