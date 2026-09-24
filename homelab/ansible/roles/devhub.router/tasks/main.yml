@@ -1,5 +1,5 @@
 ---
-# tasks file for router
+# tasks file for devhub-ansible-router
 #
 # This role configures a Debian-based system (e.g. Raspberry Pi) as a dedicated lab router.
 # It provides:

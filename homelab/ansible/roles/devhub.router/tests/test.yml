@@ -2,4 +2,4 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - router
+    - devhub-ansible-router
