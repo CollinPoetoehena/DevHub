@@ -11,8 +11,8 @@ From the Pi:
 ```bash
 nmcli connection show   # lab-wan (eth0), lab-lan (eth1), vlan-management (eth1.10), vlan-services (eth1.20), vlan-iot (eth1.30), lo
 ip a                    # eth0: 192.168.2.x/24 (DHCP from ISP modem); eth1: no IPv4; eth1.10: 10.42.10.1/24; eth1.20: 10.42.20.1/24; eth1.30: 10.42.30.1/24
-ip r                    # default via 192.168.2.254 dev eth0; 10.42.10.0/24 dev eth1.10; 10.42.20.0/24 dev eth1.20; 10.42.30.0/24 dev eth1.30
-ping -c 3 192.168.2.1   # Test ISP modem reachability
+ip r                    # default via 192.168.2.254 (or different ISP modem IP) dev eth0; 10.42.10.0/24 dev eth1.10; 10.42.20.0/24 dev eth1.20; 10.42.30.0/24 dev eth1.30
+ping -c 3 192.168.2.1   # Test ISP modem reachability (NOTE: the IP of your modem might differ!)
 ping -c 3 8.8.8.8       # Test internet from Pi
 ip neigh                # 192.168.2.254 on eth0 REACHABLE; lab devices on eth1.10/eth1.20/eth1.30 REACHABLE
 arp -n                  # Same information as ip neigh, in older format

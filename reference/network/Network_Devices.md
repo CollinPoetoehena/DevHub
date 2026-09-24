@@ -26,7 +26,7 @@ Modem is short for *modulator-demodulator*. It converts digital signals from you
 - **DNS forwarding:** Passes DNS queries from home devices to the ISP's DNS servers (or a configured upstream resolver).
 - **Firewall:** Blocks unsolicited inbound traffic from the internet by default — only traffic that was initiated from inside is allowed back in. This applies to both IPv4 and IPv6. For IPv4, NAT provides an additional (accidental) layer of protection because private IPs are not routable. For IPv6, the firewall is the *only* protection — there is no NAT hiding devices. This makes the firewall critically important for IPv6.
 - **WiFi access point** (on combined units): Provides wireless connectivity for home devices.
-- **Admin interface:** Accessible via a browser at its LAN IP (typically `192.168.2.1` or `192.168.1.1`). Used to view connected devices, DHCP leases, port forwarding rules, and static IP reservations.
+- **Admin interface:** Accessible via a browser at its LAN IP (typically `192.168.2.254`, `192.168.2.1` or `192.168.1.1`). Used to view connected devices, DHCP leases, port forwarding rules, and static IP reservations.
 
 **Double NAT (IPv4 only):** If you place a second router (e.g. a Raspberry Pi) behind the ISP modem, you create a *double NAT* situation — the ISP modem NATs to the second router's WAN IP, and the router NATs again to other devices. This is fine for outbound internet access but complicates inbound connections (e.g. accessing lab services from outside). Note that double NAT is an IPv4 concept — with IPv6 there is no NAT at all, so the router would simply route IPv6 traffic (if IPv6 forwarding is enabled) and rely on firewall rules for security.
 

@@ -8,7 +8,7 @@ This document provides guidance for diagnosing and resolving common issues durin
 
 - **Symptoms:** Multiple devices (phone, TV, printer) lose internet while others work fine.
 - **Cause:** Proxmox `vmbr0` bridge on the home LAN conflicts with the ISP modem's DHCP — causes duplicate IPs.
-- **Diagnosis:** Check ISP modem admin page (`192.168.2.1`) → DHCP leases → look for duplicate IPs.
+- **Diagnosis:** Check ISP modem admin page (e.g. `192.168.2.254` or `192.168.2.1`) → DHCP leases → look for duplicate IPs.
 - **Fix:** Set up a dedicated lab router (Raspberry Pi) between the ISP modem and lab devices to isolate the lab subnet. See [Network Setup](./2_1_Network_Setup.md).
 - **Interim workaround:** Shut down the Proxmox host until the lab router is ready.
 

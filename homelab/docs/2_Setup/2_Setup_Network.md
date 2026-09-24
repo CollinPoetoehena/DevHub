@@ -1,10 +1,9 @@
 # Setup & Installation: Network
 
-This document covers the specific steps to set up the homelab network using the setup explained in [Network Design](TODO.md).
+This document covers the specific steps to set up the homelab network using the setup explained in [Network Design](../1_Design/2_Design_Network.md).
 
-> **Prerequisites:** See [Network Design — Hardware & Software](TODO.md#hardware--software) for all required hardware (Pi, SD card, USB-Ethernet adapter, switch, cables) and software choices before starting.
->
-> See [Network Design](TODO.md) for the network architecture, design decisions, and target topology.
+> **Prerequisites:** See [Network Design — Hardware & Software](../1_Design/2_Design_Network.md#hardware--software) for all required hardware (Pi, SD card, USB-Ethernet adapter, switch, cables) and software choices before starting.
+> See [Network Design — Network Topology & Design](../1_Design/2_Design_Network.md#network-topology--design) for the network design, design decisions, and target topology.
 > See the [Network Reference](../../../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
 > **If you need to shutdown the Pi, such as when you are not using it anymore, etc., use:** `sudo shutdown -h now` — wait for the lights to stop blinking, then unplug the power supply. Power on again by plugging it back in.
 
@@ -24,7 +23,7 @@ This document covers the specific steps to set up the homelab network using the 
 
 ## Step 1: Reserve a Static IP for the Pi on the ISP Modem
 
-Log in to the ISP modem admin page (typically `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
+Log in to the ISP modem admin page (typically `192.168.2.254` or `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
 
 ---
 
@@ -136,7 +135,7 @@ hostname
 # Optionally check if the Pi is reachable from your laptop:
 ping <pi-ip>
 ping <pi-hostname>.local
-# If not reachable, make sure the Pi is connected to the ISP modem and that your laptop is on the same network (e.g., connected to the same WiFi or LAN (e.g. if the ISP modem has IP 192.168.2.1, your laptop and the Pi should have an IP in the same subnet: 192.168.2.x)).
+# If not reachable, make sure the Pi is connected to the ISP modem and that your laptop is on the same network (e.g., connected to the same WiFi or LAN (e.g. if the ISP modem has IP 192.168.2.254 or 192.168.2.1, your laptop and the Pi should have an IP in the same subnet: 192.168.2.x)).
 
 # Connect from your laptop:
 ssh <username>@<pi-ip>
@@ -151,10 +150,10 @@ ssh <username>@lab-router.local
 
 ## Step 3: User Setup & Jumphost and Security Hardening
 
-This step does the following:
+**This step does the following:**
 1. Sets up the `ansibleremote` user and other users on the lab router for secure Ansible management. After this, the lab router can be managed remotely using Ansible with the `ansibleremote` user. This step needs to happen first because the Pi comes with a default user that has limited privileges and is not suitable for secure remote management.
 2. Configures the lab router as a secure *jumphost*, enabling safe access to the home lab network while enforcing security hardening measures. 
-    - **Jumphost role:** The lab router is also used as a secure entry point to the home lab network (jumphost), providing SSH forwarding, access controls, and security hardening for safe gateway access to the private network. See details in [Network Design](../1_Design/2_Network.md#jumphost-secure-access-to-lab-network).
+    - **Jumphost role:** The lab router is also used as a secure entry point to the home lab network (jumphost), providing SSH forwarding, access controls, and security hardening for safe gateway access to the private network. See details in [Network Design — Jumphost: Secure Access to Lab Network](../1_Design/2_Design_Network.md#jumphost-secure-access-to-lab-network).
     - **`devhub-ansible-jumphost` role usage:** The `devhub-ansible-jumphost` role contains the necessary tasks and configurations for setting up the lab router as a secure jumphost, including SSH hardening, access controls, and security measures. 
 
 > **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1](../0_Local_Environment_Setup.md#step-1-generate-an-ssh-key-pair) if you haven't done this yet.
@@ -251,7 +250,7 @@ TODO: refer here to the next step where also the firewall is set up, etc., which
 In this step we will configure the switch and ensure that the `eth1` interface of the router has carrier (i.e., is physically connected and active).
 
 ### Step 5.1: Configure the Managed Switch (via Laptop)
-**Why not just give `eth1` an IP on VLAN 1 and configure the switch through the Pi?** An alternative would be to assign an IP to the Pi's physical `eth1` interface (on the native VLAN 1), connect the unconfigured switch, and configure it from there — the switch defaults to VLAN 1 for management, so it would be reachable. However, this is rejected because VLAN 1 is deliberately unused in this design: all production traffic must be explicitly VLAN-tagged. Adding an IP to `eth1` — even temporarily — breaks that principle and introduces the exact ambiguity the design avoids. See [Network Design — Why VLAN 1 is not used](TODO.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged) for the full rationale. Configuring the switch via a direct laptop connection is simpler and keeps the router configuration clean.
+**Why not just give `eth1` an IP on VLAN 1 and configure the switch through the Pi?** An alternative would be to assign an IP to the Pi's physical `eth1` interface (on the native VLAN 1), connect the unconfigured switch, and configure it from there — the switch defaults to VLAN 1 for management, so it would be reachable. However, this is rejected because VLAN 1 is deliberately unused in this design: all production traffic must be explicitly VLAN-tagged. Adding an IP to `eth1` — even temporarily — breaks that principle and introduces the exact ambiguity the design avoids. See [Network Design — Why VLAN 1 is not used](../1_Design/2_Design_Network.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged) for the full rationale. Configuring the switch via a direct laptop connection is simpler and keeps the router configuration clean.
 
 Additionally, because all production traffic is explicitly VLAN-tagged in this design, the switch must have VLANs 10, 20, and 30 created and its management moved to VLAN 10 before it can participate in the lab network. Without this, the switch only speaks on the native VLAN (VLAN 1), which carries no production traffic.
 
@@ -277,7 +276,7 @@ The switch ships with DHCP enabled on VLAN 1 — **but it only receives a DHCP a
 4. Open a web browser and navigate to the switch’s IP (e.g., `http://192.168.0.239`) to access the management UI.
 5. Follow the next steps below, such as configuring the switch, etc. Any errors related to internet connectivity can be ignored at this stage, as the switch is not yet connected to the network.
 #### Step 5.1.2: Configure the Switch
-Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](TODO.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](TODO.md#switch-port-assignments-netgear-gs305e--5-ports) for the port-to-VLAN mapping. **In the NETGEAR web UI:**
+Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](../1_Design/2_Design_Network.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](../1_Design/2_Design_Network.md#switch-port-assignments) for the port-to-VLAN mapping. **In the NETGEAR web UI:**
 1. **Log in** — Default credentials: no username, password is `password` (unless specified otherwise by your switch, check the switch's manual)
 2. **Change password** — Navigate to **System → Maintenance → Change Password** (or the switch may force you on first login). Set a strong, unique password and store it in your password manager
 3. **Set switch name** — Navigate to **System → Maintenance → Switch Information** and set the Switch Name to `lab-switch`
