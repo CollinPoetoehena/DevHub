@@ -4,7 +4,7 @@ TODO: here the actual services that run on the homelab.
 
 # TODO: what to run on the home lab cluster:
 TODO: for services/workloads do energy monitoring to add value in the home
-TODO: the IoT devices can run in VLAN 30 IoT, see [Network Topology & Design](../1_Design/2_Design_Network.md#network-topology--design)
+TODO: the IoT devices can run in VLAN 30 IoT, see [Network Topology & Design](../1_Design/3_Design_Network.md#network-topology--design)
 
 **TODO: MetalLB for VIPs and load balancing. TODO: also how to securely expose services to the outside world (e.g., via Ingress, Traefik, or NGINX), etc., so that I can use the service from outside the home network for example, etc.**
 

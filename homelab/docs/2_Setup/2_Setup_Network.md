@@ -1,10 +1,10 @@
 # Setup & Installation: Network
 
-This document covers the specific steps to set up the homelab network using the setup explained in [Network Design](../1_Design/2_Design_Network.md).
+This document covers the specific steps to set up the homelab network using the setup explained in [Network Design](../1_Design/3_Design_Network.md).
 
-> **Prerequisites:** See [Network Design — Hardware & Software](../1_Design/2_Design_Network.md#hardware--software) for all required hardware (Pi, SD card, USB-Ethernet adapter, switch, cables) and software choices before starting.
-> See [Network Design — Network Topology & Design](../1_Design/2_Design_Network.md#network-topology--design) for the network design, design decisions, and target topology.
-> The lab network is **dual-stack (IPv4 + IPv6)** — see [Network Design — IPv6 Addressing (ULA + NAT66)](../1_Design/2_Design_Network.md#ipv6-addressing-ula--nat66-on-the-lab-network) for why, and expect IPv6 gateway addresses/verification alongside the IPv4 ones throughout this document.
+> **Prerequisites:** See [Network Design — Hardware & Software](../1_Design/3_Design_Network.md#hardware--software) for all required hardware (Pi, SD card, USB-Ethernet adapter, switch, cables) and software choices before starting.
+> See [Network Design — Network Topology & Design](../1_Design/3_Design_Network.md#network-topology--design) for the network design, design decisions, and target topology.
+> The lab network is **dual-stack (IPv4 + IPv6)** — see [Network Design — IPv6 Addressing (ULA + NAT66)](../1_Design/3_Design_Network.md#ipv6-addressing-ula--nat66-on-the-lab-network) for why, and expect IPv6 gateway addresses/verification alongside the IPv4 ones throughout this document.
 > See the [Network Reference](../../../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
 > **If you need to shutdown the Pi, such as when you are not using it anymore, etc., use:** `sudo shutdown -h now` — wait for the lights to stop blinking, then unplug the power supply. Power on again by plugging it back in.
 
@@ -32,7 +32,7 @@ This document covers the specific steps to set up the homelab network using the 
 >
 > **Extra caution with IPv6:** Unlike IPv4 (where devices use private addresses like `192.168.x.x` behind NAT and are not directly reachable from the internet), IPv6 gives every device a **globally unique, internet-routable public address**. This means IPv6 addresses are *far more sensitive* than IPv4 private addresses — leaking an IPv6 address in documentation, a screenshot, or a log file exposes the real, directly reachable address of that device. An attacker with your device's IPv6 address can attempt to connect to it directly (if your firewall allows it or is misconfigured). Commands like `ip -6 addr show scope global`, `curl -6 ifconfig.me`, or even `ip a` (which shows `inet6` lines with global-scope addresses) can reveal public IPv6 addresses — never include their output in documentation or public repositories. Furthermore, if privacy extensions are not enabled, the IPv6 address embeds the device's MAC address (via EUI-64), which is a permanent hardware identifier that can be used to track the device across networks. See [Subnets & IP Addresses — IPv6](../../../reference/network/Subnets_and_IP_Addresses.md#ipv6) for full details on how IPv6 addressing works and why NAT does not protect IPv6 devices.
 
-**Note:** the lab network's own IPv6 addressing (`fd42::/48`) is ULA (Unique Local Address) rather than a global/public prefix, so those specific addresses are not internet-reachable and are safe to reference in this documentation the same way the `10.42.0.0/20` range is — see [Network Design — IPv6 Addressing (ULA + NAT66)](../1_Design/2_Design_Network.md#ipv6-addressing-ula--nat66-on-the-lab-network) for why ULA was chosen. The caution above applies to the router's WAN-side global IPv6 address (if the ISP hands one out via SLAAC) and to any lab device that might one day get a delegated global address — never paste those into documentation.
+**Note:** the lab network's own IPv6 addressing (`fd42::/48`) is ULA (Unique Local Address) rather than a global/public prefix, so those specific addresses are not internet-reachable and are safe to reference in this documentation the same way the `10.42.0.0/20` range is — see [Network Design — IPv6 Addressing (ULA + NAT66)](../1_Design/3_Design_Network.md#ipv6-addressing-ula--nat66-on-the-lab-network) for why ULA was chosen. The caution above applies to the router's WAN-side global IPv6 address (if the ISP hands one out via SLAAC) and to any lab device that might one day get a delegated global address — never paste those into documentation.
 
 ---
 
@@ -172,7 +172,7 @@ ssh <username>@lab-router.local
 **This step does the following:**
 1. Sets up the `ansibleremote` user and other users on the lab router for secure Ansible management. After this, the lab router can be managed remotely using Ansible with the `ansibleremote` user. This step needs to happen first because the Pi comes with a default user that has limited privileges and is not suitable for secure remote management.
 2. Configures the lab router as a secure *jumphost*, enabling safe access to the home lab network while enforcing security hardening measures. 
-    - **Jumphost role:** The lab router is also used as a secure entry point to the home lab network (jumphost), providing SSH forwarding, access controls, and security hardening for safe gateway access to the private network. See details in [Network Design — Jumphost: Secure Access to Lab Network](../1_Design/2_Design_Network.md#jumphost-secure-access-to-lab-network).
+    - **Jumphost role:** The lab router is also used as a secure entry point to the home lab network (jumphost), providing SSH forwarding, access controls, and security hardening for safe gateway access to the private network. See details in [Network Design — Jumphost: Secure Access to Lab Network](../1_Design/3_Design_Network.md#jumphost-secure-access-to-lab-network).
     - **`devhub-ansible-jumphost` role usage:** The `devhub-ansible-jumphost` role contains the necessary tasks and configurations for setting up the lab router as a secure jumphost, including SSH hardening, access controls, and security measures. 
 
 > **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1: Generate an SSH Key Pair](./1_Setup_Local_Environment.md) if you haven't done this yet.
@@ -237,7 +237,7 @@ eval $(ssh-agent) && ssh-add ~/.ssh/id_homelab
 # The "router" tag configures EVERYTHING covered in this step in one run: network
 # interfaces + IP forwarding, dnsmasq (DHCP/DNS/SLAAC), and the nftables firewall
 # (NAT/NAT66 + dual-stack default-deny rules) — see [Network Design — Routing
-# Software Stack](../1_Design/2_Design_Network.md#routing-software-stack-dnsmasq--nftables)
+# Software Stack](../1_Design/3_Design_Network.md#routing-software-stack-dnsmasq--nftables)
 # for what each part does and why. There is no separate "firewall step": it runs
 # as part of this same playbook invocation, right after networking and dnsmasq.
 #
@@ -311,11 +311,11 @@ ping -6 -c 3 2001:4860:4860::8888  # IPv6 internet reachability (only works once
 
 In this step we will configure the switch and ensure that the `eth1` interface of the router has carrier (i.e., is physically connected and active).
 
-> **Note on IPv6:** VLAN tagging is a Layer 2 (Ethernet frame) mechanism and has no notion of IPv4 vs IPv6 — see [Network Design — Managed Switch](../1_Design/2_Design_Network.md#managed-switch). None of the switch configuration steps below differ for the dual-stack setup; a tagged port simply carries both address families together on the same VLAN.
+> **Note on IPv6:** VLAN tagging is a Layer 2 (Ethernet frame) mechanism and has no notion of IPv4 vs IPv6 — see [Network Design — Managed Switch](../1_Design/3_Design_Network.md#managed-switch). None of the switch configuration steps below differ for the dual-stack setup; a tagged port simply carries both address families together on the same VLAN.
 
 ### Step 5.1: Configure the Managed Switch (via Laptop)
 
-**Why not just give `eth1` an IP on VLAN 1 and configure the switch through the Pi?** An alternative would be to assign an IP to the Pi's physical `eth1` interface (on the native VLAN 1), connect the unconfigured switch, and configure it from there — the switch defaults to VLAN 1 for management, so it would be reachable. However, this is rejected because VLAN 1 is deliberately unused in this design: all production traffic must be explicitly VLAN-tagged. Adding an IP to `eth1` — even temporarily — breaks that principle and introduces the exact ambiguity the design avoids. See [Network Design — Why VLAN 1 is not used](../1_Design/2_Design_Network.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged) for the full rationale. Configuring the switch via a direct laptop connection is simpler and keeps the router configuration clean.
+**Why not just give `eth1` an IP on VLAN 1 and configure the switch through the Pi?** An alternative would be to assign an IP to the Pi's physical `eth1` interface (on the native VLAN 1), connect the unconfigured switch, and configure it from there — the switch defaults to VLAN 1 for management, so it would be reachable. However, this is rejected because VLAN 1 is deliberately unused in this design: all production traffic must be explicitly VLAN-tagged. Adding an IP to `eth1` — even temporarily — breaks that principle and introduces the exact ambiguity the design avoids. See [Network Design — Why VLAN 1 is not used](../1_Design/3_Design_Network.md#why-vlan-1-native-is-not-used--all-traffic-is-explicitly-vlan-tagged) for the full rationale. Configuring the switch via a direct laptop connection is simpler and keeps the router configuration clean.
 
 Additionally, because all production traffic is explicitly VLAN-tagged in this design, the switch must have VLANs 10, 20, and 30 created and its management moved to VLAN 10 before it can participate in the lab network. Without this, the switch only speaks on the native VLAN (VLAN 1), which carries no production traffic.
 
@@ -345,7 +345,7 @@ The switch ships with DHCP enabled on VLAN 1 — **but it only receives a DHCP a
 
 #### Step 5.1.2: Configure the Switch
 
-Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](../1_Design/2_Design_Network.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](../1_Design/2_Design_Network.md#switch-port-assignments) for the port-to-VLAN mapping. **In the NETGEAR web UI:**
+Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](../1_Design/3_Design_Network.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](../1_Design/3_Design_Network.md#switch-port-assignments) for the port-to-VLAN mapping. **In the NETGEAR web UI:**
 1. **Log in** — Default credentials: no username, password is `password` (unless specified otherwise by your switch, check the switch's manual)
 2. **Change password** — Navigate to **System → Maintenance → Change Password** (or the switch may force you on first login). Set a strong, unique password and store it in your password manager
 3. **Set switch name** — Navigate to **System → Maintenance → Switch Information** and set the Switch Name to `lab-switch`

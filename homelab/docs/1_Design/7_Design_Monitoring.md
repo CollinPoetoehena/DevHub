@@ -1,4 +1,8 @@
-# Monitoring Design
+# Design: Monitoring
+
+> **Scope of this document: see [README.md/Documents Setup & Scope](README.md#documents-setup--scope); in short: design only — no specific hardware or software.**
+
+TODO
 
 TODO: finish this document, the placement of the monitoring is already done!
 
