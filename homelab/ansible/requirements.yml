@@ -14,7 +14,7 @@ roles:
     scm: git
     version: 1.0.0
   - name: devhub.router
-    src: https://github.com/CollinPoetoehena/devhub-ansible-router.git
+    src: https://github.com/CollinPoetoehena/devhub-ansible-router-custom.git
     scm: git
     version: 2.0.0
   - name: devhub.proxmox
