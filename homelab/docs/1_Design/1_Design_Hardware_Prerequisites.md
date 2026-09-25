@@ -26,7 +26,6 @@ This document covers the decisions around choosing and buying hardware and prere
     - [When Does This Matter?](#when-does-this-matter)
   - [Recommended Node Composition](#recommended-node-composition)
   - [Start Small, Expand Later](#start-small-expand-later)
-- [How to Check Your Hardware Specs](#how-to-check-your-hardware-specs)
 
 ---
 
@@ -66,8 +65,8 @@ My current home lab setup consists of:
 ### Personally Recommended
 
 I personally found the best deals and experience with **Refurbed** and **BackMarket** (not sponsored). Both have a wide selection of enterprise-grade mini PCs, good reputation (e.g. been around for some time and trusted by many users), good warranties, and solid customer service, etc.:
-- **[BackMarket](https://www.backmarket.nl)** is the largest European refurbished marketplace, well-known and reliable.
-- **[Refurbed](https://www.refurbed.nl)** is an EU-wide marketplace with multiple vetted refurbishers. Refurbed enforces strict quality standards on its partners and offers:
+- **[Refurbed (primary choice)](https://www.refurbed.nl)** is an EU-wide marketplace with multiple vetted refurbishers. Refurbed enforces strict quality standards on its partners and offers:
+- **[BackMarket (secondary choice/alternative)](https://www.backmarket.nl)** is the largest European refurbished marketplace, well-known and reliable. Less strict quality control compared to Refurbed (still good enough), but often cheaper; still a solid option for those looking for good deals on refurbished hardware.
 
 Best for: maximum buyer protection and peace of mind across the EU.
 
@@ -239,6 +238,8 @@ But for a **home lab** focused on learning and experimentation, quorum is not a 
 | **RAM** | 32–64 GB | 32 GB is comfortable for running Proxmox with several VMs. 64 GB gives plenty of headroom and is often more power-efficient than running two separate 32 GB nodes (if you need 64 GB RAM total) — one well-specced machine uses less energy than two underpowered ones (see [Prioritise Fewer, More Powerful Node(s)](#prioritise-fewer-more-powerful-nodes)). |
 | **Storage** | NVMe SSD | Significantly faster than SATA SSD (3–7 GB/s vs ~550 MB/s) and far faster than HDD. Matters for VM boot times, live migration, snapshot I/O, and running multiple VMs in parallel. Most enterprise-grade mini PCs ship with an M.2 slot, making NVMe a natural fit — no cables, no adapters, compact form factor. |
 
+See for how to check hardware specs [reference/os_hardware/Hardware_Specs.md](../../../reference/os_hardware/Hardware_Specs.md#how-to-check-your-hardware-specs).
+
 **Storage sizing — intentional asymmetry:**
 
 Not all nodes need the same storage size. A good approach is:
@@ -254,43 +255,5 @@ This asymmetry is intentional: the larger node handles temporary bulk workloads 
 If you want to practice clustering or quorum without buying extra hardware, see [How Many Nodes](#how-many-nodes) above — in short you can temporarily add a 3rd node (e.g. an old laptop you already have), use at least 3 VMs to simulate a multi-node cluster, or practice through your work environment if you have access to a larger setup.
 
 That's how I started: my old Acer laptop. Later I expanded to the full setup described in [Current Personal Setup](#current-personal-setup).
-
----
-
-## How to Check Your Hardware Specs
-
-**On Linux** (after OS is installed, or from a live USB):
-
-```bash
-# CPU: architecture, cores, threads, frequency
-lscpu
-
-# RAM: total and available memory
-free -h
-
-# Storage: disks, partitions, sizes
-lsblk
-
-# Full hardware overview (requires sudo)
-sudo lshw -short
-
-# Detailed CPU info (cores, threads, flags)
-cat /proc/cpuinfo | grep -E 'model name|cpu cores|siblings' | sort -u
-```
-
-**On Windows** (before wiping the device — useful for checking before you buy or reinstall):
-
-```powershell
-# CPU name, cores, and logical processors
-Get-WmiObject Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors
-
-# RAM total (in GB)
-(Get-WmiObject Win32_ComputerSystem).TotalPhysicalMemory / 1GB
-
-# Storage disks
-Get-PhysicalDisk | Select-Object FriendlyName, Size, MediaType
-```
-
-Alternatively, on Windows you can open **Task Manager → Performance** for a quick visual overview of CPU cores/threads, RAM, and disk.
 
 ---
