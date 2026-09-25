@@ -34,6 +34,7 @@ This document covers the decisions around choosing and buying hardware and prere
 My current home lab setup consists of:
 | Role | Device | CPU | RAM | Storage | Source | Why chosen |
 |------|--------|-----|-----|---------|--------|------------|
+| Lab Router | Raspberry Pi 4 | TODO: CPU details (e.g., 4 cores, 1.5 GHz) | 4 GB | TODO: ?? | Raspberry Pi Store, bought for €142 (including accessories like power supply and microSD card). This one is not refurbished because Raspberry Pi devices are generally low-cost and readily available new, making refurbishment unnecessary. | Affordable, low-power, sufficient for routing and basic network services. |
 | Compute node 1 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | TODO: 32 or 64 GB | TODO: 512 GB or 1 TB SSD | BackMarket (refurbished), bought for €TODO: what did I buy them for eventually in 2026 | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
 | Compute node 2 | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | Personal (repurposed), bought in 2020 on Coolblue for about €600 | Already on hand — repurposed to add a second physical host to experiment with, without extra purchasing cost. |
 
@@ -139,6 +140,8 @@ Companies replace hardware on a fixed cycle — often every 3–5 years, regardl
 - **Low failure rate** — higher-quality components than consumer PCs.
 
 ### Why NOT Raspberry Pi
+
+> **Scope note:** This section explains why Raspberry Pi is not the preferred choice for this home lab's computing nodes, however, for lightweight tasks like routing, basic network services, or low-power experiments, Raspberry Pi can still be a viable option.
 
 Mini PCs give more value for money because they are **complete computers**: a proper x86 CPU, upgradeable RAM, fast NVMe SSD storage, active cooling, a stable power supply, and reliable networking all in one device. They're designed to run 24/7 under load and handle Kubernetes workloads more consistently.
 
