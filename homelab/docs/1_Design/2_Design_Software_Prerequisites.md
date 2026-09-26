@@ -340,3 +340,5 @@ The individual choices above are not independent — the same handful of princip
 
 TODO: add this later in the same format as the others above; brainstorm with AI how to do this, etc.
 TODO: maybe Ceph?? And what to do with my Samsung 1TB SSD; I have them left over so may as well use them!
+
+**TODO: I do need a storage setup, so use the Mini PCs and then 1 or 2 HDDs for backup storage! That is worth it and can maybe add more later, etc., and maybe RAID, etc., but somethung outside of the normal storage on the mini PC and old laptop for backup storage and a HDD because it is cold storage not harf storage, rtc. TODO: add thst in storage design anf add to hardware page also the additional storage, etc.**
