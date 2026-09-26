@@ -121,7 +121,7 @@ For compute nodes, refurbished is clearly the right call (see [Part 2](#hardware
 | **Cooling** | **Fanless** | No moving parts, silent, nothing to fail. These CPUs are low enough power that passive cooling is sufficient; just give the case some airflow. |
 | **Extras worth having** | Serial/console port, VESA mount, external 12V PSU | A serial console is the recovery path when the network configuration locks you out — the router equivalent of a spare key. |
 
->**Sizing sanity check:** Dedicated router OSes like OPNsense's and pfSense's own documentation lists a ~1.5 GHz multi-core CPU, 8 GB RAM and a 120 GB SSD as the *recommended* specification — the figures above sit comfortably above that, which is deliberate: the official baseline gets the software running, it does not promise 2.5GbE performance with inspection enabled.
+>**Sizing sanity check:** Dedicated router OSes like [OPNsense's and pfSense's own documentation](https://docs.opnsense.org/manual/hardware.html) lists a ~1.5 GHz multi-core CPU, 8 GB RAM and a 120 GB SSD as the *recommended* specification, ~1 GHz dual-core CPU, 4 GB RAM and a 40 GB SSD as the *reasonanle* specification, and ~1 GHz dual-core CPU, 3 GB RAM and a 4 GB SSD as the *minimum* specification — the figures above sit comfortably above that, which is deliberate: the official baseline gets the software running, it does not promise 2.5GbE performance with inspection enabled.
 
 ### Brand Comparison: Firewall Appliance Vendors
 
