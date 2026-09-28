@@ -75,6 +75,9 @@ ansible-galaxy install -r requirements.yml
 | devhub-ansible-users | [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) | Configures OS users and groups, including sudo policies and SSH key management. |
 | devhub-ansible-jumphost | [devhub-ansible-jumphost](https://github.com/CollinPoetoehena/devhub-ansible-jumphost) | Configures a jumphost for secure access to internal networks. |
 | devhub-ansible-mgmtvm | [devhub-ansible-mgmtvm](https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
+| devhub-ansible-proxmox | [devhub-ansible-proxmox](https://github.com/CollinPoetoehena/devhub-ansible-proxmox) | Configures a machine that has been installed from the Proxmox VE ISO into a fully managed hypervisor. |
+| devhub-ansible-k8s | [devhub-ansible-k8s](https://github.com/CollinPoetoehena/devhub-ansible-k8s) | Configures k8s on a node (control plane or worker node). |
+| devhub-ansible-router-custom | [devhub-ansible-router-custom](https://github.com/CollinPoetoehena/devhub-ansible-router-custom) | Configures a Debian-based system (e.g. Raspberry Pi) as a dedicated lab router providing network isolation, DHCP, DNS, SLAAC/Router Advertisements, NAT and an nftables firewall (e.g. for a homelab). |
 
 ## README Template
 
