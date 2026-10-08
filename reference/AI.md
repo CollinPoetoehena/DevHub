@@ -114,6 +114,8 @@ Ask for a plan first or provide a plan yourself, then execute step by step, rath
 
 Start small, reuse what helps, and tailor it to your project and company policies. Supply fresh task-specific context, keep instructions and knowledge sources current, and test the setup on representative tasks before relying on it. **This guide explains the principle, not the exact templates, files, or complete setup you should use:** consult your tool's documentation for supported formats and configuration. Instructions guide the AI; they do not replace review, access controls, or enforced safeguards.
 
+> **Find the right balance:** Do not create a template, agent, or workflow for everything; use them only where repeated use meaningfully improves speed, quality, or consistency enough to justify the effort of creating and maintaining them (i.e. it actually has added value). For one-off/very low frequency or simple tasks, a direct prompt may be more efficient. Balance scope too: one template can cover several genuinely similar tasks with shared instructions and checks, saving duplication and maintenance. Do not force entirely different tasks into one generic template, or create a separate template for every minor variation. Split only where the differences matter, and simplify or retire setups that cost more effort than the value they provide.
+
 The two subsections below cover **coding**, using GitHub Copilot in VS Code as the example, and **general-purpose work**, using Microsoft 365 Copilot agents as the example. For guidance on choosing the right tool or model for a task, see [Framework: Which AI Tool/Model for Which Task](#framework-which-ai-toolmodel-for-which-task).
 
 ### Coding: GitHub Copilot in VS Code
