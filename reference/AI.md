@@ -11,6 +11,9 @@ Practical reference on AI — what it is, agents, prompt engineering, and how I 
   - [Models, Harnesses & Example Models](#models-harnesses--example-models)
   - [AI Agents](#ai-agents)
   - [Prompt Engineering](#prompt-engineering)
+- [Reusable AI Workflows and Agents](#reusable-ai-workflows-and-agents)
+  - [Coding: GitHub Copilot in VS Code](#coding-github-copilot-in-vs-code)
+  - [General Purpose: Microsoft 365 Copilot](#general-purpose-microsoft-365-copilot)
 - [AI & Software Engineering — General Usage](#ai--software-engineering--general-usage)
   - [Conclusion](#conclusion)
 - [Framework: Which AI Tool/Model for Which Task](#framework-which-ai-toolmodel-for-which-task)
@@ -68,6 +71,8 @@ An **agent** is an AI system (usually LLM-based) that doesn't just answer a ques
 
 In practice (e.g. GitHub Copilot's *agent mode*), this means you can give it a task like "add a feature", "fix this bug", or "refactor this module", and it will explore the repository, make the edits across multiple files, run tests/builds, and iterate — instead of only suggesting a snippet for you to copy-paste. This makes agents very useful for larger or more repetitive tasks, but the same principle applies as everywhere else on this page: **you remain responsible for reviewing what it did.**
 
+For practical ways to save and reuse specialist agent setups, see [Reusable AI Workflows and Agents](#reusable-ai-workflows-and-agents), including examples for GitHub Copilot and Microsoft 365 Copilot.
+
 **Further reading:**
 
 - [What are AI agents? — IBM](https://www.ibm.com/topics/ai-agents)
@@ -87,6 +92,7 @@ Ask for a plan first or provide a plan yourself, then execute step by step, rath
 - **Give it a role, when useful.** E.g. "review this as a senior security engineer" shifts the kind of feedback you get.
 - **Iterate & Refine.** Treat the first answer as a draft — refine with follow-up questions instead of expecting a perfect result immediately.
 - **Ask it to reason/explain, for hard problems.** Asking for step-by-step reasoning or trade-offs (instead of just "the answer") improves quality on non-trivial tasks.
+- **Make it easy for yourself: reuse what works.** Save recurring prompts, instructions, and agent setups instead of rewriting them for every task. See [Reusable AI Workflows and Agents](#reusable-ai-workflows-and-agents) for the general principle and practical examples.
 
 **Further reading:**
 
@@ -94,6 +100,91 @@ Ask for a plan first or provide a plan yourself, then execute step by step, rath
 - [Prompt engineering guide — OpenAI](https://platform.openai.com/docs/guides/prompt-engineering)
 - [What is prompt engineering? — IBM](https://www.ibm.com/topics/prompt-engineering)
 - [Prompting guide — Google Gemini](https://ai.google.dev/gemini-api/docs/prompting-strategies)
+
+---
+
+## Reusable AI Workflows and Agents
+
+**Make it easy for yourself:** If you regularly ask for similar work (e.g. implementing features, fixing bugs, reviewing code, or drafting documentation), reuse a small, maintained setup rather than rewriting the same context, constraints, and checks each time. This principle applies across AI tools, not just coding assistants:
+
+- **Prompt templates / saved tasks:** reusable requests for a particular job, with a new objective or input each time.
+- **Shared instructions:** stable preferences, conventions, and constraints that apply across tasks. Keep generic rules separate from project- or team-specific details.
+- **Custom agents:** reusable specialist setups with a defined role, instructions, relevant knowledge, and permitted tools/actions, where supported. For example, a code reviewer or a documentation assistant.
+- **Repeatable workflows:** a consistent sequence of steps and checks; use skills or other workflow features when your tool supports them and a saved prompt is not enough.
+
+Start small, reuse what helps, and tailor it to your project and company policies. Supply fresh task-specific context, keep instructions and knowledge sources current, and test the setup on representative tasks before relying on it. **This guide explains the principle, not the exact templates, files, or complete setup you should use:** consult your tool's documentation for supported formats and configuration. Instructions guide the AI; they do not replace review, access controls, or enforced safeguards.
+
+The two subsections below cover **coding**, using GitHub Copilot in VS Code as the example, and **general-purpose work**, using Microsoft 365 Copilot agents as the example. For guidance on choosing the right tool or model for a task, see [Framework: Which AI Tool/Model for Which Task](#framework-which-ai-toolmodel-for-which-task).
+
+### Coding: GitHub Copilot in VS Code
+
+The following is the practical coding setup used as an example here. In GitHub Copilot in VS Code, examples include `.github/prompts/*.prompt.md` for reusable task prompts, `.github/copilot-instructions.md` for repository-wide guidance, and `.github/agents/*.agent.md` for specialized custom agents. `AGENTS.md` is another supported repository instruction format, not the same thing as a custom agent definition. See [Customize AI in VS Code](https://code.visualstudio.com/docs/copilot/customization/overview) for supported customization options.
+
+**Practical example across many repositories:** In GitHub Copilot in VS Code, save a generic `implement-change.prompt.md` or `review-code.prompt.md` in your **user profile**, rather than copying it into every repository. You can similarly create a user-profile custom agent for a recurring role, such as code review, and user-level instructions for rules that genuinely apply everywhere. When you open another repository using that profile, invoke the saved prompt (e.g. `/implement-change`) or select the custom agent and provide the task-specific context. Keep each repository's architecture, conventions, and test commands in its own `.github/copilot-instructions.md` or `AGENTS.md`: this lets you reuse the workflow across projects without assuming they all work the same way. 
+
+**Custom agent example:** Create a `code-reviewer.agent.md` through VS Code's agent customization UI, choosing user-profile storage for cross-repository use or `.github/agents/` for a repository-specific agent. Give it instructions to prioritize bugs, regressions, security risks, and missing tests; report findings with file references; and avoid editing files. Where supported, restrict its available tools to those needed for inspection. Select that agent in chat and provide the files or diff to review. A prompt defines a reusable task; a custom agent defines the specialist that carries it out. See [VS Code custom agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents).
+
+**Saving, syncing, and backing up those settings:** User-profile customizations are saved as local files in VS Code's profile-specific user data. To sync supported customizations across devices, enable [VS Code Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync), sign in with your preferred GitHub or Microsoft account, and run **Settings Sync: Configure...** to select **Prompts and Instructions** (and **Profiles** if you use multiple profiles). Use the same sync account on your other devices; **Settings Sync: Show Synced Data** lets you inspect synced data and restore earlier versions. Repository-level files are **not covered by Settings Sync**: version them in Git and push to an approved remote for backup and team sharing. Keep an independent backup or approved private Git repository for important personal templates and agents too, especially anything outside the synced categories; sync is not a substitute for a long-term backup. Never include secrets, and follow company policies before syncing work-related content to a personal account.
+
+**Example prompt template for standard codebase work:** This is just one example of how to turn a recurring task (implementing a feature or bug fix) into a reusable prompt, not a complete or universally applicable template. Create your own tailored version and maintain it in your user profile or repository, not in this reference document. You can create separate prompts for other tasks, such as `generate-tests.prompt.md`, `review-code.prompt.md`, or `update-docs.prompt.md`, each with its own objective, constraints, and checks. For small, well-scoped changes, simplify or skip the planning steps as described above.
+- **Why "act as a senior software engineer"?** It sets the intended perspective: consider maintainability, trade-offs, risks, and verification, not just producing code. It is a role cue, not a guarantee of expertise or correctness; the concrete instructions and your review still matter.
+- **Model selection for this example:** The YAML header explicitly sets `model: Auto` to request automatic model selection rather than pinning a specific underlying model. This follows the [automatic model selection][automatic-model-selection] guidance: start with automatic selection for its balance of capability and credit efficiency, check the results and cost, and switch manually only when needed. If your VS Code/Copilot version does not recognize this value, omit the `model` field and select **Auto** in the chat model picker instead.
+- **Use it as a prompt file:** For Copilot's **Local agent** in VS Code, run **Chat: New Prompt File**, choose **User** to reuse it across repositories, and name it `implement-change.prompt.md`. For repository-only use, put it in `.github/prompts/implement-change.prompt.md` instead. The complete example file is below, including its YAML header. In chat, run `/implement-change Fix the login validation bug` and attach relevant files or other context. Prompt files are invoked explicitly, not automatically applied like repository instructions. See [VS Code prompt-file documentation](https://code.visualstudio.com/docs/copilot/customization/prompt-files) for details and compatibility; Agent Host sessions use skills instead of prompt files.
+
+```markdown
+---
+name: implement-change
+description: Implement a focused, verified feature or bug fix using repository conventions.
+agent: agent
+model: Auto
+argument-hint: Describe the change, expected behavior, and any constraints.
+---
+
+Act as a senior software engineer working in this repository.
+
+**Objective:** Implement the change described in the accompanying chat request. Use its expected behavior and acceptance criteria to define what "done" means. If no objective is provided, ask for it before making changes.
+
+**Before making changes:**
+
+1. Read applicable repository instructions and supplied company policies.
+2. Inspect the relevant implementation, call sites, tests, and validation commands. Keep exploration focused on the task; do not scan the entire repository by default.
+3. Identify the likely affected files, expected behavior, risks, and assumptions. Ask only about ambiguities that materially affect correctness, scope, or safety; otherwise state reasonable assumptions and proceed.
+4. For non-trivial work, share a concise plan before editing. For small, clear changes, proceed directly. If I requested planning only, stop after the plan.
+
+**Implementation:**
+
+1. Make the smallest maintainable change that meets the objective. Fix the root cause of bugs rather than masking symptoms.
+2. Follow existing conventions/formats in the existing code and reuse suitable code, dependencies, and test helpers. Avoid unrelated refactoring, speculative abstractions, and unnecessary dependencies.
+3. Preserve existing user changes. If they conflict with the task, ask before replacing them.
+4. Add or update tests for the changed behavior and relevant edge cases; for bug fixes, add a regression test where practical.
+5. Validate the touched behavior early with the narrowest useful check. Run broader tests, linting, type checks, and builds as warranted by the impact and repository rules.
+6. Fix failures introduced by your changes and rerun affected checks. Report unrelated or pre-existing failures without expanding scope to fix them.
+7. Update any documentation affected by the changes and ensure it accurately reflects the new behavior. Also update the CHANGELOG if applicable/present.
+
+**Constraints:**
+
+- Do not expose secrets, credentials, or private data in output or send them to external services.
+- Explain the impact and obtain approval before making breaking public API changes, database schema changes, destructive operations, or changes outside the agreed scope.
+- Do not commit, push, or deploy without my explicit approval.
+- Do not disable tests, weaken checks, or alter expectations merely to make failures pass.
+- If blocked by missing tools, access, or information, report the blocker and what is needed.
+
+**Completion report:**
+
+Keep the report concise:
+
+- Changes made and key files affected.
+- Checks actually executed, their results, and any checks skipped with reasons.
+- Remaining risks, assumptions, and required manual steps.
+
+Clearly distinguish verified results from untested expectations. Do not claim a check passed unless you ran it and observed that result.
+```
+
+### General Purpose: Microsoft 365 Copilot
+
+The same principle applies outside your codebase. For example, use [Agent Builder in Microsoft 365 Copilot](https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/agent-builder) to create a **Documentation Assistant** with reusable instructions such as "follow our documentation style, cite source documents, and flag missing information rather than inventing it." Connect approved knowledge sources, such as your team's SharePoint documentation, test it with representative requests, and then select the agent for recurring drafting or summarization tasks. This avoids re-entering the same role, style, and background each time; you still provide the specific task and review its output.
+
+Share the agent with colleagues only where permitted, and check access to its underlying knowledge sources separately. Availability, knowledge-source capabilities, and costs depend on your license and organizational policies; this example refers to **Microsoft 365 Copilot**, not every consumer Microsoft Copilot experience. For actions, connectors, or more involved workflows, consider [Microsoft Copilot Studio](https://learn.microsoft.com/en-us/microsoft-copilot-studio/). These agents are managed in Microsoft's service, not backed up through VS Code Settings Sync; keep an approved copy of important instructions and configuration notes. See also [Microsoft 365 Copilot agent concepts](https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/agents-overview).
 
 ---
 
@@ -132,6 +223,8 @@ AI is a game changer for Software Engineers and in general life — **but only i
 
 Whatever general-purpose AI chat tool your company recommends/provides (e.g. ChatGPT, Microsoft Copilot, Google Gemini, etc.) — use this for general theory, explanations, learning, writing/documentation help, brainstorming, design/architecture, thinking, and any non(-application)-specific tasks (e.g. non-coding-specific tasks). This is typically already available to you at no extra effort/cost (e.g. it does not cost you *monthly credits* for GitHub Copilot if you use Microsoft Copilot for those tasks (see [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot) below), etc.), so it's a good default for anything that isn't tied to a specific codebase or specific application.
 
+> **Reuse recurring general-purpose work:** Save templates or create a dedicated agent for repeated writing, summarization, or research tasks instead of re-entering the same instructions each time. See [Reusable AI Workflows and Agents: General Purpose](#general-purpose-microsoft-365-copilot) for a short Microsoft 365 Copilot agent example, including availability and policy considerations.
+
 #### Billing/Cost of General‑purpose AI tools like Microsoft Copilot
 General‑purpose AI services like Microsoft Copilot are typically billed at the **subscription or platform level**, meaning the cost of running AI models is *covered by the plan or license* you’re on rather than charged per prompt or per individual user (unlike GitHub Copilot’s individually metered credits). **Microsoft Copilot example:**
 - **Personal Microsoft 365 subscription** — You personally have effectively unlimited Copilot usage because all AI compute is included in your license. Access to higher‑end reasoning models may still be **rate‑limited, feature‑restricted, or subject to fair‑use controls** depending on your subscription tier, but you are never billed per prompt or for selecting a more advanced model.
@@ -148,6 +241,8 @@ For coding specifically, my personal preference is **GitHub Copilot in VS Code**
 These tools are usually billed at the **individual user level**, meaning each user consumes credits or incurs costs based on their own usage rather than being covered by a broader subscription or organizational plan like general-purpose AI tools like Microsoft Copilot (see [Billing/Cost of General‑purpose AI tools like Microsoft Copilot](#billingcost-of-generalpurpose-ai-tools-like-microsoft-copilot)).
 
 See the [4-Tier Model Framework](#4-tier-model-framework-credit-efficiency) below for how to pick a model tier within Copilot (or similar tools) efficiently and avoid wasting credits.
+
+> **Reuse recurring coding work:** Maintain task-specific prompts, shared repository instructions, and specialist agents for implementation, testing, and code review. See [Reusable AI Workflows and Agents: Coding](#coding-github-copilot-in-vs-code) for the GitHub Copilot example, cross-repository reuse, and saving/syncing guidance.
 
 > **Note:** This is just a reference with general explanation (as explained before), for the full tutorial and guide on how to use VS Code with GitHub Copilot, refer to the [official documentation and tutorials provided by GitHub](https://docs.github.com/en/copilot), such as [Getting Started with GitHub Copilot in VS Code](https://docs.github.com/en/copilot/get-started/quickstart?tool=vscode).
 
@@ -172,6 +267,8 @@ Many tools you already use have their own built-in AI features, which are often 
 - Similar built-in AI assistants in other tools you use (e.g. Microsoft 365 Copilot in Office apps, IDE-integrated assistants, etc.)
 
 Prefer these application-specific assistants when the task is scoped to that application/data, and fall back to a general-purpose tool otherwise.
+
+> When an application supports saved prompts or custom agents, apply the same [reusable workflow principles](#reusable-ai-workflows-and-agents) to recurring tasks, adapting the setup to that application's supported features and permissions.
 
 ---
 
