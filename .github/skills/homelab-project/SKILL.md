@@ -11,9 +11,9 @@ Use this skill whenever working on the homelab so recommendations and changes fo
 
 Before making recommendations or changes, consult these sources in order:
 
-1. [Homelab README](../../../README.md) for project scope, structure, and links to the wider DevHub reference.
-2. [Design README](../../../docs/1_Design/README.md) for architecture and the distinction between stable, tool-independent design and tool-specific implementation.
-3. [Security and Public Repository](../../../docs/0_Security_and_Public_Repository.md) for what may be published, secrets handling, review requirements, and incident response.
+1. [Homelab README](../../../homelab/README.md) for project scope, structure, and links to the wider DevHub reference.
+2. [Design README](../../../homelab/docs/1_Design/README.md) for architecture and the distinction between stable, tool-independent design and tool-specific implementation.
+3. [Security and Public Repository](../../../homelab/docs/0_Security_and_Public_Repository.md) for what may be published, secrets handling, review requirements, and incident response.
 
 Read the specific design or setup documents relevant to the request as well. Treat the security guide as mandatory for all changes, including documentation, code, configuration, examples, logs, and generated files.
 

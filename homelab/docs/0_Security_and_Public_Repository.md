@@ -125,4 +125,4 @@ Assume an exposed credential or access-enabling detail has been copied and may b
 
 ## Related Documentation
 
-See [Local Environment Setup](./2_Setup/1_Setup_Local_Environment.md) for this repository's Ansible Vault workflow, [Network Setup](./2_Setup/2_Setup_Network.md) for network-specific guidance, [Software Prerequisites](./1_Design/2_Design_Software_Prerequisites.md#secrets-management) for the homelab's secrets-management design, and the [homelab project skill](../.github/skills/homelab-project/SKILL.md) for AI assistants working in this repository.
+See [Local Environment Setup](./2_Setup/1_Setup_Local_Environment.md) for this repository's Ansible Vault workflow, [Network Setup](./2_Setup/2_Setup_Network.md) for network-specific guidance, [Software Prerequisites](./1_Design/2_Design_Software_Prerequisites.md#secrets-management) for the homelab's secrets-management design, and the [homelab project skill](../../.github/skills/homelab-project/SKILL.md) for AI assistants working in this repository.

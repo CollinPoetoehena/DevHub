@@ -3,7 +3,7 @@ name: homelab-implement-change
 description: "Implement a focused, verified feature or bug fix in the homelab using repository conventions and security rules."
 ---
 
-# Implement Change
+# Implement Homelab Change
 
 Act as a senior software engineer working in this repository.
 

@@ -27,11 +27,16 @@ The documentation has three main components:
 
 > For broader guidance on AI concepts, tools, workflows, and usage, including how to use skills in VS Code and Copilot, see the [DevHub AI reference](../reference/AI.md).
 
-Homelab skills use the **Agent Skills `SKILL.md` format**: each skill is a `SKILL.md` file inside `.github/skills/<skill-name>/`, with YAML frontmatter whose `name` matches the folder name. Every homelab skill must use the `homelab-` prefix (for example, `homelab-project` in `.github/skills/homelab-project/SKILL.md`). Use this same format, location, and naming convention for any future homelab skills so they are project-scoped and discoverable as `/homelab-<skill-name>` commands in Copilot Chat.
+Homelab skills use the **Agent Skills `SKILL.md` format**: each skill is a `SKILL.md` file inside `.github/skills/<skill-name>/`, with YAML frontmatter whose `name` matches the folder name. Every homelab skill must use the `homelab-` prefix (for example, `homelab-project` in `../.github/skills/homelab-project/SKILL.md`). Store future homelab skills in the DevHub repository-root `.github/skills/` directory, not in this nested `homelab/` folder, because VS Code discovers workspace skills from recognized skill directories at the workspace/repository root.
 
-The [homelab project skill](./.github/skills/homelab-project/SKILL.md) provides reusable project context: it directs AI assistants to the homelab overview, design boundaries, and security rules before they answer questions or make changes. Invoke it with `/homelab-project` followed by your question or task; compatible assistants may also load it automatically when relevant.
+Use [`homelab-project`](../.github/skills/homelab-project/SKILL.md) for reusable homelab context. It directs AI assistants to the project overview, design boundaries, and security rules. Invoke `/homelab-project` followed by your question or task; compatible assistants may also load it automatically when relevant. For more specific tasks, choose a task skill that matches your current objective. All task skills below apply the project skill as required context in their `SKILL.md` files. Invoke the one that matches your task:
 
-For a focused code change, invoke [`homelab-implement-change`](./.github/skills/homelab-implement-change/SKILL.md) with `/homelab-implement-change` followed by the requested change; it is instructed to apply the homelab project skill as required context. To create or edit homelab Markdown, use [`homelab-update-docs`](./.github/skills/homelab-update-docs/SKILL.md) with `/homelab-update-docs` and describe the documentation change; it also applies the project skill and its formatting and security conventions.
+| Skill | Use it for | Invoke |
+| --- | --- | --- |
+| [`homelab-implement-change`](../.github/skills/homelab-implement-change/SKILL.md) | Focused homelab code changes and bug fixes. | `/homelab-implement-change <request>` |
+| [`homelab-docs`](../.github/skills/homelab-docs/SKILL.md) | Creating or updating homelab Markdown documentation, following its structure and security conventions. | `/homelab-docs <request>` |
+
+If you open `homelab/` by itself as a workspace, [its workspace settings](./.vscode/settings.json) enable `chat.useCustomizationsInParentRepositories` so VS Code can discover project skills in the parent DevHub repository. If the skills still do not appear, confirm that Agent Skills are enabled in your VS Code/Copilot setup, then reload the window or start a fresh chat.
 
 ---
 
