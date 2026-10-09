@@ -14,6 +14,7 @@ This guide describes my code editor setup and the account and Git configuration 
 - [Subscriptions and Work Accounts](#subscriptions-and-work-accounts)
 - [Git](#git)
     - [Git with Personal and Work Accounts](#git-with-personal-and-work-accounts)
+        - [Use Different Identities for Work Platforms](#use-different-identities-for-work-platforms)
         - [Verify the Git Identity](#verify-the-git-identity)
     - [Git Authentication with SSH](#git-authentication-with-ssh)
         - [Configure Multiple Work Git Platforms](#configure-multiple-work-git-platforms)
@@ -114,6 +115,37 @@ In `~/.gitconfig-work`:
     name = Your Name
     email = you@company.example
 ```
+
+#### Use Different Identities for Work Platforms
+
+If you use different Git identities on multiple work platforms, Git can select them by repository directory. For example, keep GitHub repositories under `~/projs/work/github/` and Bitbucket repositories under `~/projs/work/bitbucket/`. Add these more-specific conditions to `~/.gitconfig` after the general `~/projs/work/` condition so these identities override the default work identity for repositories in those directories:
+
+```gitconfig
+[includeIf "gitdir:~/projs/work/github/"]
+    path = ~/.gitconfig-work-github
+[includeIf "gitdir:~/projs/work/bitbucket/"]
+    path = ~/.gitconfig-work-bitbucket
+```
+
+In `~/.gitconfig-work-github`:
+
+```gitconfig
+[user]
+    name = Your Name
+    email = you@github-company.example
+```
+
+In `~/.gitconfig-work-bitbucket`:
+
+```gitconfig
+[user]
+    name = Your Name
+    email = you@bitbucket-company.example
+```
+
+The platform is not detected from the remote URL; the repository's location determines which identity is included. Use the matching directory when cloning, and add another condition and config file for each additional platform if needed. Verify from a repository under each directory with `git config --show-origin --get user.email`; the output should name the corresponding `.gitconfig-work-*` file.
+
+> If the Git author name and email are the same across your work platforms, you do not need separate platform-specific identity files; use the general `~/.gitconfig-work` identity above. You may still need separate SSH aliases or keys to authenticate to different platforms or accounts; see [Configure Multiple Work Git Platforms](#configure-multiple-work-git-platforms).
 
 #### Verify the Git Identity
 
@@ -246,7 +278,7 @@ These commands unload identities from the current SSH agent; they do not delete 
 
 #### Clone or Update a Repository
 
-Clone each repository into the matching directory and use the SSH host alias for the account that owns it:
+Clone each repository into the matching directory and use the SSH host alias for the account that owns it, such as:
 
 ```bash
 git clone git@git-personal:you/repo.git ~/projs/personal/repo
