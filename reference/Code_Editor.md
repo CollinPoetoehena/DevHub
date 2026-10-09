@@ -124,15 +124,20 @@ git config --show-origin --get user.name
 git config --show-origin --get user.email
 ```
 
-The output should identify `.gitconfig-personal` as the source of both values. Repeat from a work repository under `~/projs/work/`; it should identify `.gitconfig-work`. If another file such as the repository's `.git/config` appears, a more specific setting may be overriding the included identity.
+The output should identify `.gitconfig-personal` as the source of both values. Repeat from a work repository under `~/projs/work/`; it should identify `.gitconfig-work`. If another file such as the repository's `.git/config` appears, a more specific setting may be overriding the included identity. For example:
+
+```bash
+...:~/projs/personal/DevHub$ git config --show-origin --get user.name
+file:/home/poetoec/.gitconfig-personal  CollinPoetoehena
+```
 
 ### Git Authentication with SSH
 
-> **Note:** GitHub is used here as the example because it is one of the most widely used Git platforms and the one I personally use. The same SSH principles apply to GitLab, Bitbucket, and other platforms; use the platform's SSH host and repository URL format in the key configuration and remote examples.
+> **Note:** The examples use GitHub, but the SSH setup is a Git workflow, not a GitHub-specific one. GitLab, Bitbucket, and other Git platforms use the same SSH keys, agent, and client configuration pattern. The host aliases below (`git-personal` and `git-work`) are local names and do not identify a platform; keep them when changing providers, and update `HostName` and the repository path in remote URLs to match the provider. This lets you switch platforms without renaming the aliases or changing the rest of your SSH workflow. See the platform's documentation for its exact host and repository URL format.
 
-SSH is useful when you use personal and work GitHub accounts because separate keys and host aliases make each repository select the intended account, without repeatedly switching HTTPS credentials or managing personal access tokens. HTTPS is also a valid choice; use it if it better fits your tools or organization. See [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) and [Contributing to multiple accounts using SSH and multiple keys](https://docs.github.com/en/account-and-profile/how-tos/account-management/managing-multiple-accounts#contributing-to-multiple-accounts-using-ssh-and-multiple-keys) for GitHub's instructions.
+SSH is useful when you use personal and work accounts on a Git platform because separate keys and host aliases make each repository select the intended account, without repeatedly switching HTTPS credentials or managing personal access tokens. HTTPS is also a valid choice; use it if it better fits your tools or organization. For GitHub-specific details, see [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) and [Contributing to multiple accounts using SSH and multiple keys](https://docs.github.com/en/account-and-profile/how-tos/account-management/managing-multiple-accounts#contributing-to-multiple-accounts-using-ssh-and-multiple-keys).
 
-> **Protected environments:** In this setup, I do interactive development on a local workstation (e.g. a company laptop): VS Code runs there as my editor, and that workstation performs my routine Git operations. Management servers and protected workloads are for administering or running services, not for my personal development workflow, so I do not run VS Code, use personal repositories, or need to switch between personal and work Git accounts there. SSH being blocked from those servers therefore does not prevent the workflow described here. If a server-side job needs repository access, use the authentication method and network route approved for that environment, such as HTTPS with an organization-managed token, deploy token, or service account. Such a job normally needs one organization-controlled identity, not my personal GitHub account. Do not copy personal SSH keys or use personal credentials there. If your setup requires running VS Code remotely, treat that as a separate workflow and follow the environment's access policies.
+> **Protected environments:** In this setup, I do interactive development on a local workstation (e.g. a company laptop): VS Code runs there as my editor, and that workstation performs my routine Git operations. Management servers and protected workloads are for administering or running services, not for my personal development workflow, so I do not run VS Code, use personal repositories, or need to switch between personal and work Git accounts there. SSH being blocked from those servers therefore does not prevent the workflow described here. If a server-side job needs repository access, use the authentication method and network route approved for that environment, such as HTTPS with an organization-managed token, deploy token, or service account. Such a job normally needs one organization-controlled identity, not my personal account on a Git platform. Do not copy personal SSH keys or use personal credentials there. If your setup requires running VS Code remotely, treat that as a separate workflow and follow the environment's access policies.
 
 If you do not already have keys, create one for each account:
 
@@ -141,18 +146,19 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_personal -C "you@example.com"
 ssh-keygen -t ed25519 -f ~/.ssh/id_work -C "you@company.example"
 ```
 
-Set a passphrase when prompted, then add each corresponding `.pub` public key to the matching GitHub account. Keep the private key files private. If your work GitHub uses a separate host, use that host name in the work SSH configuration instead of `github.com`.
+Set a passphrase when prompted, then add each corresponding `.pub` public key to the matching account on your Git platform. Keep the private key files private. If your work Git platform uses a separate host, use that host name in the work SSH configuration instead of `github.com`.
 
 In `~/.ssh/config` (see [SSH Config Docs](https://www.ssh.com/academy/ssh/config)):
 
 ```sshconfig
-Host github-personal
+# Git configs for personal and work accounts
+Host git-personal
     HostName github.com
     User git
     IdentityFile ~/.ssh/id_personal
     IdentitiesOnly yes
 
-Host github-work
+Host git-work
     HostName github.com
     User git
     IdentityFile ~/.ssh/id_work
@@ -162,8 +168,8 @@ Host github-work
 Test authentication with each SSH key to ensure it is correctly configured:
 
 ```bash
-ssh -T git@github-personal
-ssh -T git@github-work
+ssh -T git@git-personal
+ssh -T git@git-work
 ```
 
 #### Load Keys into an SSH Agent
@@ -210,15 +216,15 @@ These commands unload identities from the current SSH agent; they do not delete 
 Clone each repository into the matching directory and use the SSH host alias for the account that owns it:
 
 ```bash
-git clone git@github-personal:you/repo.git ~/projs/personal/repo
-git clone git@github-work:company/repo.git ~/projs/work/repo
+git clone git@git-personal:you/repo.git ~/projs/personal/repo
+git clone git@git-work:company/repo.git ~/projs/work/repo
 ```
 
 For a repository that is already cloned, check its current remote and replace it with the matching SSH URL. If the remote has a different name, use that name instead of `origin`:
 
 ```bash
 git remote -v
-git remote set-url origin git@github-work:company/repo.git
+git remote set-url origin git@git-work:company/repo.git
 ```
 
-Use the personal alias instead for a personal repository. If the existing repository is outside the matching `~/projs/personal/` or `~/projs/work/` directory, move it under the appropriate directory so Git's conditional include selects the right author identity. After this one-time setup, the repository path selects the commit name and email, and the remote's SSH alias selects the GitHub account. Protect private keys and follow your employer's rules for work credentials and repositories.
+Use the personal alias instead for a personal repository. If the existing repository is outside the matching `~/projs/personal/` or `~/projs/work/` directory, move it under the appropriate directory so Git's conditional include selects the right author identity. After this one-time setup, the repository path selects the commit name and email, and the remote's SSH alias selects the account on the Git platform. When using another provider, update its `HostName` and the repository path format as needed. Protect private keys and follow your employer's rules for work credentials and repositories.
