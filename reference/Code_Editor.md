@@ -16,6 +16,7 @@ This guide describes my code editor setup and the account and Git configuration 
     - [Git with Personal and Work Accounts](#git-with-personal-and-work-accounts)
         - [Verify the Git Identity](#verify-the-git-identity)
     - [Git Authentication with SSH](#git-authentication-with-ssh)
+        - [Configure Multiple Work Git Platforms](#configure-multiple-work-git-platforms)
         - [Load Keys into an SSH Agent](#load-keys-into-an-ssh-agent)
         - [Clone or Update a Repository](#clone-or-update-a-repository)
 
@@ -171,6 +172,38 @@ Test authentication with each SSH key to ensure it is correctly configured:
 ssh -T git@git-personal
 ssh -T git@git-work
 ```
+
+The response depends on the Git platform and its SSH setup. Look for confirmation that the key was accepted; interactive shell access is usually disabled for Git SSH connections. For example, GitHub may respond `Hi <username>! You've successfully authenticated, but GitHub does not provide shell access.` Bitbucket Server may instead report `shell request failed on channel 0`. This can be correct if it appears after the SSH key is accepted: `ssh -T` makes an SSH connection without running a Git command, so the server may reject the requested shell even though it allows Git operations over SSH. The shell-request message alone does not prove authentication succeeded; check for a preceding authentication failure, and verify access with an operation on a repository you are allowed to use, such as `git ls-remote <ssh-repository-url>`. Check your platform's documentation if the response is unclear.
+
+#### Configure Multiple Work Git Platforms
+
+If your work uses more than one Git platform, add a separate `Host` entry for each platform/account in `~/.ssh/config`. Give each entry a distinct local alias, and set `HostName` to that platform's SSH host. For example:
+
+```sshconfig
+# Work GitHub
+Host git-work-github
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_work
+    IdentitiesOnly yes
+
+# Work Bitbucket (example with a custom Git server and a specific port)
+Host git-work-bitbucket
+    HostName git.<company>.org
+    User git
+    Port 7999
+    IdentityFile ~/.ssh/id_work
+    IdentitiesOnly yes
+
+# Work Azure DevOps
+Host git-work-azure
+    HostName ssh.dev.azure.com
+    User git
+    IdentityFile ~/.ssh/id_work
+    IdentitiesOnly yes
+```
+
+These aliases are examples; use each provider's SSH host, repository URL format, and account requirements. The key setup and authentication checks are otherwise the same: add the public key to the relevant platform account, then test each alias with `ssh -T git@<alias>` (for example, `ssh -T git@git-work-bitbucket`). For clarity, the main walkthrough above keeps just one personal and one work alias, but the same pattern extends to as many platforms or accounts as you need. Use the selected alias in the repository's SSH remote URL, such as `git@git-work-bitbucket:workspace/repo.git`.
 
 #### Load Keys into an SSH Agent
 
