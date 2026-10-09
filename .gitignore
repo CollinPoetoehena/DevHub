@@ -46,9 +46,18 @@ terraform.rc
 .terraform.lock.hcl
 # Sensitive file (e.g. contains my public IP for SSH access, and Azure credentials, etc.)
 terraform.tfvars
+*.tfvars
+*.tfvars.json
+*.tfplan
+*.plan
 
 # Ansible
 .facts
 ansible.log
 # Vault file is encrypted (AES-256) and safe to commit — allows secrets to be versioned and shared. The vault PASSWORD file (~/.vault_pass.txt) is stored outside the repo and must never be committed.
 !*vault.yml
+
+
+
+# Ansible writes newly created Proxmox API token credentials here.
+.secrets/
