@@ -10,6 +10,7 @@ This is the central documentation for my personal home lab. It covers the goals,
 
 - [Documentation Design](#documentation-design)
 - [AI-Assisted Work](#ai-assisted-work)
+- [Infrastructure Automation](#infrastructure-automation)
 - [Reference](#reference)
 
 ---

@@ -166,22 +166,26 @@ Use the account that owns each subscription. In particular, use your **work acco
 
 **To set it up:**
 
-1. Open the Command Palette (`Ctrl+Shift+P` on Windows/Linux or `Cmd+Shift+P` on macOS).
-2. Run **Manage Extension Account Preference**.
-3. Select **GitHub Copilot** and choose **Add a new account** and then your **work GitHub account** as its preferred account. Complete your organization's SSO or authorization steps if prompted.
-4. Run **Manage Extension Account Preference** and select **GitHub Copilot** to confirm your work account is set as the preferred account (I had to manually select it again after logging in to the work account).
+1. Reset the previous account session first: open the **Accounts** menu (the account avatar in the lower-left corner of VS Code), select the GitHub account Copilot was previously using, and **Sign Out**. For example, if you initially signed in with your personal account, sign out of that account before selecting the work account. This temporarily interrupts Settings Sync if it uses that account; sign back in at the end rather than deleting any synced data.
+2. Open the Command Palette (`Ctrl+Shift+P` on Windows/Linux or `Cmd+Shift+P` on macOS).
+3. Run **Manage Extension Account Preference**.
+4. Select **GitHub Copilot** and choose **Use new account…** and then your **work GitHub account** as its preferred account. If browser authorization selects your personal account again, switch to the work account there before completing sign-in. Complete your organization's SSO or authorization steps if prompted.
+5. Run **Manage Extension Account Preference** and select **GitHub Copilot** to confirm your work account is set as the preferred account (I had to manually select it again after logging in to the work account).
+6. Run **Developer: Reload Window** from the Command Palette to apply the account changes. If it still does not update, run **Developer: Restart Extension Host**.
+7. Verify the work account and Copilot access:
+   - Open the **Accounts** menu and confirm your **work GitHub account** is signed in.
+   - Run **Manage Extension Account Preference** again and confirm it shows your **work GitHub account** for **GitHub Copilot**.
+   - Check the Copilot icon in the lower-right status bar for the Copilot plan associated with your work account, where shown.
+   - Open Copilot Chat and send a simple prompt, such as asking it to explain a small piece of code, to confirm access works. A response alone does not verify the account; use the account preference and subscription information above for that. It may take a few moments for Copilot usage credits to update.
+   - If your employer has not assigned a Copilot license to your work account, request access from your administrator.
+8. Sign back in with your **personal GitHub account** for [Settings Sync](#backup-and-settings-sync):
+   - Use **Backup and Sync Settings...** or the Settings Sync option in the **Accounts** menu to sign in with your personal account and resume sync.
+   - Confirm the **Accounts** menu now shows both your personal and work GitHub accounts, and that Settings Sync uses your **personal GitHub account**.
+   - Confirm **GitHub Copilot** still has your **work GitHub account** selected in **Manage Extension Account Preference**. Restoring personal sync should not change the Copilot preference.
+
+> **Cached account workaround (2026-10-09):** In my setup, Copilot kept using the previously signed-in personal account, apparently because of a cached session, even after I selected the work account in VS Code. Signing out of the old account first, selecting the work account, and reloading the window ensured Copilot used the correct work subscription. I then signed back in with my personal account for Settings Sync. This is the sequence that worked for me at the time, not a requirement for every installation; a future version may only need the account preference change and a window reload, without signing out.
 
 > **GitHub** in **Manage Extension Account Preference** refers to the general GitHub account used by VS Code extensions. The account you select here does not really matter, as long as the settings sync is using your personal account (see [Backup and Settings Sync](#backup-and-settings-sync)) and **GitHub Copilot** is using your work account, the **GitHub** account preference is separate from those settings and does not affect which account Copilot uses. You can even switch the **GitHub** account preference to your personal account when working on your personal projects and to your work account when working on your work projects (see [Separate Work and Personal Profiles](#separate-work-and-personal-profiles)).
-> **Account picker note (2026-10-09):** In the **Manage Extension Account Preference** flow, **Add a new account** appears after selecting **GitHub Copilot**. It does not appear when selecting **GitHub** itself.
-
-**Verify the accounts and Copilot access:**
-
-1. Click on the account avatar in the lower-left corner of VS Code and verify it shows 2 GitHub accounts: your personal and work accounts.
-2. Confirm [Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync) still shows your **personal GitHub account**.
-3. Run **Manage Extension Account Preference** again, select **GitHub Copilot**, and confirm it shows your **work GitHub account**.
-4. Check the Copilot icon in the lower-right status bar. It should show the Copilot plan associated with your work account.
-5. Open Copilot Chat, send a simple prompt, and confirm Copilot responds using the work account. For example, ask it to explain a small piece of code in the current editor. Note that it may take a few moments for the credits used by Copilot to update.
-6. If your employer has not assigned a Copilot license to your work account, request access from your administrator.
 
 > **Note:** It is fine for Settings Sync and Copilot to use different accounts: Settings Sync uses the account chosen for syncing your editor configuration, while Copilot authenticates the account that owns the subscription. These are separate services, so using your personal account for sync and your work account for Copilot does not change the sync account or interfere with your synced settings. The labels and available account options can vary with VS Code versions and organization policies.
 
