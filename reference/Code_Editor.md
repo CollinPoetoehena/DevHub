@@ -8,6 +8,11 @@ This guide describes my code editor setup and the account and Git configuration 
 
 - [Scope](#scope)
 - [Editor](#editor)
+- [VS Code Settings and Extensions](#vs-code-settings-and-extensions)
+    - [File Associations and Language Modes](#file-associations-and-language-modes)
+    - [Main Extensions](#main-extensions)
+    - [Windows and WSL](#windows-and-wsl)
+    - [List Installed Extensions](#list-installed-extensions)
 - [Backup and Settings Sync](#backup-and-settings-sync)
     - [Personal VS Code Account and Extensions](#personal-vs-code-account-and-extensions)
     - [Separate Work and Personal Profiles](#separate-work-and-personal-profiles)
@@ -39,9 +44,96 @@ I use [Visual Studio Code (VS Code)](https://code.visualstudio.com/) as my code 
 
 ---
 
+## VS Code Settings and Extensions
+
+**These are some important settings and preferences for myself (preference example updated on 2026-06-18). Settings not listed here can generally stay at their defaults; this section only highlights specific customizations I like, such as `files.associations`.**
+
+My supported user settings and local extension selection are backed up and synced through my personal account as explained in [Backup and Settings Sync](#backup-and-settings-sync). This is a short explanation, not a complete copy of my configuration. Run **Settings Sync: Show Synced Data** in the Command Palette to see the full data synced to my account. Remote extension installations, including WSL, are an exception; see [Windows and WSL](#windows-and-wsl).
+
+### File Associations and Language Modes
+
+I use these associations because plain YAML highlighting can look wrong around Helm or Jinja template expressions. Selecting the matching language mode makes those expressions readable while keeping ordinary YAML in its normal mode.
+
+Open **Preferences: Open User Settings (JSON)** from the Command Palette and merge the following example into your existing settings. VS Code settings use JSON with Comments (JSONC). Keep other settings unchanged, and merge entries into an existing `files.associations` object rather than adding a duplicate one.
+
+```jsonc
+{
+    // Settings not listed here can generally stay at their defaults.
+    "files.associations": {
+        // Plain YAML by default; not every YAML file contains templating.
+        "*.yaml": "yaml",
+
+        // Helm templates: YAML with Go template expressions.
+        "**/charts/**/*.yaml": "helm",
+        "**/templates/**/*.yaml": "helm",
+
+        // Personal overrides for files containing Jinja in my workflows.
+        "**kustomization.yaml": "jinja-yaml",
+        "**deployment.yaml": "jinja-yaml",
+        "**values.yaml": "jinja-yaml",
+        "**/base/**/*.yaml": "jinja-yaml",
+        "**/config/**/*.yaml": "jinja-yaml"
+    }
+}
+```
+
+The [main extensions below](#main-extensions) provide these modes: YAML for plain YAML, Kubernetes for `helm`, and Better Jinja for `jinja-yaml`. Jinja adds template highlighting and snippets but is not required alongside Better Jinja for this example. Syntax highlighting is not the same as automatic document formatting.
+
+These are personal overrides, not universal rules: Kustomize manifests, Kubernetes deployments, and Helm values are normally plain YAML unless a separate templating workflow adds Jinja. Helm templates use Go templates, not Jinja. The broad `charts`, `templates`, `base`, and `config` patterns can also match files that do not use the selected templating language. Narrow them to the relevant project paths, or use workspace settings for project-specific rules. Changing the language mode can affect YAML validation, formatting, and Kubernetes tooling, not just colors.
+
+Check a representative file's language mode in the bottom-right status bar after applying the settings, especially where patterns overlap. Use **Change Language Mode** to select YAML, Helm, or Jinja YAML manually when needed. Add corresponding `.yml` patterns if your projects use that extension; the example targets `.yaml`. Extend the associations with other languages or more specific overrides as needed.
+
+### Main Extensions
+
+These are my most important extensions currently. A full list and further explanation of the others are not necessary here; use the [terminal command below](#list-installed-extensions) or the Extensions view in VS Code to see everything installed. See [Backup and Settings Sync](#backup-and-settings-sync) for my synced local selection.
+
+| Extension | Why I use it |
+| --- | --- |
+| [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) | YAML validation, completion, and formatting. |
+| [Kubernetes](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) | Kubernetes tooling and Helm template highlighting and previews. |
+| [Better Jinja](https://marketplace.visualstudio.com/items?itemName=samuelcolvin.jinjahtml) | Jinja2 highlighting, especially Jinja YAML. |
+| [Jinja](https://marketplace.visualstudio.com/items?itemName=wholroyd.jinja) | Jinja highlighting and snippets. |
+| [Ansible](https://marketplace.visualstudio.com/items?itemName=redhat.ansible) | Ansible playbook and role editing. |
+| [HashiCorp Terraform](https://marketplace.visualstudio.com/items?itemName=hashicorp.terraform) | Terraform/HCL tooling and formatting. |
+| [Bicep](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep) | Azure Bicep infrastructure editing. |
+| [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) | Python development and debugging. |
+| [Go](https://marketplace.visualstudio.com/items?itemName=golang.go) | Go development, testing, and debugging. |
+| [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack) | Java language, debugging, and testing tools. |
+| [Rainbow CSV](https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv) | Color-coded CSV columns. |
+| [Todo Tree](https://marketplace.visualstudio.com/items?itemName=gruntfuggly.todo-tree) | Find TODO/FIXME comments across a project. |
+| [TODO Highlight](https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight) | Highlight TODO/FIXME comments in the editor. |
+| [Remote Development](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack), [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl), [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh), and [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) | Work in WSL, SSH hosts, and development containers. |
+| [Remote Explorer](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-explorer) and [Remote - Tunnels](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-server) | Browse remote environments and connect through tunnels. |
+
+### Windows and WSL
+
+The Windows and WSL extension lists represent different installation locations, not two incompatible sets of preferences. In my setup, VS Code runs on Windows and connects to VS Code Server in WSL. UI extensions can run locally on Windows, while language tools and debuggers often run in WSL alongside the project and its toolchain. An extension appearing only in the Windows list does not mean it is unsupported on Linux or unavailable while editing in WSL.
+
+In a WSL-connected window, open the Extensions view and check **Local - Installed** and **WSL: Ubuntu - Installed**. Use **Install in WSL: Ubuntu** for a workspace extension that is installed locally but needs to run in WSL. Local user settings are reused in WSL; **Preferences: Open Remote Settings (JSON)** lets you add WSL-specific overrides. See the official [WSL extension management guide](https://code.visualstudio.com/docs/remote/wsl#_managing-extensions).
+
+> **Sync limitation:** [Settings Sync](#backup-and-settings-sync) backs up supported user preferences and local extension selections, but VS Code does **not** sync extensions to or from remote windows such as WSL, SSH, or Dev Containers. Install the needed extensions in each remote environment separately. Workspace files, remote settings, and external toolchains are not restored by syncing local user settings. See the [official Settings Sync documentation](https://code.visualstudio.com/docs/configure/settings-sync#_configure-synced-data).
+
+### List Installed Extensions
+
+Run this in a Windows Command Prompt or PowerShell terminal for the local Windows installation:
+
+```powershell
+code --list-extensions
+```
+
+Run the same command in a WSL terminal, preferably the integrated terminal of a WSL-connected VS Code window, for that WSL installation. My supplied output begins with `Extensions installed on WSL: Ubuntu:`:
+
+```bash
+code --list-extensions
+```
+
+To include installed versions, use `code --list-extensions --show-versions`. These commands list installed extension IDs, not whether every extension is enabled for the current workspace. If using multiple profiles, add `--profile "Work"` (replace `Work` with the relevant profile name). The Extensions view remains useful for confirming the local/remote installation location.
+
+---
+
 ## Backup and Settings Sync
 
-Use [VS Code Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync) with your **personal GitHub account** (or another personal account supported by VS Code). Editor settings are personal preferences, and using a personal account keeps them available if you change jobs or lose access to a work account. The same setup can support work with different tools like Kubernetes and Ansible as well as personal projects such as a homelab.
+Use [VS Code Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync) with your **personal GitHub account** (or another personal account supported by VS Code). Editor settings are personal preferences, and using a personal account always keeps them available if you change jobs, lose access to a work account, or do not have a work account that can sync the settings at all. The same setup can support work with different tools like Kubernetes and Ansible as well as personal projects such as a homelab.
 
 Settings Sync keeps the supported parts of your coding environment consistent across machines and profiles, including preferences, extensions, keybindings, snippets, and prompts. This avoids manually recreating or maintaining the same setup in every environment.
 
