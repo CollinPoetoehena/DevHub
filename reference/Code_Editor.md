@@ -168,7 +168,9 @@ Use the account that owns each subscription. In particular, use your **work acco
 
 1. Open the Command Palette (`Ctrl+Shift+P` on Windows/Linux or `Cmd+Shift+P` on macOS).
 2. Run **Manage Extension Account Preference**.
-3. Select **GitHub Copilot** and choose your **work GitHub account** as its preferred account. Complete your organization's SSO or authorization steps if prompted.
+3. Select **GitHub Copilot** and choose **Add a new account** and then your **work GitHub account** as its preferred account. Complete your organization's SSO or authorization steps if prompted.
+4. Run **Manage Extension Account Preference** and select **GitHub Copilot** to confirm your work account is set as the preferred account (I had to manually select it again after adding it).
+5. Run **Manage Extension Account Preference** and select **GitHub** and choose your **personal GitHub account** as its preferred account. In this case, after selecting the **work account** for Copilot, it automatically switched **GitHub** to my work account as well. Check that **GitHub Copilot** still shows your **work account** as its preferred account after this change. If that is not possible, keep **GitHub Copilot** and **GitHub** to your work account (e.g. if switching GitHub to your personal account automatically changes Copilot to the personal account), as long as the settings sync is set to the personal account it is no problem.
 
 > **Account picker note (2026-10-09):** In the **Manage Extension Account Preference** flow, **Add a new account** appears after selecting **GitHub Copilot**. It does not appear when selecting **GitHub** itself.
 
