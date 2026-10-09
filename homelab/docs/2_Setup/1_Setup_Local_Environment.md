@@ -76,7 +76,7 @@ After this completes, your environment is ready to run playbooks. See the setup 
 
 This homelab repository focuses on describing the desired infrastructure and connecting reusable building blocks together. Infrastructure capabilities themselves should be maintained in dedicated repositories. Examples:
 - [`devhub-ansible-router-custom`](https://github.com/CollinPoetoehena/devhub-ansible-router-custom) → Router and network configuration role
-- [`devhub-ansible-proxmox`](https://github.com/CollinPoetoehena/devhub-ansible-proxmox) → Proxmox host installation and configuration role
+- [`devhub-ansible-proxmox`](https://github.com/CollinPoetoehena/devhub-ansible-proxmox) → Proxmox cluster settings and Terraform API account role
 - [`devhub-terraform-proxmox`](https://github.com/CollinPoetoehena/devhub-terraform-proxmox) → Terraform modules for managing Proxmox resources
 - Etc...
 

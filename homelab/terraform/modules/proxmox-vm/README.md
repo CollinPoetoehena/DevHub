@@ -49,7 +49,7 @@ Terraform state is sensitive. Use the approved backend and handle state backups 
 
 ## Template contract
 
-The [Proxmox Ansible role](../../../ansible/roles/devhub.proxmox/README.md#vm-templates) prepares compatible templates: Linux cloud image, boot disk on `scsi0`, cloud-init drive on `ide2`, and QEMU guest agent installed and running inside the guest. Its default Ubuntu template is ID `9001` with a 20 GiB disk. Select a unique destination VM ID; do not reuse the template ID.
+Provide an existing compatible cloud-init template with a Linux boot disk on `scsi0`, a cloud-init drive on `ide2`, and the QEMU guest agent installed and running inside the guest. Select a unique destination VM ID; do not reuse the template ID. Host template creation is outside this module's scope.
 
 The module uses VirtIO networking and a VirtIO SCSI controller, enables the guest agent and disk discard, and defaults to IPv4 DHCP plus IPv6 SLAAC. The bridge/switch must carry the chosen VLAN, and DHCP/Router Advertisements must exist there. It does not create VLANs, network services, firewall policies or host storage. For a static IPv4 address, provide `ipv4_address` in CIDR notation and optionally `ipv4_gateway`; a gateway with DHCP is rejected.
 
