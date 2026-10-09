@@ -169,9 +169,9 @@ Use the account that owns each subscription. In particular, use your **work acco
 1. Open the Command Palette (`Ctrl+Shift+P` on Windows/Linux or `Cmd+Shift+P` on macOS).
 2. Run **Manage Extension Account Preference**.
 3. Select **GitHub Copilot** and choose **Add a new account** and then your **work GitHub account** as its preferred account. Complete your organization's SSO or authorization steps if prompted.
-4. Run **Manage Extension Account Preference** and select **GitHub Copilot** to confirm your work account is set as the preferred account (I had to manually select it again after adding it).
-5. Run **Manage Extension Account Preference** and select **GitHub** and choose your **personal GitHub account** as its preferred account. In this case, after selecting the **work account** for Copilot, it automatically switched **GitHub** to my work account as well. Check that **GitHub Copilot** still shows your **work account** as its preferred account after this change. If that is not possible, keep **GitHub Copilot** and **GitHub** to your work account (e.g. if switching GitHub to your personal account automatically changes Copilot to the personal account), as long as the settings sync is set to the personal account it is no problem.
+4. Run **Manage Extension Account Preference** and select **GitHub Copilot** to confirm your work account is set as the preferred account (I had to manually select it again after logging in to the work account).
 
+> **GitHub** in **Manage Extension Account Preference** refers to the general GitHub account used by VS Code extensions. The account you select here does not really matter, as long as the settings sync is using your personal account (see [Backup and Settings Sync](#backup-and-settings-sync)) and **GitHub Copilot** is using your work account, the **GitHub** account preference is separate from those settings and does not affect which account Copilot uses. You can even switch the **GitHub** account preference to your personal account when working on your personal projects and to your work account when working on your work projects (see [Separate Work and Personal Profiles](#separate-work-and-personal-profiles)).
 > **Account picker note (2026-10-09):** In the **Manage Extension Account Preference** flow, **Add a new account** appears after selecting **GitHub Copilot**. It does not appear when selecting **GitHub** itself.
 
 **Verify the accounts and Copilot access:**
@@ -283,7 +283,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_personal -C "you@example.com"
 ssh-keygen -t ed25519 -f ~/.ssh/id_work -C "you@company.example"
 ```
 
-Set a passphrase when prompted, then add each corresponding `.pub` public key to the matching account on your Git platform. Keep the private key files private. If your work Git platform uses a separate host, use that host name in the work SSH configuration instead of `github.com`.
+Set a passphrase when prompted, then add each corresponding `.pub` public key to the matching account on your Git platform so it can authenticate you. For GitHub, see [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account); for other platforms, follow their documentation. Keep the private key files private. If your work Git platform uses a separate host, use that host name in the work SSH configuration instead of `github.com`.
 
 In `~/.ssh/config` (see [SSH Config Docs](https://www.ssh.com/academy/ssh/config)):
 
