@@ -2,6 +2,8 @@
 
 After preparing your hardware and prerequisites, the next step is to set up the local development environment on your laptop. This is a one-time setup that generates an SSH key, installs dependencies, generates the inventory, and configures the Ansible Vault for secrets management.
 
+> **Security:** This is a public repository. Follow [Security and Public Repository](../0_Security_and_Public_Repository.md) before adding local values or sharing command output. Keep private keys and the Ansible Vault password outside Git; only the encrypted vault file may be committed.
+
 ---
 
 ## Table of Contents

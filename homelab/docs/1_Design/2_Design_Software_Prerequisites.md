@@ -207,7 +207,7 @@ The individual choices above are not independent — the same handful of princip
 
 ## GitOps & Continuous Delivery
 
-> **See for more details about the corresponding design (not software/tool specific): TODO: add this later.**
+> **See [Security and Public Repository](../0_Security_and_Public_Repository.md) for repository-wide rules on publishing and protecting secrets.**
 
 **What it is.** Treating a Git repository as the single source of truth for what runs in the cluster, with an in-cluster agent continuously reconciling actual state against the repository. Deployments become commits; rollbacks become reverts; drift is detected and corrected automatically. Crucially it is **pull-based** — the cluster pulls from Git rather than CI pushing into the cluster, so no external system needs cluster credentials.
 
@@ -244,7 +244,7 @@ The individual choices above are not independent — the same handful of princip
 
 ## Secrets Management
 
-> **See for more details about the corresponding design (not software/tool specific): TODO: add this later.**
+> **See [Security and Public Repository](../0_Security_and_Public_Repository.md) for repository-wide rules on publishing and protecting secrets.**
 
 **What it is.** Keeping credentials, keys, and tokens out of Git and out of plaintext, while still making them available to automation and workloads — with a clear story for rotation and for who can decrypt what.
 

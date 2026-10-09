@@ -1,6 +1,7 @@
 # Setup & Installation
 
 > **See [Design](../1_Design/README.md) for the overall architecture and network topology. All setup steps are based on the design.**
+> **Before publishing configuration, logs, or screenshots, follow [Security and Public Repository](../0_Security_and_Public_Repository.md).**
 
 TODO: here the setup and installation with the specific steps.
 
