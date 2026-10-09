@@ -136,7 +136,7 @@ Terraform **clones**, it never installs an OS. Ansible prepares the golden image
 
 download cloud image → verify checksum → `virt-customize --install qemu-guest-agent` → `qm create` → `qm importdisk` → attach cloud-init drive → `qm template`.
 
-- **Why the guest agent is injected into the image**: without it the hypervisor cannot read a VM's IP (the Terraform module's `ipv4_addresses` output stays empty forever), cannot shut down gracefully, and cannot quiesce the filesystem for snapshots. It must be in the *image*, because a VM that has not booted yet cannot install it.
+- **Why the guest agent is injected into the image**: without it the hypervisor cannot read a VM's IP (that VM's entry in the Terraform module's `ipv4_addresses` output stays empty), cannot shut down gracefully, and cannot quiesce the filesystem for snapshots. It must be in the *image*, because a VM that has not booted yet cannot install it.
 - **Why `--truncate /etc/machine-id`**: systemd derives the DHCP client identifier from the machine-id. If every clone inherits the same one, every VM requests the **same lease** from the router's dnsmasq and they fight over one address.
 - **Why `qm template`**: it makes the image read-only and enables *linked* clones, which store only their differences — a 20 GB template plus ten VMs costs far less than 200 GB.
 

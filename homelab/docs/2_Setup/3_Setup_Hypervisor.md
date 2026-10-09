@@ -20,4 +20,4 @@ TODO: after that I can configure with Ansible the rest!
 
 ## Provision VMs with Terraform
 
-After configuring the host and preparing cloud-init templates with the [Proxmox Ansible role](../../ansible/roles/devhub.proxmox/README.md#vm-templates), use the [Terraform guide and example](../../terraform/README.md) to clone guests. The [VM module](../../terraform/modules/proxmox-vm/README.md) manages CPU, memory, disk, workload VLAN and cloud-init SSH/network settings; it does not install an OS or configure the Proxmox host.
+After configuring the host and preparing cloud-init templates with the [Proxmox Ansible role](../../ansible/roles/devhub.proxmox/README.md#vm-templates), use the [Terraform guide and example](../../terraform/README.md) to clone one or more guests. The [VM module](../../terraform/modules/proxmox-vm/README.md) manages each VM's CPU, memory, disk, workload VLAN and cloud-init SSH/network settings; it does not install an OS or configure the Proxmox host.
