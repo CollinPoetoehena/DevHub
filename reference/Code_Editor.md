@@ -133,7 +133,7 @@ To include installed versions, use `code --list-extensions --show-versions`. The
 
 ## Backup and Settings Sync
 
-Use [VS Code Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync) with your **personal GitHub account** (or another personal account supported by VS Code). Editor settings are personal preferences, and using a personal account always keeps them available if you change jobs, lose access to a work account, or do not have a work account that can sync the settings at all. The same setup can support work with different tools like Kubernetes and Ansible as well as personal projects such as a homelab.
+Use [VS Code Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync) with your **personal GitHub account** (or another personal account supported by VS Code); I prefer GitHub because it is currently my main development account where I also maintain this `DevHub` project, etc. Editor settings are personal preferences, and using a personal account always keeps them available if you change jobs, lose access to a work account, or do not have a work account that can sync the settings at all. The same setup can support work with different tools like Kubernetes and Ansible as well as personal projects such as a homelab.
 
 Settings Sync keeps the supported parts of your coding environment consistent across machines and profiles, including preferences, extensions, keybindings, snippets, and prompts. This avoids manually recreating or maintaining the same setup in every environment.
 
@@ -162,16 +162,26 @@ Enable **Profiles** in Settings Sync to sync both profiles using your personal a
 
 ## Subscriptions and Work Accounts
 
-Use the account that owns each subscription. In particular, use your **work account for GitHub Copilot in VS Code** when your employer provides the license. The subscription is granted to that account, so it does not need to be tied to the personal account used for Settings Sync (see [Backup and Settings Sync](#backup-and-settings-sync)). See Microsoft's [Set up GitHub Copilot in VS Code](https://code.visualstudio.com/docs/setup/copilot) guide for the current product-specific steps.
+Use the account that owns each subscription. In particular, use your **work account for GitHub Copilot in VS Code** when your employer provides the license. The subscription is granted to that account, so it does not need to be tied to the personal account used for Settings Sync (see [Backup and Settings Sync](#backup-and-settings-sync)). For the current product-specific steps, see [Set up GitHub Copilot in VS Code](https://code.visualstudio.com/docs/setup/copilot#_use-a-different-github-account-per-workspace-or-profile).
 
 **To set it up:**
 
-1. Install or enable GitHub Copilot in VS Code, following the [official setup guide](https://code.visualstudio.com/docs/setup/copilot).
-2. When VS Code asks you to sign in for Copilot, choose the work GitHub account that has the subscription. Complete your organization's SSO or authorization steps if prompted.
-3. Check the Copilot status or account details in VS Code to confirm Copilot is using the work account and the subscription is active. Keep Settings Sync signed in with your personal account as described above.
-4. If your employer has not assigned a Copilot license to your work account, request access from your administrator.
+1. Open the Command Palette (`Ctrl+Shift+P` on Windows/Linux or `Cmd+Shift+P` on macOS).
+2. Run **Manage Extension Account Preference**.
+3. Select **GitHub Copilot** and choose your **work GitHub account** as its preferred account. Complete your organization's SSO or authorization steps if prompted.
 
-> **Note:** It is fine for Settings Sync and Copilot to use different accounts: Settings Sync uses the account chosen for syncing your editor configuration, while Copilot authenticates the account that owns the subscription. These are separate services, so using your personal account for sync and your work account for Copilot does not change the sync account or interfere with your synced settings. Verify each account in its own settings or status details; organization policies and sign-in flows can vary.
+> **Account picker note (2026-10-09):** In the **Manage Extension Account Preference** flow, **Add a new account** appears after selecting **GitHub Copilot**. It does not appear when selecting **GitHub** itself.
+
+**Verify the accounts and Copilot access:**
+
+1. Click on the account avatar in the lower-left corner of VS Code and verify it shows 2 GitHub accounts: your personal and work accounts.
+2. Confirm [Settings Sync](https://code.visualstudio.com/docs/configure/settings-sync) still shows your **personal GitHub account**.
+3. Run **Manage Extension Account Preference** again, select **GitHub Copilot**, and confirm it shows your **work GitHub account**.
+4. Check the Copilot icon in the lower-right status bar. It should show the Copilot plan associated with your work account.
+5. Open Copilot Chat, send a simple prompt, and confirm Copilot responds using the work account. For example, ask it to explain a small piece of code in the current editor.
+6. If your employer has not assigned a Copilot license to your work account, request access from your administrator.
+
+> **Note:** It is fine for Settings Sync and Copilot to use different accounts: Settings Sync uses the account chosen for syncing your editor configuration, while Copilot authenticates the account that owns the subscription. These are separate services, so using your personal account for sync and your work account for Copilot does not change the sync account or interfere with your synced settings. The labels and available account options can vary with VS Code versions and organization policies.
 
 This separation is intentional: personal account for portable editor settings, work account for employer-provided tools and subscriptions. The exact sign-in flow can depend on the VS Code and extension versions, so verify both Settings Sync and the subscription are using the intended accounts.
 
