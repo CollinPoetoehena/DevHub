@@ -106,6 +106,7 @@ Ask for a plan first or provide a plan yourself, then execute step by step, rath
 ---
 
 ## Reusable AI Workflows and Agents
+> For the practical VS Code setup, including which account to use for Settings Sync versus employer-provided subscriptions and how to separate Git identities, see [Code Editor](Code_Editor.md). This account guidance is included there because it is about configuring the editor and development environment, rather than an AI workflow.
 
 **Make it easy for yourself:** If you regularly ask for similar work (e.g. implementing features, fixing bugs, reviewing code, or drafting documentation), reuse a small, maintained setup rather than rewriting the same context, constraints, and checks each time. This principle applies across AI tools, not just coding assistants:
 
@@ -121,6 +122,7 @@ Start small, reuse what helps, and tailor it to your project and company policie
 The two subsections below cover **coding**, using GitHub Copilot in VS Code as the example, and **general-purpose work**, using Microsoft 365 Copilot agents as the example. For guidance on choosing the right tool or model for a task, see [Framework: Which AI Tool/Model for Which Task](#framework-which-ai-toolmodel-for-which-task).
 
 ### Coding: GitHub Copilot in VS Code
+> For separating the personal account used for editor Settings Sync from the work account used for an employer-provided Copilot subscription, see [Code Editor](Code_Editor.md). That account arrangement is editor setup, so it is documented there rather than as an AI workflow.
 
 The following is the practical coding setup used as an example here. In GitHub Copilot in VS Code, examples include `.github/prompts/*.prompt.md` for reusable task prompts, `.github/copilot-instructions.md` for repository-wide guidance, and `.github/agents/*.agent.md` for specialized custom agents. `AGENTS.md` is another supported repository instruction format, not the same thing as a custom agent definition. See [Customize AI in VS Code](https://code.visualstudio.com/docs/copilot/customization/overview) for supported customization options.
 
@@ -250,19 +252,7 @@ See the [4-Tier Model Framework](#4-tier-model-framework-credit-efficiency) belo
 
 > **Note:** This is just a reference with general explanation (as explained before), for the full tutorial and guide on how to use VS Code with GitHub Copilot, refer to the [official documentation and tutorials provided by GitHub](https://docs.github.com/en/copilot), such as [Getting Started with GitHub Copilot in VS Code](https://docs.github.com/en/copilot/get-started/quickstart?tool=vscode).
 
-**Using multiple GitHub accounts, with one as your GitHub Copilot license:** it's common to have two (or more) GitHub accounts — one you use day-to-day (e.g. for your own code/projects) and another that simply comes with a paid Copilot license you want to make use of (e.g. a workplace/enterprise account, a second personal account, etc.) — you can use that second account purely for its Copilot license while keeping your main account (and VS Code settings) fully separate. In short:
-1. In VS Code, sign out of any currently signed-in GitHub account first — otherwise it will keep using that account (and its Copilot access, if any) by default.
-2. Sign in with the account that holds the Copilot license you want to use instead (this may go through an identity provider/SSO if it's an enterprise account); when prompted, allow it to be used for the GitHub Copilot extension.
-3. Verify the active account via the Copilot status icon in the VS Code status bar → account/subscription details, to confirm it's using the intended Copilot license.
-4. Turn on **Settings Sync** and link it to your **main/preferred** GitHub account, so your settings, keybindings, and extensions stay tied to your own profile — only Copilot itself uses the other account.
-5. Finally, switch to **SSH** for all Git operations to keep the two (or more) accounts cleanly separated (mixing HTTPS credentials between accounts can cause issues, e.g. losing access to private repos): use SSH clone URLs, update existing remotes with `git remote set-url origin <ssh-url>`, generate/add SSH keys per account, and use an SSH agent (so you're not retyping a passphrase constantly) — then test with a clone or push/pull.
-6. Now you can use your main GitHub account for all day-to-day activities and your secondary account solely for its GitHub Copilot license, keeping both accounts and their respective settings cleanly separated. For more details about specific steps above or more details in general, refer to the links below:
-    - [Connecting to GitHub with SSH — GitHub Docs](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
-    - [Switching between accounts — GitHub Docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/switching-between-accounts)
-    - [Managing multiple accounts (Git config) — GitHub Docs](https://docs.github.com/en/account-and-profile/how-tos/account-management/managing-multiple-accounts)
-    - [Settings Sync — Visual Studio Code](https://code.visualstudio.com/docs/configure/settings-sync)
-    - [Set up GitHub Copilot in VS Code](https://code.visualstudio.com/docs/setup/copilot)
-    - [Viewing and changing your GitHub Copilot plan — GitHub Docs](https://docs.github.com/en/copilot/how-tos/manage-your-account/view-and-change-your-copilot-plan)
+> For the practical account setup, see [Code Editor](Code_Editor.md). It covers using a personal account for portable editor settings and the work account that holds an employer-provided Copilot license, as well as separating Git identities and authentication. This account guidance is included there because it is about configuring the editor and development environment, rather than an AI workflow.
 
 #### Other Specific applications
 Many tools you already use have their own built-in AI features, which are often the fastest way to get something done because they already have full context of that application/data. Examples:
