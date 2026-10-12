@@ -2,10 +2,16 @@
 
 > **TODO:** Move this Terraform configuration into a dedicated repository named `devhub-terraform-proxmox-vms` by 2026-10-09, following the structure and conventions in the [DevHub Terraform reference](../../packages/Terraform.md).
 
-Terraform owns VM provisioning and configures guests after provisioning. The [Proxmox Ansible role](../ansible/roles/devhub.proxmox/README.md) manages cluster settings and Terraform's API account; it does not configure the host or prepare templates.
+Terraform owns VM provisioning; general-purpose Linux guest configuration uses cloud-init and Ansible. The [Proxmox Ansible role](../ansible/roles/devhub.proxmox/README.md) manages cluster settings and Terraform's API account; it does not configure the host or prepare templates.
 
 - [Proxmox VM module](modules/proxmox-vm/README.md): clone one or more Linux VMs from keyed configurations, with per-VM resources, workload VLAN and cloud-init login/network.
 - [Example root configuration](examples/proxmox-vm/main.tf): consumes the module without embedding credentials.
+
+## Planned Talos cluster module
+
+Kubernetes nodes will use Talos Linux instead of Ubuntu/kubeadm. The existing cloud-init VM module is for management and utility guests; its SSH user settings and unconditional guest-agent configuration must not be reused unchanged for Talos.
+
+A separate Talos cluster module is planned, not implemented here. It should manage the pinned Talos ISO in Proxmox, node VMs, and API-driven configuration/bootstrap through the [Sidero Labs Talos provider](https://registry.terraform.io/providers/siderolabs/talos/latest/docs). Keep cluster secrets stable, bootstrap once, and make node replacement and upgrades explicit. See [Cluster Setup](../docs/2_Setup/5_Setup_Cluster.md#terraform-automation-boundary) for the ownership boundary, prerequisites, security requirements, and verification workflow. Talos machine configuration and client credentials can be stored in Terraform state, so the protected backend is required before real use.
 
 ## Running the example
 

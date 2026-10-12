@@ -37,6 +37,7 @@ Hardware is one decision, made once, for one reason: **"what do I buy?"** Splitt
     - [What to Check When Buying Refurbished](#what-to-check-when-buying-refurbished)
   - [Hardware Type Selection](#hardware-type-selection)
     - [Comparison: Main Compute Options](#comparison-main-compute-options)
+    - [CPU Comparison: Families and Performance Tiers](#cpu-comparison-families-and-performance-tiers)
     - [Why Mini PCs](#why-mini-pcs)
     - [Why Enterprise-Grade (e.g. Dell, Lenovo, HP)](#why-enterprise-grade-eg-dell-lenovo-hp)
     - [Why NOT Raspberry Pi](#why-not-raspberry-pi)
@@ -281,6 +282,31 @@ Companies replace hardware on a fixed cycle — often every 3–5 years, regardl
 
 > A great DevOps home lab focuses on **production-like architecture, not production-grade hardware**. You don't need enterprise servers (very harmful for your wallet and your ears) — but you do need reproducibility, automation, observability, and failure testing, etc.
 
+#### CPU Comparison: Families and Performance Tiers
+
+CPU names describe both a **product tier** (such as Core i5 or Ryzen 5) and a **power/performance class** (often indicated by a suffix such as `U`, `H`, or `T`). A tier name on its own does not guarantee a specific core count, performance, or power draw; those change across generations and device designs. Use this table to shortlist a class, then compare the exact CPU and computer.
+
+| CPU family / tier | Typical processor power class | Relative performance and practical fit |
+|---|---|---|
+| **Intel Processor N-series** (e.g. N100, N150, N200, N305) | Roughly 6–15 W | Entry-level, efficiency-focused chips. Suitable for a low-cost, low-power host with light services and a modest VM workload. Core counts and performance differ within the family. |
+| **Intel Core i3 / Core 3** | Commonly about 15–55 W for mobile models; 35 W or more for desktop models | Entry-level mainstream performance. Can suit a small hypervisor, but check core count and sustained performance before planning several active VMs. |
+| **Intel Core i5 / Core 5** | Commonly about 15–55 W for mobile models; 35–65 W or more for desktop models | Mainstream mid-range. Often a good balance for multiple VMs and development workloads, especially when the exact model has enough cores and the system can cool it. |
+| **Intel Core i7 / Core 7 and above** | Commonly about 15–55 W for mobile models; 35–65 W or more for desktop models | Higher-tier options with more performance in many generations, but the label alone does not ensure a faster or more efficient CPU than a newer lower-tier model. |
+| **AMD Ryzen 3 / 5 / 7 and above** | Commonly about 15–54 W for mobile models; 35–65 W or more for desktop models | Comparable mainstream choices across entry, mid-range, and higher tiers. Check the generation, model suffix, core count, virtualization support, and system cooling. |
+| **Older refurbished business CPUs** (Intel Core or AMD Ryzen) | Varies widely; often around 15–65 W by processor class | Can offer good value, but performance per core, efficiency, supported memory, and virtualization capabilities vary substantially by generation and exact model. |
+
+These are **broad processor power classes**, not like-for-like guarantees or whole-computer electricity draw. For example, `U` commonly identifies an efficiency-focused mobile class, `H` a higher-performance mobile class, and `T` a lower-power desktop class; suffix meanings and available models vary by generation. Core i3/i5/i7 and Ryzen 3/5/7 indicate product tiers, not fixed power limits. Intel and AMD also use different power definitions, and boost power may be higher than the nominal figure.
+
+A mini PC's actual wall power also includes the motherboard, memory, storage, network interfaces, power-supply losses, workload, and cooling limits. Treat processor ratings as a rough way to compare classes, not as idle or continuous consumption. For a buying decision, check independent measurements of the exact system at idle and under a representative sustained workload, or measure it with a plug-in power meter.
+
+For a machine left on 24/7, each **10 W of average whole-system draw** uses about **87.6 kWh per year**. At an example electricity price of €0.30/kWh, that is about €26/year; 20 W is about €53/year and 40 W about €105/year. Use your own tariff and measured average draw for a realistic estimate.
+
+**Which class to choose:**
+
+- Choose an **Intel N-series** or similar low-power CPU when low electricity use and light workloads matter more than peak performance. Do not assume that a higher core count in an efficiency-focused chip makes it equivalent to a mainstream Core i5 or Ryzen 5.
+- Choose a **Core i3/Ryzen 3-class** machine for modest workloads; a **Core i5/Ryzen 5-class** machine is often a balanced starting point for multiple VMs; consider **Core i7/Ryzen 7-class or higher** when workloads need more parallel CPU capacity. These are starting points, not guarantees—compare exact generations and models.
+- Before buying, verify that the exact processor and system support the required virtualization features (such as Intel VT-x/VT-d or AMD-V/IOMMU), that firmware exposes them, and that the model supports the RAM capacity you need. For a hypervisor host, adequate RAM and SSD capacity can matter more than a small CPU-tier difference.
+
 #### Why Mini PCs
 
 - **Strong virtualization performance** — desktop-class CPUs (e.g. Intel i5/i7) handle Proxmox, Docker, and Kubernetes easily.
@@ -358,7 +384,7 @@ More importantly, the Pi uses ARM/Pi OS instead of x86/Ubuntu or RHEL — which 
 
 | Component | Recommended | Notes |
 |-----------|-------------|-------|
-| **CPU** | 4+ cores Intel N-series or 12th-gen Core i5 — full VT-x and VT-d support | Enough to run Proxmox + multiple VMs simultaneously without contention. |
+| **CPU** | Low-power Intel N-series for light workloads, or a suitable Core i3/Ryzen 3 class or higher for more VM and build headroom — verify virtualization support on the exact model | Choose using the [CPU family comparison](#cpu-comparison-families-and-performance-tiers), workload, and whole-system power measurements. |
 | **RAM** | 32–64 GB | 32 GB is comfortable for running Proxmox with several VMs. 64 GB gives plenty of headroom and is often more power-efficient than running two separate 32 GB nodes (if you need 64 GB RAM total; if you only need 32 GB RAM then you do not need the 64 GB RAM of course) — one well-specced machine uses less energy than two underpowered ones (see [How Many Nodes](#how-many-nodes)). |
 | **Storage** | NVMe SSD | Significantly faster than SATA SSD (3–7 GB/s vs ~550 MB/s) and far faster than HDD. Matters for VM boot times, live migration, snapshot I/O, and running multiple VMs in parallel. Most enterprise-grade mini PCs ship with an M.2 slot, making NVMe a natural fit — no cables, no adapters, compact form factor. |
 

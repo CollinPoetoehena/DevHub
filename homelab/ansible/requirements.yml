@@ -17,7 +17,3 @@ roles:
     src: https://github.com/CollinPoetoehena/devhub-ansible-proxmox.git
     scm: git
     version: initial-setup # TODO: change to PRD version later when it is done and tested!
-  - name: devhub.k8s
-    src: https://github.com/CollinPoetoehena/devhub-ansible-k8s.git
-    scm: git
-    version: initial-setup # TODO: change to PRD version later when it is done and tested!

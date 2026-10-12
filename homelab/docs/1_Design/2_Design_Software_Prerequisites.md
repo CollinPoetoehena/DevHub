@@ -35,7 +35,10 @@ This is a **high-level decision record**, not documentation. It records *what* a
 - [Router & Firewall Software](#router--firewall-software)
 - [Hypervisor / Virtualization Platform](#hypervisor--virtualization-platform)
 - [Node & VM Operating System](#node--vm-operating-system)
-- [Container Orchestration](#container-orchestration)
+- [Cluster Tools](#cluster-tools)
+  - [Container Orchestration: Kubernetes](#container-orchestration-kubernetes)
+  - [Kubernetes Node OS & Lifecycle: Talos Linux](#kubernetes-node-os--lifecycle-talos-linux)
+  - [Cluster Networking (CNI): Cilium](#cluster-networking-cni-cilium)
 - [Infrastructure as Code (Provisioning)](#infrastructure-as-code-provisioning)
 - [Configuration Management](#configuration-management)
 - [GitOps & Continuous Delivery](#gitops--continuous-delivery)
@@ -57,8 +60,10 @@ This is a **high-level decision record**, not documentation. It records *what* a
 |---|---|---|---|
 | Network | Router / firewall OS | **OPNsense** | pfSense |
 | Compute | Hypervisor | **Proxmox VE** | XCP-ng, VMware ESXi |
-| Compute | Node & VM OS | **Debian** (Proxmox base) / **Ubuntu LTS** (VMs) | RHEL derivatives |
+| Compute | Host & general-purpose VM OS | **Debian** (Proxmox base) / **Ubuntu LTS** (management and utility VMs) | RHEL derivatives |
 | Platform | Container orchestration | **Kubernetes** | Docker Compose, Nomad |
+| Platform | Kubernetes node OS & lifecycle | **Talos Linux** | Ubuntu + kubeadm, OpenShift, K3s |
+| Platform | Cluster networking (CNI) | **Cilium** | Calico, Flannel |
 | Automation | Infrastructure as Code | **Terraform** | Pulumi, OpenTofu |
 | Automation | Configuration management | **Ansible** | Puppet, Chef, Salt |
 | Delivery | GitOps / CD | **Argo CD** | Flux, push-based CD |
@@ -134,7 +139,7 @@ The individual choices above are not independent — the same handful of princip
 
 **What it is.** The base OS on the physical hosts and inside the VMs. Its job is to be predictable, well-supported, and boring — it is the substrate, not the interesting part.
 
-**Chosen (2026-03): [Debian](https://www.debian.org/) (stable) on the hosts, [Ubuntu LTS](https://ubuntu.com) in the VMs.** Debian comes as the Proxmox base, so the host OS is not really a separate choice — and it is exactly the right one: extremely stable, long support windows, minimal surprises. Ubuntu LTS is used for VMs because it is the most widely documented Linux in cloud and Kubernetes contexts, has excellent cloud-image and `cloud-init` support (which is what makes Terraform-driven VM provisioning clean), and 5-year LTS support means the lab does not need rebuilding every year.
+**Chosen (2026-03; scope clarified 2026-10): [Debian](https://www.debian.org/) (stable) on the hosts, [Ubuntu LTS](https://ubuntu.com) in general-purpose VMs.** Debian comes as the Proxmox base, so the host OS is not really a separate choice — and it is exactly the right one: extremely stable, long support windows, minimal surprises. Ubuntu LTS is used for the management VM and other general-purpose Linux services because it is widely documented, has excellent cloud-image and `cloud-init` support, and a long support window. Kubernetes control-plane and worker VMs instead use [Talos Linux](#kubernetes-node-os--lifecycle-talos-linux); they do not need a general-purpose guest OS.
 
 **Alternatives considered:**
 
@@ -146,9 +151,13 @@ The individual choices above are not independent — the same handful of princip
 
 ---
 
-## Container Orchestration
+## Cluster Tools
 
 > **See for more details about the corresponding design (not software/tool specific): [6_Design_Cluster.md](./6_Design_Cluster.md).**
+
+These are three separate choices: **Kubernetes** is the orchestration platform, **Talos Linux** supplies the node OS and cluster lifecycle tooling, and **Cilium** supplies cluster networking. They work together, rather than replacing one another. See [Cluster Setup](../2_Setup/5_Setup_Cluster.md) for the implementation workflow.
+
+### Container Orchestration: Kubernetes
 
 **What it is.** The layer that schedules containers across nodes and keeps them running: declarative desired state, self-healing, service discovery, load balancing, rolling updates, storage and secret injection, and horizontal scaling. It is where "a bunch of containers" becomes "a platform".
 
@@ -161,8 +170,53 @@ The individual choices above are not independent — the same handful of princip
 | **[Docker Compose](https://docs.docker.com/compose/) only** | Perfectly adequate for running a handful of services and far simpler. Rejected because it teaches almost nothing about orchestration: no scheduling, no self-healing, no multi-node behaviour, no declarative reconciliation — which is precisely the learning goal. |
 | **[Docker Swarm](https://docs.docker.com/engine/swarm/)** | Much easier than Kubernetes and clusters natively. Rejected because it is effectively in maintenance mode with a shrinking ecosystem; the skills do not transfer. |
 | **[HashiCorp Nomad](https://www.nomadproject.io/)** | Genuinely elegant, simpler operationally, and handles non-container workloads. Rejected purely on market reality — far fewer jobs, far fewer integrations, far less documentation. |
-| **[k3s](https://k3s.io/) / [k0s](https://k0sproject.io/) (lightweight K8s)** | Strong candidates, and still the right answer on very constrained hardware — they are the same API with a smaller footprint. Not chosen as the default because a full Kubernetes distribution exposes the real control-plane components (etcd, scheduler, controller-manager, kubelet) that the lightweight distributions bundle and hide, and understanding those is part of the point. Worth revisiting if node resources become tight. |
 | **[Plain containers on the hypervisor (LXC)](https://linuxcontainers.org/)** | Fine for single services (and used opportunistically for utility workloads), but no orchestration layer at all. |
+
+### Kubernetes Node OS & Lifecycle: Talos Linux
+
+**What it is.** The operating system and tooling used to provision, configure, and upgrade Kubernetes nodes. Choosing Kubernetes does not mean choosing to assemble and maintain it on general-purpose Linux VMs.
+
+**Chosen (2026-10): [Talos Linux](https://www.siderolabs.com/talos-linux).** A minimal, immutable, API-managed Linux OS built specifically for Kubernetes. It runs upstream Kubernetes on the Proxmox control-plane and worker VMs, managed through `talosctl` and declarative machine configuration rather than SSH, a shell, or a package manager. The [official documentation](https://docs.siderolabs.com/) is the implementation reference.
+
+**Why this fits my homelab:**
+
+- **Less maintenance, quicker setup, more fun.** I want a functioning, always-on Kubernetes cluster, not another general-purpose Linux fleet to maintain. With Ubuntu/kubeadm I would own package repositories, kernel and container-runtime updates, kubelet dependencies, OS hardening, SSH/users, service configuration, reboot coordination, and the Ansible roles that keep those layers aligned. Talos supplies a purpose-built OS/runtime stack and API-driven configuration and lifecycle operations, reducing moving parts and the custom automation I must write, debug, and keep compatible. Nodes can be rebuilt from a known image and configuration instead of repaired through accumulated manual edits. That makes setup and maintenance more repeatable and leaves more time for Kubernetes, monitoring, Proxmox, workloads, and expanding the homelab — the parts I enjoy. It does not remove responsibility for version compatibility, staged OS/Kubernetes upgrades, networking, access credentials, etcd/data backups, and recovery tests; it is not a managed service.
+- **Immutable nodes reduce drift and attack surface.** A read-only OS and controlled image-based updates discourage ad-hoc node changes. Fewer components and no SSH server or interactive shell reduce the general-purpose administration and security surface. Declarative configuration makes nodes more consistent and rebuildable, but does not replace API access controls, network policies, patching, or recovery planning.
+- **Linux learning does not require more VMs.** Learning Linux remains a goal, and the existing Ubuntu management VM already provides hands-on practice with users, packages, systemd services, permissions, SSH, networking, logs, and troubleshooting; see its role in [Hosts & Nodes Setup](../2_Setup/4_Setup_Hosts_Nodes.md). Those fundamentals transfer between Linux systems: repeating the same OS administration on several permanent Kubernetes VMs adds maintenance more than new learning. I can practice on the management VM and other Linux services while Talos keeps the cluster focused on Kubernetes. Use snapshots or disposable sandboxes for risky experiments rather than break the management access path. No extra always-on Linux VMs are needed just to satisfy this learning goal.
+- **Manual Kubernetes installation can be a temporary experiment.** When I want to learn kubeadm and node setup in depth, I can use disposable homelab VMs or an Azure cloud sandbox, for example through Pluralsight if available, then tear it down. Learning that process does not require maintaining it as the 24/7 platform. This follows the [router decision](#router--firewall-software): learn the fundamentals, then use dedicated tooling rather than keep rebuilding solved functionality on bare Linux.
+- **Enterprise-relevant concepts without the whole enterprise platform.** AKS and EKS abstract parts of cluster provisioning and lifecycle; OpenShift Container Platform (OCP) 4.x uses purpose-built Red Hat Enterprise Linux CoreOS (RHCOS) for control-plane nodes and commonly workers. These differ substantially, but share the idea of declarative, platform-managed infrastructure rather than manual node administration. Talos teaches that philosophy without reproducing OpenShift's operator ecosystem or transferring responsibility to a cloud provider. Neither OpenShift nor managed cloud Kubernetes is maintenance-free.
+- **Git-friendly configuration and portable Kubernetes skills.** Non-secret machine configuration patches and version pins can be reviewed in Git and applied through automation, reducing manual changes. Argo CD manages Kubernetes workloads, not Talos itself; node configuration still needs an explicit apply workflow. Upstream Kubernetes APIs and standard manifests reduce dependence on platform-specific services, but Talos APIs, image extensions, storage, and Cilium-specific policies remain migration considerations. OpenShift is also Kubernetes-based; its additional APIs and integrations, rather than an incompatible Kubernetes core, create extra portability work.
+- **Resource savings are a secondary benefit.** A minimal OS may save some RAM and disk compared with Ubuntu, but Kubernetes, container images, Cilium, and workloads dominate sizing. Savings are likely modest and must be measured, not assumed.
+
+**Accepted trade-offs.** No normal shell, SSH, or arbitrary package installation; debugging uses Talos APIs and Kubernetes tooling, and special host dependencies may require supported system extensions. That reduced flexibility is fine because these VMs only need to run Kubernetes. Learning Talos is itself interesting and fun, and gives me another perspective on Kubernetes; AI can help explain it, but official version-matched documentation and validation remain essential. The benefits outweigh these limits. Talos reduces lifecycle work, not my responsibility for cluster reliability.
+
+**Alternatives considered:**
+
+| Alternative | Why rejected for the always-on cluster |
+|---|---|
+| **[Ubuntu LTS](https://ubuntu.com) + [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/)** | Maximum Linux flexibility and useful installation practice, but I would own OS hardening, packages, SSH, configuration drift, and coordinated Kubernetes upgrades. Keep this for disposable learning experiments, not the permanent cluster. |
+| **[Red Hat OpenShift (OCP)](https://www.redhat.com/en/technologies/cloud-computing/openshift)** | An integrated enterprise platform with operators and lifecycle management, but its resource and operational scope exceed what this lab needs. I want the concepts, not the full platform. |
+| **[OKD](https://okd.io/)** | The community distribution of Kubernetes that powers OpenShift, without requiring an OCP subscription. Useful for OpenShift-style learning, but still a broader operator-managed application platform with its own resource, release, and support requirements. Free to obtain does not mean lighter or maintenance-free; its full platform scope is unnecessary here. |
+| **[K3s](https://k3s.io/) / [k0s](https://k0sproject.io/)** | Valid lightweight Kubernetes distributions, worth revisiting under tighter resource limits. They simplify Kubernetes installation but do not by themselves remove general-purpose host OS maintenance as Talos does. |
+| **[MicroK8s](https://microk8s.io/)** | Convenient snap-packaged Kubernetes with add-ons and clustering. Simplifies Kubernetes installation/lifecycle, but I still maintain the Linux host and snap/update policy. Talos better matches the dedicated immutable-node goal. |
+| **[Kubespray](https://kubespray.io/)** | Ansible-based Kubernetes deployment and lifecycle automation on supported Linux distributions. Removes much manual setup, but still leaves host OS/package maintenance, inventory, playbooks, and compatibility to manage. It is a provisioning approach, not a node OS; useful when conventional Linux flexibility is required. |
+| **[RKE2](https://docs.rke2.io/)** | A security-focused Kubernetes distribution with packaged components and lifecycle tooling. A credible option for hardened conventional Linux nodes, but it does not replace the underlying OS administration I want to minimize. |
+| **[AKS](https://learn.microsoft.com/en-us/azure/aks/what-is-aks) / [EKS](https://aws.amazon.com/eks/)** | Useful for cloud learning and abstract control-plane operations, but add ongoing cloud cost and move the cluster away from the local Proxmox learning platform. Workload, access, networking, and some node responsibilities still remain. |
+
+### Cluster Networking (CNI): Cilium
+
+**What it is.** The Container Network Interface implementation connects pods across nodes and supplies the networking foundation for services and network-policy enforcement. It is separate from the node OS and the router/firewall.
+
+**Chosen (2026-10): [Cilium](https://docs.cilium.io/en/stable/overview/intro/).** A strong fit for learning modern Kubernetes networking: eBPF-based networking, Kubernetes NetworkPolicy enforcement, and optional Hubble flow visibility for troubleshooting. Its support for advanced routing, service handling, and observability provides room to grow without enabling every feature immediately. It is not universally the best or simplest CNI; flexibility is valuable only when it serves a real requirement.
+
+**Keep the initial setup small.** Follow the [official Talos/Cilium integration guide](https://docs.siderolabs.com/kubernetes-guides/cni/deploying-cilium), with compatible pinned versions, the default CNI disabled, and a basic networking configuration. Start with kube-proxy retained; kube-proxy replacement, Hubble, BGP, and advanced ingress/load-balancing features are separate, deliberate additions after basic connectivity and policies work. Cilium adds memory usage and an eBPF troubleshooting learning curve. Prefer standard Kubernetes NetworkPolicy where sufficient to preserve portability; Cilium-specific policies are a conscious dependency.
+
+**Alternatives considered:**
+
+| Alternative | Why rejected |
+|---|---|
+| **[Calico](https://docs.tigera.io/calico/latest/about/)** | Mature networking and policy enforcement, including an eBPF option. A valid alternative, but Cilium's integrated Hubble visibility and networking learning path fit my goals better. |
+| **[Flannel](https://github.com/flannel-io/flannel)** | Simple connectivity and the Talos default, but it does not itself enforce Kubernetes NetworkPolicy. I want policy enforcement and a richer troubleshooting path without adding a separate policy engine. |
 
 ---
 
@@ -172,7 +226,7 @@ The individual choices above are not independent — the same handful of princip
 
 **What it is.** Declaring *infrastructure that does not exist yet* — VMs, networks, disks, DNS records, cloud resources — in version-controlled files, and letting a tool reconcile reality with that declaration. It tracks state, computes a diff, shows a plan before applying, and makes infrastructure reproducible and reviewable instead of hand-clicked.
 
-**Chosen (2026-03): [Terraform](https://www.terraform.io/).** The de-facto industry standard with by far the largest provider ecosystem, including a mature Proxmox provider. The `plan` → `apply` workflow with explicit state and a visible diff is exactly the safety property you want before touching infrastructure, the declarative HCL syntax is easy to review in a pull request, and the skills transfer directly to any cloud. In this lab it owns the creation of VMs on Proxmox and their lifecycle, and it hands the finished machines to Ansible.
+**Chosen (2026-03): [Terraform](https://www.terraform.io/).** The de-facto industry standard with by far the largest provider ecosystem, including a mature Proxmox provider. The `plan` → `apply` workflow with explicit state and a visible diff is exactly the safety property you want before touching infrastructure, the declarative HCL syntax is easy to review in a pull request, and the skills transfer directly to any cloud. In this lab it owns VM creation and lifecycle on Proxmox. General-purpose Linux guests are configured with Ansible; Kubernetes guests use Talos machine configuration and the [Sidero Labs Talos provider](https://registry.terraform.io/providers/siderolabs/talos/latest/docs). A separate Talos cluster module is planned; see [Cluster Setup](../2_Setup/5_Setup_Cluster.md#terraform-automation-boundary).
 
 **Alternatives considered:**
 
@@ -192,6 +246,8 @@ The individual choices above are not independent — the same handful of princip
 **What it is.** Taking machines that already exist and driving them to a desired state: packages, users, services, files, kernel parameters, certificates. It is **idempotent** — running it repeatedly converges to the same result — which is what turns "I set this up once, somehow" into "this is how it is defined, and it can be rebuilt."
 
 **Chosen (2026-02): [Ansible](https://www.ansible.com/).** Agentless (pure SSH — nothing to install or maintain on the targets, which matters on a firewall appliance and on freshly created VMs), YAML-based and therefore readable by anyone, with a huge collection ecosystem and roles that map cleanly onto this lab's components. It pairs naturally with Terraform: Terraform creates the machine, Ansible configures it. It also handles the router: the OPNsense configuration is generated from variables in Git and pushed, so the reasoning and the configuration stay version-controlled rather than clicked into a web UI.
+
+**Talos boundary.** Ansible remains useful for Proxmox administration, the management VM, and other supported systems. Talos Kubernetes nodes are configured through their API, not SSH-based Linux roles or an Ansible kubeadm installation.
 
 **Alternatives considered:**
 

@@ -20,8 +20,9 @@ TODO: then with Terraform can automate the provisioning and management of VMs on
 
 
 # TODO: for Proxmox creating VMs:
-TODO: use Ubuntu Server, TODO: add here why with AI.
-TODO: nodes I want: mgmtvm, then 1 control plane for now and 2 workers. Later can expand when I have more hardware than only my laptop, etc.!
+Use Ubuntu LTS for the management VM (`mgmtvm`) and general-purpose services: it provides normal Linux administration practice and works with cloud-init and Ansible. Use Talos Linux for Kubernetes control-plane and worker VMs; see [Cluster Tools](../1_Design/2_Design_Software_Prerequisites.md#cluster-tools) for the choices and [Cluster Setup](./5_Setup_Cluster.md) for image preparation, API configuration, and bootstrap.
+
+Initial layout: the existing management VM, one Talos control-plane VM, and two Talos workers. Expand when more hardware is available. One control-plane node is not highly available; multiple VMs on the same laptop also share a physical failure domain. No additional permanent Linux VM is needed just for learning.
 TODO: selecting the speccs (for now manual, but later do with automation!).
 ## TODO: explanation about specs and things, add this in /reference for explanation of what each part is, this is now from AI:
 Proxmox CPU Options Explained
@@ -159,7 +160,7 @@ Turn off unless you know you need it.
 
 Kubernetes nodes do not benefit from NUMA in a homelab.
 
-🎯 Recommended CPU Settings for Ubuntu Server K8s VM
+🎯 Starting CPU Settings for Talos Kubernetes VMs
 Control Plane
 Sockets: 1
 
@@ -189,6 +190,6 @@ CPU Limit: none
 
 
 
-TODO: for automated VM setup, use Terraform with a cloud image (avoids having to manually configure the OS on each VM), can just use an existing cloud image from Ubuntu. See example: https://github.com/marcmassoteau-jpg/massoteau-homelab-devops/tree/main/terraform/proxmox-vms
-TODO: add the Terraform module as a separate repo in DevHub!
-**TODO: I think I can make a single Terraform module with all the things, such as add VMs and other configurations for Proxmox??** If it gets bigger I can always make more separate modules, etc. TODO: and in a separate repository as well. TODO: do not forget to add to devhub!
+For Ubuntu management and utility VMs, use the existing [Terraform cloud-init VM module](../../terraform/modules/proxmox-vm/README.md). Talos needs a separate image and API-driven configuration workflow, not Ubuntu cloud-init or SSH guest setup. The planned separate Terraform Talos cluster module owns its image upload, VM provisioning, and Talos bootstrap; see [Terraform Automation Boundary](./5_Setup_Cluster.md#terraform-automation-boundary).
+
+TODO: implement and test that Talos module before deployment. Keep the Terraform repository extraction tracked in the [Terraform guide](../../terraform/README.md), rather than combining unrelated Proxmox host administration and guest lifecycle into one module.

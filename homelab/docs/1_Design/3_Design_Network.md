@@ -6,6 +6,8 @@ A stable network is the foundation of a reliable homelab. This document covers t
 
 See the [Network Reference](../../../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
 
+> **Future option, not the current design:** see [TODO FUTURE: Shared Home and Lab Gateway](#todo-future-shared-home-and-lab-gateway) for the proposed integration, platform preference, and documents to revisit when I manage my own home network.
+
 ## Table of Contents
 - [Network Setup Options](#network-setup-options)
   - [Option 1: Lab devices directly on the home network](#option-1-lab-devices-directly-on-the-home-network)
@@ -18,6 +20,11 @@ See the [Network Reference](../../../reference/network/README.md) for background
   - [Jumphost: Secure Access to Lab Network](#jumphost-secure-access-to-lab-network)
 - [Subnet & VLAN Design](#subnet--vlan-design)
   - [Switch Port Assignments](#switch-port-assignments)
+- [TODO FUTURE: Shared Home and Lab Gateway](#todo-future-shared-home-and-lab-gateway)
+  - [Why One Gateway Is Still Enough](#why-one-gateway-is-still-enough)
+  - [Future Platform Preference and Comparison](#future-platform-preference-and-comparison)
+  - [Configuration, Backups, and Public Documentation](#configuration-backups-and-public-documentation)
+  - [TODO: Documents and Setup to Update Later](#todo-documents-and-setup-to-update-later)
 
 ---
 
@@ -213,3 +220,48 @@ Inter-VLAN traffic is denied by default and specific forwardings are allowed exp
 - **VLAN 10 (management): tagged** — router, switch, hypervisor hosts; requires a VLAN-aware sub-interface/bridge.
 - **VLAN 20 (services): tagged** — cluster nodes and all hosted applications; requires a VLAN-aware bridge/sub-interface.
 - **VLAN 30 (IoT): tagged** — smart devices and sensors; isolated from management for security.
+
+---
+
+## TODO FUTURE: Shared Home and Lab Gateway
+
+**Future proposal only.** When I have my own home and control its network, consider one physical gateway behind the ISP modem for home and lab, with a suitably sized managed switch and VLAN-aware Wi-Fi. My preference for that future setup is a simple prebuilt platform rather than a separately maintained firewall PC. **The current dedicated lab router and OPNsense hardware/software choices remain unchanged until this proposal is deliberately revisited and validated.** Product names below are comparison examples, not new selections; final choices belong in the hardware/software prerequisites.
+
+### Why One Gateway Is Still Enough
+
+Sharing a router does not require sharing a flat network. Separate home, lab services, management, and IoT VLANs keep their Layer 2 broadcast domains and DHCP traffic apart. Default-deny inter-VLAN firewall rules in **both IPv4 and IPv6** allow only necessary flows: home clients can reach selected lab applications without reaching hypervisor management, and IoT can reach the home-automation endpoint without reaching other networks. VLAN tags alone and WAN NAT do not provide this isolation; switch configuration and firewall policy must be tested.
+
+One gateway removes a device, a firmware lifecycle, duplicated DHCP/routing settings, and an extra downstream NAT boundary. It also makes controlled home/IoT integration easier. A second router is not needed solely for those logical boundaries, although it may still be useful for independent routing experiments or a stronger physical separation requirement.
+
+**Accepted limits:** a router outage, bad update, compromise, or policy mistake can affect both household and lab. VLANs do not eliminate this shared failure/security boundary or prevent shared-link saturation. Keep the gateway physical and independent of lab VMs; household DHCP, DNS, and essential Wi-Fi functions must work when the lab is off. Preserve direct local recovery access, schedule maintenance, and keep disruptive experiments off the household gateway.
+
+### Future Platform Preference and Comparison
+
+| Approach | Benefits | Responsibilities and trade-offs |
+|---|---|---|
+| **Prebuilt platform, for example UniFi or TP-Link Omada** | Coherent device management, supported firmware, and potentially integrated gateway/switch/Wi-Fi administration. Best fits my future priority: straightforward operation of a network the household depends on. | Verify the exact model's routed VLANs, wired trunks, SSID mapping, firewall/IPv6 controls, throughput, local recovery, and account/controller dependencies. Some gateways need separate APs. Less open and portable; firmware updates and configuration still need care. |
+| **Physical firewall appliance running OPNsense** | An open-source, purpose-built routing/firewall platform with more configuration, VPN, and plugin flexibility. Can serve home and lab through the same VLAN design. | I own hardware compatibility, installation/recovery, OS/plugin lifecycle, and coordination with separate Wi-Fi equipment. It is much simpler than building a router from plain Linux, but offers more control than I need for the proposed household role. Reusing an existing appliance may be sensible. |
+
+**Why I would prefer prebuilt for that future network:** I would then manage both home and lab infrastructure, so dependable household connectivity matters more than learning every layer of the gateway. I want the easiest maintainability, a stable supported setup, and quick configuration/recovery, not another ongoing hardware/OS/plugin project. More control is not automatically more useful; it can add responsibilities without serving the actual requirements. A prebuilt product does not guarantee better reliability than OPNsense, so verify support, recovery, and real performance rather than assume the brand solves everything.
+
+This follows a familiar enterprise principle: organizations often buy integrated networking platforms, for example Cisco routers/firewalls with vendor-supported software, instead of assembling generic PCs and their routing stack. Those products **still run an OS** and need patching, backups, and administration; the transferable idea is to use an integrated, supported platform for predictable operation, not to buy enterprise-grade equipment or claim there is no maintenance. I can keep learning networking through segmentation, policy, VPNs, and troubleshooting without maintaining the underlying gateway OS myself.
+
+**Budget:** avoiding a second router can fund roughly the same **€250–€350 gateway/Wi-Fi planning budget** otherwise allocated to the lab appliance. Compare the whole cost, including APs, PoE, any controller, and recurring fees. An already-bought appliance is a sunk cost unless returned or resold; do not assume cash has been recovered or replace working equipment solely to consolidate. Check ISP handoff/bridge mode, prefix delegation, and whether the old NAT66 workaround is supported before choosing.
+
+### Configuration, Backups, and Public Documentation
+
+**Full router IaC is not a requirement for this future setup.** The earlier OPNsense automation goal need not dictate the replacement. For one stable household gateway, a small number of careful UI steps can be easier to maintain than custom automation that must track API changes, protect credentials, and preserve complex apply/rollback behavior. Manual configuration is acceptable when it is limited, documented, repeatable, and backed up; it does not mean untracked experimentation. Use supported automation later where scale or recurring changes justify it.
+
+Keep a sanitized record of intended VLANs, access policies, and changes, and create protected configuration backups before and after significant changes and before updates. Encrypt backups, restrict access, retain copies outside the gateway, and test restore/local recovery. Check whether restoring also needs account access, matching firmware, or separately backed-up controller settings. A screenshot or public decision record is not a complete recovery artifact.
+
+**Be even more careful because this repository is public and the gateway serves the household too.** Apply [Security and Public Repository](../0_Security_and_Public_Repository.md): publish principles and reserved examples, not the live home configuration. Keep raw gateway/controller exports, credentials, VPN keys, real public addresses/domains, device identifiers, and identifying household/client information outside Git. Private VLAN/subnet examples are not inherently secrets, but avoid publishing a detailed live household inventory or access map. Review screenshots, logs, and backups for sensitive values; public configuration-as-code is not a reason to expose actual network settings.
+
+### TODO: Documents and Setup to Update Later
+
+When this future proposal becomes an implementation decision, carry the reasoning above into the following documents **together**, rather than change the current choices now:
+
+- **TODO — [Hardware Prerequisites](./1_Design_Hardware_Prerequisites.md#part-1--networking-hardware):** replace the active separate-firewall-appliance recommendation with the selected shared gateway, actual buying requirements, Wi-Fi/switch needs, total budget, and ease-of-maintenance rationale. Update [Current Personal Setup](./1_Design_Hardware_Prerequisites.md#current-personal-setup) only after purchase/migration is confirmed; preserve the old purchase as history if relevant.
+- **TODO — [Software Prerequisites: Router & Firewall Software](./2_Design_Software_Prerequisites.md#router--firewall-software):** replace the current OPNsense selection with the chosen prebuilt platform and rejected alternatives. Include the household reliability priority, enterprise analogy, accepted vendor dependence, limited manual configuration, backups, and privacy rationale. Update the [stack summary](./2_Design_Software_Prerequisites.md#software-stack-at-a-glance) and [configuration-management boundary](./2_Design_Software_Prerequisites.md#configuration-management), rather than assume Linux/OPNsense roles apply to vendor firmware.
+- **TODO — [Network Design](#network-setup-options):** revise the chosen topology, household ownership/scope, home/lab/IoT segmentation, firewall policy, management access, recovery, and IPv6 approach after validation. Do not assume the router can also be a general-purpose SSH jumphost; assess using the existing management VM. Recheck addressing and ISP compatibility before migrating.
+- **TODO — [Network Setup](../2_Setup/2_Setup_Network.md):** replace legacy Pi/separate-router instructions with the selected vendor's setup, protected backup/restore, migration/rollback, and verification procedure. Confirm household internet works with the hypervisor, management VM, and cluster powered off, and test allowed/denied traffic in both address families.
+- **TODO — [Hosts & Nodes Setup](../2_Setup/4_Setup_Hosts_Nodes.md) and [Monitoring Design](./7_Design_Monitoring.md):** adjust management access and supported router monitoring where needed. Update corresponding automation only after selecting supported APIs; keep required household services independent of lab-hosted tools.

@@ -11,7 +11,7 @@ TODO: add steps here to install Proxmox VE on the host and then after that just 
 TODO: after adding in /etc/network/interfaces the correct ones such as vmbr0.10, etc., for the VLANs, it had connection, see [network interfaces template](../../ansible/roles/proxmox/templates/network-interfaces.j2).
 **TODO: maybe add that with Ansible now via Ansible modules for the network interfaces and NOT as a template!!! This is hardcoded and ideally you want Ansible to automate this! TODO: then add in comments why the setup, such as vlan-aware, etc.**
 
-TODO: then for image usage: Ubuntu Server.
+Use Ubuntu cloud-init images for management and utility VMs, and a separate Talos Image Factory ISO for Kubernetes nodes. See [Cluster Setup](./5_Setup_Cluster.md#talos-installation-and-bootstrap) for the release pin, optional QEMU guest-agent extension, and upload/bootstrap workflow.
 
 ## TODO: configure through connection with Proxmox VE host:
 TODO: SSH works from the Pi router, I tested: `ssh root@10.42.10.10`, then just the password.
@@ -21,3 +21,5 @@ TODO: after that I can configure with Ansible the rest!
 ## Provision VMs with Terraform
 
 After configuring the host and preparing a compatible cloud-init template, use the [Terraform guide and example](../../terraform/README.md) to clone one or more guests. The [Proxmox Ansible role](../../ansible/roles/devhub.proxmox/README.md) configures cluster settings and the Terraform API account; it does not configure the host or create templates. The [VM module](../../terraform/modules/proxmox-vm/README.md) manages each VM's CPU, memory, disk, workload VLAN and cloud-init SSH/network settings; it does not install an OS or configure the Proxmox host.
+
+That cloud-init path is for general-purpose Linux guests, not Talos. Kubernetes nodes follow the separate planned [Terraform Talos workflow](./5_Setup_Cluster.md#terraform-automation-boundary).
