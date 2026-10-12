@@ -208,13 +208,15 @@ Two coverage points are preferable here to one AP transmitting through every wal
 
 There is no 6 GHz radio or multi-gigabit uplink. Wireless PHY rates are not application speeds; gigabit Ethernet remains a ceiling. Both APs use the chosen PoE switch, without separate injectors.
 
-**Why not the ISP's access points / “wifi versterkers”?** They can be an inexpensive, convenient way to extend ordinary household Wi-Fi, especially when included with the subscription and supported by the provider. However, “wifi versterker” is a marketing term: the device may be a wireless repeater, a mesh node, or an AP with Ethernet backhaul. Do not assume all ISP devices are wireless repeaters or perform poorly.
-
-For this setup, coverage alone is not enough. The APs must support [Home, IoT, and Guest VLAN-mapped SSIDs with restricted management](3_Design_Network.md#distribution-and-access-layers), alongside the [shared network's firewall policy](3_Design_Network.md#firewall-and-access-policy). Depending on the ISP model and firmware, those controls may be absent, limited to a provider-defined guest network, or dependent on the ISP modem/router and its app. Check whether they remain available in bridge mode and with a third-party gateway; a guest SSID alone does not prove compatibility with this VLAN plan.
-
-The selected U6+ APs provide the required VLAN mapping, wired Ethernet backhaul, and PoE, and are managed with the gateway and switch in [one UniFi platform](#network-platform-unifi). That keeps configuration, updates, visibility, and recovery together rather than adding an ISP-managed Wi-Fi ecosystem. Wired backhaul also avoids using radio airtime for a wireless repeater/mesh uplink, although an ISP AP with Ethernet backhaul could offer that same advantage. See [Network Setup — Configure Wi-Fi](../2_Setup/2_Setup_Network.md#step-7-configure-wi-fi) for implementation.
-
-Owning these APs also makes the internal Wi-Fi setup less dependent on the ISP or subscription: changing providers should mainly affect the WAN configuration, not require replacing provider-tied Wi-Fi equipment. This does not remove the accepted [UniFi vendor dependence](#purchasing-cost-and-accepted-trade-offs). The extra purchase cost is worthwhile here for consistent segmentation and fewer separate management workflows; for a simple unsegmented household network, compatible ISP-provided APs may be sufficient.
+**Why not the ISP's access points / Wi-Fi extenders?**
+- **They can be convenient:** ISP equipment may be inexpensive or included with the subscription, and can be a good choice for extending ordinary household Wi-Fi. A Wi-Fi extender may be a wireless repeater, mesh node, or access point with Ethernet backhaul; not all ISP devices are wireless repeaters or perform poorly.
+- **This setup needs more than coverage:** the APs must support [Home, IoT, and Guest VLAN-mapped SSIDs with restricted management](3_Design_Network.md#distribution-and-access-layers), alongside the [shared network's firewall policy](3_Design_Network.md#firewall-and-access-policy).
+  - Depending on the ISP model and firmware, those controls may be absent, limited to a provider-defined guest network, or dependent on the ISP modem/router and its app.
+  - Check compatibility with bridge mode and a third-party gateway. A guest SSID alone does not prove that the device supports this VLAN plan.
+- **The selected U6+ fits the design:** it provides the required VLAN mapping, wired Ethernet backhaul, and PoE, and is managed with the gateway and switch in [one UniFi platform](#network-platform-unifi). This keeps configuration, updates, visibility, and recovery together rather than adding an ISP-managed Wi-Fi ecosystem. See [Network Setup — Configure Wi-Fi](../2_Setup/2_Setup_Network.md#step-7-configure-wi-fi) for implementation.
+  - Wired backhaul avoids using radio airtime for a repeater/mesh uplink, although an ISP AP with Ethernet backhaul could offer that same advantage.
+- **Owning APs reduces ISP dependence:** changing providers should mainly affect WAN configuration, not require replacing provider-tied Wi-Fi equipment. It does not remove the accepted [UniFi vendor dependence](#purchasing-cost-and-accepted-trade-offs).
+- **Trade-off:** the extra purchase cost is worthwhile here for consistent segmentation and fewer separate management workflows. For a simple, unsegmented household network, compatible ISP-provided APs may be sufficient.
 
 **Alternatives considered:**
 
@@ -227,7 +229,7 @@ Owning these APs also makes the internal Wi-Fi setup less dependent on the ISP o
 | **TP-Link Omada EAP** | Strong VLAN-capable Wi-Fi value, particularly in an Omada ecosystem. |
 | **NETGEAR business / Aruba Instant On APs** | Credible segmentation; another management system adds little here. |
 | **ASUS mesh / TP-Link Deco / NETGEAR Orbi** | Convenient coverage, but per-SSID VLAN/backhaul support varies. Another mesh/router ecosystem is unnecessary. |
-| **ISP-provided APs / “wifi versterkers”** | Convenient and potentially included, but VLAN controls, third-party gateway compatibility, ownership/subscription terms, and management vary. The comparison above explains why the integrated UniFi APs are chosen here. |
+| **ISP-provided APs / Wi-Fi extenders** | Convenient and potentially included, but VLAN controls, third-party gateway compatibility, ownership/subscription terms, and management vary. The comparison above explains why the integrated UniFi APs are chosen here. |
 | ISP Wi-Fi / single all-in-one router | Less cost, but placement/segmentation may not meet this plan. |
 | Wireless mesh backhaul | Useful without cabling, but consumes airtime and adds interference/availability dependencies. |
 
