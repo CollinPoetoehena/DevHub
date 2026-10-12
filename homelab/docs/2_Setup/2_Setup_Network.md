@@ -1,474 +1,250 @@
 # Setup & Installation: Network
 
-> **Superseded procedure — not the current network setup.** The steps below describe the former Raspberry Pi/Ansible lab router, not the shared UniFi gateway/switch/AP setup. Current choices are in [Network Design](../1_Design/3_Design_Network.md), [Networking Hardware](../1_Design/1_Design_Hardware_Prerequisites.md#part-1--networking-hardware), and [Network Software](../1_Design/2_Design_Software_Prerequisites.md#router--firewall-software). TODO: replace this historical procedure with verified GUI configuration, segmentation tests, private backups, and local recovery steps. Do not apply the old router-jumphost or NAT66 assumptions to the new gateway.
+> **TODO — future home context:** Present this setup as the network for my own home, which I can follow when I have my own home, but not yet while I live with my parents. The existing homelab hardware can be reused and only the Wi-Fi access points still need buying; refer to [Networking Hardware](../1_Design/1_Design_Hardware_Prerequisites.md#part-1--networking-hardware). This note is a pending documentation task, not an instruction to change the setup steps below. **The documentation does NOT need to be changed for this, this note is only for future context so that I am reminded for myself this was my intended setup and goal.**
 
-> **Historical prerequisites:** The Pi, SD card, and USB-Ethernet adapter below belong to the former setup, not the current [hardware](../1_Design/1_Design_Hardware_Prerequisites.md#part-1--networking-hardware) and [software](../1_Design/2_Design_Software_Prerequisites.md#router--firewall-software) choices.
-> See [Network Design — Network Topology & Design](../1_Design/3_Design_Network.md#network-topology--design) for the network design, design decisions, and target topology.
-> The historical procedure uses ULA + NAT66; the current [IPv6 design](../1_Design/3_Design_Network.md#ipv6-design-and-rollout) requires validating ISP delegation and IPv6 isolation before rollout.
-> See the [Network Reference](../../../reference/network/README.md) for background knowledge on networking concepts, commands, and troubleshooting tips.
-> **If you need to shutdown the Pi, such as when you are not using it anymore, etc., use:** `sudo shutdown -h now` — wait for the lights to stop blinking, then unplug the power supply. Power on again by plugging it back in.
+This guide implements the [shared home-and-lab network design](../1_Design/3_Design_Network.md) with the selected UniFi Cloud Gateway Max, Lite 8 PoE switch, and two wired U6+ APs. One physical gateway serves separate logical networks and hosts their network management. See [Networking Hardware](../1_Design/1_Design_Hardware_Prerequisites.md#part-1--networking-hardware) for the equipment and [Router & Firewall Software](../1_Design/2_Design_Software_Prerequisites.md#router--firewall-software) for the software decision.
 
-TODO: add this as setup as if I had my own home, and add then there that can follow this when I have my own home but not yet now because I still live with my parents, etc.
-TODO: add also in that note the hardware can stay the same, refer to hardware, only have to buy the WiFi access points and the rest is already bought for my homelab earlier and can be used, etc.
+UniFi OS and Network run on the gateway itself. Its optional camera-recording SSD is not needed for routing, firewalling, or managing the switch/APs; see the [no-storage gateway decision](../1_Design/1_Design_Hardware_Prerequisites.md#router--firewall-cloud-gateway-max).
+
+> **Chosen setup, example values only:** VLAN IDs, subnets, port numbers, SSID labels, and addresses below illustrate this setup; they are not a live inventory. Substitute the privately recorded values consistently. Follow [Security and Public Repository](../0_Security_and_Public_Repository.md), including its [safe-documentation guidance](../0_Security_and_Public_Repository.md#information-that-is-usually-safe-to-document). Never publish real WAN addresses, global IPv6 prefixes, credentials, Wi-Fi passwords, recovery codes, or unredacted exports/screenshots.
+
+**Validation status:** these are setup instructions, not evidence that the live network has passed them. Record installed versions and completed checks privately. GUI labels can change between UniFi Network releases; the paths below follow Ubiquiti's documentation. Verify the corresponding setting on the installed version instead of substituting an unrelated option.
 
 ## Table of Contents
 
-- [Step 1: Reserve a Static IP for the Pi on the ISP Modem](#step-1-reserve-a-static-ip-for-the-pi-on-the-isp-modem)
-- [Step 2: Assemble and Boot the Pi & Prepare the Pi for Headless Operation](#step-2-assemble-and-boot-the-pi--prepare-the-pi-for-headless-operation)
-    - [Step 2.1: Fit the Pi in a Case and Connect Accessories](#step-21-fit-the-pi-in-a-case-and-connect-accessories)
-    - [Step 2.2: Prepare the Pi for Headless Operation](#step-22-prepare-the-pi-for-headless-operation)
-- [Step 3: User Setup & Jumphost and Security Hardening](#step-3-user-setup--jumphost-and-security-hardening)
-- [Step 4: Configure the Pi with Ansible](#step-4-configure-the-pi-with-ansible)
-- [Step 5: Configure Switch & Ensure eth1 of the Router Has Carrier](#step-5-configure-switch--ensure-eth1-of-the-router-has-carrier)
-    - [Step 5.1: Configure the Managed Switch (via Laptop)](#step-51-configure-the-managed-switch-via-laptop)
-        - [Step 5.1.1: Direct Laptop-to-Switch Connection](#step-511-direct-laptop-to-switch-connection)
-        - [Step 5.1.2: Configure the Switch](#step-512-configure-the-switch)
-    - [Step 5.2: Connect Switch to Pi's LAN Interface to ensure carrier is detected](#step-52-connect-switch-to-pis-lan-interface-to-ensure-carrier-is-detected)
-    - [Step 5.3: Access Switch Management via SSH Tunnel & Perform Final Switch Configurations](#step-53-access-switch-management-via-ssh-tunnel--perform-final-switch-configurations)
-        - [Step 5.3.1: Verify the switch is reachable](#step-531-verify-the-switch-is-reachable)
-        - [Step 5.3.2: Access the switch web UI via SSH tunnel](#step-532-access-the-switch-web-ui-via-ssh-tunnel)
-        - [Step 5.3.3: Enable DHCP on the switch](#step-533-enable-dhcp-on-the-switch)
-        - [Step 5.3.4: Backup the switch configuration](#step-534-backup-the-switch-configuration)
-    - [Step 5.4: Recovery — if locked out of the switch](#step-54-recovery--if-locked-out-of-the-switch)
+- [Step 1: Prepare the Equipment and Network Plan](#step-1-prepare-the-equipment-and-network-plan)
+- [Step 2: Connect and Initialize the Gateway](#step-2-connect-and-initialize-the-gateway)
+- [Step 3: Adopt the Switch and Access Points](#step-3-adopt-the-switch-and-access-points)
+- [Step 4: Create the Networks](#step-4-create-the-networks)
+- [Step 5: Configure Firewall Policy](#step-5-configure-firewall-policy)
+- [Step 6: Assign Ports and Move Device Management](#step-6-assign-ports-and-move-device-management)
+- [Step 7: Configure Wi-Fi](#step-7-configure-wi-fi)
+- [Step 8: Connect Household and Lab Clients](#step-8-connect-household-and-lab-clients)
+- [Step 9: Validate the Setup](#step-9-validate-the-setup)
+- [Step 10: Back Up and Maintain the Network](#step-10-back-up-and-maintain-the-network)
+- [Recovery and Troubleshooting](#recovery-and-troubleshooting)
+- [Future VPN and IPv6 Work](#future-vpn-and-ipv6-work)
 
-> **Important security note:** The IPs named here are all local network addresses, they are not reachable from the internet. Make sure to avoid listing any public IPs in the documentation (e.g. `curl ifconfig.me` returns your public IP) because this is sensitive information that can be used to attack your network. Only use local IPs (e.g., `192.168.x.x`, `10.x.x.x`, `172.16.x.x`) in documentation!
-> See [Security and Public Repository](../0_Security_and_Public_Repository.md) for the broader guidance on public domains, secrets, VPN details, and reviewing material before publishing.
->
-> **Extra caution with IPv6:** Unlike IPv4 (where devices use private addresses like `192.168.x.x` behind NAT and are not directly reachable from the internet), IPv6 gives every device a **globally unique, internet-routable public address**. This means IPv6 addresses are *far more sensitive* than IPv4 private addresses — leaking an IPv6 address in documentation, a screenshot, or a log file exposes the real, directly reachable address of that device. An attacker with your device's IPv6 address can attempt to connect to it directly (if your firewall allows it or is misconfigured). Commands like `ip -6 addr show scope global`, `curl -6 ifconfig.me`, or even `ip a` (which shows `inet6` lines with global-scope addresses) can reveal public IPv6 addresses — never include their output in documentation or public repositories. Furthermore, if privacy extensions are not enabled, the IPv6 address embeds the device's MAC address (via EUI-64), which is a permanent hardware identifier that can be used to track the device across networks. See [Subnets & IP Addresses — IPv6](../../../reference/network/Subnets_and_IP_Addresses.md#ipv6) for full details on how IPv6 addressing works and why NAT does not protect IPv6 devices.
-
-**Historical addressing note:** the ULA and IPv4 examples below are not the current addressing plan. See [Subnet & VLAN Design](../1_Design/3_Design_Network.md#subnet--vlan-design) and [IPv6 Design and Rollout](../1_Design/3_Design_Network.md#ipv6-design-and-rollout); never publish real global prefixes, endpoints, or unredacted exports.
+TODO: the setup below is generated with AI, it is checked and looks good but follow the steps and change where needed if anything is found to be incorrect/can be improved, etc.!
 
 ---
 
-## Step 1: Reserve a Static IP for the Pi on the ISP Modem
+## Step 1: Prepare the Equipment and Network Plan
 
-Log in to the ISP modem admin page (typically `192.168.2.254` or `192.168.2.1`) and reserve a static DHCP lease for the Pi's WAN interface using its MAC address (`eth0`). This ensures the Pi always receives the same upstream IP.
+Prepare the equipment, addressing, ISP requirements, and recovery access before installation, following the [design's maintenance and recovery requirements](../1_Design/3_Design_Network.md#maintenance-recovery-and-safe-experiments).
 
----
-
-## Step 2: Assemble and Boot the Pi & Prepare the Pi for Headless Operation
-
-> **Goal: Prepare the Pi for headless operation, this is the only manual setup required:** These are the only manual steps for the Pi, these are all the steps you need to perform before it can run headless. This ensures that once the initial setup is complete, you can manage and operate the Pi entirely via SSH without needing direct physical access.
-
-### Step 2.1: Fit the Pi in a Case and Connect Accessories
-
-1. Fit the Pi in a case and connect any accessories. See the [official product page](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/), [getting started guide](https://www.raspberrypi.com/documentation/computers/getting-started.html). Possible accessories (including link to set them up/configure them):
-- [case](https://www.raspberrypi.com/products/raspberry-pi-4-case/)
-- [power supply](https://www.raspberrypi.com/products/power-supply/)
-- [Raspberry Pi SD Card](https://www.raspberrypi.com/products/sd-cards/)
-- [case fan (including heat sink)](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) (this link shows how you can set up the fan and assemble it in the case).
-- USB-to-Ethernet adapter: Plug it into a USB 3.0 port on the Pi. Verify with `ip link` after booting.
-2. Insert the SD card (already containing flashed OS, see [prerequisites](TODO.md#hardware--software)), connect `eth0` to the ISP modem LAN port and `eth1` to the lab switch. Power on the Pi.
-
-### Step 2.2: Prepare the Pi for Headless Operation
-
-1. Boot the Pi and perform the first setup configuration. For the first boot, connect a monitor (HDMI), keyboard, and mouse (USB) to complete the initial setup. Furthermore, we enable SSH — after that, all subsequent access is via SSH and the Pi runs headless (no monitor, keyboard, or mouse needed). Some important first startup settings in the Raspberry Pi OS configuration tool (`raspi-config`):
-```bash
-# Ensure the Pi is up-to-date:
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install vim # My favorite text editor, but you can use nano or any other editor you prefer.
-sudo reboot
-
-# Open the Raspberry Pi OS configuration tool:
-sudo raspi-config
-# The following settings are recommended to configure on first boot:
-#
-# -- Localisation Options ----------------------------------------------------
-# → "Locale"
-#   Select your locale (e.g., "en_GB.UTF-8 UTF-8" for British English, or
-#   "en_US.UTF-8 UTF-8" for American English). This controls the language,
-#   character encoding, and formatting (dates, numbers, currency) system-wide.
-#   Without the correct locale set, some tools emit "locale" warnings/errors.
-#   I chose "en_US.UTF-8 UTF-8" because American is the default locale for so many tools and applications.
-#
-# → "Timezone"
-#   Set your timezone (e.g., "Europe/Amsterdam"). This ensures system clocks,
-#   log timestamps, and cron jobs use the correct local time. Raspberry Pi OS
-#   Lite defaults to "Europe/London" (UTC in winter, BST in summer).
-#
-# → "Keyboard"  (navigate to "Layout")
-#   Select the correct keyboard layout (e.g., "Generic 105-key PC (intl.)"
-#   for a standard international keyboard) → Other → English (US) → Default options for the rest. 
-#   Without this, special characters map to wrong keys — for example, \ types as # on a UK layout.
-#
-# → "WLAN Country"
-#   Set your country (e.g., "NL" for the Netherlands). This is required for
-#   the built-in WiFi to comply with local radio regulations (allowed channels
-#   and power levels). Even if you are not using WiFi, setting this avoids a
-#   warning in raspi-config and ensures the radio is not left unconfigured.
-#
-# -- System Options -----------------------------------------------------------
-# → "Hostname"
-#   Change the hostname from the default "raspberrypi" to something meaningful
-#   (e.g., "lab-router"). The hostname identifies the device on the network
-#   and appears in SSH prompts and log messages.
-#
-# -- Performance Options ------------------------------------------------------
-# → "Fan"
-#   Set the fan to turn on only at a specific temperature (e.g., 60°C) rather
-#   than running at full speed all the time. See the
-#   https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/ for
-#   assembly and configuration instructions.
-#   Without this, the fan runs continuously at full speed — noticeably loud.
-#
-# After making all changes, select "Finish" and reboot to apply them:
-sudo reboot
-# Verify the locale is set correctly:
-localectl status
-# Check the current CPU temperature to confirm thermal monitoring works:
-echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))°C"
-vcgencmd measure_temp  # Alternative method
-```
-2. Enable SSH: Enable SSH manually via terminal (required before you can access it from another device!). SSH (Secure Shell) lets you remotely control the Pi from your laptop over the network — no monitor or keyboard needed. Once enabled, all subsequent management is done via SSH.
-
-```bash
-# ========================== Enable SSH: ==========================
-# Check if SSH is already enabled:
-sudo systemctl status ssh
-# If you see "Active: active (running)", SSH is already enabled.
-
-# If not, enable and start it:
-sudo systemctl enable ssh
-sudo systemctl start ssh
-sudo systemctl status ssh   # Verify: should show "Active: active (running)"
-
-# Confirm SSH is listening on port 22 (sudo ensures the process list is complete):
-sudo ss -tulpn | grep ssh
-# Should show: LISTEN 0 128 0.0.0.0:22
-
-# ========================== Find the Pi's IP address and hostname: ==========================
-# Find the Pi's IP address from the Pi itself:
-hostname -I
-# Example output: 192.168.2.59
-# Or from the network interfaces on the Pi itself (assuming eth0 is the interface connected to the home network):
-ip a show eth0 | grep 'inet '
-# Example output: inet 192.168.2.59/24 brd 192.168.2.255 scope global dynamic noprefixroute eth0
-# Or from another device on the same network (e.g., your laptop) one of these commands
-ip neigh # New version
-arp -a # Old version
-# NOTE: This outputs all devices on the same subnet that your laptop can see. Look for the Pi's MAC address (printed on the Pi board) to find its IP address.
-
-# Or use the hostname command to get the Pi's hostname:
-hostname
-# Example output: lab-router (if changed; default is raspberrypi)
-
-# ========================== Connect from another device (e.g. your laptop): ==========================
-# Optionally check if the Pi is reachable from your laptop:
-ping <pi-ip>
-ping <pi-hostname>.local
-# If not reachable, make sure the Pi is connected to the ISP modem and that your laptop is on the same network (e.g., connected to the same WiFi or LAN (e.g. if the ISP modem has IP 192.168.2.254 or 192.168.2.1, your laptop and the Pi should have an IP in the same subnet: 192.168.2.x)).
-
-# Connect from your laptop:
-ssh <username>@<pi-ip>
-# Example: ssh pi@192.168.2.59
-# Use the username you set during Raspberry Pi OS setup (default is "pi").
-# On first connect you'll be asked to confirm the host fingerprint — type "yes".
-# NOTE: This should work from WSL as well, even with a VPN (unless you have a full VPN), check reachability via ping with IP (hostname usually does not work from WSL!)!
-
-# Alternatively, connect by hostname (no need to look up the IP):
-ssh <username>@lab-router.local
-```
+1. Choose suitable locations for the gateway, switch, and APs, with power, ventilation, and wired backhaul. Schedule any service interruptions with the people who depend on the connection.
+2. Prepare the gateway and its power supply, switch and its power adapter, two APs, Ethernet cables, and a laptop with wired Ethernet. Check [cabling](../1_Design/1_Design_Hardware_Prerequisites.md#ethernet-cables), ventilation, and [PoE capacity](../1_Design/1_Design_Hardware_Prerequisites.md#managed-switch). The gateway has no Wi-Fi or PoE output; power the APs from the switch's PoE+ ports.
+3. Privately record ISP connection requirements: DHCP, PPPoE credentials, static addressing, or provider VLAN tagging as applicable. Confirm bridge/passthrough support and any TV/voice dependencies using the [core/edge design](../1_Design/3_Design_Network.md#core--edge-layer).
+4. Check proposed subnets against the upstream LAN, VPN routes, and cluster pod/service ranges. Use the [addressing design](../1_Design/3_Design_Network.md#ipv4-addressing); do not assume its example addresses are suitable unchanged.
+5. Prepare secure storage for local backups and administrator credentials outside Git and outside lab-only storage. Keep ISP settings and recovery instructions accessible if the gateway or lab is offline.
+6. Initially connect only trusted setup equipment. Keep household, lab, IoT, and guest clients disconnected until their segmentation is ready. Ensure the gateway is the intended DHCP server and, if IPv6 is enabled later, the intended router advertising prefixes on each segment; do not attach competing routers or DHCP servers.
 
 ---
 
-## Step 3: User Setup & Jumphost and Security Hardening
+## Step 2: Connect and Initialize the Gateway
 
-**This step does the following:**
-1. Sets up the `ansibleremote` user and other users on the lab router for secure Ansible management. After this, the lab router can be managed remotely using Ansible with the `ansibleremote` user. This step needs to happen first because the Pi comes with a default user that has limited privileges and is not suitable for secure remote management.
-2. Configures the lab router as a secure *jumphost*, enabling safe access to the home lab network while enforcing security hardening measures. 
-    - **Historical jumphost role:** The former lab router provided SSH forwarding. The current gateway does not have that role; see [Management Access and Optional Jumphost](../1_Design/3_Design_Network.md#management-access-and-optional-jumphost).
-    - **`devhub-ansible-jumphost` role usage:** The `devhub-ansible-jumphost` role contains the necessary tasks and configurations for setting up the lab router as a secure jumphost, including SSH hardening, access controls, and security measures. 
+Follow Ubiquiti's [How to Set Up UniFi](https://help.ui.com/hc/en-us/articles/4416276882327) for the console wizard.
 
-> **Prerequisite:** You must have already generated your SSH key pair (`~/.ssh/id_homelab`). See [Local Environment Setup — Step 1: Generate an SSH Key Pair](./1_Setup_Local_Environment.md) if you haven't done this yet.
+1. Connect the modem's LAN/handoff to the gateway port identified as WAN. Connect the laptop directly to a gateway LAN port and power the gateway with its own adapter. Leave other clients disconnected.
+2. For initial staging, it is acceptable to leave the ISP device routing and obtain a private WAN lease on the gateway, provided the downstream LAN does not overlap it. This is temporary double NAT, not the final segmentation policy. If an upstream DHCP reservation is used, keep it private.
+3. Open the gateway's local setup page using the address shown on its display or the laptop's DHCP default gateway. Alternatively, use the UniFi mobile app with Bluetooth near the gateway. Do not assume the example management address below is already configured.
+4. Complete the wizard with the actual WAN connection type. A provider WAN VLAN is distinct from the internal VLAN IDs in [Step 4](#step-4-create-the-networks). Verify internet access from the wired laptop before continuing.
+5. Configure a strong administrator credential. If using a UI Account, enable MFA and securely store recovery codes. Establish and test local administrative access supported by the installed UniFi OS so recovery is not dependent solely on cloud sign-in.
+6. Review remote console access separately from WAN firewall management: a cloud-management feature can exist without an inbound port forward. Leave remote access disabled unless deliberately required. Do not expose the console, SSH, or device-adoption ports to the internet.
+7. Install suitable official/stable UniFi OS and Network updates before connecting clients, following release notes. Record versions privately; do not use early-access firmware for the essential household network.
+8. Preserve a direct wired bootstrap connection and save an initial private backup using [Step 10](#step-10-back-up-and-maintain-the-network).
 
-```bash
-# Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
-cd homelab; source venv/bin/activate; cd ansible
-
-# Load the SSH key into the agent so Ansible can use it without prompting for the passphrase.
-# Without this, Ansible fails with "Permission denied (publickey)" because it cannot
-# interactively prompt for the key's passphrase like a manual ssh command can.
-eval $(ssh-agent) && ssh-add ~/.ssh/id_homelab
-# Enter your passphrase once — it stays cached for this shell session.
-
-# ========================== Bootstrap the ansibleremote user ==========================
-# Run the users play to create the ansibleremote service account on the Pi.
-# --diff: show file changes made on the remote host
-# -u <username>: connect as the initial OS user (the one you created during Pi setup)
-# -K: prompt for the sudo password (needed because <username> requires a password for sudo)
-ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u <username> -K
-# Check users with a few of the commands provided by the users role: see ./roles/devhub.users/tasks/main.yml
-# Furthermore, you can check logs on the Pi if you have authentication problems:
-sudo journalctl | grep -i "sshd" | tail -30
-
-# After the initial setup (ansibleremote added), you need to run without -K on the router (ansibleremote has passwordless sudo):
-ansible-playbook site.yml -i hosts -l lab-router --tags users --diff -u ansibleremote
-
-# ========================== Verify connectivity with ansibleremote ==========================
-# Test that Ansible can reach the Pi using the newly created ansibleremote user:
-ansible all -i hosts -m ping -l lab-router -u ansibleremote
-
-# ========================== Run Jumphost role for hardening and SSH setup ==========================
-TODO: update the jumphost role where needed and run that here, implement in site.yml as well!
-
-# ========================== Verify from your laptop ==========================
-# From a new terminal, confirm key login still works:
-ssh <username>@<pi-ip> -i ~/.ssh/id_homelab
-# Should log in using your key without prompting for a password.
-
-# Confirm password login is rejected (optional — use a different user or try explicitly):
-ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no <username>@<pi-ip>
-# Should print: "Permission denied (publickey)." — password login is disabled.
-```
-
-From this step onwards you can use another device to SSH into the Pi.
+Where supported, perform the final ISP bridge/passthrough change during the maintenance window, configure the gateway's corresponding WAN settings, and recheck internet/TV/voice services. If it fails, restore the known-good modem mode. If bridge mode is unavailable, document double NAT and ISP carrier-grade NAT limitations under the [WAN design](../1_Design/3_Design_Network.md#core--edge-layer). Do not disable all firewalls as a troubleshooting shortcut.
 
 ---
 
-## Step 4: Configure the Pi with Ansible
+## Step 3: Adopt the Switch and Access Points
 
-```bash
-# Go to the Ansible directory and activate Python venv (see 0_Local_Environment_Setup.md for details!):
-cd homelab; source venv/bin/activate; cd ansible
+Use [UniFi Device Adoption](https://help.ui.com/hc/en-us/articles/360012622613). Initially keep the devices on the gateway's default/bootstrap LAN, connected only to trusted setup equipment.
 
-# Load the SSH key into the agent so Ansible can use it without prompting for the passphrase.
-# Without this, Ansible fails with "Permission denied (publickey)" because it cannot
-# interactively prompt for the key's passphrase like a manual ssh command can.
-eval $(ssh-agent) && ssh-add ~/.ssh/id_homelab
-# Enter your passphrase once — it stays cached for this shell session.
+1. Connect a gateway LAN port to the Lite 8 PoE switch and power the switch with its supplied adapter. One uplink is enough; do not create a loop with a second cable.
+2. In UniFi Network's **Devices** view, adopt the switch if it is pending adoption. Confirm it becomes online before changing VLAN settings.
+3. Connect each U6+ to one of the switch's four PoE+ ports. Adopt both APs into the gateway's Network application, not standalone mode or a separate controller.
+4. Check that both APs have a wired uplink and remain online after provisioning. Install compatible official firmware, one device at a time.
+5. Record physical port roles privately. Give devices clear role labels without publishing identifying hostnames or hardware IDs.
+6. Check the PoE budget: two APs at their published maximum of 9 W each fit within the switch's 52 W budget. Recalculate before adding more powered devices.
 
-# ========================== Configure the Pi as a router ==========================
-# The "router" tag configures EVERYTHING covered in this step in one run: network
-# interfaces + IP forwarding, dnsmasq (DHCP/DNS/SLAAC), and the nftables firewall
-# (NAT/NAT66 + dual-stack default-deny rules) — see [Network Design — Routing
-# Software decision](../1_Design/2_Design_Software_Prerequisites.md#router--firewall-software)
-# for what each part does and why. There is no separate "firewall step": it runs
-# as part of this same playbook invocation, right after networking and dnsmasq.
-#
-# First do a dry run (-C) to preview changes without applying them:
-# --diff: shows the exact file content changes (like a git diff)
-# -C (--check): dry run — shows what WOULD change without actually changing anything
-ansible-playbook site.yml -i hosts -l lab-router --tags router --diff -C
-
-# If the dry run looks good, apply the changes (remove -C):
-ansible-playbook site.yml -i hosts -l lab-router --tags router --diff
-
-# ========================== Verify router configuration ==========================
-# Check the router configuration on the Pi (uses tag "verify" from the roles/router), run with -vvv to check the actual results and commands that ran on the Pi:
-# This already runs ALL the checks below automatically (networking, dnsmasq, nftables,
-# connectivity — both IPv4 and IPv6) and prints a single readable summary at the end;
-# the manual commands further down are for quick spot-checks without waiting on a full playbook run.
-ansible-playbook site.yml -i hosts -l lab-router --tags verify -vvv
-
-# ---------- Some helpful manual verification steps: ----------
-
-# Check that the DHCP/DNS/SLAAC server is running
-systemctl status dnsmasq.service
-
-# List all listening ports and their associated processes (should show dnsmasq listening)
-# t = TCP; u = UDP; l = listening sockets only; p = show process; n = numeric addresses/ports (don't resolve names)
-sudo ss -tulpn
-
-# Show recent dnsmasq log entries (DHCP leases, DNS queries if log-queries is enabled, RA/SLAAC activity):
-# -u dnsmasq.service : show only log entries from this systemd unit (instead of the whole system journal)
-# -e                 : jump straight to the END of the journal (most recent entries), instead of the oldest
-# -x                 : append explanatory help text from the systemd message catalog for known error/warning codes
-journalctl -xeu dnsmasq.service
-
-# If there are problems and you need to re-apply the router playbook, you may need to stop the process manually on the Pi:
-sudo kill 992
-sudo systemctl restart dnsmasq
-
-# Show connections:
-nmcli connection show
-# Should show: lab-wan (eth0), lab-lan (eth1), vlan-management (eth1.10), vlan-services (eth1.20), vlan-iot (eth1.30)
-
-# ---- IPv4 gateway addresses per VLAN ----
-ip -4 addr show eth1.10  # Should show: inet 10.42.10.1/24
-ip -4 addr show eth1.20  # Should show: inet 10.42.20.1/24
-ip -4 addr show eth1.30  # Should show: inet 10.42.30.1/24
-
-# ---- IPv6 (ULA) gateway addresses per VLAN — see Network Design: IPv6 Addressing ----
-ip -6 addr show eth1.10  # Should show: inet6 fd42:10::1/64
-ip -6 addr show eth1.20  # Should show: inet6 fd42:20::1/64
-ip -6 addr show eth1.30  # Should show: inet6 fd42:30::1/64
-
-# Confirm both IPv4 and IPv6 forwarding are enabled in the kernel (two independent sysctls!):
-sysctl net.ipv4.ip_forward           # Should show: net.ipv4.ip_forward = 1
-sysctl net.ipv6.conf.all.forwarding  # Should show: net.ipv6.conf.all.forwarding = 1
-
-# ---- nftables firewall (NAT + NAT66 + default-deny rules) ----
-sudo systemctl status nftables.service
-sudo nft list ruleset
-# Look for: "policy drop" on the input/forward chains of "table inet filter",
-# a "masquerade" rule in "table inet nat" (IPv4), and — if IPv6 NAT is enabled —
-# a second masquerade rule matching "ip6 saddr fd42::/48" for NAT66.
-
-# Quick dual-stack connectivity check from the Pi itself:
-ping -c 3 8.8.8.8          # IPv4 internet reachability
-ping -6 -c 3 2001:4860:4860::8888  # IPv6 internet reachability (only works once NAT66/forwarding are correct)
-```
+Do not enable household SSIDs yet. Configure management only after networks, firewall policy, and the tagged path are prepared in [Steps 4–6](#step-4-create-the-networks). If a device is managed by another console, verify ownership and follow Ubiquiti's device-adoption guidance; factory reset only the specific device deliberately being reprovisioned.
 
 ---
 
-## Step 5: Configure Switch & Ensure eth1 of the Router Has Carrier
+## Step 4: Create the Networks
 
-In this step we will configure the switch and ensure that the `eth1` interface of the router has carrier (i.e., is physically connected and active).
+In **UniFi Network > Settings > Networks**, create each virtual network with the **Cloud Gateway as its router**, following [Creating Virtual Networks](https://help.ui.com/hc/en-us/articles/9761080275607). Do not choose a third-party gateway or a VLAN-only definition: this gateway must provide routing and DHCP.
 
-> **Note on IPv6:** VLAN tagging is Layer 2 and carries IPv4 and IPv6 together; see [Required Building Blocks](../1_Design/3_Design_Network.md#required-building-blocks-design-level). The old switch procedure below is historical; gateway IPv6 addressing and policy require separate validation.
+Use the [chosen segment roles and example VLAN plan](../1_Design/3_Design_Network.md#subnet--vlan-design):
 
-### Step 5.1: Configure the Managed Switch (via Laptop)
+| Network role | Example VLAN ID | Example gateway / subnet | DHCP intent |
+|---|---|---|---|
+| Management | 10 | 10.42.10.1/24 | Infrastructure reservations and trusted administration |
+| Lab | 20 | 10.42.20.1/24 | Lab VMs and cluster nodes as required |
+| IoT | 30 | 10.42.30.1/24 | Constrained devices |
+| Home | 40 | 10.42.40.1/24 | Household clients |
+| Guest | 50 | 10.42.50.1/24 | Visitor clients |
 
-**Historical native-VLAN choice:** the Pi procedure kept `eth1` without an untagged management IP and configured the old switch directly from a laptop. Do not assume that convention applies to the new devices' adoption or recovery. The current [Switch Port Assignments](../1_Design/3_Design_Network.md#switch-port-assignments) allow explicit tagged or untagged management as supported and verified.
+1. Set each network's name, VLAN ID, gateway/subnet, and non-overlapping DHCP pool explicitly. For example, a pool of `.100`–`.199` leaves room for infrastructure addresses in each `/24`; use private reservations and exclude manually assigned addresses from the pool.
+2. Configure client DNS to use the gateway's supported DNS forwarding service, with suitable upstream resolvers. Do not make household DNS depend on lab compute or a cluster service.
+3. Leave cross-VLAN mDNS/service discovery disabled unless a specific documented use requires it. Do not enable blanket discovery or UPnP to make segmentation problems disappear.
+4. Start with IPv4. Disable WAN/LAN IPv6 configuration for this baseline until [IPv6 rollout](#future-vpn-and-ipv6-work) is deliberately validated. IPv6 link-local addresses may still exist; they do not prove routed internet connectivity.
+5. Keep the original Default/bootstrap network temporarily for trusted provisioning and rollback. It is not Home and not a permanent unfiltered sixth client network. Do not delete or renumber the path currently used for administration before testing its replacement.
 
-Additionally, because all production traffic is explicitly VLAN-tagged in this design, the switch must have VLANs 10, 20, and 30 created and its management moved to VLAN 10 before it can participate in the lab network. Without this, the switch only speaks on the native VLAN (VLAN 1), which carries no production traffic.
-
-Unfortunately, the NETGEAR GS305E web UI is not scriptable (no CLI or API), so this must be done manually. This is fine since these are only a few steps and buying a switch with automation capabilities would be overkill and generally costs significantly more money.
-
-The switch ships with DHCP enabled on VLAN 1 — **but it only receives a DHCP address if it is connected to a router or DHCP server via Ethernet**. However, a laptop connected over Wi‑Fi does *not* provide DHCP to the switch. Therefore, in a direct laptop‑to‑switch setup, the switch falls back to its default IP (typically **192.168.0.239** on NETGEAR Plus switches, check the switch’s manual for confirmation). The below approach works **without a router** and on **any laptop**, because you can temporarily assign your laptop’s Ethernet interface a static IP in the same subnet as the switch’s fallback IP. This creates a small, isolated two‑device network that allows you to reach the management UI and change the IP configuration of the switch:
-
-#### Step 5.1.1: Direct Laptop-to-Switch Connection
-
-1. Connect an Ethernet cable directly from your laptop to any port on the switch.
-2. Assign a static IP to your laptop’s Ethernet interface in the same subnet as the switch’s fallback IP (e.g., `192.168.0.x`), see the switch’s manual for its static IP. To assign the static IP on your laptop:
-    - **Windows:**
-        1. Open Settings → Network & Internet → Ethernet → Click your Ethernet adapter → Scroll to IP assignment → Edit → Choose Manual → Enable IPv4
-        2. Enter:
-            - IP: 192.168.0.10
-            - Subnet mask: 255.255.255.0
-            - Gateway: (leave blank)
-        3. Save
-        4. Disable Wi‑Fi (important)
-    - **Linux:**
-        1. Open a terminal
-        2. Assign a static IP to your Ethernet interface (replace `eth0` with your interface name if different) and bring the interface up: `sudo ip addr flush dev eth0; sudo ip addr add 192.168.0.10/24 dev eth0; sudo ip link set eth0 up`
-        3. Disable Wi‑Fi (important)
-3. Verify that your laptop can ping the switch’s IP (e.g., `ping 192.168.0.239`).
-4. Open a web browser and navigate to the switch’s IP (e.g., `http://192.168.0.239`) to access the management UI.
-5. Follow the next steps below, such as configuring the switch, etc. Any errors related to internet connectivity can be ignored at this stage, as the switch is not yet connected to the network.
-
-#### Step 5.1.2: Configure the Switch
-
-Perform all configuration in one session. See [Network Design — Subnet & VLAN Design](../1_Design/3_Design_Network.md#subnet--vlan-design) for the design rationale and [Switch Port Assignments](../1_Design/3_Design_Network.md#switch-port-assignments) for the port-to-VLAN mapping. **In the NETGEAR web UI:**
-1. **Log in** — Default credentials: no username, password is `password` (unless specified otherwise by your switch, check the switch's manual)
-2. **Change password** — Navigate to **System → Maintenance → Change Password** (or the switch may force you on first login). Set a strong, unique password and store it in your password manager
-3. **Set switch name** — Navigate to **System → Maintenance → Switch Information** and set the Switch Name to `lab-switch`
-4. **Create VLANs** — Navigate to **VLAN → 802.1Q (not Port-based!) → Advanced → VLAN Configuration**. Add VLAN 10 (name: `Management`), VLAN 20 (name: `Services`), VLAN 30 (name: `IoT`)
-5. **Set VLAN membership** — For VLAN 10, VLAN 20, and VLAN 30, go to **VLAN Membership** and set:
-    - Port 1 (router): **T** (tagged)
-    - Port 2 (PVE1): **T** (tagged)
-    - Port 3 (PVE2): **T** (tagged)
-    - Ports 4–5: leave as not a member
-6. **Verify VLAN 1** — All ports should remain **U** (untagged) for VLAN 1 (native VLAN — unused for production traffic, serves only as a fallback recovery path)
-7. **Set PVID** — Set the **PVID** (Port VLAN ID) for all ports to 1 (typically the default — untagged frames arriving on any port are assigned to VLAN 1)
-8. **Set Management VLAN (VERY IMPORTANT)** — Navigate to **System → Management → Management VLAN**, select VLAN 10. This moves the switch's management interface to the management VLAN. The switch will be assigned a static IP later based on its MAC address by the Pi router after [Step 4: Configure the Pi with Ansible](#step-4-configure-the-pi-with-ansible). If the switch is not in the Management VLAN, the router cannot assign it an IP, and you may lose access to the switch. That is why this step is critical.
-    - **Alternative (the switch I bought (GS305E) did not have the above option)** — Some switches do not have the option to change the management interface VLAN. In that case, you need to manually update the switch's IP address to be within the management VLAN subnet: Navigate to **System → Maintenance → Switch Information → Disable DHCP** and set the IP address to an address within the management VLAN subnet (e.g., `10.42.10.2`), the corresponding subnet mask (e.g., `255.255.255.0`) and the gateway to the Pi router's IP (e.g. `10.42.10.1`).
-        - **This behavior is perfectly fine on the GS305E** — The GS305E always uses **VLAN 1** internally for its management CPU, and this cannot be changed. This does *not* break the homelab design because VLAN 1 is intentionally left unused for production traffic and serves only as a fallback recovery path. The Pi router can still route traffic between VLAN 10 and VLAN 1, allowing the switch to have an IP inside the management subnet (`10.42.10.0/24`) even though its internal management plane lives on VLAN 1. This results in a clean and secure setup that matches enterprise practice for low‑end smart switches and integrates cleanly with the homelab network topology:
-            - VLAN 10 remains the **true management VLAN** for all homelab devices (router, Proxmox, services).
-            - VLAN 1 remains the **native fallback VLAN**, isolated and unused except for the switch’s management CPU.
-            - No production device uses VLAN 1, so the switch’s management plane is isolated by design.
-            - If VLAN tagging ever breaks, VLAN 1 still provides guaranteed access to the switch for recovery.
-7. **Apply** — Click **Apply** to save
-8. Once the switch is configured fully with all the steps explained in the other sections, revert your laptop’s Ethernet interface back to DHCP so your Wi‑Fi and normal networking continue to work as before:
-    - **Windows:** Settings → Network & Internet → Ethernet → IP assignment → Edit → Automatic (DHCP). Then re-enable Wi‑Fi.
-    - **Linux:** `sudo ip addr flush dev eth0; sudo dhclient eth0`
-
-> **If you need to reconfigure later:** See [Step 5.4: Recovery — if locked out of the switch](#step-54-recovery--if-locked-out-of-the-switch) for how to regain access.
-
-### Step 5.2: Connect Switch to Pi's LAN Interface to ensure carrier is detected
-
-**Why connect the switch after the initial configuration?** The router's Ansible playbook creates VLAN sub-interfaces (`eth1.10`, `eth1.20`, `eth1.30`) and configures dnsmasq to serve DHCP/SLAAC per VLAN. For these to work, the switch must already have VLANs configured and be passing tagged frames. If you connect an unconfigured switch to the configured Pi router, the VLAN sub-interfaces come up but have no corresponding VLANs on the switch — tagged frames are dropped, dnsmasq cannot reach clients, and you cannot access the switch's web UI via the Pi (because the switch's management interface is on a VLAN the unconfigured switch does not understand). Configuring the switch first via a direct laptop connection avoids this chicken-and-egg problem entirely.
-
-Connect the switch to the Pi's `eth1` (LAN) interface (you can disconnect it from your laptop, which was only necessary for the initial switch configuration). This provides carrier on `eth1`, which NetworkManager needs to bring up the VLAN sub-interfaces.
-
-**Why carrier is required:** Ethernet link detection is a physical-layer handshake — both ends of the cable must be connected to active Ethernet ports that exchange electrical link pulses (auto-negotiation). If the other end is disconnected, unpowered, or missing, the Pi's Ethernet PHY reports `NO-CARRIER` and NetworkManager treats the interface as inactive (no IP assignment on sub-interfaces, in either address family).
-
-A switch port is always electrically active — it provides carrier immediately, even if no other devices are plugged into the switch yet. So once the Pi is cabled to the switch, `eth1` gets carrier → the router can use the VLAN sub-interfaces → dnsmasq binds → everything works.
-
-```bash
-# Verify carrier status on the Pi:
-cat /sys/class/net/eth1/carrier
-# 1 = cable connected to active device (carrier detected)
-# 0 or "No such file" = no carrier (cable missing or other end inactive)
-
-# Or check via ip command:
-ip link show eth1
-# Look for: state UP + LOWER_UP = carrier present
-#           state DOWN or NO-CARRIER = no active link
-```
-
-### Step 5.3: Access Switch Management via SSH Tunnel & Perform Final Switch Configurations
-
-Now that the router is configured and running, the final steps for the switch can be performed.
-
-#### Step 5.3.1: Verify the switch is reachable
-
-```bash
-# From the Pi, verify the static lease is in the dnsmasq config:
-grep "lab-switch" /etc/dnsmasq.conf
-# Should show: dhcp-host=<MAC address>,10.42.10.2,lab-switch
-
-# If the switch hasn't picked up its IP yet, reboot it:
-# Unplug the switch's power cable, wait ~5 seconds, plug it back in.
-# On boot it sends a DHCP DISCOVER and gets the reserved IP.
-
-# Verify from the Pi:
-ping -c 3 10.42.10.2
-```
-
-#### Step 5.3.2: Access the switch web UI via SSH tunnel
-
-The switch's web UI is on the lab management network (`10.42.10.2`, VLAN 10), which is not directly reachable from your home laptop. Use **SSH port forwarding** through the Pi to access it.
-
-Traffic flow:
-```
-Home Laptop browser → localhost:8080
-    │
-    │  SSH tunnel (encrypted, over home network)
-    ▼
-Pi (192.168.2.59) — decrypts and forwards →
-    │
-    │  (over lab management VLAN 10)
-    ▼
-Switch web UI (10.42.10.2:80)
-```
-
-**Why SSH port forwarding:** The whole point of the dedicated router is to keep the lab and home networks separated. Adding a route from your home laptop to `10.42.0.0/20` would punch a hole through that isolation. SSH port forwarding keeps the networks fully separated — your home laptop connects to the Pi (which is reachable on the home network at your Pi's IP, such as `192.168.2.59`), and the Pi forwards the traffic to the switch on the lab side. The tunnel is temporary (exists only while the SSH session is open) and requires no firewall or routing changes on either network.
-
-```bash
-# From your home laptop, open an SSH tunnel:
-#   -L 8080:10.42.10.2:80  = "listen on localhost:8080 on my laptop, and
-#      forward connections through the Pi to 10.42.10.2:80"
-ssh -L 8080:10.42.10.2:80 <username>@<Pi_IP> -i ~/.ssh/id_homelab
-# Then open a browser: http://localhost:8080
-# You should see the NETGEAR switch management interface.
-# When you close the SSH session, the tunnel closes and the port is released.
-
-# This same technique works for any web UI on the lab network. For example,
-# to access the Proxmox web UI (port 8006) later:
-#   ssh -L 8006:10.42.10.10:8006 <username>@<Pi_IP> -i ~/.ssh/id_homelab
-#   Then browse to: https://localhost:8006
-```
-
-Use this access to verify the switch configuration, update settings, or download a backup of the configuration.
-
-#### Step 5.3.3: Enable DHCP on the switch
-
-In the switch's management interface, make sure the DHCP client is enabled so it can obtain the reserved IP (`10.42.10.2`) from the router's dnsmasq server.
-
-Now that the router is configured and the switch is connected to the Pi, the switch should have received its static IP (`10.42.10.2`) on the management VLAN (VLAN 10) via DHCP from dnsmasq. The static lease is defined in [group_vars/router/main.yml](../../ansible/group_vars/router/main.yml) (the `router_static_leases` variable).
-
-#### Step 5.3.4: Backup the switch configuration
-
-Before disconnecting from the switch, back up its configuration:
-1. Navigate to **System → Maintenance → Save Configuration → Save**
-2. Save the configuration file in [homelab/files](../../files) with the name `lab-switch.cfg` for version control and future reference
-3. If you ever need to restore the switch, upload this file via **System → Maintenance → Restore Configuration**
-### Step 5.4: Recovery — if locked out of the switch
-
-If you lose access to the switch (e.g. management VLAN misconfigured, SSH tunnel not working, switch not getting DHCP), you can always reconfigure it directly from your laptop:
-1. **Factory reset the switch** — hold the reset button on the switch for 10 seconds. This restores the switch to factory defaults (management on VLAN 1, password `password`)
-2. **Follow [Step 5.1](#step-51-direct-laptop-to-switch-connection)** to connect your laptop and find the switch's IP and reconfigure it (password, name, VLANs, management VLAN). 
-3. Optionally, restore the configuration by the [backup file saved earlier](#step-533-backup-the-switch-configuration) (e.g., `lab-switch.cfg`) via **System → Maintenance → Restore Configuration**.
+**Creating VLANs is not isolation.** New networks may inherit permissive inter-network policies; configure [Step 5](#step-5-configure-firewall-policy) before attaching untrusted clients.
 
 ---
+
+## Step 5: Configure Firewall Policy
+
+Implement the [design's firewall and access matrix](../1_Design/3_Design_Network.md#firewall-and-access-policy), not just a "guest" label. Use Ubiquiti's [Zone-Based Firewall](https://help.ui.com/hc/en-us/articles/115003173168-Zone-Based-Firewalls-in-UniFi) and [Traffic Policy Management](https://help.ui.com/hc/en-us/articles/5546542486551) guides.
+
+In Network 9.4, policy creation is documented under **Settings > Zones > Create Policy** or **Settings > Policy Table > Create New Policy**; Network 9.3 uses **Settings > Policy Engine > Zones**. Check the installed version. Older legacy firewall layouts require their corresponding documentation, not blindly translated clicks.
+
+1. Give Management, Lab, IoT, Home, and Guest distinct custom zones and assign each network to its intended zone. Keep the bootstrap LAN limited to trusted setup use. **Do not assume the built-in Internal zone is default-deny**: its default policies can allow inter-network traffic.
+2. Before adding deny rules, create narrow permissions for approved administrators to the Management zone and the **Gateway zone**. Gateway-zone rules protect services on the router itself; inter-VLAN rules alone do not restrict its console.
+3. Permit the required gateway DHCP and DNS services from each served network. Permit device-management communication from switch/AP management addresses to the local Network application using Ubiquiti's [required-port reference](https://help.ui.com/hc/en-us/articles/218506997). Restrict those flows to the infrastructure devices; never forward adoption ports from WAN.
+4. Allow only explicitly selected Home-to-Lab application endpoints and IoT-to-service flows, with destination addresses and ports. If none are needed, create no such exception.
+5. Preserve established/related return traffic for allowed sessions. Use the policy's **Auto Allow Return Traffic** where needed, or verified stateful return rules. Deny unsolicited new connections in the reverse direction; do not replace that with a blanket bidirectional allow.
+6. Add default-deny policies for other new connections between the custom zones and for client-to-Gateway traffic not explicitly required. This must deny gateway administration from ordinary Home, Lab, IoT, and Guest clients while preserving DHCP/DNS and the approved infrastructure/admin flows. Keep those exceptions above broader blocks. Inspect effective rule order, including built-in rules.
+7. Allow internet access according to each segment's needs, while preserving stateful WAN protection against unsolicited inbound traffic. Check both directions in the zone matrix and review any automatically created exceptions.
+8. Keep same-VLAN Management clients restricted to infrastructure and approved administrators. The gateway cannot filter traffic that stays entirely on that VLAN; use device account controls, host firewalls, or supported client isolation where required.
+9. If IPv6 is later enabled, select rules matching both IP families and explicitly allow necessary IPv6 control traffic; do not assume IPv4 rules cover it. See [IPv6 Design and Rollout](../1_Design/3_Design_Network.md#ipv6-design-and-rollout).
+
+Apply changes incrementally from the wired administrator connection. Test console access, DHCP/DNS, and switch/AP connectivity after each policy group. Do not accept a rule set that only appears correct in the UI; the endpoint tests in [Step 9](#step-9-validate-the-setup) are required.
+
+---
+
+## Step 6: Assign Ports and Move Device Management
+
+Use [Switch Port VLAN Assignment](https://help.ui.com/hc/en-us/articles/26136855808919), [VLAN Troubleshooting](https://help.ui.com/hc/en-us/articles/9592924981911), and the [design's port-assignment explanation](../1_Design/3_Design_Network.md#switch-port-assignments). In UniFi's **Ports** view, set **Native VLAN / Network** and **Tagged VLAN Management**: **Block All** creates an access port; **Custom** permits only selected tagged VLANs. Avoid leaving **Allow All** everywhere.
+
+For the example below, Management VLAN 10 is **tagged for infrastructure management** and the bootstrap network remains native on infrastructure trunks during configuration. This differs from the design's optional untagged-management variant but serves the same segment roles; do not mix both variants on the same link.
+
+| Example switch port | Role | Native network | Tagged VLANs when configured |
+|---|---|---|---|
+| 1–2 (PoE+) | AP 1 and AP 2 | Bootstrap, with no ordinary clients | Management 10, IoT 30, Home 40, Guest 50 |
+| 3–4 | Spare PoE ports | None in use; disabled | None |
+| 5 | Gateway uplink | Bootstrap, matching gateway LAN port | Management 10, Lab 20, IoT 30, Home 40, Guest 50 |
+| 6–7 | Lab host uplinks | Management 10 | Lab 20; additional segments only if needed |
+| 8 | Wired administrator / local recovery | Management 10 | None |
+
+These are example assignments, not a claim about installed cabling. If household wired devices need more ports, repurpose a spare as a Home access port or expand capacity. The switch's AP uplinks must carry Management 10 because the AP management override below uses tags.
+
+1. Configure the gateway LAN uplink and switch uplink to permit all five required tagged VLANs, retaining their matching native/bootstrap network. Confirm the switch is still online.
+2. Configure the dedicated administrator port as a Management access port: native Management, tagged VLANs blocked. Move the laptop there, renew its DHCP lease, and test the gateway's Management address and console login. Keep another known-working direct bootstrap path until this succeeds.
+3. In the switch's device settings, use the supported management **Network Override** to select Management. The uplink must already carry VLAN 10 tagged. Confirm its new lease/reservation, online status, and reprovisioning before proceeding. Do not assume a switch management VLAN changes its uplink profile automatically.
+4. For each AP, first permit Management and its intended SSID VLANs on the uplink, then select Management in the AP's **IP Settings / Network Override**. Confirm one AP stays online before configuring the other.
+5. Only after management connectivity is verified, trim tagged allowances to the table. Keep AP native/bootstrap separate from the tagged SSID networks; Ubiquiti documents client-connectivity problems when an AP's non-default native VLAN also carries a broadcast SSID.
+6. Configure lab host ports for the intended management variant. In this example, host management is **untagged on Management**, while VM Lab traffic is tagged. Align the host configuration in [Step 8](#step-8-connect-household-and-lab-clients); any host template must match this native/tagged choice.
+7. Assign ordinary wired clients access ports with Home or IoT as native and tagged VLANs blocked. Disable unused ports.
+8. Once all replacement paths are tested, remove temporary bootstrap allows and prevent bootstrap access to production networks/administration. Leave no ordinary devices or SSIDs on it. Document any retained native network's restrictions privately; it is not an automatic recovery backdoor.
+
+Keep a physically controlled local Management access port for recovery, enabling it only when needed if normally disabled. A wrong trunk or override can disconnect a device; use [Recovery and Troubleshooting](#recovery-and-troubleshooting) rather than broadening every port or firewall permanently.
+
+---
+
+## Step 7: Configure Wi-Fi
+
+Follow [Creating UniFi WiFi SSIDs](https://help.ui.com/hc/en-us/articles/26136823938583) and the [distribution/access design](../1_Design/3_Design_Network.md#distribution-and-access-layers).
+
+1. In **Settings > WiFi**, create a small set of networks and select their corresponding virtual network in the **Network** dropdown:
+
+   | Example SSID label | Network | Purpose |
+   |---|---|---|
+   | Home | Home / example VLAN 40 | Trusted household clients |
+   | IoT | IoT / example VLAN 30 | Constrained devices |
+   | Guest | Guest / example VLAN 50 | Visitor internet access |
+
+2. Broadcast them on both wired APs as needed. Use privately stored strong passwords; no real SSIDs or credentials belong in this repository.
+3. Use WPA2/WPA3 Personal with suitable protected-management-frame settings for supported clients. Prefer stronger modes when all clients support them; if IoT needs WPA2 compatibility, confine that change to the IoT SSID instead of weakening Home. Do not use an open guest network by default.
+4. Enable guest wireless client isolation where supported. This complements, but does not replace, Guest-to-internal firewall blocks. A captive portal is not required.
+5. Keep management off the household/guest SSIDs. Confirm all VLANs selected for SSIDs are permitted along the AP-to-switch-to-gateway path.
+6. Disable wireless meshing when wired backhaul is confirmed and mesh is not needed. Use appropriate local country settings, then check channel use, power, coverage, and roaming with actual clients. Start with conservative settings rather than forcing wide channels or maximum transmit power.
+
+The [U6+ hardware decision](../1_Design/1_Design_Hardware_Prerequisites.md#wi-fi-access-points) explains its bands and gigabit limit. Do not treat advertised radio rates as measured internet throughput.
+
+---
+
+## Step 8: Connect Household and Lab Clients
+
+1. Test one client per intended network before connecting the rest. Confirm its subnet, gateway, and DNS match the private plan; reserve infrastructure addresses as needed.
+2. Put household wired clients on Home access ports and wireless clients on Home. Move IoT and visitors only to their intended ports/SSIDs. Do not connect clients directly to the modem to bypass policy.
+3. Connect each lab host only after its port profile is ready. Its management interface must match the switch's native/tagged choice. For the example in [Step 6](#step-6-assign-ports-and-move-device-management), host management is untagged and VM Lab traffic uses VLAN 20.
+4. Configure the hypervisor's VLAN-aware bridge and assign VM network interfaces to the Lab VLAN; do not trunk Home/Guest into lab hosts without a specific requirement. Host installation/configuration belongs in [Hypervisor Setup](3_Setup_Hypervisor.md), while Talos VM networking belongs in [Cluster Setup](5_Setup_Cluster.md). Verify host templates match the selected port configuration before applying them.
+5. Configure clients to obtain addressing, gateway, and DNS through DHCP unless a documented static configuration is needed. Keep static addresses, reservations, and automation inventories consistent with the private network plan.
+6. Keep household DHCP/DNS on the gateway. The gateway is not an SSH jumphost; see [Management Access and Optional Jumphost](../1_Design/3_Design_Network.md#management-access-and-optional-jumphost). A lab bastion, if added later, must not become the only recovery route.
+
+After Home connectivity passes validation, disable redundant ISP Wi-Fi/LAN client service only as appropriate to the selected modem mode and any provider services. Record the intended modem settings and how to recover them.
+
+---
+
+## Step 9: Validate the Setup
+
+Use the [design's verification requirements](../1_Design/3_Design_Network.md#maintenance-recovery-and-safe-experiments). Record each result as passed, failed, or not yet tested, alongside actual device/software versions, in private operational notes. Do not put the network into normal use while required checks fail.
+
+| Check | Required result |
+|---|---|
+| Gateway, switch, and APs | Online after provisioning; intended management network and wired links; no unexpected bootstrap clients |
+| DHCP/DNS on each segment | Correct subnet, gateway, DNS, and reservations; no unexpected DHCP servers or Router Advertisements |
+| Home internet | Working DNS and web access from wired and wireless clients |
+| Guest isolation | Internet/DHCP/DNS work; Management, Home, Lab, IoT, and gateway administration are inaccessible |
+| Home-to-Lab application exception | Only the selected endpoint/service works, if configured; other lab/management services remain blocked |
+| Lab / IoT restrictions | New access to Home/Management blocked; only expressly configured exceptions work |
+| Management access | Approved administrator reaches console and host/device administration; ordinary clients do not |
+| Same-VLAN isolation | Guest wireless clients cannot reach one another where isolation is enabled; evaluate wired clients separately |
+| Stateful return traffic | Responses to approved connections work without allowing unrelated reverse connections |
+| IPv6 baseline or rollout | No unintended routed IPv6 path; if enabled, both allowed and denied tests pass over IPv6 |
+| Local recovery | Wired Management access and local sign-in work without cloud sign-in |
+| Independence from lab | With lab hosts/VMs off, household internet, DHCP, DNS, and Wi-Fi still work |
+| Restart / reconnection | During the agreed window, gateway/switch/AP restart does not lose configuration; devices and clients recover |
+
+**Test the service, not just ping.** For each denied path, first establish that the destination service is actually listening and reachable from an authorized source. Then attempt the same destination address/port from the denied segment; inspect firewall events/counters where available. A closed service, incorrect address, or host firewall can make a test fail without proving gateway isolation. Check both zone directions and both IP families if enabled.
+
+For allowed paths, use the actual application, DNS lookup, or administrative service. An illustrative DNS test is `nslookup example.com 10.42.40.1` from a Home client, substituting the private gateway address. Do not paste command outputs exposing real endpoints into public Git. Use the [Network Reference](../../../reference/network/README.md) for diagnostic tools.
+
+Connect the remaining clients and remove temporary bootstrap allowances after all required checks pass. Keep a private final port/SSID/network map rather than treating these example tables as the live inventory.
+
+---
+
+## Step 10: Back Up and Maintain the Network
+
+Follow [UniFi Backups and Migration](https://help.ui.com/hc/en-us/articles/360008976393), the [network recovery design](../1_Design/3_Design_Network.md#maintenance-recovery-and-safe-experiments), and the [software backup boundary](../1_Design/2_Design_Software_Prerequisites.md#backup).
+
+1. Download a **System Config Backup** from the console's **Settings > Control Plane > Backups**. Prefer this complete gateway/OS/application/device configuration backup to assuming a Network-only export covers everything.
+2. Keep dated backups before changes and after validated configuration. Store them encrypted/access-controlled outside this repository and outside storage that needs the lab to run. Keep an additional protected copy away from the gateway.
+3. Automatic cloud backups are optional and account-dependent, not the only recovery mechanism. If enabled, protect the owner account with MFA and understand what is stored. Still retain an offline copy.
+4. Record restoration steps, installed versions, ISP settings, management connectivity, and device re-adoption requirements privately. Review restore compatibility for the target gateway/version using Ubiquiti's guide.
+5. Confirm a downloaded backup is available and that the restore workflow is understood. Schedule any actual restore test in a maintenance window; do not claim restore success merely because a file was downloaded.
+6. Apply supported stable firmware updates in planned windows, reading release notes and backing up first. Update incrementally and repeat connectivity/isolation checks after changes. Lab monitoring can be optional, but must not be required for network operation.
+
+Do not commit console backups, exports, keys, credentials, or identifying screenshots. Follow [Review Before Publishing](../0_Security_and_Public_Repository.md#review-before-publishing) for any public notes.
+
+---
+
+## Recovery and Troubleshooting
+
+The first response is to restore the last tested path, not factory-reset the entire network. Keep recovery independent of the lab and cloud login, as required by [Management Access](../1_Design/3_Design_Network.md#management-access-and-optional-jumphost).
+
+| Symptom | Check / recovery action |
+|---|---|
+| No WAN internet | Check link, configured DHCP/PPPoE/static/provider VLAN, upstream subnet overlap, and ISP status. Revert a failed modem-mode change; do not disable WAN protection. |
+| Device offline after VLAN change | Check native VLAN agreement, tagged Management allowance, device Network Override, and lease. Revert the last changed port/override through a known-working local path. |
+| Wi-Fi joins but no address or internet | Check SSID Network mapping and VLAN allowance on every uplink, DHCP, DNS, and Gateway-zone exceptions. |
+| Client reaches an unexpected segment | Inspect network-to-zone assignment, effective policy order, broad Internal/allow rules, port membership, and IPv6. Remove the unwanted path and repeat allowed/denied tests. |
+| Administrator locked out | Use the documented wired Management port and local account. If DHCP is unavailable, a correctly chosen private static address may help only if the port/VLAN path still works; it cannot repair wrong tags or firewall policy. |
+| Gateway fails or cannot be recovered locally | During a planned outage, follow Ubiquiti's model-specific reset/recovery procedure, restore a compatible private backup, then verify device reconnection and isolation. Do not reset other devices unless actually required. |
+
+Factory reset is a **last resort** that removes configuration; use [How to Reset UniFi Devices](https://help.ui.com/hc/en-us/articles/205143490) and the [backup/restore guide](https://help.ui.com/hc/en-us/articles/360008976393). Ensure physical access, power, WAN details, credentials, and the offline backup are available first. Keep ordinary clients disconnected during recovery until segmentation has been restored and verified.
+
+See [Troubleshooting](Troubleshooting.md) for related network issues; use only the sections applicable to this equipment.
+
+---
+
+## Future VPN and IPv6 Work
+
+- **VPN remains TODO**, not part of basic setup. Follow the [software VPN decision](../1_Design/2_Design_Software_Prerequisites.md#router--firewall-software) before choosing OpenVPN, WireGuard, or another supported option. Check firmware, double NAT/carrier-grade NAT, credentials, and minimum segment access. Keep remote endpoints and VPN exports private.
+- **IPv6 requires a separate validated rollout**, following [IPv6 Design and Rollout](../1_Design/3_Design_Network.md#ipv6-design-and-rollout) and [UniFi DHCPv6 Prefix Delegation](https://help.ui.com/hc/en-us/articles/115005868927). Configure the ISP-supported WAN prefix delegation and LAN `/64` allocations, required Router Advertisement/ICMPv6 behavior, DNS, and equivalent firewall policy before enabling routed IPv6 for clients. WAN IPv6 alone does not prove downstream delegation works. Do not assume NAT66 is required or publish real delegated prefixes; use `2001:db8::/32` only for documentation examples, not live internet addressing.

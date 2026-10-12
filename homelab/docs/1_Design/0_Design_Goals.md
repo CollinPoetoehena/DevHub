@@ -18,7 +18,7 @@ Personally, I work as a DevOps Engineer, not as a hardware, network, or storage 
 
 This lab is the opposite for myself: it's for **learning, experimenting, and having fun**. Breaking a lab workload or rebuilding the cluster should not stop household services: the shared network foundation runs independently. That foundation does need maintenance, and gateway changes can affect the house, so it is kept stable rather than used as the experimental playground. The lab itself should remain something I enjoy tinkering with, not something I am obligated to keep running. Keep experiments separate from essential household dependencies; a shared physical network does not change that goal. See the [network's maintenance, recovery, and safe-experiment boundaries](3_Design_Network.md#maintenance-recovery-and-safe-experiments).
 
-The networking boundaries below summarize the chosen setup. See [Network Design](3_Design_Network.md) for the topology and policy, and [Network Setup](../2_Setup/2_Setup_Network.md) for implementation documentation; its historical procedure is marked superseded until the current GUI setup steps are verified.
+The networking boundaries below summarize the chosen setup. See [Network Design](3_Design_Network.md) for the topology and policy, and [Network Setup](../2_Setup/2_Setup_Network.md) for the UniFi configuration procedure. Its [validation checklist](../2_Setup/2_Setup_Network.md#step-9-validate-the-setup) must be completed on the actual network; the written guide is not proof of live verification.
 
 Key boundaries:
 

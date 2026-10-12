@@ -54,7 +54,7 @@ Hardware is one decision, made once, for one reason: **"what do I buy?"** Splitt
 
 ## Current Personal Setup
 
-My setup is split into **shared home-and-lab networking** (the things that move packets) and **compute/workload** (the things that run VMs and containers). The separate lab-router direction is superseded: one physical UniFi gateway, managed switch, and two wired APs serve both home and lab, isolated through VLANs and firewall policy. This also documents hardware the household needs independently of the lab. See [Network Design — One Shared Gateway with Segmentation](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) for that decision and [Network Setup](../2_Setup/2_Setup_Network.md) for implementation documentation; the historical setup procedure is marked superseded pending verified GUI steps.
+My setup is split into **shared home-and-lab networking** (the things that move packets) and **compute/workload** (the things that run VMs and containers). The separate lab-router direction is superseded: one physical UniFi gateway, managed switch, and two wired APs serve both home and lab, isolated through VLANs and firewall policy. This also documents hardware the household needs independently of the lab. See [Network Design — One Shared Gateway with Segmentation](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) for that decision and [Network Setup](../2_Setup/2_Setup_Network.md) for the UniFi procedure, including [live validation requirements](../2_Setup/2_Setup_Network.md#step-9-validate-the-setup).
 
 ### Network
 
@@ -105,7 +105,7 @@ No additional downstream lab router; lab compute may be switched off.
 
 The gateway is **dedicated physical network hardware**, but it is not a separately maintained general-purpose firewall PC. It runs independently of Proxmox and Kubernetes. The [network design](3_Design_Network.md) owns segmentation, firewall policy, addressing, the layered topology, and the accepted shared failure domain.
 
-The decisions below follow the software document's format: **what it is**, **chosen + date**, and **alternatives considered**. Prices are recorded purchases, not current quotations.
+The decisions below follow the software document's format (see [2_Design_Software_Prerequisites.md](./2_Design_Software_Prerequisites.md)): **what it is**, **chosen + date**, and **alternatives considered**. Prices are recorded purchases, not current quotations.
 
 ### Network Platform: UniFi
 
@@ -208,6 +208,14 @@ Two coverage points are preferable here to one AP transmitting through every wal
 
 There is no 6 GHz radio or multi-gigabit uplink. Wireless PHY rates are not application speeds; gigabit Ethernet remains a ceiling. Both APs use the chosen PoE switch, without separate injectors.
 
+**Why not the ISP's access points / “wifi versterkers”?** They can be an inexpensive, convenient way to extend ordinary household Wi-Fi, especially when included with the subscription and supported by the provider. However, “wifi versterker” is a marketing term: the device may be a wireless repeater, a mesh node, or an AP with Ethernet backhaul. Do not assume all ISP devices are wireless repeaters or perform poorly.
+
+For this setup, coverage alone is not enough. The APs must support [Home, IoT, and Guest VLAN-mapped SSIDs with restricted management](3_Design_Network.md#distribution-and-access-layers), alongside the [shared network's firewall policy](3_Design_Network.md#firewall-and-access-policy). Depending on the ISP model and firmware, those controls may be absent, limited to a provider-defined guest network, or dependent on the ISP modem/router and its app. Check whether they remain available in bridge mode and with a third-party gateway; a guest SSID alone does not prove compatibility with this VLAN plan.
+
+The selected U6+ APs provide the required VLAN mapping, wired Ethernet backhaul, and PoE, and are managed with the gateway and switch in [one UniFi platform](#network-platform-unifi). That keeps configuration, updates, visibility, and recovery together rather than adding an ISP-managed Wi-Fi ecosystem. Wired backhaul also avoids using radio airtime for a wireless repeater/mesh uplink, although an ISP AP with Ethernet backhaul could offer that same advantage. See [Network Setup — Configure Wi-Fi](../2_Setup/2_Setup_Network.md#step-7-configure-wi-fi) for implementation.
+
+Owning these APs also makes the internal Wi-Fi setup less dependent on the ISP or subscription: changing providers should mainly affect the WAN configuration, not require replacing provider-tied Wi-Fi equipment. This does not remove the accepted [UniFi vendor dependence](#purchasing-cost-and-accepted-trade-offs). The extra purchase cost is worthwhile here for consistent segmentation and fewer separate management workflows; for a simple unsegmented household network, compatible ISP-provided APs may be sufficient.
+
 **Alternatives considered:**
 
 | Alternative | Why not chosen here |
@@ -219,6 +227,7 @@ There is no 6 GHz radio or multi-gigabit uplink. Wireless PHY rates are not appl
 | **TP-Link Omada EAP** | Strong VLAN-capable Wi-Fi value, particularly in an Omada ecosystem. |
 | **NETGEAR business / Aruba Instant On APs** | Credible segmentation; another management system adds little here. |
 | **ASUS mesh / TP-Link Deco / NETGEAR Orbi** | Convenient coverage, but per-SSID VLAN/backhaul support varies. Another mesh/router ecosystem is unnecessary. |
+| **ISP-provided APs / “wifi versterkers”** | Convenient and potentially included, but VLAN controls, third-party gateway compatibility, ownership/subscription terms, and management vary. The comparison above explains why the integrated UniFi APs are chosen here. |
 | ISP Wi-Fi / single all-in-one router | Less cost, but placement/segmentation may not meet this plan. |
 | Wireless mesh backhaul | Useful without cabling, but consumes airtime and adds interference/availability dependencies. |
 
@@ -241,17 +250,17 @@ There is no 6 GHz radio or multi-gigabit uplink. Wireless PHY rates are not appl
 
 **All UniFi gear was bought new from [Ubiquiti Store Europe](https://eu.store.ui.com/eu/en).** At purchase time, Coolblue and MediaMarkt stocked a smaller subset and had less attractive prices for these choices. The official store supplied the desired models with direct product information. This is not a permanent cheapest-store claim; compare VAT, shipping, warranty/returns, and availability for later purchases.
 
-**€608 is not cheap, but not an unusually expensive complete managed home-network foundation**: routing/firewall, PoE switching, and two APs. It saves **a lot of time** compared with OPNsense plus separate device management, and much more compared with maintaining a hand-built Linux/Ansible router. This is expected operational savings, not a measured hours-per-month guarantee.
+**€608 is not cheap, but not an unusually expensive complete managed home-network foundation**: routing/firewall, PoE switching, and two APs. It saves **a lot of time** compared with OPNsense (or a different router OS) plus separate device management, and much more compared with maintaining a hand-built Linux/Ansible router. This is expected operational savings. Also, this is needed infrastructure for both household and lab networking anyway, making the investment more justifiable, such as APs for Wi-Fi coverage on multiple floors, etc.
 
-The previously considered cheapest Topton N100 on AliExpress was about **€350 with 8 GB RAM and a 128 GB SSD** at the time, for a firewall PC alone. Household routing, switches, and APs still needed providing independently. The €238 gateway replaces that role, leaving €112 of that comparison budget toward switch/APs. The full package is not cheaper than the PC alone; it avoids duplicating essential home-and-lab infrastructure.
+The previously considered cheapest Topton N100 on AliExpress was about **€350 with 8 GB RAM and a 128 GB SSD** at the time, for a firewall PC alone. Household routing, switches, and APs still needed providing independently. The €238 gateway replaces that role, leaving €112 of that comparison budget toward switch/APs. The full package is not cheaper than the PC alone; it avoids duplicating essential home-and-lab infrastructure which you need to buy anyway for your home network.
 
 **Accepted trade-offs:** vendor lock-in, less OS/plugin flexibility, vendor firmware/support dependence, limited hardware upgrades, and GUI settings rather than complete IaC. Standards-based VLANs/Ethernet allow future mixed-vendor replacement, but migration costs effort. Gigabit access and a shared gateway failure domain are deliberate limits too. See the [shared-gateway boundaries](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) and [network maintenance and recovery approach](3_Design_Network.md#maintenance-recovery-and-safe-experiments).
 
-The benefits significantly outweigh those costs for my [goals](0_Design_Goals.md): fewer components, simpler troubleshooting/recovery, consistent security policy, less duplicated hardware, and more learning time. Manual steps are acceptable when few, documented, privately backed up, and tested. Developing automation for every setting would reintroduce the maintenance this choice removes. See [Network Setup](../2_Setup/2_Setup_Network.md) for the implementation record and the [security guide](../0_Security_and_Public_Repository.md) for handling backups and publishable examples.
+The benefits significantly outweigh those costs for my [goals](0_Design_Goals.md): fewer components, simpler troubleshooting/recovery, consistent security policy, less duplicated hardware, and more time available for other things like learning, experimenting, building, etc. Manual steps instead of IaC in this case are acceptable when few, documented, privately backed up, and tested like we have in this setup. Developing automation for every setting would reintroduce the maintenance this choice removes and with this minimal set of manual tasks it is not necessary. See [Network Setup](../2_Setup/2_Setup_Network.md) for the implementation record and the [security guide](../0_Security_and_Public_Repository.md) for handling backups and publishable examples.
 
 ### Why Not a Separately Maintained Firewall PC
 
-**First setup: a hand-built Linux router on a Raspberry Pi, configured with Ansible.** The Pi's built-in Ethernet port connected to the ISP modem/home LAN, and a USB-to-Ethernet adapter connected to the lab switch. The Pi was a separate downstream lab router, not the shared household gateway. Raspberry Pi OS supplied the general-purpose Linux base; custom Ansible roles assembled the router functionality: network interfaces and VLANs, kernel IP forwarding, dnsmasq for DHCP/DNS and IPv6 Router Advertisements, and nftables for firewalling and IPv4 NAT/IPv6 NAT66. It also served as an SSH jumphost into the lab. The [historical Network Setup](../2_Setup/2_Setup_Network.md) records that procedure, including [router configuration with Ansible](../2_Setup/2_Setup_Network.md#step-4-configure-the-pi-with-ansible).
+**First setup: a hand-built Linux router on a Raspberry Pi, configured with Ansible.** The Pi's built-in Ethernet port connected to the ISP modem/home LAN, and a USB-to-Ethernet adapter connected to the lab switch. The Pi was a separate downstream lab router, not the shared household gateway. Raspberry Pi OS supplied the general-purpose Linux base; custom Ansible roles assembled the router functionality: network interfaces and VLANs, kernel IP forwarding, dnsmasq for DHCP/DNS and IPv6 Router Advertisements, and nftables for firewalling and IPv4 NAT/IPv6 NAT66. It also served as an SSH jumphost into the lab. That retired procedure remains in Git history; the current [Network Setup](../2_Setup/2_Setup_Network.md) documents a fresh UniFi installation, starting with [equipment and network planning](../2_Setup/2_Setup_Network.md#step-1-prepare-the-equipment-and-network-plan).
 
 **Why that was retired.** Ansible made the configuration repeatable, but did not turn the individually configured Linux services into a supported router platform. I still owned their integration, role development, package/kernel compatibility, dual-stack firewall correctness, troubleshooting, and recovery. The Pi also added adapter and SD-card dependencies. This was valuable for learning fundamentals, but maintaining the router implementation became more work than the learning justified. The problem was not Ansible itself; it was using custom automation to build and maintain functionality already supplied by purpose-built router software. Ansible remains useful for supported lab hosts and VMs; see its [current configuration-management scope](2_Design_Software_Prerequisites.md#configuration-management).
 
@@ -261,7 +270,7 @@ The benefits significantly outweigh those costs for my [goals](0_Design_Goals.md
 
 OPNsense remains good for open extensibility, detailed control, and router-OS learning. That is not the priority for household infrastructure. UniFi still needs firmware updates/security care but reduces integration/development responsibility. See the [software decision](2_Design_Software_Prerequisites.md#router--firewall-software) for comparisons and the future VPN TODO.
 
-**Learn separately:** run OPNsense or another router OS in an isolated lab VM for routing/firewall practice while the shared network stays stable if you want to learn the internals and operational aspects of a router OS/networking in more depth. No need to rebuild DHCP, DNS, firewalling, and routing manually with Ansible; a purpose-built router OS offers plenty to learn. Follow the [network's safe-experiment boundaries](3_Design_Network.md#maintenance-recovery-and-safe-experiments).
+**Learn separately if needed:** run OPNsense or another router OS in an isolated lab VM for routing/firewall practice while the shared network stays stable if you want to learn the internals and operational aspects of a router OS/networking in more depth. No need to rebuild DHCP, DNS, firewalling, and routing manually with Ansible; a purpose-built router OS offers plenty to learn. Follow the [network's safe-experiment boundaries](3_Design_Network.md#maintenance-recovery-and-safe-experiments).
 
 ---
 
