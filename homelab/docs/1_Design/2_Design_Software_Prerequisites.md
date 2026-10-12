@@ -4,7 +4,7 @@ This document is the **central place for every software decision in this homelab
 
 Its counterpart is [Design: Hardware & Prerequisites](1_Design_Hardware_Prerequisites.md), the equivalent central place for every **hardware** decision. Together the two own all concrete implementation choices; the remaining design documents (network, cluster, storage) describe the *architecture* and deliberately name no products or tools.
 
->**IMPORTANT NOTE:** This guide is focused on my personal homelab goals (see [Personal Goals](0_Goals.md)), these software choices may not be suitable for everyone. So, make sure to adapt them to your own needs and constraints.
+>**IMPORTANT NOTE:** This guide is focused on my personal homelab goals (see [Personal Goals](0_Design_Goals.md)), these software choices may not be suitable for everyone. So, make sure to adapt them to your own needs and constraints.
 
 ## Why Software Is a Separate Document
 
@@ -58,7 +58,7 @@ This is a **high-level decision record**, not documentation. It records *what* a
 
 | Layer | Category | Chosen | Main alternative rejected |
 |---|---|---|---|
-| Network | Router / firewall OS | **OPNsense** | pfSense |
+| Network | Routing, firewall, switching & Wi-Fi management | **UniFi OS + UniFi Network**, supplied with the selected hardware | OPNsense on a separately maintained x86 appliance |
 | Compute | Hypervisor | **Proxmox VE** | XCP-ng, VMware ESXi |
 | Compute | Host & general-purpose VM OS | **Debian** (Proxmox base) / **Ubuntu LTS** (management and utility VMs) | RHEL derivatives |
 | Platform | Container orchestration | **Kubernetes** | Docker Compose, Nomad |
@@ -84,8 +84,8 @@ TODO: add here storage later; see TODOs in [Storage](#storage)
 The individual choices above are not independent — the same handful of principles produced most of them, and they are worth stating explicitly because they are what to fall back on when a future decision is close:
 
 - **Keep infrastructure boring.** For anything the rest of the lab depends on (router, hypervisor, backups), choose stability, predictability, and fast recovery over interesting. Spend the novelty budget on the layers where learning actually happens.
-- **Declarative over imperative.** State the desired end state and let the tool converge; do not script a sequence of steps. This is why Terraform, Ansible, Kubernetes, and Argo CD all fit together — they share the same model.
-- **Git is the source of truth.** If a decision or a configuration is not in version control, it does not exist. This is what makes the lab reviewable, diffable, and rebuildable, and what turns documentation from an afterthought into a by-product.
+- **Declarative over imperative where it reduces work.** Terraform, Ansible, Kubernetes, and Argo CD remain useful for lab provisioning and workloads. The essential network is an intentional exception: a few documented GUI settings cost less to maintain than a custom automation layer.
+- **Git records intent; sensitive state stays private.** Version-control design decisions, sanitized setup steps, and declarative lab configuration. For GUI-managed network devices, keep private backups and a documented recovery process instead of pretending Git contains the complete live configuration. Never commit unredacted exports or secrets; see the [security guide](../0_Security_and_Public_Repository.md).
 - **Prefer the industry standard unless there is a concrete reason not to.** The point of this lab is transferable skill, so the tie-breaker between two technically comparable tools is which one is actually used at work.
 - **Do not own solved problems.** Every hand-built component is a permanent maintenance liability. Build something yourself only while it is teaching you something; once it has, hand it to a platform that does it better (this is exactly what happened to the hand-built router).
 - **Choose for the hardware you have.** Loki over Elasticsearch, SOPS over Vault, one 64 GB node over four 16 GB ones — resource efficiency is a first-class selection criterion when the whole lab is a few low-power machines.
@@ -97,19 +97,32 @@ The individual choices above are not independent — the same handful of princip
 
 > **See for more details about the corresponding design (not software/tool specific): [3_Design_Network.md](./3_Design_Network.md).**
 
-**What it is.** The operating system on the lab router. It terminates the WAN link, routes between VLANs, serves DHCP and DNS, sends IPv6 Router Advertisements, performs NAT/NAT66, and enforces the firewall policy. It is the single component everything else in the lab depends on, so its most important property is not features but **boring reliability and fast recovery**.
+**What it is.** The software for the shared home-and-lab gateway, switch, and wireless access points: WAN connectivity, VLAN routing, DHCP/DNS forwarding, firewall rules, switch port profiles, and Wi-Fi networks. Household connectivity must remain independent of the hypervisor and cluster.
 
-**Chosen (2026-09): [OPNsense](https://opnsense.org/).** A FreeBSD-based, open-source firewall/router platform with a coherent, fully integrated networking stack out of the box: interfaces, VLANs, DHCP/DHCPv6, DNS (Unbound), Router Advertisements, NAT/NAT66, and a default-deny firewall — all under one configuration model. It matches the hardware exactly (x86-64, Intel i226-V NICs natively supported through the FreeBSD `igc` driver, AES-NI for VPN crypto), the entire configuration is a single XML file that can be version-controlled and restored in minutes, it has a usable API for automation, and the plugin ecosystem covers WireGuard, Suricata IDS/IPS, Zenarmor, and DNS-over-TLS without any of those becoming a project in themselves. Releases are frequent and predictable, and the project is European (Deciso, NL).
+**Chosen (2026-10): [UniFi](https://ui.com/) software already supplied and maintained by Ubiquiti on the [selected network hardware](1_Design_Hardware_Prerequisites.md#part-1--networking-hardware).** The gateway runs UniFi OS and the UniFi Network application locally, managing the switch and AP firmware/configuration together. No separate controller VM, CloudKey, custom router OS, Ansible router role, or additional networking software is needed for now. "Cloud Gateway" does not mean forwarding household traffic through a hosted controller; local operation remains the foundation.
+
+OPNsense was a major improvement over the previous hand-built Linux router managed with Ansible, but still required more configuration, integration, and maintenance than I want for the network the household depends on. UniFi saves **a lot of time** compared with that approach, and much more compared with maintaining nftables, DHCP, DNS, and IPv6 services individually. This is a fit-for-purpose decision, not a claim that OPNsense is unreliable or inferior. See [Why Not a Separately Maintained Firewall PC](1_Design_Hardware_Prerequisites.md#why-not-a-separately-maintained-firewall-pc) for the original Raspberry Pi/Ansible setup, the subsequent OPNsense direction, and why both were superseded.
+
+**Configuration and recovery.** Accept a small set of manual GUI steps for networks, port profiles, SSIDs, firewall policy, and updates. Record their intent and verification in the setup documentation; keep configuration backups, account recovery details, and secrets outside public Git. Maintain firmware, review security advisories, schedule potentially disruptive updates, and test recovery. There is less automation development to maintain, not zero maintenance.
+
+**Accepted trade-offs.** Vendor lock-in, less low-level control and plugin flexibility, dependence on vendor firmware/support, and less complete declarative configuration. Core local networking has no mandatory subscription, but optional paid services are separate. These costs are significantly outweighed here by integrated administration, simpler recovery, fewer components, and time saved.
+
+**Learning remains possible.** As with choosing Talos for Kubernetes lifecycle management, using a platform does not prohibit learning its internals elsewhere. Run OPNsense, pfSense, or another router OS in an isolated VM network to study firewalling, routing, or VPNs without changing the household gateway. Do not bridge experimental DHCP or Router Advertisements into live VLANs. A router OS provides ample learning depth; returning to a manually assembled Ansible router stack is not necessary.
 
 **Alternatives considered:**
 
 | Alternative | Why rejected |
 |---|---|
-| **[pfSense](https://www.pfsense.org/)** | The closest competitor and genuinely excellent — this was the main alternative. Rejected because the open-source CE edition lags behind pfSense Plus, the release cadence is slower and less predictable, and the feature split between CE and Plus makes it unclear which version the documentation applies to. OPNsense has a cleaner, faster-moving open-source story and a more modern UI/API. Both run identically well on this hardware; however due to the better open-source setup and the better API and automation capabilities, OPNsense is preffered over pfSense. |
-| **[OpenWrt](https://openwrt.org/)** | Excellent and very lightweight — it was the previous router OS in this lab when the router was a Raspberry Pi, because it runs on ARM and OPNsense does not. Now that the router is x86, that constraint is gone, and OPNsense offers a more capable firewall feature set (IDS/IPS, reporting, plugin ecosystem) and closer alignment with the enterprise firewall appliances; meaning it provides more learning value and experiences that help during my work. |
-| **[VyOS](https://vyos.io/)** | Fully CLI- and config-file-driven, which is very attractive for IaC. Rejected because the free rolling releases are unstable by design and stable releases are behind a subscription, and because a pure-CLI platform gives up the visual state inspection (live leases, firewall counters, flows) that is genuinely useful when debugging a lab at 23:00. |
-| **Plain Linux + nftables/dnsmasq** | This is what the lab used to run (hand-built on Raspberry Pi OS via a custom Ansible role). Rejected now that the learning goal has been met: what remained was pure maintenance — tracking package changes, re-verifying rulesets after kernel updates, chasing IPv6 forwarding quirks, and slow rebuilds after a storage failure. While this approach was invaluable for learning networking fundamentals, the focus has since shifted from building router functionality to operating reliable infrastructure instead of constantly troubleshooting and maintaining the router setup. This is already solved by a dedicated router OS like OPNsense or pfSense and provides peace of mind and reduced operational overhead. That time is better spent on more valuable things like Kubernetes, storage, and observability. |
-| **Vendor firmware (e.g. [MikroTik](https://mikrotik.com/), [UniFi](https://ui.com/), [ASUS](https://www.asus.com/))** | Closed appliance OSes. Rejected because the lab's goal is an open, version-controllable, rebuildable platform — and because they lock you to the vendor's hardware. Furthermore, a closed appliance OS does not provide the learning value or flexibility that an open platform like OPNsense does. |
+| **[OPNsense](https://opnsense.org/)** | Excellent integrated open-source firewall, and the previous direction. Still requires owning an appliance OS, its configuration, optional plugins, and separate switch/AP management. More operational work than this shared network needs; retain as an isolated learning option. See the [previous setup and retirement rationale](1_Design_Hardware_Prerequisites.md#why-not-a-separately-maintained-firewall-pc). |
+| **[pfSense](https://www.pfsense.org/)** | Similar strengths and responsibilities to OPNsense. Switching between them does not solve the underlying desire to maintain fewer things. |
+| **[OpenWrt](https://openwrt.org/)** | Flexible and lightweight, including on supported ARM hardware. Hardware support and configuration still need attention; not the selected integrated gateway/switch/AP experience. |
+| **[VyOS](https://vyos.io/)** | Strong routing and configuration-as-code potential, but operating and automating a routing platform is not the goal for essential household connectivity. |
+| **Plain Linux + nftables/dnsmasq + Ansible** | Previously useful for learning, but leaves routing, firewall, DHCP, DNS, updates, and recovery integration with me. The greatest maintenance/development burden; not returning to it. |
+| **[TP-Link Omada](https://www.tp-link.com/en/omada/)** | Credible centrally managed alternative, often competitively priced. UniFi was selected for the desired hardware, cohesive local console, documentation, and community familiarity; Omada remains a reasonable alternative, not an inferior design. |
+| **[MikroTik RouterOS](https://mikrotik.com/)** | Excellent capability per euro and deep routing control, but a steeper configuration/operational learning curve than wanted here. |
+| **[ASUS](https://www.asus.com/) / [NETGEAR](https://www.netgear.com/) consumer firmware** | Convenient for simple home networks, but routed VLANs, per-SSID segmentation, and integrated managed switching vary by model. Not chosen for this explicitly segmented setup. |
+
+> **TODO: future VPN / remote access.** Evaluate the gateway's supported VPN options, such as OpenVPN or WireGuard, only when remote access is needed. Confirm firmware support, ISP reachability/double NAT, authentication, and restricted access to the intended segments. No VPN is deployed merely because the hardware supports it; never publish endpoints, keys, or exports.
 
 ---
 
@@ -245,7 +258,7 @@ These are three separate choices: **Kubernetes** is the orchestration platform, 
 
 **What it is.** Taking machines that already exist and driving them to a desired state: packages, users, services, files, kernel parameters, certificates. It is **idempotent** — running it repeatedly converges to the same result — which is what turns "I set this up once, somehow" into "this is how it is defined, and it can be rebuilt."
 
-**Chosen (2026-02): [Ansible](https://www.ansible.com/).** Agentless (pure SSH — nothing to install or maintain on the targets, which matters on a firewall appliance and on freshly created VMs), YAML-based and therefore readable by anyone, with a huge collection ecosystem and roles that map cleanly onto this lab's components. It pairs naturally with Terraform: Terraform creates the machine, Ansible configures it. It also handles the router: the OPNsense configuration is generated from variables in Git and pushed, so the reasoning and the configuration stay version-controlled rather than clicked into a web UI.
+**Chosen (2026-02; network scope revised 2026-10): [Ansible](https://www.ansible.com/).** Agentless SSH-based configuration for supported hosts and general-purpose VMs, with readable YAML and reusable roles. It pairs with Terraform: Terraform creates the machine, Ansible configures it. It no longer configures the household gateway, switch, or APs; those use the documented UniFi GUI workflow and private backups, not an OPNsense export generated from Git.
 
 **Talos boundary.** Ansible remains useful for Proxmox administration, the management VM, and other supported systems. Talos Kubernetes nodes are configured through their API, not SSH-based Linux roles or an Ansible kubeadm installation.
 
@@ -332,7 +345,7 @@ These are three separate choices: **Kubernetes** is the orchestration platform, 
 
 ### Metrics
 
-**Chosen (2026-05): [Prometheus](https://prometheus.io/).** The de-facto standard for cloud-native metrics: pull-based scraping, service discovery that understands Kubernetes natively, a powerful query language (PromQL), and an exporter for essentially every component in this lab (node_exporter for hosts, Proxmox and OPNsense exporters, cAdvisor, kube-state-metrics). It is the backbone the rest of the stack assumes.
+**Chosen (2026-05): [Prometheus](https://prometheus.io/).** The de-facto standard for cloud-native metrics: pull-based scraping, Kubernetes-aware service discovery, PromQL, and exporters such as node_exporter, Proxmox exporters, cAdvisor, and kube-state-metrics. Network devices use UniFi's built-in visibility for now; an external exporter is optional future integration, not another dependency of household networking.
 
 | Alternative | Why rejected |
 |---|---|
@@ -358,7 +371,7 @@ These are three separate choices: **Kubernetes** is the orchestration platform, 
 |---|---|
 | **[Kibana](https://www.elastic.co/kibana/)** | Tied to the Elasticsearch stack, which was already rejected for logs. |
 | **[Prometheus' built-in UI](https://prometheus.io/docs/visualization/) ** | Fine for ad-hoc PromQL queries, but not a dashboarding tool. |
-| **Vendor/per-tool UIs** (Proxmox summary graphs, OPNsense reporting) | Useful locally and kept, but they are per-device islands with short retention and no cross-system correlation. |
+| **Vendor/per-tool UIs** (Proxmox summary graphs, UniFi Network) | Retained for local diagnostics, including network operation without lab monitoring. Not a replacement for cross-system lab dashboards. |
 
 ### Alerting
 
@@ -367,7 +380,7 @@ These are three separate choices: **Kubernetes** is the orchestration platform, 
 | Alternative | Why rejected |
 |---|---|
 | **[Grafana Alerting](https://grafana.com/docs/grafana/latest/alerting/)** | Convenient because it is already in the dashboard UI, and genuinely good. Rejected as the primary mechanism to keep alert rules next to the metrics that define them, and because Alertmanager's routing/inhibition model is more capable. |
-| **Per-tool alerting** (Proxmox email, OPNsense notifications) | Kept as a last-resort fallback specifically *because* it is independent of the monitoring stack — useful precisely when the monitoring stack is what failed. Not a primary mechanism: no grouping, no silencing, no routing. |
+| **Per-tool alerting** (Proxmox email, UniFi notifications) | Useful independent fallback when lab monitoring is unavailable. Exact notification delivery depends on the service configured; not the primary correlated lab alerting mechanism. |
 
 ---
 
@@ -377,7 +390,7 @@ These are three separate choices: **Kubernetes** is the orchestration platform, 
 
 **What it is.** The ability to get back to a known-good state after a failure, a bad change, or a mistake. A homelab that cannot be restored is a homelab you become afraid to experiment in — which defeats the purpose.
 
-**Chosen (2026-05): [Proxmox Backup Server (PBS)](https://www.proxmox.com/en/proxmox-backup-server)**, with configuration-as-code in Git as the second layer. PBS does incremental, deduplicated, compressed, verified backups of VMs and containers, integrates directly into Proxmox, and can restore a whole VM or individual files. Everything that is *not* VM state — Terraform, Ansible, Kubernetes manifests, OPNsense config export — lives in Git, which means most of the lab is not restored from backup at all but **rebuilt from source**. That is the stronger property: backups protect data, version control protects intent.
+**Chosen (2026-05): [Proxmox Backup Server (PBS)](https://www.proxmox.com/en/proxmox-backup-server)** for incremental, deduplicated, compressed, verified VM/container backups, with sanitized configuration-as-code in Git as a second layer. Terraform, Ansible, and Kubernetes configuration can rebuild lab components from source; sensitive state, keys, and exports must remain private under the [security guide](../0_Security_and_Public_Repository.md). **UniFi configuration backups are separate from VM backups and are not committed to public Git.** Keep them accessible without the lab running, alongside a documented gateway restore/re-adoption process. Backups protect data and device state; version control protects publishable intent.
 
 | Alternative | Why rejected |
 |---|---|

@@ -2,9 +2,9 @@
 
 This document is the **central place for every hardware decision in this homelab**: which physical devices are bought, why, with what specs, and from where — networking hardware (router/firewall appliance, switch, cabling) and compute/workload hardware (nodes) alike. If a piece of physical equipment is part of this lab, it is decided here and nowhere else.
 
-Its counterpart is [Design: Software & Prerequisites](3_Design_Software_Prerequisites.md), which is the equivalent central place for every **software** decision (router OS, hypervisor, cluster, automation, observability, backup). Together the two documents own all concrete implementation choices; the remaining design documents (network, cluster, storage) describe the *architecture* and deliberately name no products or tools.
+Its counterpart is [Design: Software & Prerequisites](2_Design_Software_Prerequisites.md), which is the equivalent central place for every **software** decision (network platform, hypervisor, cluster, automation, observability, backup). Together the two documents own all concrete implementation choices; the remaining design documents (network, cluster, storage) describe the *architecture* and deliberately name no products or tools.
 
->**IMPORTANT NOTE:** This guide is focused on my personal homelab goals (see [Personal Goals](0_Goals.md)), the purchasing strategy and hardware choices may not be suitable for everyone. So, make sure to adapt it to your own needs and constraints.
+>**IMPORTANT NOTE:** This guide is focused on my personal homelab goals (see [Personal Goals](0_Design_Goals.md)), the purchasing strategy and hardware choices may not be suitable for everyone. So, make sure to adapt it to your own needs and constraints.
 
 ## Why All Hardware Is in This One File
 
@@ -13,7 +13,7 @@ Hardware is one decision, made once, for one reason: **"what do I buy?"** Splitt
 - **One place to look for every physical device.** The router, the switch, the cables, and the nodes are bought against the same budget, from overlapping channels, under the same trade-offs (new vs. refurbished, official store vs. marketplace). Separating "networking hardware" from "compute hardware" would duplicate the purchasing reasoning in two places and let the two copies drift apart.
 - **Every architecture document stays clean.** Because all brands, models, and prices are centralized here, the network and cluster design documents can describe topology, segmentation and policy without naming a single product — the classic separation between *architecture* and *implementation*.
 - **Replacing a device is a one-file change.** Swap a node or the router and only this file changes; nothing else has to be hunted down and kept in sync.
-- **Length is not the problem; structure is.** A long document with clear headings, tables and anchors is searchable (`Ctrl+F` finds everything), diffable in one review, and readable top to bottom. Split only when the parts have genuinely different audiences or lifecycles — which is exactly why *software* got its own document (see [the rationale there](3_Design_Software_Prerequisites.md)) and why hardware did not need further splitting.
+- **Length is not the problem; structure is.** A long document with clear headings, tables and anchors is searchable (`Ctrl+F` finds everything), diffable in one review, and readable top to bottom. Split only when the parts have genuinely different audiences or lifecycles — which is exactly why *software* got its own document (see [the rationale there](2_Design_Software_Prerequisites.md)) and why hardware did not need further splitting.
 
 ## Table of Contents
 
@@ -21,13 +21,15 @@ Hardware is one decision, made once, for one reason: **"what do I buy?"** Splitt
   - [Network](#network)
   - [Compute / Workload](#compute--workload)
 - [Part 1 — Networking Hardware](#part-1--networking-hardware)
-  - [Why a Firewall/Router Appliance Mini PC](#why-a-firewallrouter-appliance-mini-pc)
-  - [Why New (and Not Refurbished) for the Router](#why-new-and-not-refurbished-for-the-router)
-  - [Recommended Router Hardware Specs](#recommended-router-hardware-specs)
-  - [Brand Comparison: Firewall Appliance Vendors](#brand-comparison-firewall-appliance-vendors)
-  - [Where to Buy: AliExpress, Amazon, eBay & Official Stores](#where-to-buy-aliexpress-amazon-ebay--official-stores)
+  - [General Home Network Design](#general-home-network-design)
+  - [Network Platform: UniFi](#network-platform-unifi)
+  - [ISP Modem](#isp-modem)
+  - [Router / Firewall: Cloud Gateway Max](#router--firewall-cloud-gateway-max)
   - [Managed Switch](#managed-switch)
+  - [Wi-Fi Access Points](#wi-fi-access-points)
   - [Ethernet Cables](#ethernet-cables)
+  - [Purchasing, Cost, and Accepted Trade-offs](#purchasing-cost-and-accepted-trade-offs)
+  - [Why Not a Separately Maintained Firewall PC](#why-not-a-separately-maintained-firewall-pc)
 - [Part 2 — Compute / Workload Hardware](#part-2--compute--workload-hardware)
   - [Hardware Purchasing Strategy](#hardware-purchasing-strategy)
     - [New vs. Refurbished vs. Second-Hand](#new-vs-refurbished-vs-second-hand)
@@ -52,18 +54,20 @@ Hardware is one decision, made once, for one reason: **"what do I buy?"** Splitt
 
 ## Current Personal Setup
 
-My current homelab setup is split into **network** (the things that move packets) and **compute/workload** (the things that run VMs and containers). The Raspberry Pi 4 that used to act as the lab router has been retired in favour of a dedicated x86 firewall/router appliance — see [Why a Firewall/Router Appliance Mini PC](#why-a-firewallrouter-appliance-mini-pc) for the reasoning.
+My setup is split into **shared home-and-lab networking** (the things that move packets) and **compute/workload** (the things that run VMs and containers). The separate lab-router direction is superseded: one physical UniFi gateway, managed switch, and two wired APs serve both home and lab, isolated through VLANs and firewall policy. This also documents hardware the household needs independently of the lab. See [Network Design — One Shared Gateway with Segmentation](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) for that decision and [Network Setup](../2_Setup/2_Setup_Network.md) for implementation documentation; the historical setup procedure is marked superseded pending verified GUI steps.
 
 ### Network
 
 | Role | Device | Key specs | Price | Source | Why chosen |
 |------|--------|-----------|-------|--------|------------|
-| Lab router / firewall | Firewall appliance mini PC: Topton Solid Fanless Firewall Mini PC Intel N150 Core | 4 cores x86, 8 GB DDR4, 128 GB NVMe, 4× Intel i226-V 2.5GbE, fanless | €339.39 | Bought **new** from the vendor's **official store** on AliExpress (see [Where to Buy](#where-to-buy-aliexpress-amazon-ebay--official-stores)); in this case [Topton Computer Store on AliExpress](https://nl.aliexpress.com/store/2546008) | Purpose-built for router/firewall software: multiple Intel NICs, x86, AES-NI, fanless, low power (the Intel N150 consumes about 6W). Runs OPNsense with room for VLANs, WireGuard and IDS/IPS (see [Router & Firewall Software](#router--firewall-software)). Specifically this model from Topton because it is a reputable brand (see [Brand Comparison: Firewall Appliance Vendors](#brand-comparison-firewall-appliance-vendors)) and this model was the most cost-effective option with the desired specifications and good reviews (at the time in 2026 about 20+ reviews and 250+ purchases). *NOTE: I did not buy the SSD and RAM separately here because it was much cheaper to buy the complete unit with RAM and storage included and saves additional cost, effort and risk of buying incompatible components separately.* |
-| Managed switch | NETGEAR GS305E | 5× 1GbE, 802.1Q VLAN tagging, web-managed | €24.99 | MediaMarkt (new) | Cheapest reliable way to get real VLAN tagging; reputable brand; 5 ports is enough for a router + 2 hosts + spares. The `TP-LINK TL-SG105E` is an equally good alternative. |
+| ISP connection | ISP-provided modem / access termination | Provider-compatible; bridge/passthrough where available | Existing service equipment | ISP | Retain the provider's access equipment; model/mode to verify privately |
+| Shared router / firewall | UniFi Cloud Gateway Max, no optional NVR storage | 5× 2.5GbE RJ45; local UniFi Network management; routed VLANs and firewall | €238 | [Ubiquiti Store Europe](https://eu.store.ui.com/eu/en), new | Integrated home-and-lab gateway; no separate router OS/controller VM |
+| Managed PoE switch | UniFi Lite 8 PoE | 8× 1GbE; 4× PoE+; 52 W total PoE budget; VLAN support | €132 | [Ubiquiti Store Europe](https://eu.store.ui.com/eu/en), new | VLAN-aware wired access and power for both APs |
+| Wi-Fi access points | 2× UniFi U6+ | Dual-band Wi-Fi 6; 2×2 per band (2.4GHz and 5GHz bands); 1GbE wired uplink; PoE; VLAN-mapped SSIDs | €238 total (€119 each) | [Ubiquiti Store Europe](https://eu.store.ui.com/eu/en), new | Two wired coverage points without a separate mesh ecosystem |
 | WAN cable (ISP modem → router) | ISY IPC-6100-1-GB, Cat6, 10 m | Cat6, 10 m | €18.99 | MediaMarkt (new) | Long enough to run from the meter cabinet to the work room, through a wall or conduit if needed. |
 | Router → switch and switch → hosts | ISY IPC-1012 CAT6A U/UTP Slim, 0.75 m | Cat6A, 0.75 m | €9.99 each | MediaMarkt (new) | Short patch cables keep the rack/shelf tidy; Cat6A is future-proof for 2.5GbE and beyond. |
 
->**Design choices behind the network hardware:** a **separate physical router** keeps the lab network independent of the virtualization platform (if Proxmox is down, the network is not), a **managed switch** is the minimum requirement for VLAN segmentation, and **short patch cables + one long WAN cable** is the cheapest layout that still lets the lab live in the work room instead of the meter cabinet. The full topology, subnetting, and VLAN policy are in the [3_Design_Network.md](3_Design_Network.md).
+> **Recorded purchase prices (2026-10), not current quotations:** gateway + switch + two APs total **€608**, excluding existing ISP equipment, cabling, and any delivery charges. All three UniFi product choices were bought from the official EU store. The switch and AP uplinks are gigabit: the gateway's 2.5GbE ports do not make the whole LAN multi-gigabit. See [Part 1](#part-1--networking-hardware) for alternatives and the [network design](3_Design_Network.md) for topology and policy.
 
 ### Compute / Workload
 
@@ -72,125 +76,192 @@ My current homelab setup is split into **network** (the things that move packets
 | Compute node 1 | Dell OptiPlex 7050 Micro | Intel Core i5-7500T (3.2 GHz, TODO: cores and threads per core) | TODO: 32 or 64 GB | TODO: 512 GB or 1 TB SSD | €TODO: what did I buy them for eventually in 2026 | BackMarket (refurbished) | Enterprise-grade reliability, silent, low power (≈15W), VT-x/VT-d for virtualization, widely available refurbished at a good price (see [Why Enterprise-Grade](#why-enterprise-grade-eg-dell-lenovo-hp)). |
 | Compute node 2 | Old personal Acer laptop (Acer Aspire A715-75G) | Intel Core i7-9750H (2.60 GHz, 6 cores, 2 threads per core) | 16 GB | 512 GB SSD | ≈€600 in 2020 | Personal (repurposed), bought on Coolblue | Already on hand — repurposed to add a second physical host to experiment with, without extra purchasing cost. |
 
->**What I think is the best value here (for my personal homelab, which is mostly used for learning and experimenting (see [Personal Goals](./0_Design_Goals.md))):** one refurbished enterprise mini PC with as much RAM as you can get (32 GB is enough) plus one machine you already own. That combination costs the least, uses the least power, and still covers ~95% of the learning value (see [How Many Nodes](#how-many-nodes)). The router is the one device worth buying **new**; everything that runs workloads is worth buying **refurbished**.
+>**What I think is the best value here (for my personal homelab, which is mostly used for learning and experimenting (see [Personal Goals](./0_Design_Goals.md))):** one refurbished enterprise mini PC with as much RAM as you can get (32 GB is enough) plus one machine you already own. That combination costs the least, uses the least power, and still covers ~95% of the learning value (see [How Many Nodes](#how-many-nodes)). Essential network equipment is bought **new** for straightforward support and warranty; workload hardware is worth buying **refurbished**.
 
 ---
 
 ## Part 1 — Networking Hardware
 
-This part covers everything that moves packets: the router/firewall appliance (the main decision), the managed switch, and the cables. The network *design* — topology, subnets, VLANs, firewall policy — lives in the [3_Design_Network.md](3_Design_Network.md); this part is only about the physical boxes and how to buy them.
+### General Home Network Design
 
-### Why a Firewall/Router Appliance Mini PC
+Start with the ordinary home network, not a separate stack bought only for the lab. The modem terminates the ISP connection; the router provides the firewall and routing; the switch expands wired connectivity and carries VLANs; access points provide Wi-Fi. These responsibilities are separate even when a consumer all-in-one box combines them. See the [layered network topology](3_Design_Network.md#network-topology--design) for how these roles fit together.
 
-A *firewall appliance mini PC* is a small, usually fanless (usually x86) machine whose defining feature is **multiple discrete Intel Ethernet ports** (typically 4× or 6× 2.5GbE). General-purpose mini PCs vary: many have one Ethernet port, while some have two, but they are not consistently equipped with the multiple compatible ports this router design calls for.
+```text
+Internet
+  |
+ISP modem (bridge/passthrough preferred when supported)
+  |
+UniFi Cloud Gateway Max (one home-and-lab router/firewall + local console)
+  |
+UniFi Lite 8 PoE (managed VLAN switch, 1GbE uplink)
+  +-- PoE + Ethernet --> U6+ AP 1 --> Home / IoT / Guest Wi-Fi
+  +-- PoE + Ethernet --> U6+ AP 2 --> Home / IoT / Guest Wi-Fi
+  +-- Ethernet -------> Wired household devices
+  +-- VLAN trunks ----> Lab hosts and VMs
 
-- **A router needs at least two real NICs.** One for WAN (towards the ISP modem) and at least one for LAN (towards the switch). This design uses a four-port appliance for native network connections without add-on adapters. USB-to-Ethernet adapters and add-on NICs can introduce compatibility and reliability concerns, especially on BSD-based firewalls, and add to the total cost.
-- **These boxes are built for exactly this job.** Intel i226-V 2.5GbE controllers or similar ones on firewall appliance mini PCs are natively supported by FreeBSD (which for example OPNsense is built on) through the `igc` driver, so there are no driver patches, no surprises after an upgrade, and no vendor-specific kernel modules. The chassis is fanless, the power supply is external, and the board exposes a serial console — all things you want in a device that runs 24/7 in a cupboard.
-- **Completely silent — no moving parts at all.** These appliances are passively cooled: a solid aluminium chassis acts as the heatsink, so there is **no fan** and, with an NVMe or SATA SSD, **no spinning disk** either. Nothing in the box makes noise and nothing in the box can seize, clog with dust, or start whining after two years — fans and hard drives are the two components that fail most often in any always-on machine. That matters because the router lives in a work room or a cupboard and runs 24/7: a device you can hear very loudly is often a device you end up switching off.
-- **Very low power draw, and that is real money.** The Alder Lake-N or similar CPUs in these firewall appliance mini PCs used in these boxes typically have a 6–15W base power figure, and a whole appliance typically idles around **8–15W** with a realistic ceiling near 20W under load. At ~€0.30/kWh (NL, 2026) that is roughly **€25–€40 per year** to run the entire lab network — versus a repurposed desktop/mini PC or an old 1U server, which would draw several times more and cost more in electricity every year than the appliance cost to buy. Low power also means low heat, which is exactly what makes the fanless design possible in the first place.
-- **Cheap for what it is.** A complete multi-port appliance with RAM and an SSD lands around €250–€350 (at least in 2026) — comparable to a decent consumer router, and a fraction of a branded firewall appliance doing the same job. Crucially there is **no licence and no subscription**: the software is free and open-source, so the purchase price is the total price, where commercial firewall vendors charge annually for threat feeds and support. Against a DIY alternative with custom Ansible and nftables, dnsmasq, etc., it also wins on total cost, because a mini PC plus USB NICs plus adapters ends up in the same price range while being worse in every other respect.
-- **Small, and easy to put somewhere sensible.** Roughly the footprint of a paperback, VESA-mountable, powered by a single external 12V brick. It fits on a shelf, behind a monitor, or in a meter cabinet without a rack, without special cooling, and without dominating the room.
-- **Long service life and simple recovery.** With no fans and no spinning disks, the realistic failure modes are the SSD and the power supply — both cheap, both standard parts, both replaceable in minutes. The RAM and SSD are normal SO-DIMM and M.2 components, so the box can be upgraded rather than replaced.
-- **Why not a Beelink (or another general-purpose mini PC) here?** Beelink makes capable mini PCs for compute, and some models may be usable as routers. However, Ethernet port count and controller vary by model; many have only one or two ports, and you must verify the exact NIC chipset and its support. This design instead uses a purpose-built appliance with four discrete Intel Ethernet ports, fanless cooling, and a layout intended for always-on networking. A Beelink that meets those same requirements could work, but it is not the selected option because the dedicated appliance fits the router's connectivity and operating requirements without relying on model-specific compromises or adapters.
-- **Not a Raspberry Pi.** The Pi is ARM, has one built-in NIC, boots from an SD card, and — critically — **OPNsense and pfSense do not run on ARM at all**, they are FreeBSD-based and effectively x86-only. Running a Pi router means accepting a different router OS purely because of the hardware, which is not a good design decision. (The Pi was the original lab router here, which was abandoned because of the high maintenance cost and other drawbacks; see [2_Design_Software_Prerequisites.md — Router & Firewall Software](#router--firewall-software).)
-- **Not a consumer router (MikroTik, UniFi, ASUS, etc.).** Dedicated routers are excellent products, but they are closed appliances running the vendor's OS. The whole point of this lab is to run a general-purpose, open-source firewall platform that can be version-controlled and rebuilt from scratch — which requires a general-purpose machine underneath.
-- **Not a VM on the hypervisor.** Running the router as a VM on Proxmox puts the router and the path you use to fix the router in the same failure domain: the host goes down, the lab *and* your way in are gone at the same time. A separate physical box keeps the network up independently of the virtualization platform.
+Shared equipment; separate Home, Lab, Management, IoT, and Guest VLANs.
+No additional downstream lab router; lab compute may be switched off.
+```
 
-### Why New (and Not Refurbished) for the Router
+The gateway is **dedicated physical network hardware**, but it is not a separately maintained general-purpose firewall PC. It runs independently of Proxmox and Kubernetes. The [network design](3_Design_Network.md) owns segmentation, firewall policy, addressing, the layered topology, and the accepted shared failure domain.
 
-For compute nodes, refurbished is clearly the right call (see [Part 2](#hardware-purchasing-strategy)). For the router, it is the opposite, and the reasons are specific rather than a general preference for new:
+The decisions below follow the software document's format: **what it is**, **chosen + date**, and **alternatives considered**. Prices are recorded purchases, not current quotations.
 
-- **There is no meaningful refurbished market for these.** They are made in small volumes by Chinese ODMs and sold direct; companies do not buy fleets of them and retire them after three years, so the refurbished supply that makes enterprise mini PCs cheap simply does not exist.
-- **New is already cheap.** A multi-port N100 appliance with RAM and an NVMe SSD sits roughly in the €250–€350 band — around the price of a good consumer router, and often less than a comparable branded firewall appliance.
-- **It is a single point of failure for the whole lab.** Every device, every VLAN, and the jumphost path all depend on the router. Warranty coverage and a known-good unit are worth far more here than on a compute node you can simply power off and replace.
-- **NIC quality is the entire product.** On a refurbished/second-hand unit you cannot verify which NIC controller is actually fitted, and a Realtek-based board that looks identical in photos will quietly cost you throughput and stability. Buying new from the official store means the spec sheet is the spec sheet.
-- **Fanless hardware ages through thermal cycling, not through use.** Passive cooling, a long-life power supply, and fresh thermal pads matter on a box that runs at a constant temperature for years.
+### Network Platform: UniFi
 
->**The one thing to verify before ordering:** that the listing photo explicitly shows **four RJ45 ports labelled Intel i226-V 2.5G**. Realtek 2.5GbE ports look identical in a product photo and are the single most common cause of disappointing throughput and link flapping on FreeBSD-based firewalls. If the listing will not confirm the NIC controller in writing, buy a different listing.
+**What it is.** Integrated management for router/firewall, switches, and Wi-Fi APs: VLANs, port profiles, SSIDs, firmware, and troubleshooting in one place.
 
-### Recommended Router Hardware Specs
+**Chosen (2026-10): [Ubiquiti UniFi](https://ui.com/).** Widely used in homelabs, prosumer networks, and small businesses, UniFi offers business-style features without the cost and complexity of many enterprise platforms. It is not exclusively a consumer brand or provably "the most popular" everywhere. Its appeal here is capability per euro, a broad range, extensive community guidance, and cohesive local administration.
 
-**The recommended router specifications (as of 2026; may be different in a later year):**
+The Cloud Gateway hosts UniFi Network, so no controller VM or CloudKey is required. Essential networking does not depend on lab compute. VLAN switching, per-SSID VLANs, and routed firewall policy support a lab while the integrated UI simplifies household operation. Core local networking has no mandatory subscription; optional services are separate.
 
-| Component | Recommended | Why |
-|-----------|-------------|-----|
-| **Architecture** | **x86-64 only — NOT ARM** | Dedicated router OSes like OPNsense and pfSense are FreeBSD-based and have effectively no ARM support. Even where ARM "works" (OpenWrt, VyOS), driver and package coverage is thinner, hardware crypto offload is inconsistent, and you inherit board-specific quirks. x86-64 is the platform every router OS, every plugin, and every guide assumes. |
-| **CPU** | Intel **N100** (recommended) or **i3-N305** (preferred if you need more cores and performance headroom) | Both are Alder Lake-N, 6–15W, fanless-capable, and include **AES-NI** for hardware-accelerated VPN crypto. N100 is 4 cores and comfortably routes gigabit; the N305 is 8 cores and gives real headroom for IDS/IPS, WireGuard, and a multi-gig WAN later. CPU is the first bottleneck for firewall throughput, so buying one tier up is the cheapest future-proofing there is (if you need it, if you do not need it stick with the N100). |
-| **NICs** | **4× Intel i226-V 2.5GbE** (minimum 2, 4 is the sweet spot) | Intel controllers are natively supported by FreeBSD's `igc` driver; Realtek 2.5GbE is the known problem child. Four ports = WAN + LAN trunk + two spare (a second WAN for failover, a dedicated management port, or a direct-attached host). 2.5GbE costs almost nothing extra and removes the gigabit ceiling. |
-| **RAM** | **8 GB minimum, 16 GB preferred** DDR4/DDR5 SO-DIMM | 8 GB matches OPNsense's and pfSense's official recommendation and is enough for routing, DHCP, DNS, and VLANs. 16 GB is the honest recommendation once you enable Suricata IDS/IPS, Zenarmor, or keep local reporting data — those are memory-hungry, and N-series boards are **single-channel**, so a second stick buys you nothing; buy one 16 GB stick, not two 8 GB. |
-| **Storage** | **128 GB minimum, 256 GB NVMe SSD preferred** | Dedicated router OSes like OPNsense or pfSense itself needs very little, but logs, NetFlow data, IDS rule sets and reporting write constantly. NVMe is cheap, fast, and far more write-tolerant than eMMC. **Avoid eMMC-only and SD-card-based configurations** — they wear out under a firewall's write pattern. |
-| **Cooling** | **Fanless** | No moving parts, silent, nothing to fail. These CPUs are low enough power that passive cooling is sufficient; just give the case some airflow. |
-| **Extras worth having** | Serial/console port, VESA mount, external 12V PSU | A serial console is the recovery path when the network configuration locks you out — the router equivalent of a spare key. |
+**Alternatives considered:**
 
->**Sizing sanity check:** Dedicated router OSes like [OPNsense's and pfSense's own documentation](https://docs.opnsense.org/manual/hardware.html) lists a ~1.5 GHz multi-core CPU, 8 GB RAM and a 120 GB SSD as the *recommended* specification, ~1 GHz dual-core CPU, 4 GB RAM and a 40 GB SSD as the *reasonanle* specification, and ~1 GHz dual-core CPU, 3 GB RAM and a 4 GB SSD as the *minimum* specification — the figures above sit comfortably above that, which is deliberate: the official baseline gets the software running, it does not promise 2.5GbE performance with inspection enabled.
+| Alternative | Why not chosen here |
+|---|---|
+| **[TP-Link Omada](https://www.tp-link.com/en/omada/)** | Strong value and integrated management; a serious alternative. Controller placement/features vary by model. UniFi's selected local console and hardware mix fit this purchase, not a universal quality ranking. |
+| **[NETGEAR](https://www.netgear.com/) / Insight** | Good managed switches/business Wi-Fi; management/licensing varies by family. Not the selected single local gateway/switch/AP experience. |
+| **[MikroTik](https://mikrotik.com/)** | Very capable per euro, but deeper configuration and a steeper learning curve than wanted for household infrastructure. |
+| **[ASUS](https://www.asus.com/) / [AVM FRITZ!](https://fritz.com/)** | Convenient home all-in-one devices; routed VLANs, SSID isolation, and switch integration need model-specific checks. |
+| **[Aruba Instant On](https://www.arubainstanton.com/)** | Credible small-business AP/switch option; check gateway offerings and cloud-management requirements. Not the selected local-console ecosystem. |
+| Mixed vendors | Standards-based Ethernet/VLANs allow this and sometimes lower prices, but multiple tools and firmware lifecycles add work. |
+| Firewall PC + independent switch/AP management | More OS/plugin freedom and more integration responsibility; see [why superseded](#why-not-a-separately-maintained-firewall-pc). |
 
-### Brand Comparison: Firewall Appliance Vendors
+### ISP Modem
 
-These vendors largely build on the same Intel reference designs, so the differences are in build quality, support, firmware, warranty, and price — not usually in raw performance.
+**What it is.** Provider-compatible internet termination; depending on the service this may be a modem/router or optical termination.
 
-| Brand | Origin / Model | Typical price (4-port N100/N305 class) | Strengths | Weaknesses | Verdict |
-|---|---|---|---|---|---|
-| **[CWWK](https://cwwk.net/)** (Changwang) | CN ODM, sells direct + AliExpress | ≈€230–€400 | Widest range of firewall/NAS boards, consistent use of Intel i226-V, active BIOS/driver downloads page, responsive support, good reputation in the homelab community | Documentation is thin and translation-quality varies; warranty handling is long-distance | **Best overall value.** The default recommendation for a 4× i226-V N100/N305 box. |
-| **[Topton](https://topton.net/)** | CN ODM, primarily AliExpress | ≈€180–€350 | Often the cheapest for the same silicon; very broad model range including 10G SFP+ variants | Model naming is chaotic and listings change constantly; support is less consistent than CWWK; QC is more variable | **Good budget pick** if you read the listing carefully and confirm the NIC controller. |
-| **[Qotom](https://qotom.net/)** | CN, established manufacturer since 2011, own website + AliExpress | ≈€200–€450 | Longest track record, genuinely industrial build, strong multi-port and Atom C3000 (Denverton) line-up with SFP+, proper product pages and drivers | Older Atom models are pricier per unit of performance than Alder Lake-N | **Best if you want more ports or SFP+**, or value a manufacturer with a long history. |
-| **[Protectli](https://eu.protectli.com/)** | US, "Vault" series, sells direct (incl. EU store) | ≈€350–€650+ | Built specifically for open-source firewalls, **coreboot** support, 2-year warranty (extendable), real Western support, optional pre-installed OPNsense, EU shipping and VAT handled | Substantially more expensive; RAM/SSD options at their store are poor value | **Best if you want warranty and support** and are willing to pay roughly double. |
-| **[Deciso (OPNsense DEC series)](https://shop.opnsense.com/product-categorie/hardware-appliances/)** | NL, made by the OPNsense developers | ≈€600–€1,600+ | Official OPNsense hardware, designed and shipped from Europe, first-class support, purchase directly funds the project | Homelab-unrealistic pricing for what is the same job | **Overkill for a homelab** — but the honest choice for a business. |
-| **[Netgate](https://www.netgate.com/)** | US, official pfSense hardware | ≈€400–€700+ | Turnkey, pfSense Plus pre-installed, vendor support | Tied to pfSense; not the platform chosen here | Not chosen — see [Router & Firewall Software](#router--firewall-software). |
-| **Amazon Rebrands** (ANDAQI, MOGINSOK, SPARKFLY, Ayemlpoi, KingNovyPC, etc.) | Rebadged/rebranded ODM boards, often originally manufactured by companies such as CWWK, Topton, Qotom, or similar OEM/ODM vendors | ≈€250–€600 | Fast delivery, easy EU returns, local consumer protection, Amazon customer support, no customs hassle, often available from local warehouses | Usually the same hardware sold at a markup compared to buying directly from the original manufacturer; firmware, BIOS updates, drivers, and documentation may be harder to obtain because the Amazon brand is often only a reseller and not the actual manufacturer; model specifications are sometimes less transparent; long-term support varies significantly between sellers | **Generally not recommended.** The hardware is often perfectly fine, but in most cases you pay more for essentially the same device available directly from CWWK, Topton, Qotom, or another OEM. Only worth considering if easy returns, local warranty handling, fast delivery, and Amazon buyer protection are more important to you than price and direct manufacturer support. |
+**Chosen (2026-10): retain ISP-provided access equipment.** No new modem purchase is recorded. Prefer supported bridge/passthrough mode so the gateway owns WAN routing; verify ISP authentication and required TV/voice services first.
 
-**Bottom line:** **CWWK** for the best balance of price, Intel NICs, and support; **Topton** if you want the lowest price and will verify the listing yourself; **Qotom** for more ports or SFP+; **Protectli** if warranty and Western support are worth roughly double the price. All four run OPNsense or pfSense equally well — this is a support-and-trust decision, not a performance one.
+**Why a router behind it?** The ISP device prioritizes provider compatibility, not necessarily routed VLANs, detailed firewall policy, or segmented Wi-Fi. A separate gateway gives consistent control of these functions. It does **not** automatically improve speed/security: capacity, configuration, and the ISP service still matter. If the modem must route, document double NAT and its VPN/port-forwarding/IPv6 limitations instead of assuming bridge mode is available.
 
-> **General important points for choosing the brand & Related points to Chinese hardware in the EU:**
-> - **Why are CWWK, Topton, and Qotom so much cheaper than Protectli, Netgate, or Deciso?** In most cases, the difference is not the hardware itself. Modern firewall appliances from CWWK, Topton, and Qotom often use the same Intel CPUs, Intel i226-V NICs, standard SO-DIMM memory, and NVMe SSDs found in more expensive competitors. The lower price comes primarily from their business model: direct-to-consumer sales, lower margins, limited documentation, minimal support, and long-distance warranty handling. By contrast, vendors such as Protectli, Netgate, and Deciso invest heavily in documentation, validation, firmware development (e.g. coreboot support), professional support teams, warranty services, certifications, and software ecosystem development. For a homelab, many of those extras provide limited value, making the Chinese ODM vendors significantly more cost-effective. For business or production use, however, the additional support and warranty coverage can easily justify the higher price.
-> - **Buying the above hardware directly from Chinese ODMs is generally safe for homelab use.** These devices are typically standard x86 PCs with off-the-shelf Intel CPUs, Intel NICs, SO-DIMM RAM, NVMe storage, and a normal UEFI firmware. The first thing most users do is wipe the SSD and install their own operating system (e.g. OPNsense or pfSense), removing any preinstalled software. When purchased through the manufacturer's official store, marketplaces such as AliExpress provide buyer protection, VAT is usually handled at checkout, and established vendors such as CWWK, Topton, and Qotom have strong reputations within the homelab community. The primary trade-offs are slower shipping, more complicated warranty handling, and less comprehensive documentation and support compared to vendors such as Protectli, Netgate, or Deciso — not a significantly increased security risk as long as you stick to those reputable brands like CWWK, Topton, etc.
+**Alternatives considered:**
 
-### Where to Buy: AliExpress, Amazon, eBay & Official Stores
+| Alternative | Why not chosen here |
+|---|---|
+| ISP modem/router alone | Cheapest for a flat LAN, but segmentation/management may be limited. |
+| Replacement modem | Needs provider support and a concrete benefit; adds compatibility responsibility. |
+| Direct gateway connection to provider handoff | Possible where permitted, but provider requirements/technology must be verified; not assumed. |
 
-> **Important tip before buying:** Always check the specifications and double-check with AI to ensure the hardware meets your performance and connectivity requirements as explained above to avoid buying the wrong device/a device that turns out not to meet your requirements, etc.!
+### Router / Firewall: Cloud Gateway Max
 
-Unlike refurbished compute hardware (where marketplaces are the problem — see [Part 2](#why-not-amazon-aliexpress-or-ebay-for-refurbished-compute)), **new** firewall appliances are mostly sold *direct from the manufacturer* on marketplaces. Here the marketplace is not a reseller risk; it is the payment and dispute layer on top of a factory.
+**What it is.** Physical WAN firewall, inter-VLAN gateway, DHCP/DNS forwarding, and local network administration, independent of lab hosts.
 
-| Channel | How it works | Pros | Cons |
-|---|---|---|---|
-| **AliExpress** | A Chinese marketplace where manufacturers open their own storefronts. You buy from a *store*, not from AliExpress itself; AliExpress holds the payment, provides Buyer Protection, and arbitrates disputes. EU orders now show **VAT included at checkout**, and most sellers ship DDP (duties handled) — so the checkout price is usually the final price. Delivery is typically 1–3 weeks. | Lowest prices, direct from the manufacturer, strong buyer protection, many photos and reviews from other homelabbers | Slow shipping, returns to China are impractical, listings and store URLs change, many copycat stores |
-| **Manufacturer's own website** (e.g. cwwk.com / cwwk.net, qotom.com, protectli.com) | Buy direct from the factory or brand. CWWK offers free worldwide DDP shipping (duties and clearance included). | Often slightly cheaper than AliExpress, full spec pages, BIOS/driver downloads, direct contact for support | Weaker dispute mechanism — you are dealing with the vendor alone, with no third party holding the money |
-| **Amazon (.nl/.de)** | Third-party sellers (often rebadgers) ship from EU warehouses. | Fast delivery, easy EU returns, consumer-law protection | 20–50% more expensive for the same board; rebadged brands you cannot go back to for firmware, so generally avoid buying here. |
-| **eBay** | Mixed private and business sellers. | Occasional bargains | No quality guarantee, unverifiable sellers — same objection as for refurbished compute. **Avoid.** |
+**Chosen (2026-10): [UniFi Cloud Gateway Max](https://techspecs.ui.com/unifi/cloud-gateways/ucg-max), no optional NVR storage, €238.** Five 2.5GbE ports, routed VLANs, stateful firewalling, and a local console give a compact foundation without an OS installation or controller VM. There is **no built-in Wi-Fi or PoE output**; the switch and APs below are intentional components.
 
->**For a €250–€400 appliance I would buy from the official store on AliExpress if the price difference versus the manufacturer's own website is less than about €20–€30, purely for the extra buyer protection.** Above that gap, buy direct from the manufacturer.
+**Why Max over Ultra?** The Max offers 2.5GbE LAN and WAN for a future faster switch/direct device. Ultra remains excellent for gigabit: 2.5GbE WAN, four gigabit LAN ports. The premium buys headroom, not stronger VLAN isolation or immediate speed through this gigabit switch/AP setup. Routing/inspection capacity depends on firmware and enabled features; port speed is not guaranteed application throughput.
 
-**Always buy from the official store, never from a reseller.** Resellers list the same board with an inflated price, no BIOS support, and no way to verify which NIC controller is actually fitted. Official stores (e.g. the official Topton store on AliExpress)are the ones the manufacturer links to from their own website, they have multi-year store history, 95%+ positive ratings, and photos matching the official product pages.
+**Why no storage?** This means **no optional NVMe recording SSD**, not no internal OS storage. Routing, firewalling, and UniFi Network do not need an NVR drive. UniFi Protect camera recording would need suitable recording storage; I have no cameras now, so it has no current benefit. Revisit a compatible drive/tray or recorder only if needed; it is not storage for VMs or a NAS.
 
-**Official stores and links:**
+**Alternatives considered:**
 
-| Brand | Official website | Official marketplace store |
-|---|---|---|
-| **CWWK** | [cwwk.net](https://cwwk.net/) · [cwwk.com](https://cwwk.com/) | [CWWK PC Store on AliExpress](https://www.aliexpress.com/wholesale?SearchText=CWWK) (search for *CWWK Official Store* / *CWWK PC Store*) |
-| **Topton** | — (sells through marketplaces) | [Topton Computer Store on AliExpress](https://nl.aliexpress.com/store/2546008) |
-| **Qotom** | [qotom.com](https://www.qotom.com/) · [qotom.net](https://www.qotom.net/) | [Qotom Official Store on AliExpress](https://m.pt.aliexpress.com/store/108231?) |
-| **Protectli** | [protectli.com](https://protectli.com/products/) · [eu.protectli.com](https://eu.protectli.com/) (EU store) | Sells direct only |
-| **Deciso / OPNsense** | [shop.opnsense.com](https://shop.opnsense.com/) | Sells direct only |
-
->**How to verify a store is the official one on AliExpress** (store URLs change, redirect per region, or require login, so searching is often more reliable than a saved link):
->1. Search AliExpress for the brand plus the product, e.g. `CWWK N100 firewall` or `Topton N305 firewall`.
->2. Open a listing and click the **store name** to open the store page.
->3. Verify: the store name clearly identifies the brand (e.g. *CWWK Official Store* / *CWWK PC Store*), the rating is **95%+ positive**, the store has been open for **multiple years**, they have sold many products (e.g. 1000+ orders), and the products and photos **match the official website**.
->4. Check the listing text explicitly states the NIC controller (e.g. **Intel i226-V**) — not just "2.5G LAN".
+| Alternative | Why not chosen here |
+|---|---|
+| **Cloud Gateway Ultra** | Cheaper and adequate for VLANs/firewall/gigabit; Max was selected for multi-gigabit LAN headroom, not because Ultra is poor. |
+| **UniFi Express family** | Compact Wi-Fi/routing options vary by generation; this design separates gateway placement from two wired AP locations. |
+| **UniFi UXG gateway-only models** | Need separately hosted management here; suitable when a controller already exists. |
+| **Higher-tier Cloud Gateways / Dream Machine rack models** | Faster uplinks/capacity, rack integration, or camera capabilities exceed present needs and cost more. |
+| **TP-Link Omada gateway** | Credible value; check VLAN/inspection/controller requirements per model. Best paired with an Omada stack. |
+| **MikroTik router** | Strong routing/value with more configuration depth than wanted here. |
+| **NETGEAR / ASUS / FRITZ! router** | Good home options; VLAN/firewall/AP-management varies by model, unlike this selected cohesive stack. |
+| **Topton / CWWK / Qotom / Protectli PC** | Open router-OS flexibility, but OS/plugins/compatibility/integration ownership remain. |
+| Router VM on lab hypervisor | Host outages take household routing and its recovery path down; only for isolated experiments. |
 
 ### Managed Switch
 
-A **managed switch** does one essential thing for this lab: 802.1Q VLAN tagging. Without it there is no segmentation, and the whole network design collapses into one flat subnet. Everything else (PoE, layer 3, stacking) is optional.
+**What it is.** Layer 2 fan-out carrying VLAN trunks and access ports; the gateway does inter-VLAN routing.
 
-- **Requirement:** 802.1Q VLAN support, at least 5 ports, a web UI. Gigabit is fine — the router's 2.5GbE ports are for WAN headroom, not for switching between two local hosts.
-- **Note:** VLAN tagging is a Layer 2 mechanism, so the switch configuration is identical regardless of the router OS and carries IPv4 and IPv6 together without any dual-stack-specific change.
+**Chosen (2026-10): [UniFi Lite 8 PoE](https://techspecs.ui.com/unifi/switching/usw-lite-8-poe), €132.** Eight gigabit ports, four PoE+ ports, **52 W total PoE budget**, silent fanless cooling, and integrated port/VLAN management. It powers the APs without separate injectors.
+
+Two U6+ APs have a published maximum consumption of 9 W each, comfortably within the budget. Check per-port and total power before adding devices; four PoE ports cannot necessarily all deliver their individual maximum simultaneously. The gateway uses no switch PoE.
+
+| Management type | Capability | Fit |
+|---|---|---|
+| **Unmanaged** | Plug-and-play, no configurable VLAN membership/trunks/access ports. | Unsuitable as the main segmentation switch; passing tags is not enforcing boundaries. |
+| **Smart / easy managed** | Usually basic VLANs/port controls via local UI; varies by model. | Can suffice after checking exact 802.1Q and management-isolation behavior. |
+| **Managed** | VLANs/port profiles, monitoring, and typically more policy/loop controls. | Chosen for integrated management and PoE; Layer 3 enterprise routing is unnecessary. |
+
+Require enough ports, 802.1Q, configurable access/trunk ports, restricted management, compatible PoE/budget, and appropriate uplinks. One gateway uplink, two APs, and two lab hosts leave three of eight ports for home devices/spares.
+
+**Gigabit suits current light workloads**, but each link and the shared gateway uplink caps at 1Gbps. Concurrent/inter-VLAN flows can contend; the Max does not remove this bottleneck. Upgrade for an actual multi-gigabit NAS, faster internet, or port-count requirement, not simply because faster exists.
+
+**Alternatives considered:**
+
+| Alternative | Why not chosen here |
+|---|---|
+| **UniFi Flex Mini** | Cheaper managed connectivity, fewer ports, no downstream PoE. Injectors/expansion reduce savings. |
+| **UniFi Lite 16 PoE** | More ports/power than needed initially. |
+| **UniFi Flex 2.5G / other multi-gigabit switches** | Useful for faster hosts/NAS; check exact PoE/non-PoE variant and power source. No current speed requirement. |
+| **UniFi Enterprise / Pro Max PoE** | More capacity/features, cost/size, and potentially power/noise; oversized now. |
+| **NETGEAR GS305E / TP-Link TL-SG105E** | Cheap smart VLAN switches, including the former direction, but five ports/no AP PoE mean injectors and little expansion. Valid for smaller wired-only labs. |
+| **TP-Link Omada managed PoE** | Competitive and capable; strongest with an Omada stack. Avoid mixed management for now. |
+| **NETGEAR managed PoE / Aruba Instant On** | Credible alternatives; compare ports, budget, management/licensing per model. No compelling reason to split this stack. |
+| Unmanaged switch | Cheapest, but cannot enforce the intended segmentation. |
+
+### Wi-Fi Access Points
+
+**What it is.** Wireless access bridged onto the appropriate VLAN, using wired backhaul rather than another router/NAT layer.
+
+**Chosen (2026-10): 2× [UniFi U6+](https://techspecs.ui.com/unifi/wifi/u6-plus), €238 total (€119 each).** Dual-band Wi-Fi 6, 2×2 MIMO per band, gigabit Ethernet, PoE, and VLAN-mapped SSIDs. Home, IoT, and Guest wireless clients use the same segments as wired clients; AP administration stays restricted.
+
+Two coverage points are preferable here to one AP transmitting through every wall. Placement, construction, interference, and clients determine actual coverage/roaming; test rather than guarantee it. Use wired backhaul, sensible channel/power settings, and WPA2/WPA3 as supported. Keep SSID count small to limit overhead.
+
+There is no 6 GHz radio or multi-gigabit uplink. Wireless PHY rates are not application speeds; gigabit Ethernet remains a ceiling. Both APs use the chosen PoE switch, without separate injectors.
+
+**Alternatives considered:**
+
+| Alternative | Why not chosen here |
+|---|---|
+| **UniFi U6 Lite / older Wi-Fi 5 APs** | Potentially cheaper, including used; U6+ gives dual-band Wi-Fi 6 and new-device condition. Compare actual prices/availability. |
+| **UniFi U6 Pro / U6 Enterprise** | More capacity/bands depending on model; extra cost without a demonstrated need. |
+| **UniFi U7 family** | Wi-Fi 7/newer uplinks; features vary. Check clients, PoE, and switches; not needed for this gigabit access layer. |
+| **UniFi wall / outdoor APs** | Appropriate for those installation needs, absent here. |
+| **TP-Link Omada EAP** | Strong VLAN-capable Wi-Fi value, particularly in an Omada ecosystem. |
+| **NETGEAR business / Aruba Instant On APs** | Credible segmentation; another management system adds little here. |
+| **ASUS mesh / TP-Link Deco / NETGEAR Orbi** | Convenient coverage, but per-SSID VLAN/backhaul support varies. Another mesh/router ecosystem is unnecessary. |
+| ISP Wi-Fi / single all-in-one router | Less cost, but placement/segmentation may not meet this plan. |
+| Wireless mesh backhaul | Useful without cabling, but consumes airtime and adds interference/availability dependencies. |
 
 ### Ethernet Cables
 
-Cat6 or better. Buy one long cable for the WAN run and short patch cables for everything else.
+**What it is.** WAN/LAN links and wired PoE backhaul.
 
-- **WAN (ISP modem → router):** 1× 10 m Cat6 — long enough to reach a work room on another floor, through a wall or conduit (or optionally place the router and other hardware in the meter cabinet; assuming you have proper height and ventilation to avoid overheating and fires, etc.).
-- **Router → switch and switch → each host:** 1× 0.75 m Cat6A per link — keeps the shelf tidy. 
-- **Alternative:** putting the router and switch in the meter cabinet next to the ISP modem means much shorter cables, but worse physical access for maintenance. Keep ventilation in mind and do not obstruct the electrical installation.
+**Chosen (2026-10): retain the [inventory's](#network) Cat6/Cat6A cables and add measured AP runs as needed.** The 10 m WAN and 0.75 m patch cables suit the work-room layout. AP cable purchases/lengths still need recording. Use standards-compliant copper cable suitable for installation/PoE, not copper-clad aluminium.
+
+**Alternatives considered:**
+
+| Alternative | Why not chosen here |
+|---|---|
+| Router/switch beside modem | Valid with accessible, ventilated placement; needs longer LAN/AP runs. |
+| Cat5e | Suitable existing runs support gigabit; retain already owned Cat6/Cat6A without replacing good cable merely for its label. |
+| Fibre | Useful longer/faster links, but cannot power APs and adds equipment. |
+| Powerline / wireless | Convenient, but more variable performance/troubleshooting than Ethernet. |
+
+### Purchasing, Cost, and Accepted Trade-offs
+
+**All UniFi gear was bought new from [Ubiquiti Store Europe](https://eu.store.ui.com/eu/en).** At purchase time, Coolblue and MediaMarkt stocked a smaller subset and had less attractive prices for these choices. The official store supplied the desired models with direct product information. This is not a permanent cheapest-store claim; compare VAT, shipping, warranty/returns, and availability for later purchases.
+
+**€608 is not cheap, but not an unusually expensive complete managed home-network foundation**: routing/firewall, PoE switching, and two APs. It saves **a lot of time** compared with OPNsense plus separate device management, and much more compared with maintaining a hand-built Linux/Ansible router. This is expected operational savings, not a measured hours-per-month guarantee.
+
+The previously considered cheapest Topton N100 on AliExpress was about **€350 with 8 GB RAM and a 128 GB SSD** at the time, for a firewall PC alone. Household routing, switches, and APs still needed providing independently. The €238 gateway replaces that role, leaving €112 of that comparison budget toward switch/APs. The full package is not cheaper than the PC alone; it avoids duplicating essential home-and-lab infrastructure.
+
+**Accepted trade-offs:** vendor lock-in, less OS/plugin flexibility, vendor firmware/support dependence, limited hardware upgrades, and GUI settings rather than complete IaC. Standards-based VLANs/Ethernet allow future mixed-vendor replacement, but migration costs effort. Gigabit access and a shared gateway failure domain are deliberate limits too. See the [shared-gateway boundaries](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) and [network maintenance and recovery approach](3_Design_Network.md#maintenance-recovery-and-safe-experiments).
+
+The benefits significantly outweigh those costs for my [goals](0_Design_Goals.md): fewer components, simpler troubleshooting/recovery, consistent security policy, less duplicated hardware, and more learning time. Manual steps are acceptable when few, documented, privately backed up, and tested. Developing automation for every setting would reintroduce the maintenance this choice removes. See [Network Setup](../2_Setup/2_Setup_Network.md) for the implementation record and the [security guide](../0_Security_and_Public_Repository.md) for handling backups and publishable examples.
+
+### Why Not a Separately Maintained Firewall PC
+
+**First setup: a hand-built Linux router on a Raspberry Pi, configured with Ansible.** The Pi's built-in Ethernet port connected to the ISP modem/home LAN, and a USB-to-Ethernet adapter connected to the lab switch. The Pi was a separate downstream lab router, not the shared household gateway. Raspberry Pi OS supplied the general-purpose Linux base; custom Ansible roles assembled the router functionality: network interfaces and VLANs, kernel IP forwarding, dnsmasq for DHCP/DNS and IPv6 Router Advertisements, and nftables for firewalling and IPv4 NAT/IPv6 NAT66. It also served as an SSH jumphost into the lab. The [historical Network Setup](../2_Setup/2_Setup_Network.md) records that procedure, including [router configuration with Ansible](../2_Setup/2_Setup_Network.md#step-4-configure-the-pi-with-ansible).
+
+**Why that was retired.** Ansible made the configuration repeatable, but did not turn the individually configured Linux services into a supported router platform. I still owned their integration, role development, package/kernel compatibility, dual-stack firewall correctness, troubleshooting, and recovery. The Pi also added adapter and SD-card dependencies. This was valuable for learning fundamentals, but maintaining the router implementation became more work than the learning justified. The problem was not Ansible itself; it was using custom automation to build and maintain functionality already supplied by purpose-built router software. Ansible remains useful for supported lab hosts and VMs; see its [current configuration-management scope](2_Design_Software_Prerequisites.md#configuration-management).
+
+**Next direction: an x86 firewall appliance with OPNsense.** A Topton-style mini PC with native Ethernet ports and SSD storage addressed the Pi hardware compromises, while OPNsense integrated routing, firewalling, DHCP/DNS, and management rather than having me assemble those services. This was a substantial improvement over the hand-built Linux/Ansible setup. However, owning the firewall OS, configuring its features, and managing switches/APs alongside it still required more lifecycle work than wanted for essential networking. That direction is now superseded: a Topton or equivalent firewall PC and separately installed OPNsense/pfSense are no longer selected.
+
+**Current choice: one integrated physical gateway for home and lab.** UniFi is still dedicated physical router/firewall hardware; the removed burden is the separately maintained general-purpose firewall platform and second lab-router stack. Shared switching and wired APs complete the household network, with VLANs and firewall policy providing logical separation. See [Network Setup Options](3_Design_Network.md#network-setup-options) and [One Shared Gateway with Segmentation](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) for the architectural comparison and reasoning.
+
+OPNsense remains good for open extensibility, detailed control, and router-OS learning. That is not the priority for household infrastructure. UniFi still needs firmware updates/security care but reduces integration/development responsibility. See the [software decision](2_Design_Software_Prerequisites.md#router--firewall-software) for comparisons and the future VPN TODO.
+
+**Learn separately:** run OPNsense or another router OS in an isolated lab VM for routing/firewall practice while the shared network stays stable if you want to learn the internals and operational aspects of a router OS/networking in more depth. No need to rebuild DHCP, DNS, firewalling, and routing manually with Ansible; a purpose-built router OS offers plenty to learn. Follow the [network's safe-experiment boundaries](3_Design_Network.md#maintenance-recovery-and-safe-experiments).
 
 ---
 
@@ -211,7 +282,7 @@ This part covers the machines that actually run workloads: Proxmox hosts, VMs, a
 | **Sustainability** | Requires new materials & manufacturing | Very circular (prevents e-waste) | Circular, as long as the device works |
 
 **Verdict:**
-- **Brand-new** → Even inexpensive consumer mini PCs, such as Beelink models, can be tempting, but newness alone does not make them better value for this compute role. For a similar or lower price, a professionally refurbished enterprise mini PC often provides stronger CPU performance, more memory, better upgrade options, and business-grade virtualization features. Compare the exact CPU, RAM, storage, upgradeability, and warranty: a new consumer model can still make sense if it wins on those specifics, but this lab prioritises the performance and capability per euro of refurbished business hardware. The router is the deliberate exception, because its dedicated networking ports and always-on role justify buying a new firewall appliance (see [Why New for the Router](#why-new-and-not-refurbished-for-the-router)).
+- **Brand-new** → Even inexpensive consumer mini PCs, such as Beelink models, can be tempting, but newness alone does not make them better value for this compute role. For a similar or lower price, a professionally refurbished enterprise mini PC often provides stronger CPU performance, more memory, better upgrade options, and business-grade virtualization features. Compare the exact CPU, RAM, storage, upgradeability, and warranty: a new consumer model can still make sense if it wins on those specifics, but this lab prioritises the performance and capability per euro of refurbished business hardware. Essential network equipment is the deliberate exception: new integrated devices with straightforward support and warranty serve the household as well as the lab (see [Networking Hardware](#part-1--networking-hardware)).
 - **Professional refurbished** → Best balance. Enterprise-grade hardware (e.g. Lenovo, Dell, HP) at 40–80% less. These units come from companies replacing their fleets — the hardware is still high quality, power-efficient, and tested. This is the right choice for a home lab focused on learning real-world skills without breaking the bank. You pay more compared to private second-hand (e.g. via Amazon, eBay, Marktplaats, etc.), but the risk is significantly lower and the hardware will last longer and perform reliably. So, paying a bit extra compared to private second-hand is worth it for the peace of mind and reliability.
 - **Private second-hand** (e.g. Marktplaats, eBay, Amazon, etc.) → Too risky. No proper testing, no guarantees. Avoid.
 
@@ -242,7 +313,7 @@ Choose whichever has the better specific offer: the right CPU and upgradeable RA
 
 #### Why Not Amazon, AliExpress or eBay for Refurbished Compute
 
-This is the mirror image of [Part 1](#where-to-buy-aliexpress-amazon-ebay--official-stores), and the reason is simple: **for new hardware you are buying from a manufacturer, for refurbished hardware you are buying from a process.** The marketplace model breaks down when the value of the product is the quality of the inspection that was done to it.
+This differs from buying new network gear through the [official store](#purchasing-cost-and-accepted-trade-offs): **for new hardware you are buying a supported product, for refurbished hardware you are buying a process.** The marketplace model breaks down when the value of the product is the quality of the inspection that was done to it.
 
 | Channel | Why not for refurbished compute |
 |---|---|
@@ -335,7 +406,7 @@ For a machine left on 24/7, each **10 W of average whole-system draw** uses abou
 
 #### Why NOT Raspberry Pi
 
-> **Scope note:** This section explains why Raspberry Pi is not the preferred choice for this home lab's computing nodes. For lightweight tasks like basic network services or low-power experiments it can still be viable — but note that it is **not** viable as the lab router either, for the reasons in [Why a Firewall/Router Appliance Mini PC](#why-a-firewallrouter-appliance-mini-pc).
+> **Scope note:** This section explains why Raspberry Pi is not preferred for compute nodes. It can still serve lightweight experiments, but is not the selected household gateway: the [integrated network platform](#network-platform-unifi) avoids owning a custom router stack.
 
 Mini PCs give more value for money because they are **complete computers**: a proper x86 CPU, upgradeable RAM, fast NVMe SSD storage, active cooling, a stable power supply, and reliable networking all in one device. They're designed to run 24/7 under load and handle workloads more consistently.
 
@@ -347,7 +418,7 @@ More importantly, the Pi uses ARM/Pi OS instead of x86/Ubuntu or RHEL — which 
 
 #### How Many Nodes
 
-**It depends on your situation — 1 node can be more than enough.** If your goal is learning Kubernetes, Docker, Ansible, and monitoring, a single well-specced mini PC handles all of that comfortably. If you are not even filling one node with workloads, buying more nodes just to "have a cluster" is not worth the purchase and energy cost. Add a second node only when you actually need more capacity — and anything beyond 1–2 nodes is only worth it if you intend to host a lot (a full home cloud replacing Netflix, OneDrive, etc.), which is not the goal of this lab (see [Goals](0_Goals.md)).
+**It depends on your situation — 1 node can be more than enough.** If your goal is learning Kubernetes, Docker, Ansible, and monitoring, a single well-specced mini PC handles all of that comfortably. If you are not even filling one node with workloads, buying more nodes just to "have a cluster" is not worth the purchase and energy cost. Add a second node only when you actually need more capacity — and anything beyond 1–2 nodes is only worth it if you intend to host a lot (a full home cloud replacing Netflix, OneDrive, etc.), which is not the goal of this lab (see [Goals](0_Design_Goals.md)).
 - **Prioritise fewer, more powerful node(s).** The biggest factor in energy cost is the **number of physical machines**, not how much RAM is in each one. RAM uses very little power compared to the CPU, motherboard, SSDs, and PSU losses — so one node with 64 GB uses roughly the same power as one node with 16 GB, while four 16 GB nodes use roughly 4× the power of one 64 GB node. At ~20W per node and ~€0.30/kWh (NL, 2026):
 
   | Setup | Total RAM | Typical Power | Est. Yearly Cost |
@@ -410,6 +481,6 @@ That's how I started: my old Acer laptop. Later I expanded to the full setup des
 
 ## Software
 
-All software decisions — the router/firewall OS, hypervisor, node and VM operating systems, container orchestration, IaC, configuration management, GitOps/CI, secrets, observability, and backup — live in their own central document: **[Design: Software & Prerequisites](3_Design_Software_Prerequisites.md)**.
+All software decisions — the network platform, hypervisor, node and VM operating systems, container orchestration, IaC, configuration management, GitOps/CI, secrets, observability, and backup — live in their own central document: **[Design: Software & Prerequisites](2_Design_Software_Prerequisites.md)**.
 
-The two documents are deliberately symmetrical: this one is the single source of truth for *what hardware is bought*, that one is the single source of truth for *what software runs on it*. Where a choice on one side constrains the other, it is noted explicitly in both (for example, the router appliance is x86-64 with Intel NICs **because** the chosen router OS requires it, and node RAM is sized **because** of what the hypervisor and cluster have to fit into).
+The two documents are deliberately symmetrical: this one is the single source of truth for *what hardware is bought*, that one is the single source of truth for *what software runs on it*. Dependencies are explicit in both: the gateway supplies the local network console, the switch powers the APs, and node RAM is sized for the hypervisor and cluster.

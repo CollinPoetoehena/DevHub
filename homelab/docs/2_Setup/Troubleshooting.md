@@ -2,15 +2,17 @@
 
 This document provides guidance for diagnosing and resolving common issues during setup, such as network issues.
 
+> **Scope note:** Pi/Ansible-specific troubleshooting below is historical and does not configure the current shared gateway. Use the [current network design](../1_Design/3_Design_Network.md) and verify the new platform's settings before applying any old router procedure.
+
 ---
 
 ## Some home network devices cannot connect to the internet
 
 - **Symptoms:** Multiple devices (phone, TV, printer) lose internet while others work fine.
-- **Cause:** Proxmox `vmbr0` bridge on the home LAN conflicts with the ISP modem's DHCP — causes duplicate IPs.
-- **Diagnosis:** Check ISP modem admin page (e.g. `192.168.2.254` or `192.168.2.1`) → DHCP leases → look for duplicate IPs.
-- **Fix:** Set up a dedicated lab router (Raspberry Pi) between the ISP modem and lab devices to isolate the lab subnet. See [Network Setup](./2_1_Network_Setup.md).
-- **Interim workaround:** Shut down the Proxmox host until the lab router is ready.
+- **Possible causes:** Duplicate static addresses, a rogue DHCP server, incorrect VLAN/bridge membership, or a Layer 2 loop. A normal hypervisor bridge does not itself serve DHCP.
+- **Diagnosis:** Check gateway leases, switch port profiles, and host/VM addressing. Confirm lab DHCP and IPv6 Router Advertisements cannot reach Home.
+- **Fix:** Correct the lab host's VLAN-aware bridge and switch membership, and remove unintended DHCP/RA services or loops. The [current design](../1_Design/3_Design_Network.md#firewall-and-access-policy) isolates home and lab through managed VLANs/firewall policy, not an additional Pi router.
+- **Interim workaround:** Disconnect or shut down the offending lab host while correcting its configuration; preserve household connectivity.
 
 ---
 
