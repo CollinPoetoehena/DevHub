@@ -393,6 +393,8 @@ git clone git@git-personal:you/repo.git ~/projs/personal/repo
 git clone git@git-work:company/repo.git ~/projs/work/repo
 ```
 
+You can organize repositories into additional folders within the matching personal or work directory—for example, group related projects under `~/projs/work/customer-a/`. This keeps each clone as its own repository, so you can open and work in one repository on its own, or open the containing folder to browse the related projects together. In VS Code, you can also add individual repository folders to a multi-root workspace when you want to work across selected projects. Keep work repositories under `~/projs/work/` and personal repositories under `~/projs/personal/` so the conditional Git identity configuration continues to apply.
+
 For a repository that is already cloned, check its current remote and replace it with the matching SSH URL. If the remote has a different name, use that name instead of `origin`:
 
 ```bash
