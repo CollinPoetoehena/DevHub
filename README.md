@@ -1,28 +1,51 @@
 # DevHub
-DevHub: My central development hub — a personal lab and reference repository for home lab documentation, reusable packages, and shared tooling across my projects.
 
-DevHub brings together my home lab (a hands-on learning environment for DevOps, Kubernetes, networking, and infrastructure automation) and my reusable packages (Terraform modules, Ansible roles, Helm charts, etc.) under one roof. It serves as both the central index and the documentation/code repository for everything I build, learn, and experiment with. While primarily a personal hub, it is publicly available for anyone who finds these resources useful.
+**DevHub is my central development hub and entry point for the reusable resources and separate projects that support my development work.** I maintain it primarily for myself: to organize what I learn, keep useful guidance and tools easy to find, and connect the projects I work on. It is also public, so it can serve as a portfolio that shows how I approach development, automation, documentation, and ongoing learning.
 
-The name reflects what the project is:
-- **Dev** — short for *development* and *DevOps*: the main focus areas of this repository. Everything here is about building, automating, and learning through hands-on development work.
-- **Hub** — a central point that connects everything together. Like a hub in a wheel, all parts of my personal development work (home lab, reusable packages, shared tooling, etc.) connect back to this one place. It's the single source of truth and starting point for navigating all of it.
+The name reflects the purpose:
+
+- **Dev** means development and DevOps: building, automating, and learning through practical work.
+- **Hub** means a central place to navigate to the related resources and projects.
+
+## Table of Contents
+
+- [Why I Maintain DevHub](#why-i-maintain-devhub)
+- [What belongs in DevHub](#what-belongs-in-devhub)
+- [Separate projects](#separate-projects)
+
+> **Scope of this README:** This is a concise introduction to DevHub's purpose and structure, not a full explanation of every area or project. More detail belongs in the relevant documentation linked below; the root README should stay short enough to work as a clear entry point.
 
 ---
 
-## Table of Contents
-1. [DevHub Design & Documentation](#devhub-design--documentation)
-2. [Home Lab](./homelab/README.md)
-3. [Packages](./packages/README.md)
+## Why I Maintain DevHub
 
---- 
+Development work generates more information, decisions, commands, and lessons than I can reliably remember. Writing down what matters gives me an external reference I can return to, helps me explain my thinking clearly, and reduces the effort of rediscovering or relearning the same things. The [Reference](./reference/README.md#why-i-document) explains this documentation approach in more detail.
 
-## DevHub Design & Documentation
-DevHub is my central development hub — bringing together my personal home lab, reusable packages, and shared CI/CD tooling under one roof. It serves as both an index and a documentation/code repository for everything I build, learn, and experiment with. The design is split into two main areas: the home lab and the packages:
-1. **Home Lab:** A hands-on learning environment for DevOps, Kubernetes, networking, and infrastructure automation. The home lab is where I experiment with new tools, learn new concepts, and build out my skills in a practical way. It includes detailed documentation on the setup and architecture decisions. See the [Home Lab Design](./homelab/README.md#home-lab-design) section for more details.
-2. **Packages:** A collection of reusable components, including Terraform modules, Ansible roles, Helm charts, and more. Each component type lives in its own dedicated repository for better modularity and versioning. The packages section also centralizes all shared publishing logic (e.g. GitHub Actions workflows) that individual repositories can reference. See the [Packages Design](./packages/README.md#packages-design) section for more details.
+Maintaining DevHub is worthwhile because it turns individual problem-solving into knowledge I can reuse: across future tasks, across separate projects, and when reviewing why a decision was made. Shared scripts, generic workflows, and reference material also help me apply practices consistently without copying the same guidance into every project. I curate this for practical use rather than trying to document everything; information is useful when I can find it, understand its context, and keep it accurate.
 
-Each part of DevHub lives in its own top-level folder (e.g. `homelab/`, `packages/`) and is treated as a self-contained unit with its own documentation and code. This keeps concerns separated — the home lab setup has nothing to do with the Terraform module publishing logic, for example — while still being part of the larger DevHub project. The root `README.md` (this file) acts as the single entry point and index, making it easy to navigate to the right part without everything being mixed together.
+The public repository has a second purpose as a portfolio. It provides an honest view of the work behind my projects—not only finished code, but also the designs, trade-offs, automation, and learning that shaped them. The portfolio aspect is valuable, but it is secondary to the repository's role as a working hub for myself. I want it to remain useful and maintainable for my own development, rather than turn it into a showcase that is disconnected from the work I actually do.
 
-The documentation in `DevHub` is intentionally kept minimal, with the main documentation for `DevHub` in general limited to this README.md file and further documentation provided by each part of the project (e.g. `homelab`, `packages` all have their own documentation (see [DevHub Design](#devhub-design) below)).
+---
 
---- 
+## What belongs in DevHub
+
+DevHub is intended to grow through broadly reusable material, not by absorbing the implementation of every project:
+
+- **[Reference documentation](./reference/README.md)** collects general concepts, practical commands, and guidance that can be reused across projects.
+- **[Scripts](./scripts/README.md)** contains shared utility scripts that are not owned by one specific project.
+- **[Generic GitHub workflows and AI skills](./.github/README.md)** provide reusable automation and agent workflows, including shared GitHub Actions and GitHub Copilot skills.
+- **[Packages](./packages/README.md)** is the index and shared publishing guidance for reusable components. The implementations themselves—such as Python packages, Ansible roles, Terraform modules, and Helm charts—belong in their own repositories, where they can be versioned, released, tested, and maintained independently.
+
+These resources can be useful across several repositories, so keeping them centralized avoids duplication and gives generic guidance one place to evolve. DevHub can therefore become larger while retaining a clear purpose: the contents are shared resources or an entry point, not a collection of unrelated project implementations.
+
+---
+
+## Separate projects
+
+Larger efforts with their own implementation, configuration, release cycle, or operational lifecycle should live in their own repositories and link back here for shared guidance:
+
+- **[Home lab — devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab)** is a separate project for the home network and lab design, documentation, infrastructure implementation, and automation. It is part of the wider DevHub ecosystem, but has its own repository so its code, maintenance, pipelines, repository permissions, and project-specific secrets can be managed independently. This root README remains its DevHub entry point; see the [AI reference](./reference/AI.md#coding-github-copilot-in-vs-code) for shared AI workflow guidance.
+
+The distinction is about ownership and reuse, not whether a project is related to development. A homelab is a development platform, but its specific implementation is still a distinct project. DevHub links projects together and provides the generic material they share; it does not need to contain each project's implementation.
+
+---

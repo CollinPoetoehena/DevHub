@@ -4,9 +4,9 @@ Reusable [Helm](https://helm.sh/) charts, used for packaging and deploying Kuber
 
 Each chart lives in its own dedicated repository. This file serves as the index and reference for all Helm charts, and documents conventions shared across them.
 
-## Dev-Hub
+## DevHub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Helm charts, see [README.md](README.md) for the full design and index of all component types.
+This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Helm charts, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -29,9 +29,9 @@ Where:
 - `README.md` provides documentation specific to the chart, including usage instructions, values descriptions, and any other relevant information.
 - `templates/` contains the Kubernetes manifest templates rendered by Helm.
 
-## Chart Naming Convention
+## Naming Convention
 
-Chart names use lowercase letters, digits, and hyphens only, following [Helm best practices](https://helm.sh/docs/chart_best_practices/conventions/#chart-names). Names should be descriptive and scoped to what the chart deploys, e.g. `nginx`, `prometheus-stack`, `cert-manager`.
+See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. Specifically for Helm, you can find some general tips in the [Helm best practices](https://helm.sh/docs/chart_best_practices/conventions/#chart-names). 
 
 ## Usage
 
@@ -61,16 +61,16 @@ helm install <release-name> .
 
 | Chart | Repository | Description |
 |-------|------------|-------------|
-| _(none yet)_ | | Roles will be listed here as they are added |
+| _(none yet)_ | | Helm Charts will be listed here as they are added |
 
 ## README Template
 
 When creating a new chart repository, use the following template as the starting point for its `README.md`:
 
 ```markdown
-# <chart-name>
+# <package-name following the naming convention>
 
-> Part of [dev-hub/Helm](https://github.com/CollinPoetoehena/dev-hub/blob/main/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
+> Part of [DevHub/Helm](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Helm.md) — see that file for conventions, structure guidelines, and the full chart index.
 
 <Short description of what this chart deploys.>
 

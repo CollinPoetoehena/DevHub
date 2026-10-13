@@ -7,7 +7,7 @@ This section covers all reusable packages maintained under DevHub — including 
 ## Table of Contents
 
 - [Packages Design](#packages-design)
-- [Repositories](#repositories)
+- [Repositories & Naming Conventions](#repositories--naming-conventions)
 - [Versioning](#versioning)
   - [Qualifiers (pre-releases)](#qualifiers-pre-releases)
   - [Creating a release](#creating-a-release)
@@ -26,18 +26,25 @@ To address this, each component type now lives in its own dedicated repository. 
 - Each repository can have its own focused CI/CD pipeline, access controls, and issue tracker, etc. without overlap or noise from unrelated components.
 - Avoids accidental coupling: a breaking change in one component does not affect others.
 
-DevHub remains the central index—the [Repositories Section](#repositories) links to all the individual repositories so they are easy to discover. In addition, DevHub centralizes all shared publishing logic: GitHub Actions workflows, helper scripts, and any other CI/CD tooling used to release or validate components. Individual repositories reference or reuse these centrally managed pipelines rather than duplicating them.
+DevHub remains the central index—the [Repositories & Naming Conventions](#repositories--naming-conventions) links to all the individual repositories so they are easy to discover. In addition, DevHub centralizes all shared publishing logic: GitHub Actions workflows, helper scripts, and any other CI/CD tooling used to release or validate components. Individual repositories reference or reuse these centrally managed pipelines rather than duplicating them.
 
 ---
 
-## Repositories
+## Repositories & Naming Conventions
 
 | Component | Index | Description |
 |-----------|-------|-------------|
 | Terraform | [Terraform.md](./Terraform.md) | Reusable Terraform modules (IaC) |
 | Ansible | [Ansible.md](./Ansible.md) | Reusable Ansible roles and playbooks |
 | Helm | [Helm.md](./Helm.md) | Reusable Helm charts |
+| Python | [Python.md](./Python.md) | Reusable Python packages |
 | _(future)_ | | Add more here as needed |
+
+**Global Naming Conventions:**:
+- All component repositories follow the pattern `devhub-<type>-<topic>`, where `<type>` is the component type (e.g., `ansible`, `python`, `helm`) and `<topic>` is the specific name of the component. The `devhub` prefix indicates that the repository is part of the DevHub ecosystem and should always be included to make it easily identifiable as part of DevHub.
+- Component names should be descriptive and scoped to what the component configures or provides.
+- Use lowercase letters, digits, and underscores only for component names.
+- Avoid using special characters or spaces in repository names.
 
 ---
 
@@ -94,11 +101,11 @@ The releases are created by creating a Git tag with the version number. This ser
 git log --oneline
 # Create an annotated tag with a message (recommended for releases)
 git tag -a <tagname> <commit-hash> -m "<release message>"
-git push origin <tagname>
+git push --tags
 
 # Example:
 git tag -a 1.0.0 abc123 -m "Initial release"
-git push origin 1.0.0
+git push --tags
 ```
 
 Pin to a tag to get a stable, reproducible reference. Each ecosystem uses the Git tag slightly differently, see the specific instructions for each type below.
@@ -129,4 +136,9 @@ git push origin -d <tagname>
 # Example:
 git tag -d 1.0.0
 git push origin -d 1.0.0
+
+# Full sequence example: Deleting and recreating a release (picks the latest commit):
+git tag -d 1.0.0 && git push origin --delete 1.0.0
+git add -A && git commit --amend -m "Initial release" && git push -f
+git tag -a 1.0.0 -m "Initial release" && git push --tags
 ```

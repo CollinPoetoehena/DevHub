@@ -99,7 +99,7 @@ fi
 
 
 
-# Check Azure config dir for safety to ensure the correct Azure environment is targeted (see: Azure Account Isolation in dev-hub/scripts/terraform/lib.sh)
+# Check Azure config dir for safety to ensure the correct Azure environment is targeted (see: Azure Account Isolation in DevHub/scripts/terraform/lib.sh)
 check_azure_config_dir "${HOME}/.azure-${PROJECT_NAME}"
 
 log_header_1 "Terraform tfvars Generator"

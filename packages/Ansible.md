@@ -4,9 +4,9 @@ Reusable [Ansible](https://docs.ansible.com/) roles and playbooks, used for conf
 
 Each role lives in its own dedicated repository. This file serves as the index and reference for all Ansible roles, and documents conventions shared across them.
 
-## Dev-Hub
+## DevHub
 
-This repository ([dev-hub](https://github.com/CollinPoetoehena/dev-hub)) is the central reference for all Ansible roles, see [README.md](README.md) for the full design and index of all component types.
+This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Ansible roles, see [README.md](README.md) for the full design and index of all component types.
 
 ## Structure
 
@@ -40,11 +40,9 @@ ansible-galaxy role init <role-name>
 
 This generates the full directory layout with placeholder files. Remove any directories not needed by the role after initializing, and/or add your own custom directories and files as needed.
 
-## Role Naming Convention
+## Naming Convention
 
-Roles follow the [Ansible Galaxy naming convention](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html): lowercase letters, digits, and underscores only. Names should be descriptive and scoped to what the role configures, e.g. `docker`, `nginx`, `java_install`.
-
-Role repositories are named using the pattern `ansible-role-<topic>`, where `<topic>` matches the role name (e.g. `ansible-role-docker`, `ansible-role-nginx`, `ansible-role-java_install`).
+See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. No exceptions should be made for Ansible roles.
 
 ## Usage
 
@@ -58,7 +56,7 @@ Or declare it in a `requirements.yml` file:
 
 ```yaml
 roles:
-  - name: <role-name>
+  - name: devhub.<role-name>
     src: https://github.com/CollinPoetoehena/<role-repo>.git
     scm: git
     version: main
@@ -74,18 +72,20 @@ ansible-galaxy install -r requirements.yml
 
 | Role | Repository | Description |
 |------|------------|-------------|
-| ansible-role-users | [ansible-role-users](https://github.com/CollinPoetoehena/ansible-role-users) | Configures OS users and groups, including sudo policies and SSH key management. |
-| ansible-role-jumphost | [ansible-role-jumphost](https://github.com/CollinPoetoehena/ansible-role-jumphost) | Configures a jumphost for secure access to internal networks. |
-| ansible-role-mgmtvm | [ansible-role-mgmtvm](https://github.com/CollinPoetoehena/ansible-role-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
+| devhub-ansible-users | [devhub-ansible-users](https://github.com/CollinPoetoehena/devhub-ansible-users) | Configures OS users and groups, including sudo policies and SSH key management. |
+| devhub-ansible-jumphost | [devhub-ansible-jumphost](https://github.com/CollinPoetoehena/devhub-ansible-jumphost) | Configures a jumphost for secure access to internal networks. |
+| devhub-ansible-mgmtvm | [devhub-ansible-mgmtvm](https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
+| devhub-ansible-proxmox | [devhub-ansible-proxmox](https://github.com/CollinPoetoehena/devhub-ansible-proxmox) | Configures a machine that has been installed from the Proxmox VE ISO into a fully managed hypervisor. |
+| devhub-ansible-router-custom | [devhub-ansible-router-custom](https://github.com/CollinPoetoehena/devhub-ansible-router-custom) | Configures a Debian-based system (e.g. Raspberry Pi) as a dedicated lab router providing network isolation, DHCP, DNS, SLAAC/Router Advertisements, NAT and an nftables firewall (e.g. for a homelab). |
 
 ## README Template
 
 When creating a new role repository, use the following template as the starting point for its `README.md`:
 
 ```markdown
-# <role-name>
+# <package-name following the naming convention>
 
-> Part of [dev-hub/Ansible](https://github.com/CollinPoetoehena/dev-hub/blob/main/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
+> Part of [DevHub/Ansible](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Ansible.md) — see that file for conventions, structure guidelines, and the full role index.
 
 <Short description of what this role does.>
 
@@ -105,7 +105,7 @@ Requirements file example (same directory as ansible.cfg, create a file called r
 ```yaml
 ---
 roles:
-  - name: <role-name>
+  - name: devhub.<role-name>
     src: https://github.com/CollinPoetoehena/<role-name>.git
     scm: git
     version: <version or branch>
@@ -121,5 +121,5 @@ Example playbook using this role (e.g. site.yml):
 ```yaml
 - hosts: all
   roles:
-    - role: <role-name>
+    - role: devhub.<role-name>
 ```
