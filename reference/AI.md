@@ -119,6 +119,8 @@ Start small, reuse what helps, and tailor it to your project and company policie
 
 > **Find the right balance:** Do not create a template, agent, or workflow for everything; use them only where repeated use meaningfully improves speed, quality, or consistency enough to justify the effort of creating and maintaining them (i.e. it actually has added value). For one-off/very low frequency or simple tasks, a direct prompt may be more efficient. Balance scope too: one template can cover several genuinely similar tasks with shared instructions and checks, saving duplication and maintenance. Do not force entirely different tasks into one generic template, or create a separate template for every minor variation. Split only where the differences matter, and simplify or retire setups that cost more effort than the value they provide.
 
+**DevHub's reusable skills:** The generic [`implement-change`](../.github/skills/implement-change/SKILL.md) and [`docs`](../.github/skills/docs/SKILL.md) skills are maintained in DevHub for reuse across repositories. See the [skills README](../.github/skills/README.md) for how to invoke or copy them. A project with additional requirements can layer its own context on the generic workflow; for example, [devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab/tree/main/.github/skills) keeps project-specific skills with its implementation. A repository link is useful for discovery, but does not install a skill into an AI assistant.
+
 The two subsections below cover **coding**, using GitHub Copilot in VS Code as the example, and **general-purpose work**, using Microsoft 365 Copilot agents as the example. For guidance on choosing the right tool or model for a task, see [Framework: Which AI Tool/Model for Which Task](#framework-which-ai-toolmodel-for-which-task).
 
 ### Coding: GitHub Copilot in VS Code
@@ -152,7 +154,7 @@ The following is the practical coding setup used as an example here. This is for
 ```markdown
 ---
 name: implement-change
-description: "Implement a focused, verified feature or bug fix in the homelab using repository conventions and security rules."
+description: "Implement a focused, verified feature or bug fix using this repository's conventions and security rules."
 ---
 
 # Implement Change

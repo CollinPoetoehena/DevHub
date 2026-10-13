@@ -8,7 +8,7 @@ This is also documentation for the **home network itself**: it records the topol
 
 > **Actual design, example values:** this document describes the chosen home-and-lab network setup, not a hypothetical alternative. Published VLAN IDs, subnets, IP addresses, and other configuration values are illustrative examples, not a record of live settings. The topology, segment roles, and policy intent describe the chosen design; keep the mapping to actual configured values in private operational records. Follow [Security and Public Repository](../0_Security_and_Public_Repository.md#information-that-is-usually-safe-to-document) when documenting those details: private ranges and VLAN IDs are not secrets by themselves, but examples must be clearly labeled and must not expose real access details or identifying information.
 
-See the [Network Reference](../../../reference/network/README.md) for networking concepts and troubleshooting, and [Personal Goals](0_Design_Goals.md) for the low-maintenance boundary between household infrastructure and disposable experiments.
+See the DevHub [Network Reference](https://github.com/CollinPoetoehena/DevHub/tree/main/reference/network) for networking concepts and troubleshooting, and [Personal Goals](0_Design_Goals.md) for the low-maintenance boundary between household infrastructure and disposable experiments.
 
 ## Table of Contents
 
@@ -191,7 +191,7 @@ This is a role-based example; final port numbering and native-management setting
 
 **Tagged** means an 802.1Q tag identifies the VLAN on that link; **untagged** means the port's configured VLAN classifies the frame. Native VLANs must match across a link. Management may be tagged or untagged depending on supported adoption/recovery behavior; neither "VLAN 1 must exist everywhere" nor "an unused VLAN always gives recovery access" is a design guarantee. Test recovery before restricting management.
 
-For explanation, see [Tagged vs Untagged](../../../reference/network/Network_Devices.md#tagged-vs-untagged-8021q-vlan-tagging). Limit VLAN membership and configuration access; trunking every VLAN to every device defeats least privilege.
+For explanation, see the DevHub [Tagged vs Untagged reference](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/network/Network_Devices.md#tagged-vs-untagged-8021q-vlan-tagging). Limit VLAN membership and configuration access; trunking every VLAN to every device defeats least privilege.
 
 ---
 

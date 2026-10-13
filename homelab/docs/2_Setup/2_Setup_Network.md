@@ -204,7 +204,7 @@ Use the [design's verification requirements](../1_Design/3_Design_Network.md#mai
 
 **Test the service, not just ping.** For each denied path, first establish that the destination service is actually listening and reachable from an authorized source. Then attempt the same destination address/port from the denied segment; inspect firewall events/counters where available. A closed service, incorrect address, or host firewall can make a test fail without proving gateway isolation. Check both zone directions and both IP families if enabled.
 
-For allowed paths, use the actual application, DNS lookup, or administrative service. An illustrative DNS test is `nslookup example.com 10.42.40.1` from a Home client, substituting the private gateway address. Do not paste command outputs exposing real endpoints into public Git. Use the [Network Reference](../../../reference/network/README.md) for diagnostic tools.
+For allowed paths, use the actual application, DNS lookup, or administrative service. An illustrative DNS test is `nslookup example.com 10.42.40.1` from a Home client, substituting the private gateway address. Do not paste command outputs exposing real endpoints into public Git. Use the DevHub [Network Reference](https://github.com/CollinPoetoehena/DevHub/tree/main/reference/network) for diagnostic tools.
 
 Connect the remaining clients and remove temporary bootstrap allowances after all required checks pass. Keep a private final port/SSID/network map rather than treating these example tables as the live inventory.
 

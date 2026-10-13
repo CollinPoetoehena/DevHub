@@ -475,7 +475,7 @@ More importantly, the Pi uses ARM/Pi OS instead of x86/Ubuntu or RHEL — which 
 | **RAM** | 32–64 GB | 32 GB is comfortable for running Proxmox with several VMs. 64 GB gives plenty of headroom and is often more power-efficient than running two separate 32 GB nodes (if you need 64 GB RAM total; if you only need 32 GB RAM then you do not need the 64 GB RAM of course) — one well-specced machine uses less energy than two underpowered ones (see [How Many Nodes](#how-many-nodes)). |
 | **Storage** | NVMe SSD | Significantly faster than SATA SSD (3–7 GB/s vs ~550 MB/s) and far faster than HDD. Matters for VM boot times, live migration, snapshot I/O, and running multiple VMs in parallel. Most enterprise-grade mini PCs ship with an M.2 slot, making NVMe a natural fit — no cables, no adapters, compact form factor. |
 
-See for how to check hardware specs [reference/os_hardware/Hardware_Specs.md](../../../reference/os_hardware/Hardware_Specs.md#how-to-check-your-hardware-specs).
+See the DevHub [Hardware Specs reference](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/os_hardware/Hardware_Specs.md#how-to-check-your-hardware-specs) for how to check hardware specifications.
 
 **Storage sizing — intentional asymmetry:**
 

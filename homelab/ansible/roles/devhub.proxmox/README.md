@@ -6,7 +6,7 @@ Prepares an existing Proxmox VE installation for infrastructure automation: opti
 
 The role is **node-agnostic**. Configure node-specific management addresses and, when building templates, storage, bridges and cluster-wide unique template VM IDs in inventory variables rather than editing the role.
 
-Primarily used for my personal [homelab in DevHub](https://github.com/CollinPoetoehena/DevHub/blob/main/homelab/README.md) but also suitable for other small-scale lab environments.
+Primarily used for my personal [DevHub homelab](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/README.md) but also suitable for other small-scale lab environments.
 
 ## What it manages
 

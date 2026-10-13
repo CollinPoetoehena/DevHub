@@ -12,7 +12,7 @@ TODO: the IoT devices can run in VLAN 30 IoT, see [Network Topology & Design](..
 TODO: then add something like make your grocery shop list that exports to a PDF/PNG that automatically sorts it for you into sections (e.g. fruits, vegetables, dairy, meat, pantry), etc.
 TODO: and also make it read a Word document and extract the "benodigdheden" automatically and put it into a DB, etc.
 TODO: that will save a lot of time when doing grocery shopping, etc.!
-TODO: see [Python Packages](../../../packages/Python.md) for details, I want to build this in Python because it is fun, easy to maintain, and has a rich ecosystem for handling tasks like PDF/Word processing, database interactions, and web integrations, etc.! 
+TODO: see the DevHub [Python Packages guide](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Python.md) for details, I want to build this in Python because it is fun, easy to maintain, and has a rich ecosystem for handling tasks like PDF/Word processing, database interactions, and web integrations, etc.!
 TODO: see that file above and use best practices again I learned at my work also, such as Logging, Exceptions, etc.
 
 **TODO: 2: Energy Monitoring: TODO: make in separate repo (NOT in DevHub/Homelab, it is a separate service/project, so build it into a container and then deploy it in homelab, etc.!)**

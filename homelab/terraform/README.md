@@ -1,6 +1,6 @@
 # Terraform
 
-> **TODO:** Move this Terraform configuration into a dedicated repository named `devhub-terraform-proxmox-vms` by 2026-10-09, following the structure and conventions in the [DevHub Terraform reference](../../packages/Terraform.md).
+> **TODO:** Move this Terraform configuration into a dedicated repository named `devhub-terraform-proxmox-vms` by 2026-10-09, following the structure and conventions in the DevHub [Terraform reference](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/Terraform.md).
 
 Terraform owns VM provisioning; general-purpose Linux guest configuration uses cloud-init and Ansible. The [Proxmox Ansible role](../ansible/roles/devhub.proxmox/README.md) manages cluster settings and Terraform's API account; it does not configure the host or prepare templates.
 

@@ -1,6 +1,6 @@
 # Security and Public Repository
 
-The homelab is documented in the public DevHub repository so others can learn from and reuse it, and so it can serve as a portfolio of the design and automation work. Public visibility is intentional; exposing information that could identify or provide access to the real network is not.
+The homelab is documented in the public [`devhub-homelab` repository](https://github.com/CollinPoetoehena/devhub-homelab) so others can learn from and reuse it, and so it can serve as a portfolio of the design and automation work. It is a separate project in the wider [DevHub ecosystem](https://github.com/CollinPoetoehena/DevHub/blob/main/README.md), but the same publication and security rules apply. Public visibility is intentional; exposing information that could identify or provide access to the real network is not.
 
 This document is the central reference for homelab security in this public repository. It defines what information may be documented, how secrets must be managed, and how to review content before publishing. Use it as the baseline when creating or updating homelab documentation, configuration, automation, and other repository content.
 
@@ -125,4 +125,4 @@ Assume an exposed credential or access-enabling detail has been copied and may b
 
 ## Related Documentation
 
-See [Local Environment Setup](./2_Setup/1_Setup_Local_Environment.md) for this repository's Ansible Vault workflow, [Network Setup](./2_Setup/2_Setup_Network.md) for network-specific guidance, [Software Prerequisites](./1_Design/2_Design_Software_Prerequisites.md#secrets-management) for the homelab's secrets-management design, and the [homelab project skill](../../.github/skills/homelab-project/SKILL.md) for AI assistants working in this repository.
+See [Local Environment Setup](./2_Setup/1_Setup_Local_Environment.md) for this repository's Ansible Vault workflow, [Network Setup](./2_Setup/2_Setup_Network.md) for network-specific guidance, [Software Prerequisites](./1_Design/2_Design_Software_Prerequisites.md#secrets-management) for the homelab's secrets-management design, and the [homelab project skill](../.github/skills/homelab-project/SKILL.md) for AI assistants working in this repository.
