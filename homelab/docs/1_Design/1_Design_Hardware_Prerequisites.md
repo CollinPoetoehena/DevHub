@@ -4,6 +4,8 @@ This document is the **central place for every hardware decision in this homelab
 
 Its counterpart is [Design: Software & Prerequisites](2_Design_Software_Prerequisites.md), which is the equivalent central place for every **software** decision (network platform, hypervisor, cluster, automation, observability, backup). Together the two documents own all concrete implementation choices; the remaining design documents (network, cluster, storage) describe the *architecture* and deliberately name no products or tools.
 
+For networking, **[Network Design](3_Design_Network.md) is the authoritative design; this document records the actual hardware used to implement it**. The shared-gateway decision, segmentation, topology, firewall boundaries, and wired-AP-versus-mesh rationale belong there. Here the question is which devices satisfy those requirements, with their specifications, prices, purchasing choices, and hardware limitations; configuration steps belong in [Network Setup](../2_Setup/2_Setup_Network.md).
+
 >**IMPORTANT NOTE:** This guide is focused on my personal homelab goals (see [Personal Goals](0_Design_Goals.md)), the purchasing strategy and hardware choices may not be suitable for everyone. So, make sure to adapt it to your own needs and constraints.
 
 ## Why All Hardware Is in This One File
@@ -84,7 +86,7 @@ My setup is split into **shared home-and-lab networking** (the things that move 
 
 ### General Home Network Design
 
-Start with the ordinary home network, not a separate stack bought only for the lab. The modem terminates the ISP connection; the router provides the firewall and routing; the switch expands wired connectivity and carries VLANs; access points provide Wi-Fi. These responsibilities are separate even when a consumer all-in-one box combines them. See the [layered network topology](3_Design_Network.md#network-topology--design) for how these roles fit together.
+This is a **hardware mapping of the [network design](3_Design_Network.md#network-topology--design), not a separate architecture**. Start with equipment for the ordinary home network, not a separate stack bought only for the lab. The diagram below names the devices implementing those roles; see [why one shared gateway](3_Design_Network.md#chosen-one-shared-gateway-with-segmentation) and [why wired APs instead of mesh](3_Design_Network.md#why-wired-access-points-instead-of-a-mesh-system) for the design rationale.
 
 ```text
 Internet
@@ -149,6 +151,8 @@ The Cloud Gateway hosts UniFi Network, so no controller VM or CloudKey is requir
 
 **Chosen (2026-10): [UniFi Cloud Gateway Max](https://techspecs.ui.com/unifi/cloud-gateways/ucg-max), no optional NVR storage, €238.** Five 2.5GbE ports, routed VLANs, stateful firewalling, and a local console give a compact foundation without an OS installation or controller VM. There is **no built-in Wi-Fi or PoE output**; the switch and APs below are intentional components.
 
+**Why separate devices instead of an all-in-one?** The Max, PoE switch, and wired APs implement the [modular network design](3_Design_Network.md#why-separate-gateway-switch-and-access-points): place APs for signal coverage independently of the gateway, scale ports and wireless coverage separately, and replace individual components without replacing the entire box. UniFi keeps their administration together; separate hardware does not require separate management platforms.
+
 **Why Max over Ultra?** The Max offers 2.5GbE LAN and WAN for a future faster switch/direct device. Ultra remains excellent for gigabit: 2.5GbE WAN, four gigabit LAN ports. The premium buys headroom, not stronger VLAN isolation or immediate speed through this gigabit switch/AP setup. Routing/inspection capacity depends on firmware and enabled features; port speed is not guaranteed application throughput.
 
 **Why no storage?** This means **no optional NVMe recording SSD**, not no internal OS storage. Routing, firewalling, and UniFi Network do not need an NVR drive. UniFi Protect camera recording would need suitable recording storage; I have no cameras now, so it has no current benefit. Revisit a compatible drive/tray or recorder only if needed; it is not storage for VMs or a NAS.
@@ -158,6 +162,7 @@ The Cloud Gateway hosts UniFi Network, so no controller VM or CloudKey is requir
 | Alternative | Why not chosen here |
 |---|---|
 | **Cloud Gateway Ultra** | Cheaper and adequate for VLANs/firewall/gigabit; Max was selected for multi-gigabit LAN headroom, not because Ultra is poor. |
+| **UniFi Dream Router** | Integrated gateway, switching, and Wi-Fi can simplify a small installation. This setup deliberately uses separate wired AP locations and independently replaceable gateway/switch/AP hardware; see the [modular design rationale](3_Design_Network.md#why-separate-gateway-switch-and-access-points). External APs/switches can still extend an all-in-one; exact capabilities vary by model. |
 | **UniFi Express family** | Compact Wi-Fi/routing options vary by generation; this design separates gateway placement from two wired AP locations. |
 | **UniFi UXG gateway-only models** | Need separately hosted management here; suitable when a controller already exists. |
 | **Higher-tier Cloud Gateways / Dream Machine rack models** | Faster uplinks/capacity, rack integration, or camera capabilities exceed present needs and cost more. |
@@ -228,7 +233,7 @@ There is no 6 GHz radio or multi-gigabit uplink. Wireless PHY rates are not appl
 | **UniFi wall / outdoor APs** | Appropriate for those installation needs, absent here. |
 | **TP-Link Omada EAP** | Strong VLAN-capable Wi-Fi value, particularly in an Omada ecosystem. |
 | **NETGEAR business / Aruba Instant On APs** | Credible segmentation; another management system adds little here. |
-| **ASUS mesh / TP-Link Deco / NETGEAR Orbi** | Convenient coverage, but per-SSID VLAN/backhaul support varies. Another mesh/router ecosystem is unnecessary. |
+| **ASUS mesh / TP-Link Deco / NETGEAR Orbi** | Convenient coverage, but per-SSID VLAN/backhaul support varies. See the [wired-AP design rationale](3_Design_Network.md#why-wired-access-points-instead-of-a-mesh-system); no additional mesh/router ecosystem is needed here. |
 | **ISP-provided APs / Wi-Fi extenders** | Convenient and potentially included, but VLAN controls, third-party gateway compatibility, ownership/subscription terms, and management vary. The comparison above explains why the integrated UniFi APs are chosen here. |
 | ISP Wi-Fi / single all-in-one router | Less cost, but placement/segmentation may not meet this plan. |
 | Wireless mesh backhaul | Useful without cabling, but consumes airtime and adds interference/availability dependencies. |

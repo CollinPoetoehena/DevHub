@@ -15,9 +15,11 @@ See the [Network Reference](../../../reference/network/README.md) for networking
 - [Network Setup Options](#network-setup-options)
   - [Chosen: One Shared Gateway with Segmentation](#chosen-one-shared-gateway-with-segmentation)
 - [Required Building Blocks (Design Level)](#required-building-blocks-design-level)
+  - [Why Separate Gateway, Switch, and Access Points](#why-separate-gateway-switch-and-access-points)
 - [Network Topology & Design](#network-topology--design)
   - [Core / Edge Layer](#core--edge-layer)
   - [Distribution and Access Layers](#distribution-and-access-layers)
+  - [Why Wired Access Points Instead of a Mesh System](#why-wired-access-points-instead-of-a-mesh-system)
 - [Subnet & VLAN Design](#subnet--vlan-design)
   - [IPv4 Addressing](#ipv4-addressing)
   - [IPv6 Design and Rollout](#ipv6-design-and-rollout)
@@ -25,6 +27,7 @@ See the [Network Reference](../../../reference/network/README.md) for networking
 - [Firewall and Access Policy](#firewall-and-access-policy)
   - [Management Access and Optional Jumphost](#management-access-and-optional-jumphost)
 - [Maintenance, Recovery, and Safe Experiments](#maintenance-recovery-and-safe-experiments)
+  - [Redundancy: Enterprise Requirements vs. Household Trade-offs](#redundancy-enterprise-requirements-vs-household-trade-offs)
 
 ---
 
@@ -40,6 +43,10 @@ See the [Network Reference](../../../reference/network/README.md) for networking
 ### Chosen: One Shared Gateway with Segmentation
 
 Maintaining a separate lab network does not make home-network maintenance disappear. The household already needs a router/firewall, switches, wireless coverage, security updates, and a recovery plan. Reuse that infrastructure and effort rather than buying and managing a second routing setup. One gateway avoids duplicating DHCP/DNS settings, firewall administration, backups, and firmware lifecycles; it also makes selected home-to-lab access easier to reason about.
+
+**Segmentation is a home-network security requirement, not just a lab feature.** Even without a lab, guest clients, IoT devices, trusted household clients, and infrastructure management should have appropriate trust boundaries and least-privilege access; see the [segment roles](#subnet--vlan-design) and [firewall policy](#firewall-and-access-policy). Build that capability into the home network once, then add the lab as another restricted segment rather than leaving the home LAN flat and treating a second router as the only way to isolate experiments.
+
+With separate home and lab routers, there are **two routing stacks to buy, build, secure, update, back up, troubleshoot, and recover**. The home router still needs its own segmentation and security care, while the lab router adds another configuration and maintenance lifecycle. This does not mean every cable, switch, or AP must be bought twice, but it does duplicate routing responsibilities and may require extra hardware and coordination between firewall rules. When the goal is simply to isolate lab traffic (which in this design it is!), the existing VLAN-capable gateway and managed network already provide that boundary; a second router adds no requirement that this design cannot meet.
 
 VLANs contain Layer 2 broadcasts and DHCP within their segments when ports and bridges are configured correctly. The gateway routes between those segments and denies unneeded traffic. A home client can reach an explicitly allowed lab application without gaining access to host management; an IoT client can reach an approved endpoint without reaching every home device. VLAN tagging alone is not a firewall, and neither IPv4 NAT nor a separate subnet automatically enforces these policies.
 
@@ -60,6 +67,19 @@ Keep the gateway **physical and separate from the virtualization platform**. Hou
 | **Cabling and power** | Suitable Ethernet runs, correctly rated PoE equipment, ventilation, accessible recovery cabling, and reliable power. | Physical installation quality is part of network reliability, not an afterthought. |
 
 Concrete capacities and limitations belong in the [hardware decision record](1_Design_Hardware_Prerequisites.md#part-1--networking-hardware). Essential local services must not require a public cloud connection or the lab to remain operational.
+
+### Why Separate Gateway, Switch, and Access Points
+
+**One shared network does not mean one all-in-one box.** The chosen design separates routing/firewalling, wired switching, and wireless access into purpose-built components, while keeping their configuration and policy coordinated. This is modular hardware within one network, not the [duplicated home-and-lab routing stacks rejected above](#chosen-one-shared-gateway-with-segmentation).
+
+- **Place each component where it works best:** the gateway can sit near the ISP handoff and the switch near wired connections, while APs go where they provide the best coverage. An all-in-one router's convenient cable location is not necessarily a good radio location; separate wired APs avoid that compromise.
+- **Scale only what needs expanding:** add or reposition an AP for coverage, expand switch ports or PoE capacity for more devices, or upgrade the gateway for routing throughput. These requirements need not grow together, so one does not force replacement of the others.
+- **Replace components independently:** a failed or outdated AP need not mean replacing a working gateway and switch. Troubleshooting and planned upgrades can focus on one role, although gateway or shared-switch outages still affect dependent devices; this is not redundancy.
+- **Keep configuration responsibilities clear:** firewall and routing policy live at the gateway, wired VLAN membership at the switch, and SSID-to-VLAN mapping at the APs; see the [layered topology](#network-topology--design). With coordinated management, this makes changes easier to reason about and gives explicit control over ports, coverage, and segment boundaries without adding another router.
+
+For someone comfortable with networking and the [VLAN and port model](#switch-port-assignments), this is the better fit for control, growth, and maintainability in this setup. It is **not automatically easier to configure or more secure**: trunks, SSIDs, firewall rules, and management access still need to agree across devices. The trade-off is more equipment, cabling, power connections, and initial cost than a compact all-in-one.
+
+An all-in-one gateway/switch/AP can be a good choice for a small home with suitable placement and sufficient ports, coverage, and segmentation support. Some also accept external switches and APs, so they are not inherently unexpandable. Here, separate coverage points and independent hardware lifecycles justify the modular setup; see the [gateway hardware alternatives](1_Design_Hardware_Prerequisites.md#router--firewall-cloud-gateway-max) for the concrete comparison.
 
 ---
 
@@ -115,6 +135,16 @@ Home and lab clients belong behind the shared gateway, not partly on the modem's
 The switch carries the gateway trunk and connects APs, wired household clients, and hypervisor hosts. Access ports present one VLAN untagged to ordinary devices. Trunks carry only the VLANs required by an AP or host; a lab host does not need the home or guest VLAN simply because the switch carries them.
 
 Map wireless SSIDs to the same logical segments as wired devices. Use wired AP backhaul rather than making wireless mesh a default dependency; place APs for coverage and validate roaming/channel use in the actual building. AP management belongs to the management segment, not to the guest or IoT SSID.
+
+### Why Wired Access Points Instead of a Mesh System
+
+**The requirement is reliable, segmented Wi-Fi coverage, not mesh itself.** Multiple wired APs can provide coverage and client roaming under the same SSIDs without a wireless mesh uplink. Roaming still depends on client behavior, placement, and radio settings; neither mesh branding nor multiple APs guarantees seamless handover.
+
+- **Wired backhaul is more predictable:** each AP reaches the switch over Ethernet instead of relying on a radio link through walls or interference. Wireless backhaul consumes airtime and can contend with clients, especially when they share a radio/channel; dedicated backhaul radios reduce that contention but do not remove the wireless dependency.
+- **Segmentation must extend to Wi-Fi:** coverage alone is not enough. APs must map Home, IoT, and Guest SSIDs to the [chosen VLANs](#subnet--vlan-design), keep management restricted, and leave routing to the shared gateway. A mesh system's guest network does not by itself prove support for that policy.
+- **Avoid a second routing or management stack:** another system in router mode could add NAT and its own DHCP/firewall configuration. Bridge/AP mode can avoid this, but its VLAN capabilities must still be verified. The selected design needs access points, not another gateway.
+
+Mesh is useful when Ethernet runs are impractical. Some mesh systems also support wired backhaul and suitable VLAN controls; those are not inherently unsuitable, but offer no needed advantage here over wired APs. The accepted trade-off is installing Ethernet and PoE to the coverage points in exchange for predictable uplinks and one consistent segmentation policy. See [Wi-Fi Access Points](1_Design_Hardware_Prerequisites.md#wi-fi-access-points) for the actual equipment and product alternatives.
 
 ---
 
@@ -201,3 +231,23 @@ The gateway is **not an application server or SSH jumphost**. If an SSH bastion 
 - Expect shared bandwidth and shared failure domains. If a future requirement demands physical independence, revisit separate hardware deliberately rather than assuming VLANs supply it.
 
 These records make the home network easier to understand and rebuild, while keeping the lab a learning environment rather than the household's critical service platform.
+
+### Redundancy: Enterprise Requirements vs. Household Trade-offs
+
+**Enterprises need redundancy where outages would breach availability commitments or cause unacceptable business impact.** The aim is to keep services running through component failure or planned maintenance, rather than waiting for replacement equipment. The required level follows the service's availability target; not every enterprise network needs every high-availability feature.
+
+| Layer | Typical enterprise redundancy | What it protects against |
+|---|---|---|
+| Internet access | Multiple ISP connections with independent access equipment and, where possible, diverse physical paths | Failure of one provider, modem, or access circuit |
+| Gateway / firewall | A supported high-availability pair with health checks, configuration synchronization, and state synchronization where supported | Gateway failure or maintenance, with tested failover |
+| Switching and links | Redundant switches and uplinks, with supported loop prevention or multi-chassis link aggregation and dual-connected critical hosts | Switch, port, or cable failure without creating network loops |
+| Wireless access | Overlapping AP coverage and resilient management where required | Loss of an AP while retaining sufficient coverage and capacity |
+| Power | UPS protection and, where justified, separate power feeds and redundant supplies | Short power interruptions or failure of one power path |
+
+Redundancy is **more than buying two boxes**: failover must be supported, configured, monitored, and tested, and the surviving path must carry the required load. Shared power, cabling, upstream equipment, or configuration mistakes can still defeat both paths. Backups help restore configuration but do not keep traffic flowing during an outage.
+
+**This household deliberately accepts downtime instead of paying for enterprise-style availability.** A failed gateway or shared switch can interrupt the network until a replacement arrives and its configuration is restored. That is inconvenient, but not catastrophic for this simple household: there are no enterprise uptime commitments or business-critical services that justify duplicate gateways, switches, independent internet subscriptions, and their additional maintenance. Ideally, redundancy would reduce interruptions; for the [personal goals](0_Design_Goals.md), its cost and operational complexity outweigh that benefit. The two APs serve coverage needs, not a guaranteed redundant Wi-Fi design.
+
+For essential internet access during an outage, use a **mobile hotspot or a travel router with a supported mobile uplink** temporarily, subject to signal, data allowance, and device compatibility. This can keep selected household clients online; it does not restore the lab, wired LAN, normal VLAN policy, or all local services. Keep it a limited fallback, not an unplanned bridge that bypasses the [segmentation and firewall policy](#firewall-and-access-policy).
+
+The **ISP modem and single ISP connection remain single points of failure** even if the internal gateway and switch were duplicated. Removing that dependency requires genuinely independent upstream connectivity; two internal routers alone do not provide end-to-end redundancy. The chosen approach is therefore [documented recovery and private backups](#maintenance-recovery-and-safe-experiments), replacement of the failed component, and temporary mobile access when needed. Revisit redundancy if prolonged outages become unacceptable or the household's requirements change.
