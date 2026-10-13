@@ -1,3 +1,0 @@
----
-# handlers file for users
-# No handlers required — all operations are idempotent file/user/group tasks.
