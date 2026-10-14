@@ -8,6 +8,25 @@ node_modules
 .env
 *.bkp
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+htmlcov/
+build/
+dist/
+*.egg-info/
+
 # Normally, all content of .vscode would be added to .gitignore, but this is a 
 # special case becaus I want to include the launch.json. This file contains an example 
 # I can use for running SpringBoot applications in VSCode.

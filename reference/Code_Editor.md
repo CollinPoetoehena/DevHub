@@ -6,6 +6,7 @@ This guide describes my code editor setup and the account and Git configuration 
 
 ## Contents
 
+- [Personal DevHub AI customizations](#personal-devhub-ai-customizations)
 - [Scope](#scope)
 - [Editor](#editor)
 - [VS Code Settings and Extensions](#vs-code-settings-and-extensions)
@@ -25,6 +26,18 @@ This guide describes my code editor setup and the account and Git configuration 
         - [Configure Multiple Work Git Platforms](#configure-multiple-work-git-platforms)
         - [Load Keys into an SSH Agent](#load-keys-into-an-ssh-agent)
         - [Clone or Update a Repository](#clone-or-update-a-repository)
+
+---
+
+## Personal DevHub AI customizations
+
+Use the central [DevHub installation guide](../install/README.md) to install my personal Copilot skills and agents:
+
+```sh
+python3 /path/to/DevHub/install/install.py
+```
+
+Then add the documented [login-shell hook](../install/README.md#run-at-shell-login) so Bash or Zsh logins invoke Python to check GitHub for the latest setup. The installer uses an isolated temporary checkout and persistent managed copies, not my development clone. It currently supports Linux and WSL with Python 3.10+ and Git; install inside the environment where Copilot runs and verify discovery in the host. Settings Sync does not replace this installation. Review the guide's trust and workplace-policy notes before enabling automatic upstream updates. See [why Python is used](../install/README.md#why-python) and the matching [uninstall command](../install/README.md#uninstall).
 
 ---
 

@@ -1,5 +1,9 @@
 # Reusable GitHub Actions Workflows
 
+> **TODO:** Reusable workflows are not developed yet. Implement and validate them before use; the guidance below describes the intended approach.
+
+Return to the [shared GitHub customizations overview](../OVERVIEW.md) for other topics.
+
 This directory is for GitHub Actions workflows that provide common automation for multiple repositories. A project can call a reusable workflow instead of copying its implementation, while keeping its own trigger, inputs, permissions, secrets, and project-specific jobs in its repository.
 
 The current [`publish.yml`](./publish.yml) is a placeholder; it does not yet define a callable reusable workflow. Before adopting it from another repository, implement and validate the reusable workflow interface (`workflow_call`, inputs, secrets, outputs, and permissions) and document the supported contract here.

@@ -2,10 +2,25 @@
 
 > This file is named `OVERVIEW.md` rather than `README.md` because GitHub gives a `.github/README.md` precedence over the repository-root `README.md` on the repository home page. Using a different filename keeps the root README as the repository's landing page while this file provides an overview of the shared GitHub customizations.
 
-This folder contains generic automation and AI workflows that can be reused across DevHub projects and other repositories. Keep project-specific implementation and settings in the project that owns them; keep reusable guidance and workflows here.
+This is the entry point for DevHub's shared GitHub customizations: reusable AI guidance and GitHub Actions workflows.
 
-- [Reusable GitHub Actions workflows](./workflows/README.md) describes how to call workflows from other repositories and the current workflow's status.
-- [Reusable Agent Skills](./skills/README.md) explains how to use the generic skills and adapt them to a repository.
-- The [DevHub README](../README.md#what-belongs-in-devhub) explains why these shared resources live in DevHub while larger project implementations, such as the homelab, live in separate repositories.
+## Table of contents
 
-These files are examples and shared starting points, not a requirement that every project use the same workflow. Review inputs, permissions, secrets, and security implications in the consuming repository before adopting them.
+- [AI customizations](#ai-customizations)
+- [GitHub Actions workflows](#github-actions-workflows)
+
+---
+
+## AI customizations
+
+See [AI Customizations](./AI.md) for the customization types, design principles, and central guidance on using external or centralized customizations across repositories.
+
+The type-specific guides cover [instructions](./instructions/README.md), [skills](./skills/README.md), and [agents](./agents/README.md).
+
+---
+
+## GitHub Actions workflows
+
+See [Reusable GitHub Actions Workflows](./workflows/README.md) for the workflow documentation and current development status.
+
+> **TODO:** Reusable workflows are not developed yet; the current publishing workflow is only a placeholder.

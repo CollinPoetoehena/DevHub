@@ -2,6 +2,8 @@
 
 The `scripts/` folder contains shared utility scripts used across the project. These are standalone tools that don't belong to a specific sub-project.
 
+For installing DevHub resources and configuring login-time updates, use the central [installation guide](../install/README.md).
+
 | Script | Description |
 |--------|-------------|
 | `load_config.sh` | Shared configuration loader — sources project-wide variables and utility functions. Other scripts source this file to get the project root path and common settings. |

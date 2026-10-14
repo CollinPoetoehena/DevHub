@@ -15,6 +15,8 @@ The name reflects the purpose:
 
 > **Scope of this README:** This is a concise introduction to DevHub's purpose and structure, not a full explanation of every area or project. More detail belongs in the relevant documentation linked below; the root README should stay short enough to work as a clear entry point.
 
+For documentation changes, follow the [Documentation Guidelines](./DOCUMENTATION.md).
+
 ---
 
 ## Why I Maintain DevHub
@@ -33,7 +35,8 @@ DevHub is intended to grow through broadly reusable material, not by absorbing t
 
 - **[Reference documentation](./reference/README.md)** collects general concepts, practical commands, and guidance that can be reused across projects.
 - **[Scripts](./scripts/README.md)** contains shared utility scripts that are not owned by one specific project.
-- **[Generic GitHub workflows and AI skills](./.github/OVERVIEW.md)** provide reusable automation and agent workflows, including shared GitHub Actions and GitHub Copilot skills.
+- **[Local installation](./install/README.md)** provides a central installer with focused components, currently for personal AI customizations and login-time updates.
+- **[Generic GitHub workflows and AI customizations](./.github/OVERVIEW.md)** explain how to use GitHub Copilot instructions, skills, and agents, and provide reusable GitHub Actions and skills.
 - **[Packages](./packages/README.md)** is the index and shared publishing guidance for reusable components. The implementations themselves—such as Python packages, Ansible roles, Terraform modules, and Helm charts—belong in their own repositories, where they can be versioned, released, tested, and maintained independently.
 
 These resources can be useful across several repositories, so keeping them centralized avoids duplication and gives generic guidance one place to evolve. DevHub can therefore become larger while retaining a clear purpose: the contents are shared resources or an entry point, not a collection of unrelated project implementations.
@@ -44,7 +47,7 @@ These resources can be useful across several repositories, so keeping them centr
 
 Larger efforts with their own implementation, configuration, release cycle, or operational lifecycle should live in their own repositories and link back here for shared guidance:
 
-- **[Home lab — devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab)** is a separate project for the home network and lab design, documentation, infrastructure implementation, and automation. It is part of the wider DevHub ecosystem, but has its own repository so its code, maintenance, pipelines, repository permissions, and project-specific secrets can be managed independently. This root README remains its DevHub entry point; see the [AI reference](./reference/AI.md#coding-github-copilot-in-vs-code) for shared AI workflow guidance.
+- **[Home lab — devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab)** is a separate project for the home network and lab design, documentation, infrastructure implementation, and automation. It is part of the wider DevHub ecosystem, but has its own repository so its code, maintenance, pipelines, repository permissions, and project-specific secrets can be managed independently. This root README remains its DevHub entry point; see the [AI reference](./reference/AI.md#reusable-ai-workflows-and-agents) for general principles and the [GitHub Copilot guide](./.github/AI.md) for product-specific setup.
 
 The distinction is about ownership and reuse, not whether a project is related to development. A homelab is a development platform, but its specific implementation is still a distinct project. DevHub links projects together and provides the generic material they share; it does not need to contain each project's implementation.
 
