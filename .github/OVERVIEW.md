@@ -15,6 +15,8 @@ This is the entry point for DevHub's shared GitHub customizations: reusable AI g
 
 See [AI Customizations](./AI.md) for the customization types, design principles, and central guidance on using external or centralized customizations across repositories.
 
+The collection reflects my [personal preferences and workplace reuse](./AI.md#personal-preferences-and-workplace-reuse). Its generic workflows discover each project's context automatically, so a separate team-generic collection is optional extra maintenance; prefer project-specific additions.
+
 The type-specific guides cover [instructions](./instructions/README.md), [skills](./skills/README.md), and [agents](./agents/README.md).
 
 ---

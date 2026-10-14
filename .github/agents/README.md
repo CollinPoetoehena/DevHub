@@ -4,6 +4,8 @@
 >
 > The rest of this page describes DevHub's conventions and examples; follow the official documentation for the supported file format, locations, and host-specific behavior.
 
+Start with the shared [Create and maintain customizations](../AI.md#create-and-maintain-customizations) guidance for design, automatic context discovery, self-contained roles, and validation. This page adds agent-specific details. These agents are part of my [personal collection, reusable for personal projects and at work](../AI.md#personal-preferences-and-workplace-reuse); prefer project-specific additions rather than another generic collection.
+
 ## Table of contents
 
 - [DevHub agents](#devhub-agents)
@@ -44,15 +46,13 @@ See [Use external or centralized customizations across repositories](../AI.md#us
 
 ## Create a repository agent
 
-For requests to create or maintain a DevHub skill or custom agent, use the [`devhub-create-ai-customization` skill](../skills/devhub-create-ai-customization/SKILL.md). The guidance below is general agent-design context; the skill adds the DevHub-specific workflow and requirements.
+Apply the shared [authoring guidance](../AI.md#create-and-maintain-customizations), then add the agent-specific role definition. The [`devhub-create-ai-customization` skill](../skills/devhub-create-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
 
-For a DevHub agent, add a Markdown file here using a `.agent.md` suffix. Give it a clear role name and description in its supported YAML frontmatter, then write role-specific instructions in the body. Use a `devhub-` prefix in the filename and agent name for DevHub-maintained agents.
+For a DevHub agent, add a Markdown file here using a `devhub-` prefixed filename and `.agent.md` suffix. Give it a clear role name and description in its supported YAML frontmatter, then write role-specific instructions in the body.
 
 Define the agent's responsibilities, boundaries, relevant context, and expected response. If the role should not edit files, say so and, where the host supports it, restrict its tools to inspection. Instructions alone do not technically prevent file changes.
 
-Avoid creating an agent for every task variation. Use a skill for a repeatable task workflow and instructions for persistent repository rules. Keep the role self-contained; do not require it to invoke a particular skill.
-
-Include automatic discovery of project instructions, documentation, structure, and relevant configuration, with a broader repository search when common locations are insufficient. This lets the same role work across repositories without making users supply discoverable paths or conventions. Users still provide goals, unresolved decisions, and authorization. Have the agent report which files informed its guidelines and structural understanding, and state any discovery limitations rather than inventing missing context.
+Immediately after the frontmatter, include the user-facing maintenance note linking to that exact agent's source in DevHub; label it as provenance, not required reading. Add or update its entry in [DevHub agents](#devhub-agents).
 
 The supported file locations and available frontmatter options can differ across Copilot hosts. Verify them in the official documentation before using options beyond the basic name and description.
 

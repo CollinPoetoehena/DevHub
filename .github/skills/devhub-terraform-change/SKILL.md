@@ -5,6 +5,8 @@ description: "Implement or fix Terraform modules and configurations. Discover pr
 
 > **Maintenance note for users:** This skill is maintained in [DevHub](https://github.com/CollinPoetoehena/DevHub/blob/main/.github/skills/devhub-terraform-change/SKILL.md). This is provenance information only; AI agents do not need to follow the link to use the skill.
 
+> **Invocation-specific instructions take precedence:** Follow explicit directions in the current skill invocation or accompanying request over conflicting defaults or procedures in this skill. For example, if the request says not to run tests, do not run them even if this workflow normally calls for tests, and report them as skipped. This does not override higher-priority system or developer instructions, host constraints, or applicable safety requirements.
+
 # Terraform Change
 
 Implement the requested Terraform change in the owning repository. Establish expected behavior, scope, and acceptance criteria; resolve material ambiguity before editing. This workflow is self-contained and does not require another skill.
@@ -44,3 +46,7 @@ DevHub Terraform projects generally do not have implemented automated tests. Dis
 Summarize changes, key files, compatibility and replacement risks, commands actually run and results, and checks skipped with reasons. State whether meaningful tests were found or only placeholders, and identify remaining manual verification or migration steps.
 
 Explicitly list the project files used for guidelines and structure, with links or paths and each file's role. Identify inferred conventions and missing dedicated guidance. Do not commit, push, deploy, weaken checks, or perform destructive operations unless explicitly requested.
+
+Before composing the commit message, inspect `git diff`, `git diff --cached`, and `git status --short`; review relevant untracked files too, since they are not included in those diffs. Base the message on the complete pending change set that `git add -A` will stage, including earlier session changes, not only the latest task or your own edits. Describe the combined scope without claiming ownership or validation of others' changes, and flag unrelated or unreviewed changes before offering the all-changes command.
+
+For file changes in a Git repository, end the report with a copy-ready `sh` block containing `git add -A && git commit` with a concrete task-specific message, followed by `&& git push`. Do not add a co-author trailer. Follow the consuming repository's commit conventions. Inspect the branch and upstream; if no upstream exists, use `git push --set-upstream` with a verified remote and current branch. Do not leave placeholders or invent a push target. Before the block, warn that `git add -A` stages all changes, including unrelated edits, and ask the user to review the diff. These commands are for the user; do not commit or push unless explicitly requested. If no files changed, the task is outside Git, or a safe sequence is blocked, explain why the commands are omitted or incomplete.

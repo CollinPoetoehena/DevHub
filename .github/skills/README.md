@@ -4,6 +4,8 @@
 >
 > The rest of this page describes DevHub's conventions and recommendations; use the official docs as the source of truth for supported Copilot behavior and formats.
 
+Start with the shared [Create and maintain customizations](../AI.md#create-and-maintain-customizations) guidance for design, automatic context discovery, self-contained workflows, validation, and completion reports. This page adds skill-specific details. These skills are part of my [personal collection, reusable for personal projects and at work](../AI.md#personal-preferences-and-workplace-reuse); prefer project-specific additions rather than another generic collection.
+
 DevHub maintains reusable, project-independent Agent Skills under `.github/skills/`. Each skill has its own directory containing a `SKILL.md`; the required YAML `name` matches the directory name. DevHub skill names use the `devhub-` prefix.
 
 Skills capture reusable task instructions, repeatable processes, and multi-step workflows as well as specialized knowledge. Supporting scripts and resources are optional; a repeatable process can be useful as a skill on its own.
@@ -23,10 +25,15 @@ Skills capture reusable task instructions, repeatable processes, and multi-step 
 ## Available skills
 
 - [`devhub-create-ai-customization`](./devhub-create-ai-customization/SKILL.md) — create or maintain a self-contained DevHub skill or custom agent (mainly used in this DevHub repository itself, but reusable across other repositories as well).
+- [`devhub-commit-message`](./devhub-commit-message/SKILL.md) — create a commit message and copy-ready Git handoff from all current changes, without editing files or committing.
 - [`devhub-docs`](./devhub-docs/SKILL.md) — create or update documentation using the owning project's conventions (can be used for any project since it is not tied to DevHub-specific practices, it automatically adapts to the project's existing documentation structure and guidelines).
 - [`devhub-generic-change`](./devhub-generic-change/SKILL.md) — implement and verify generic code changes using discovered project conventions (see specific skills below for more specific tool guidance, such as Ansible, etc.).
 - [`devhub-terraform-change`](./devhub-terraform-change/SKILL.md) — change Terraform code with infrastructure-specific safety and validation.
 - [`devhub-ansible-change`](./devhub-ansible-change/SKILL.md) — change Ansible roles and playbooks with idempotence, safe targeting, and validation.
+
+Commit-message and Git handoff guidance is already included directly in all the other DevHub skills. Use `/devhub-commit-message` when you only need that step, such as after many manual changes or work with a general AI assistant without a skill. It reviews the complete pending change set, not just the latest edit, and does not require running another skill first.
+
+Keeping it as a standalone skill gives this distinct, recurring task its own direct entry point without requiring a broader implementation or documentation workflow that is not needed. The overlap with other skills is intentional: it makes commit-message support discoverable and useful even when no other skill is active. See the shared [guidance on focused standalone skills](../AI.md#use-focused-standalone-skills) for the general rationale; this skill itself remains self-contained.
 
 ### Choosing a change skill
 
@@ -57,13 +64,17 @@ Each skill should be useful on its own. Do not build workflows that depend on Co
 
 Follow GitHub's [Creating and adding a skill](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills#creating-and-adding-a-skill) instructions for the supported folder structure and required `SKILL.md` frontmatter.
 
-For requests to create or maintain a skill or custom agent in DevHub, use the [`devhub-create-ai-customization` skill](./devhub-create-ai-customization/SKILL.md). The guidance below is general design context; that skill adds the DevHub-specific workflow and requirements.
+Apply the shared [authoring guidance](../AI.md#create-and-maintain-customizations), then add the skill-specific structure:
 
-Make the design choice deliberately. A skill is worthwhile when a repeatable workflow or specialized capability adds more value than the effort of creating and maintaining it. Do not create one for every small task or minor variation; combine closely related work when it shares a process, and split workflows only when the differences matter. Keep the skill self-contained rather than linking it to another skill as a required next step. This avoids an unreliable dependency chain and makes each skill usable even where cross-skill invocation is unsupported. Some duplication is acceptable; Copilot can help create and maintain the text, but a person should still review it.
+- Create `.github/skills/devhub-<short-name>/SKILL.md` with a matching lowercase, hyphenated YAML `name` and a concise `description` that explains the task and when to use the skill.
+- Write the focused task procedure in the body. Add scripts or supporting resources only when useful, keep them inside the skill directory, and explain when to use them.
+- Use AI to create and maintain the skill, including having it keep duplicated essential guidance consistent across skills when requirements change. Review the resulting diff yourself, verify that the skill remains accurate and self-contained for its task, and run relevant checks; AI assistance does not replace review.
+- Immediately after the frontmatter, include the user-facing maintenance note linking to that exact skill's source in DevHub; label it as provenance, not required reading.
+- Add or update the skill's entry in [Available skills](#available-skills).
+- Include the [Git command handoff requirement](../AI.md#end-skill-reports-with-ready-to-run-git-commands) directly in the skill: end reports for Git-backed changes with `git add -A`, a concrete commit message, and the appropriate `git push` command. Warn about staging unrelated edits and do not execute the commands without authorization.
+- Require the commit message to describe the full pending change set, including earlier session changes: inspect `git diff`, `git diff --cached`, and `git status --short`, and review relevant untracked files before composing it.
 
-When creating a reusable DevHub skill, use the `devhub-` prefix, keep the description clear about when Copilot should use it, and avoid assumptions about the consuming project's architecture or commands. Link to project-specific guidelines only when they are available in the consuming repository; the generic [`devhub-docs`](./devhub-docs/SKILL.md) workflow, for example, allows a repository to supply its own writing guidelines.
-
-Build automatic context discovery into the skill: inspect project instructions, documentation, relevant code, manifests, configuration, and CI, then search beyond common filenames when needed. This keeps the skill generic across repositories and avoids requiring users to supply custom paths, guideline files, or commands already available in the project. Ask only for information or decisions that cannot be safely discovered, and never infer authorization from a discovered command. Require the completion report to identify the files actually used for guidelines and structure, plus inferred conventions or missing guidance.
+The [`devhub-create-ai-customization` skill](./devhub-create-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
 
 ---
 
