@@ -10,6 +10,7 @@ Return to the [shared GitHub customizations overview](./OVERVIEW.md) for other t
 
 - [Why I developed and use these customizations](#why-i-developed-and-use-these-customizations)
 - [Which customization should I use?](#which-customization-should-i-use)
+- [Model selection](#model-selection)
 - [Approvals and permissions](#approvals-and-permissions)
 - [Personal preferences and workplace reuse](#personal-preferences-and-workplace-reuse)
 - [General design principles](#general-design-principles)
@@ -59,6 +60,21 @@ Use skills and agents for recurring, generic tasks or roles where saved guidance
 These mechanisms can overlap, but they solve different problems: instructions express rules, skills teach a task, prompts package a request, agents define a role, MCP servers provide capabilities, and hooks run configured actions. The availability and activation behavior of each feature depends on the AI product and host.
 
 > **Use skills instead of prompt files:** For new DevHub customizations, do not create `.prompt.md` files; use skills for reusable task instructions and repeatable processes, including multi-step workflows. Skills are not limited to specialized knowledge or bundled scripts. The [VS Code prompt file documentation](https://code.visualstudio.com/docs/agent-customization/prompt-files) states that prompt files are deprecated and are not loaded in Agent Host sessions; they continue to work with the Local agent for now. [Migrate existing prompt files to skills](https://code.visualstudio.com/docs/agent-customization/migrate-customizations#_convert-prompt-files-to-skills). This recommendation concerns saved prompt files, not ordinary one-off chat prompts.
+
+---
+
+## Model selection
+
+**Use Auto in the chat session by default**, including when using DevHub skills and custom agents. In my experience, it generally selects an appropriate model and gets the task done reliably, with excellent token/credit cost efficiency compared with routinely choosing a more expensive model manually. Auto matches task complexity to suitable models, reserving more costly reasoning for work that needs it; this improves cost efficiency, not necessarily the number of tokens used. GitHub currently also offers a **10% discount on model costs for paid Copilot plans** when using Auto in supported experiences. See the [AI reference's automatic model selection guidance](../reference/AI.md#automatic-model-selection) for the detailed rationale, experience, trade-offs, and when to switch to manual selection, and GitHub's [Auto model selection documentation](https://docs.github.com/en/copilot/concepts/models/auto-model-selection) for current availability and discount terms.
+
+**Choose the Balance tier by default for the Auto model selection.** It is generally my recommended option for everyday work: it weighs cost, answer quality, and latency against task complexity, saving costs while still providing good answers. **Efficiency** prioritizes cost and is also a useful option I sometimes explicitly select for straightforward work, such as simple documentation edits. **Intelligence** prioritizes quality and can favor higher-tier models that cost substantially more, though it does not route every task to an expensive model. I generally do not use it: in my experience, the low- and medium-cost models Balance usually selects get most work done perfectly, and even low-cost models have handled larger tasks successfully. Balance can still select a more capable model when needed; I have found it suitable even for very large and complex tasks without routinely paying for a higher-cost model. See GitHub's [Auto tier options](https://docs.github.com/en/copilot/concepts/models/auto-model-selection#auto-tier-options) for details.
+
+Keep model selection in the chat/session controls rather than hard-coding it into reusable customizations:
+
+- **Custom agents:** Omit the YAML `model` property by default so the agent inherits the session's selected/default model, including Auto when selected. Do not set `model: auto`: it is not a documented, portable supported frontmatter value and is unnecessary for inheritance. Only specify a fixed supported model when the task genuinely requires it. See the [custom agent configuration reference](https://docs.github.com/en/copilot/reference/custom-agents-configuration).
+- **Skills:** Do not add a `model` property to `SKILL.md`. Skills provide instructions, not model selection; they use the model of the chat session or agent invoking them.
+
+Exact defaults and model controls vary by host. Leaving the agent's model unset preserves the host's selection rather than forcing a particular model or attempting to enable Auto through frontmatter.
 
 ---
 
@@ -119,7 +135,7 @@ For a broader comparison of customization types, see the [VS Code customization 
 
 > **Shared authoring guidance:** My other repositories, such as [devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab), link to this section as the central reference for creating AI customizations, rather than maintaining separate copies of the generic guidance.
 
-This is the shared authoring guidance for DevHub's file-based AI customizations. Start here, then use the type-specific additions for [instructions](./instructions/README.md#what-to-include), [skills](./skills/README.md#create-a-skill), or [agents](./agents/README.md#create-a-repository-agent). For requests to create or maintain a DevHub skill or agent, the [`devhub-create-ai-customization` skill](./skills/devhub-create-ai-customization/SKILL.md) contains the complete executable workflow; it does not require following this page at runtime.
+This is the shared authoring guidance for DevHub's file-based AI customizations. Start here, then use the type-specific additions for [instructions](./instructions/README.md#what-to-include), [skills](./skills/README.md#create-a-skill), or [agents](./agents/README.md#create-a-repository-agent). For requests to create or maintain a DevHub skill or agent, the [`devhub-ai-customization` skill](./skills/devhub-ai-customization/SKILL.md) contains the complete executable workflow; it does not require following this page at runtime.
 
 Use AI to create and maintain customizations, including applying updates consistently when shared guidance is duplicated across skills. Review the complete diff yourself, confirm each customization remains accurate and self-contained for its purpose, and run relevant checks before relying on the changes; AI assistance is an editing aid, not a substitute for review.
 
@@ -138,6 +154,10 @@ Build task-appropriate discovery into every reusable skill or agent, and perform
 3. Treat common filenames as starting points, not mandatory inputs. If they do not reveal enough context, inspect the repository layout, search relevant filenames and contents, and follow existing entry-point links. Keep the search scoped and respect access restrictions.
 4. Do not hard-code consuming-project paths or require users to supply discoverable conventions and commands. Users still provide goals, material unresolved decisions, authorization, and inaccessible information. A discovered command is not permission to execute it.
 5. Require reports to identify the files actually read and used, each file's role, inferred conventions, and missing guidance. Do not invent context or claim discovery always succeeds.
+
+For code-change workflows, discover whether meaningful tests are implemented in the owning project or package by reading test contents and runner configuration, not merely finding a test directory. The [generic, Terraform, and Ansible change skills](./skills/README.md#choosing-a-change-skill) update or add coverage using an existing meaningful suite; when tests are absent or only placeholders exist, they skip test creation and execution by default and report why. Explicit user requests or applicable project requirements can require adding tests where none exist. Do not introduce a framework merely because code changed, including for standalone scripts. Continue applicable existing formatting, linting, syntax, type, build, or documentation checks, and distinguish static validation from runtime verification.
+
+Code-change guidance should also require concise comments for non-obvious reasoning, constraints, edge cases, or trade-offs, following the consuming project's style. Explain why rather than restating obvious code, and update or remove comments made inaccurate by a change.
 
 ### Keep each customization self-contained
 

@@ -1,15 +1,15 @@
 ---
-name: devhub-create-ai-customization
-description: "Create or maintain a self-contained GitHub Copilot skill or custom agent for DevHub. Use when asked to create or improve a reusable skill or agent."
+name: devhub-ai-customization
+description: "Create or maintain a self-contained GitHub Copilot skill or custom agent for DevHub. Use when asked to create, update, rename, or improve a reusable skill or agent."
 ---
 
-> **Maintenance note for users:** This skill is maintained in [DevHub](https://github.com/CollinPoetoehena/DevHub/blob/main/.github/skills/devhub-create-ai-customization/SKILL.md). This is provenance information only; AI agents do not need to follow the link to use the skill.
+> **Maintenance note for users:** This skill is maintained in [DevHub](https://github.com/CollinPoetoehena/DevHub/blob/main/.github/skills/devhub-ai-customization/SKILL.md). This is provenance information only; AI agents do not need to follow the link to use the skill.
 
 > **Invocation-specific instructions take precedence:** Follow explicit directions in the current skill invocation or accompanying request over conflicting defaults or procedures in this skill. For example, if the request limits which customizations to update, honor that scope rather than applying this workflow's broader defaults. This does not override higher-priority system or developer instructions, host constraints, or applicable safety requirements.
 
-# Create a DevHub Skill or Custom Agent
+# Create and Maintain DevHub Skills and Custom Agents
 
-Create exactly the requested kind of GitHub Copilot customization: either an Agent Skill or a custom agent. Do not create both unless asked. Keep the result useful outside one specific project unless the request explicitly requires project-specific context.
+Create or maintain exactly the requested kind of GitHub Copilot customization: either an Agent Skill or a custom agent. Do not create or update both unless asked. Keep the result useful outside one specific project unless the request explicitly requires project-specific context.
 
 ## Decide Whether It Adds Value
 

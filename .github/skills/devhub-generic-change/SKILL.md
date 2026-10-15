@@ -21,7 +21,7 @@ Automatically discover the consuming project's guidance before editing; do not a
 
 1. Identify the owning repository or package. Read applicable `AGENTS.md`, `.github/copilot-instructions.md`, relevant `.github/instructions/*.instructions.md`, and directory-specific guidance.
 2. Check common entry points such as `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `DEVELOPMENT.md`, and coding, testing, or security guides under `docs/`, `doc/`, `documentation/`, `reference/`, and package-local directories.
-3. Inspect relevant source and test directories, neighboring implementations, dependency manifests, build and lint configuration, `Makefile`, `Taskfile.yml`, and CI workflows. Discover the actual commands, supported versions, architecture, and test conventions rather than assuming a framework.
+3. Inspect relevant source and test directories, neighboring implementations, dependency manifests, build and lint configuration, `Makefile`, `Taskfile.yml`, and CI workflows. Read test contents and runner configuration to establish whether meaningful tests exist for the owning project or package; tests in an unrelated package do not establish a suite for the affected code. Discover the actual commands, supported versions, architecture, and test conventions rather than assuming a framework.
 4. These are candidates, not required names. If they do not reveal the guidance or structure, inspect the repository layout, search filenames and contents for relevant conventions and commands, and follow links from existing entry points. Keep discovery scoped to the task and respect access restrictions.
 5. Track the files actually read and used, distinguishing explicit rules from inferred conventions. When dedicated guidance is absent, use the nearest consistent patterns and report the limitation. Resolve only material remaining ambiguity with the user.
 
@@ -36,10 +36,19 @@ Automatically discover the consuming project's guidance before editing; do not a
 1. Make the smallest maintainable change that meets the objective. Fix root causes rather than masking symptoms.
 2. Follow existing conventions and reuse suitable code, dependencies, and test helpers. Avoid unrelated refactoring and unnecessary dependencies.
 3. Preserve existing user changes. Do not overwrite changes unrelated to the request.
-4. Add or update tests for changed behavior and relevant edge cases; add a regression test for bug fixes where practical.
-5. Validate the touched behavior with the narrowest useful checks, escalating to broader tests, linting, type checks, and builds as warranted.
-6. Fix failures introduced by the change and rerun affected checks. Report unrelated or pre-existing failures without expanding scope.
-7. Update directly related documentation and keep it consistent with the implementation. If a changelog exists, update it accordingly.
+4. Add concise comments where non-obvious reasoning, constraints, edge cases, or trade-offs need explanation. Explain why, not what the code already makes clear; avoid narrating obvious code or adding comments merely for coverage. Follow local style and update or remove comments made inaccurate by the change.
+5. Update directly related documentation and keep it consistent with the implementation. If a changelog exists, update it accordingly.
+
+## Tests and Validation
+
+Discover the consuming project's actual test setup; do not assume automated tests are present or required for every change.
+
+1. Read test contents and runner configuration, not just directory names. Empty files, generated scaffolding, TODOs, commented examples, and trivial assertions unrelated to real behavior are not an implemented test suite.
+2. If meaningful tests are implemented for the owning project or package, update or add coverage for changed behavior and relevant edge cases using that suite, including regression coverage for bug fixes where practical. Preserve existing coverage even if the suite does not yet cover the touched behavior. Run the narrowest relevant checks.
+3. If no meaningful tests are implemented, skip adding or running automated tests by default and report why, including any placeholder paths inspected. For example, changing a standalone script without tests does not justify adding a suite. Do not introduce a framework, runner, dependencies, or test scaffolding merely for this change. Explicit user requests or applicable project requirements for tests take precedence; when tests are requested, follow discovered conventions and clarify material tooling or scope decisions if none exist.
+4. Skipping tests does not skip other applicable validation. Use existing formatting, linting, syntax checks, type checks, and builds as appropriate, starting with the narrowest useful checks. Do not introduce tooling solely because a check is absent. For documentation-only changes, use existing documentation checks where available; do not run unrelated code tests or builds.
+5. Inspect commands and their side effects before execution. Tests, builds, and manual checks that access external services, change data, or execute scripts require an approved safe target and appropriate authorization; discovery is not permission to run them.
+6. Fix failures introduced by the change and rerun affected checks. Report unavailable tools, unrelated or pre-existing failures, and unverified behavior explicitly. Do not claim static checks prove runtime behavior.
 
 ## Constraints
 
@@ -50,7 +59,7 @@ Automatically discover the consuming project's guidance before editing; do not a
 
 ## Completion Report
 
-Summarize the changes, key files, checks actually run and their results, checks skipped and why, plus remaining risks or manual steps. Clearly distinguish verified results from untested expectations.
+Summarize the changes, key files, checks actually run and their results, checks skipped and why, plus remaining risks or manual steps. State whether meaningful tests were found, only placeholders were found, or tests were absent, and explain the resulting testing decision. Clearly distinguish verified results from untested expectations.
 
 Explicitly list the files used to establish project guidelines and structure, with links or paths and each file's role. Report missing dedicated guidance and any conventions inferred from existing code.
 

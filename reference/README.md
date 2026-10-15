@@ -10,7 +10,9 @@ It is not intended to be a complete guide of Software Engineering/IT in general 
 
 > “Your professional success and quality of life depend directly on your ability to manage information effectively.” — Tiago Forte
 
-We consume far more information than we can reliably remember. Notes and references give important knowledge a place outside my memory, so I can find and use it again instead of repeatedly searching for it or relearning it. Writing also makes me slow down, decide what matters, and formulate my thoughts clearly. Turning an idea into words often reveals gaps, assumptions, or connections that were not obvious while the idea was still only in my head.
+My broader view on thinking, judgment, and memory is explained in [Why I Maintain DevHub](../README.md#why-i-maintain-devhub). Here, the focus is on how documentation makes useful information clear, retrievable, and reusable.
+
+Writing makes me slow down, decide what matters, and explain it clearly. Recording the reasoning, assumptions, and alternatives behind a decision preserves its context, so I can revisit it when circumstances change. Notes and references also reduce repeated searches and give useful concepts, commands, and lessons a stable place to return to.
 
 I document concepts, decisions, commands, and lessons that are useful beyond the moment I learn them. This creates a practical reference for future work, supports more consistent decisions, and makes it easier to apply knowledge across projects. The purpose is not to record everything or build an encyclopedia: it is to curate useful information, organize it so it can be retrieved, and keep it accurate enough to trust.
 

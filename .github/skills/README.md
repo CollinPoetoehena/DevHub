@@ -24,10 +24,10 @@ Skills capture reusable task instructions, repeatable processes, and multi-step 
 
 ## Available skills
 
-- [`devhub-create-ai-customization`](./devhub-create-ai-customization/SKILL.md) — create or maintain a self-contained DevHub skill or custom agent (mainly used in this DevHub repository itself, but reusable across other repositories as well).
+- [`devhub-ai-customization`](./devhub-ai-customization/SKILL.md) — create or maintain a self-contained DevHub skill or custom agent (mainly used in this DevHub repository itself, but reusable across other repositories as well).
 - [`devhub-commit-message`](./devhub-commit-message/SKILL.md) — create a commit message and copy-ready Git handoff from all current changes, without editing files or committing.
 - [`devhub-docs`](./devhub-docs/SKILL.md) — create or update documentation using the owning project's conventions (can be used for any project since it is not tied to DevHub-specific practices, it automatically adapts to the project's existing documentation structure and guidelines).
-- [`devhub-generic-change`](./devhub-generic-change/SKILL.md) — implement and verify generic code changes using discovered project conventions (see specific skills below for more specific tool guidance, such as Ansible, etc.).
+- [`devhub-generic-change`](./devhub-generic-change/SKILL.md) — implement and verify generic code changes using discovered project conventions and existing test setup, with comments for non-obvious reasoning (see specific skills below for more specific tool guidance, such as Ansible, etc.).
 - [`devhub-terraform-change`](./devhub-terraform-change/SKILL.md) — change Terraform code with infrastructure-specific safety and validation.
 - [`devhub-ansible-change`](./devhub-ansible-change/SKILL.md) — change Ansible roles and playbooks with idempotence, safe targeting, and validation.
 
@@ -44,7 +44,9 @@ Use [`devhub-generic-change`](./devhub-generic-change/SKILL.md) for generic code
 | [`devhub-terraform-change`](./devhub-terraform-change/SKILL.md) | Terraform modules and configurations | Resource/state compatibility, replacement risks, provider-aware validation, and infrastructure side effects |
 | [`devhub-ansible-change`](./devhub-ansible-change/SKILL.md) | Ansible roles, playbooks, and collections | Idempotence, variable precedence, handlers, inventories, and safe managed-host targeting |
 
-These skills exist because infrastructure changes need additions to the generic code-change workflow, including a different approach to testing. DevHub Terraform and Ansible projects generally do not have implemented automated tests. Each skill discovers the consuming project's actual test setup: if meaningful tests exist, update or add coverage for the change; otherwise skip test creation and execution by default and report the reason. An existing `test/` or `tests/` directory alone is not evidence of implemented tests: generated Ansible role test playbooks and other default/basic scaffolding without real behavioral verification count as skipped.
+The tool-specific skills add infrastructure safety and validation to the generic code-change workflow. All three change skills discover the consuming project's actual test setup rather than assuming tests exist. If meaningful tests exist in the owning project or package, update or add coverage for the change using that suite; otherwise skip test creation and execution by default and report the reason. This also applies to standalone scripts without tests: a code change alone does not justify introducing a suite or framework. To add tests where none exist, explicitly request them, unless applicable project requirements already mandate them.
+
+An existing `test/` or `tests/` directory alone is not evidence of implemented tests: generated Ansible role test playbooks and other default/basic scaffolding without real behavioral verification count as placeholders. DevHub Terraform and Ansible projects generally do not have implemented automated tests, but discovery establishes the consuming project's actual state.
 
 Skipping tests does not skip applicable formatting, linting, syntax, or static validation. Explicit test requests and project requirements take precedence. Each change skill automatically discovers local guidance and structure, reports which files informed the work, and is self-contained; the tool-specific skills do not require invoking the generic skill first.
 
@@ -74,7 +76,7 @@ Apply the shared [authoring guidance](../AI.md#create-and-maintain-customization
 - Include the [Git command handoff requirement](../AI.md#end-skill-reports-with-ready-to-run-git-commands) directly in the skill: end reports for Git-backed changes with `git add -A`, a concrete commit message, and the appropriate `git push` command. Warn about staging unrelated edits and do not execute the commands without authorization.
 - Require the commit message to describe the full pending change set, including earlier session changes: inspect `git diff`, `git diff --cached`, and `git status --short`, and review relevant untracked files before composing it.
 
-The [`devhub-create-ai-customization` skill](./devhub-create-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
+The [`devhub-ai-customization` skill](./devhub-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
 
 ---
 

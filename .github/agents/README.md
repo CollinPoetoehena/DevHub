@@ -46,7 +46,7 @@ See [Use external or centralized customizations across repositories](../AI.md#us
 
 ## Create a repository agent
 
-Apply the shared [authoring guidance](../AI.md#create-and-maintain-customizations), then add the agent-specific role definition. The [`devhub-create-ai-customization` skill](../skills/devhub-create-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
+Apply the shared [authoring guidance](../AI.md#create-and-maintain-customizations), then add the agent-specific role definition. The [`devhub-ai-customization` skill](../skills/devhub-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
 
 For a DevHub agent, add a Markdown file here using a `devhub-` prefixed filename and `.agent.md` suffix. Give it a clear role name and description in its supported YAML frontmatter, then write role-specific instructions in the body.
 
