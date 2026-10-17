@@ -50,12 +50,11 @@ A router creates a new, separate subnet. LAN devices get private IPs from the ro
 
 ### Switch
 
-A switch connects multiple devices within the same network. It does not create a new network, does not run DHCP, provides no firewall, and does no routing. Think of it as a power strip for Ethernet: it gives you more ports, but everything plugged in is on the same network.
+A basic Layer 2 switch forwards Ethernet frames within a network. Managed switches can assign ports to separate VLANs, and some switches also support Layer 3 routing or other controls. Do not assume that adding switch ports creates a trust boundary, or that the gateway firewall inspects traffic routed elsewhere. Use the [network design reference](./Network_Design.md#segmentation-and-access) to decide where policy must be enforced.
 
-| Device | Creates new network | DHCP | Firewall | Isolation |
-|--------|---------------------|------|----------|-----------|
-| Switch | No                  | No   | No       | No        |
-| Router | Yes                 | Yes  | Yes      | Yes       |
+An unmanaged switch adds ordinary LAN ports in much the same way as the LAN switch built into many home routers; it is not inherently more powerful or a router. It normally lacks configurable VLAN membership, QoS policy and DHCP snooping, even if it passes tagged frames or implements fixed traffic-priority behavior. A fully managed switch exposes configurable network controls. A **smart** or **web-managed** switch usually offers a smaller, simpler subset of managed features, often including VLANs and basic QoS. These labels are not standardized capability guarantees: check the exact model and firmware.
+
+PoE, link aggregation, DHCP snooping and Layer 3 routing are **separate features**, not what makes a switch "smart." Some smart switches provide selected Layer 3 functions or PoE; some fully managed switches do not. For VLAN designs, verify access-port membership, tagged uplinks, management restrictions and the required diagnostics, not just the marketing tier.
 
 ### VLAN (Virtual LAN)
 

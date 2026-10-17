@@ -27,7 +27,7 @@ That is why this reference is centralized in DevHub rather than repeated in each
 | [AI.md](AI.md) | AI background, agents, prompt engineering, and how to use AI (and which model tier) effectively for Software Engineering work. |
 | [Code_Editor.md](Code_Editor.md) | Personal code editor setup, account separation, Settings Sync, subscriptions, and Git with personal and work accounts. |
 | [Software_Engineering_Principles.md](Software_Engineering_Principles.md) | Language-agnostic coding and design principles (DRY, KISS, YAGNI, SOLID, coupling/cohesion, Clean Architecture, Twelve-Factor, etc.). |
-| [Network Reference](network/README.md) | Networking concepts (devices, subnets, IP addresses, DHCP, DNS, NAT, IPv6) and Linux networking commands. Split into multiple files — see the network README for the full index. |
+| [Network Reference](network/README.md) | Networking theory, general architecture (segmentation, trust zones and traffic flows), and Linux networking commands. Split into multiple files — see the network README for the full index. |
 | [OS and Related Hardware Reference](./os_hardware/README.md) | OS and related hardware concepts and theory. |
 | [Storage_Background_Commands.md](Storage_Background_Commands.md) | Storage concepts (filesystems, mounting, LVM, RAID, NFS) and Kubernetes storage (Volumes, PV, PVC, StorageClass). |
 | [Other Reference](other/README.md) | Other general reference material, including tmux terminal multiplexer reference. |
