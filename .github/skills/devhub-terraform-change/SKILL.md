@@ -11,6 +11,8 @@ description: "Implement or fix Terraform modules and configurations. Discover pr
 
 Implement the requested Terraform change in the owning repository. Establish expected behavior, scope, and acceptance criteria; resolve material ambiguity before editing. This workflow is self-contained and does not require another skill.
 
+---
+
 ## Discover Project Guidance and Structure
 
 Automatically discover project guidance; do not assume the consuming repository follows DevHub's layout.
@@ -22,6 +24,8 @@ Automatically discover project guidance; do not assume the consuming repository 
 5. These names are candidates, not requirements. If they do not reveal the guidance or structure, inspect the repository layout and search filenames and contents for relevant conventions and commands. Respect access restrictions and keep discovery scoped.
 6. Track files actually used for guidelines and structure. Distinguish explicit rules from inferred patterns, and report when dedicated guidance is absent.
 
+---
+
 ## Implement the Change
 
 1. Inspect affected resources, expressions, inputs, outputs, examples, and consumers. Share a concise plan for non-trivial work.
@@ -29,6 +33,8 @@ Automatically discover project guidance; do not assume the consuming repository 
 3. Preserve resource addresses, state compatibility, input types and defaults, and output contracts unless the request requires a change. Explain replacement risks and any necessary migration steps; do not manipulate state to hide incompatibility.
 4. Use suitable types, validation, and descriptions for inputs. Keep credentials out of code and do not expose sensitive values in logs, outputs, or reports. Marking a value sensitive does not keep it out of state.
 5. Update directly affected module documentation, examples, input/output tables, and existing changelog entries as appropriate. Use established generators when present.
+
+---
 
 ## Tests and Validation
 
@@ -40,6 +46,8 @@ DevHub Terraform projects generally do not have implemented automated tests. Dis
 4. Skipping tests does not skip static validation. Use project-defined formatting, validation, and lint commands where available, such as scoped `terraform fmt -check` and `terraform validate`. Validation may require initialization; use `terraform init -backend=false` only when needed and permitted by project policy, without upgrading dependencies or accessing the remote backend.
 5. Do not run `terraform test` blindly: tests can create real infrastructure. Run tests or plans that access providers, credentials, state, or external services only with an approved isolated target and understood side effects. Never apply, destroy, import, migrate state, or alter infrastructure without explicit authorization.
 6. Fix failures introduced by the change and rerun affected checks. Report unavailable tools, uninitialized providers, unrelated failures, and unverified behavior explicitly; do not claim static validation proves deployment behavior.
+
+---
 
 ## Completion Report
 

@@ -11,6 +11,8 @@ description: "Implement or fix Ansible roles, playbooks, and collections. Discov
 
 Implement the requested Ansible change in the owning repository. Establish expected behavior, scope, and acceptance criteria; resolve material ambiguity before editing. This workflow is self-contained and does not require another skill.
 
+---
+
 ## Discover Project Guidance and Structure
 
 Automatically discover project guidance; do not assume the consuming repository follows DevHub's layout.
@@ -22,6 +24,8 @@ Automatically discover project guidance; do not assume the consuming repository 
 5. These names are candidates, not requirements. If they do not reveal the guidance or structure, inspect the repository layout and search filenames and contents for relevant conventions and commands. Respect access restrictions and keep discovery scoped.
 6. Track files actually used for guidelines and structure. Distinguish explicit rules from inferred patterns, and report when dedicated guidance is absent.
 
+---
+
 ## Implement the Change
 
 1. Inspect affected tasks, handlers, templates, variables, dependencies, and consumers. Share a concise plan for non-trivial work.
@@ -29,6 +33,8 @@ Automatically discover project guidance; do not assume the consuming repository 
 3. Prefer appropriate Ansible modules over shell commands. Preserve idempotence, use accurate change/failure conditions, and notify handlers only when appropriate. Do not mask failures or report success without evidence.
 4. Preserve variable contracts, precedence, tags, supported platforms, and privilege boundaries unless a change is intended. Use safe defaults, appropriate file permissions, and project-standard secret handling; never expose credentials in output or examples.
 5. Update directly related role or collection documentation, variable tables, dependencies, usage examples, and existing changelog entries as appropriate.
+
+---
 
 ## Tests and Validation
 
@@ -40,6 +46,8 @@ DevHub Ansible projects generally do not have implemented automated tests. Disco
 4. Skipping tests does not skip static validation. Use existing YAML, `ansible-lint`, template, and syntax checks as applicable. For a role, use an existing suitable wrapper playbook for `ansible-playbook --syntax-check`; do not treat a task file as a standalone playbook. Report missing dependencies or suitable validation entry points.
 5. Inspect inventory, connection settings, and delegated tasks before executing any playbook or test. Do not run against production, use privilege escalation, or change managed hosts without explicit authorization. Check mode is not a sandbox: tasks can bypass it or have side effects, so `--check --diff` also requires an approved safe target and must not expose secrets.
 6. Fix failures introduced by the change and rerun affected checks. Report unrelated failures and limitations explicitly; syntax and lint checks do not prove runtime behavior or idempotence.
+
+---
 
 ## Completion Report
 

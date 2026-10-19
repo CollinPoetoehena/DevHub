@@ -20,6 +20,8 @@ See for more details the [General Official Python Documentation](https://docs.py
 
 > Throughout this document, `example_package` stands for the distribution's top-level package. The other names are placeholders too: `domain_a`/`domain_b` are sub-packages, `provider_x` a supplier package, and `SomeClient`/`SomeRecord`/`SomeInterface` the objects they export.
 
+---
+
 ## Table of Contents
 
 - [General principles](#general-principles)

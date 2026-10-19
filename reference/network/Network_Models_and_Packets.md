@@ -708,5 +708,5 @@ This unifies both concepts nicely because "local" from a Layer 3 perspective usu
 | Switch (NETGEAR GS305E) | 2 (Data Link) | MAC addresses, VLAN tags |
 | Router (Pi) | 3 (Network) | IP addresses, routing table |
 | Firewall (iptables on Pi) | 3–4 (Network + Transport) | IP addresses, ports, connection state |
-| dnsmasq (DHCP/DNS) | 7 (Application) | DHCP messages, DNS queries |
+| DHCP server / DNS resolver | 7 (Application) | DHCP messages, DNS queries |
 | SSH tunnel | 4–7 (Transport + Application) | TCP connections, encrypted payload |

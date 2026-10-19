@@ -567,7 +567,7 @@ nmap -sU -p <port(s)> <host>           # scan UDP ports (requires root, much slo
 | `-sS` | TCP SYN scan (default when run as root) — fast "half-open" scan; does not complete the TCP handshake, so it is less likely to be logged by the target. Requires root. |
 | `-sT` | TCP connect scan (default when run without root) — completes the full TCP handshake. Slower and more visible, but does not require root. |
 | `-sU` | UDP scan — probes UDP ports. Much slower than TCP because there is no handshake; relies on ICMP "port unreachable" for closed ports and timeouts for filtered ones. Requires root. |
-| `-sV` | Version detection — probe open ports to determine the service name and version (e.g. `OpenSSH 8.9p1`, `dnsmasq 2.89`). |
+| `-sV` | Version detection — probe open ports to determine the service name and version (e.g. `OpenSSH 8.9p1`). |
 | `-O` | OS detection — guess the target's operating system based on TCP/IP stack fingerprinting. Requires root. |
 | `-A` | Aggressive mode — enables `-sV`, `-O`, `--traceroute`, and default NSE scripts. Convenient but slow and noisy. |
 | `-p <ports>` | Specify ports: `-p 22` (single), `-p 22,80,443` (list), `-p 1-1024` (range), `-p-` (all 65535). |
@@ -585,7 +585,7 @@ nmap -sU -p <port(s)> <host>           # scan UDP ports (requires root, much slo
 ```
 PORT      STATE    SERVICE   VERSION
 22/tcp    open     ssh       OpenSSH 8.9p1 Ubuntu 3ubuntu0.6
-53/tcp    open     domain    dnsmasq 2.89
+53/tcp    open     domain
 80/tcp    closed   http
 443/tcp   filtered https
 ```
@@ -653,7 +653,7 @@ Host is up (0.0025s latency).
 
 PORT   STATE    SERVICE VERSION
 22/tcp open     ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
-53/tcp open     domain  dnsmasq 2.89
+53/tcp open     domain
 80/tcp filtered http
 
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
@@ -661,7 +661,7 @@ Nmap done: 1 IP address (1 host up) scanned in 6.42 seconds
 ```
 
 - Port 22: SSH is running with OpenSSH 8.9.
-- Port 53: dnsmasq is serving DNS.
+- Port 53: a DNS service is reachable. Identify its implementation and configuration from the host's process information and documentation.
 - Port 80: filtered — a firewall rule is dropping traffic to port 80 (no web server intended on the router).
 
 **Example — ping sweep to discover hosts:**
@@ -745,24 +745,27 @@ Netid  State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
 sudo ss -tulpn
 ```
 
-Example output (router running dnsmasq and SSH):
+Example output (router running DNS, DHCP and SSH services):
+
+The `dns-service` and `dhcp-service` process names below are illustrative placeholders; actual names depend on the selected implementation.
+
 ```
 Netid  State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
-udp    UNCONN  0       0       10.42.0.1:53        0.0.0.0:*          users:(("dnsmasq",pid=512,fd=4))
-udp    UNCONN  0       0       0.0.0.0:67          0.0.0.0:*          users:(("dnsmasq",pid=512,fd=3))
-tcp    LISTEN  0       32      10.42.0.1:53        0.0.0.0:*          users:(("dnsmasq",pid=512,fd=5))
+udp    UNCONN  0       0       10.42.0.1:53        0.0.0.0:*          users:(("dns-service",pid=512,fd=4))
+udp    UNCONN  0       0       0.0.0.0:67          0.0.0.0:*          users:(("dhcp-service",pid=513,fd=3))
+tcp    LISTEN  0       32      10.42.0.1:53        0.0.0.0:*          users:(("dns-service",pid=512,fd=5))
 tcp    LISTEN  0       128     0.0.0.0:22          0.0.0.0:*          users:(("sshd",pid=450,fd=3))
 ```
 
-- `10.42.0.1:53` (TCP + UDP) — dnsmasq serving DNS on the LAN interface only (not on `0.0.0.0`, so it is not listening on the WAN side).
-- `0.0.0.0:67` (UDP) — dnsmasq serving DHCP on all interfaces (port 67 is the DHCP server port; filtering is done by the `interface=` directive in dnsmasq config, not by bind address).
+- `10.42.0.1:53` (TCP + UDP) — DNS sockets bound to this specific address.
+- `0.0.0.0:67` (UDP) — a DHCP socket bound to all IPv4 addresses. This alone does not establish which interfaces or relayed networks the server will serve; verify the implementation's interface selection and firewall policy.
 - `0.0.0.0:22` (TCP) — SSH daemon listening on all interfaces.
 
-**Debugging port conflicts:** If a service fails to start with "Address already in use", use `ss -tulpn | grep :<port>` to find which process already holds that port. For example, when dnsmasq fails because something else occupies port 53:
+**Debugging port conflicts:** If a service fails to start with "Address already in use", use `ss -tulpn | grep :<port>` to find which process already holds that port. For example, when a DNS server fails because another process occupies port 53:
 
 ```
 sudo ss -tulpn | grep :53
 tcp  LISTEN  0  4096  127.0.0.53%lo:53  0.0.0.0:*  users:(("systemd-resolve",pid=320,fd=17))
 ```
 
-This shows `systemd-resolved` is listening on `127.0.0.53:53` — it must be stopped or dnsmasq must be configured to not bind to loopback (`except-interface=lo`).
+This shows a local resolver is listening on `127.0.0.53:53`. Before changing either service, identify why it is listening and consult the distribution and server documentation; changing a local resolver can disrupt name resolution for the host itself.

@@ -4,9 +4,13 @@ Reusable [Terraform](https://developer.hashicorp.com/terraform) modules, used as
 
 Each module lives in its own dedicated repository. This file serves as the index and reference for all Terraform modules, and documents conventions shared across them.
 
+---
+
 ## DevHub
 
 This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Terraform modules, see [README.md](README.md) for the full design and index of all component types.
+
+---
 
 ## Structure
 
@@ -30,12 +34,16 @@ Where:
 - `README.md` provides documentation specific to the module, including usage instructions, input/output descriptions, and any other relevant information.
 - `modules/` is an optional directory for any nested modules that this module may use internally.
 
+---
+
 ## Naming Convention
 
 
 See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. Specifically for Terraform, each module follows the standard [Terraform Naming Convention](https://developer.hashicorp.com/terraform/registry/modules/publish): `devhub-terraform-<PROVIDER>-<NAME>`, where:
 - `<PROVIDER>` is the name of the cloud provider or service (e.g., `aws`, `azurerm`, etc.).
 - `<NAME>` is a brief description of the module's functionality or the resource it manages (e.g., `vpc`, `vm`, `network`, etc.).
+
+---
 
 ## Usage
 
@@ -47,12 +55,16 @@ module "example" {
 }
 ```
 
+---
+
 ## Modules
 
 | Module | Repository | Description |
 |--------|------------|-------------|
 | devhub-terraform-azurerm-network | *https://github.com/CollinPoetoehena/devhub-terraform-azurerm-network* | Terraform module that creates a complete Azure network stack — VNets, peerings, NSGs, subnets, and NSG associations. |
 | devhub-terraform-azurerm-compute | *https://github.com/CollinPoetoehena/devhub-terraform-azurerm-compute* | Terraform module that creates compute resources in Azure — Linux VMs, NICs, and public IPs |
+
+---
 
 ## README Template
 

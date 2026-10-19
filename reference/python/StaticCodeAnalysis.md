@@ -6,6 +6,8 @@ The tool used in this repository is [Pylint](https://pylint.readthedocs.io/en/la
 
 > **Why `pylint` and not other packages like `pydeps`, etc.:** Pylint is the official choice for comprehensive static code analysis in Python. It provides a comprehensive set of static checks, including circular imports, unused code, and code style issues. It integrates well with CI/CD pipelines and offers detailed messages that help maintain code quality. Other tools like `pydeps` focus primarily on visualizing dependencies and do not provide the same level of static analysis coverage.
 
+---
+
 ## Table of Contents
 
 - [Running Pylint](#running-pylint)

@@ -4,9 +4,13 @@ Reusable [Ansible](https://docs.ansible.com/) roles and playbooks, used for conf
 
 Each role lives in its own dedicated repository. This file serves as the index and reference for all Ansible roles, and documents conventions shared across them.
 
+---
+
 ## DevHub
 
 This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Ansible roles, see [README.md](README.md) for the full design and index of all component types.
+
+---
 
 ## Structure
 
@@ -40,9 +44,13 @@ ansible-galaxy role init <role-name>
 
 This generates the full directory layout with placeholder files. Remove any directories not needed by the role after initializing, and/or add your own custom directories and files as needed.
 
+---
+
 ## Naming Convention
 
 See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. No exceptions should be made for Ansible roles.
+
+---
 
 ## Usage
 
@@ -68,6 +76,8 @@ Then install with:
 ansible-galaxy install -r requirements.yml
 ```
 
+---
+
 ## Roles
 
 | Role | Repository | Description |
@@ -77,6 +87,8 @@ ansible-galaxy install -r requirements.yml
 | devhub-ansible-mgmtvm | [devhub-ansible-mgmtvm](https://github.com/CollinPoetoehena/devhub-ansible-mgmtvm) | Configures a management VM, such as for interacting with other infrastructure components (e.g. workload VMs, K8s cluster, etc.). |
 | devhub-ansible-proxmox | [devhub-ansible-proxmox](https://github.com/CollinPoetoehena/devhub-ansible-proxmox) | Configures a machine that has been installed from the Proxmox VE ISO into a fully managed hypervisor. |
 | devhub-ansible-router-custom | [devhub-ansible-router-custom](https://github.com/CollinPoetoehena/devhub-ansible-router-custom) | Configures a Debian-based system (e.g. Raspberry Pi) as a dedicated lab router providing network isolation, DHCP, DNS, SLAAC/Router Advertisements, NAT and an nftables firewall (e.g. for a homelab). |
+
+---
 
 ## README Template
 
@@ -103,7 +115,9 @@ List any dependencies or prerequisites here.
 
 Requirements file example (same directory as ansible.cfg, create a file called requirements.yml):
 ```yaml
+
 ---
+
 roles:
   - name: devhub.<role-name>
     src: https://github.com/CollinPoetoehena/<role-name>.git

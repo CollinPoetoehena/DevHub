@@ -6,6 +6,8 @@
 
 Start with the shared [Create and maintain customizations](../AI.md#create-and-maintain-customizations) guidance, especially [self-contained instructions](../AI.md#keep-each-customization-self-contained). This page adds instruction-specific locations, scope, and examples. See [Personal preferences and workplace reuse](../AI.md#personal-preferences-and-workplace-reuse) for why project-specific instructions should complement, not duplicate, the generic collection.
 
+---
+
 ## Table of contents
 
 - [Where instructions belong](#where-instructions-belong)

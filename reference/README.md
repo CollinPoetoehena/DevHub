@@ -6,6 +6,28 @@ The goal of this folder is to provide a central place for technical knowledge an
 
 It is not intended to be a complete guide of Software Engineering/IT in general and all technologies and tools used in this project, but rather a curated and carefully selected collection of information that is highly relevant for myself and some of the projects I work on (e.g. homelab, Python packages, etc.).
 
+---
+
+## Table of Contents
+
+- [Scope and Tool Specificity](#scope-and-tool-specificity)
+- [Why I Document](#why-i-document)
+- [Contents](#contents)
+
+---
+
+## Scope and Tool Specificity
+
+> “In engineering and IT, fundamentals endure while tools change.”
+
+This is the guiding principle for DevHub's Reference: prioritize general concepts, durable fundamentals, and the reasoning needed to make good technical decisions. Networking, storage, operating-system behavior, programming, and data protection remain useful even as particular products, interfaces, and commands evolve or are replaced. Understanding those foundations makes it easier to evaluate new tools and apply what you know in different environments.
+
+This reference is not intended to be a catalog of every possible product, platform, or command. Tools such as Kubernetes and specific networking products can have extensive, version-dependent behavior; reproducing all of that here would make the reference harder to maintain and could leave it out of date. Instead, DevHub includes only the tool-specific context or examples that help explain a broader concept, and links to the official documentation for current details and comprehensive instructions. The goal is to understand the fundamentals, not to collect every tool or duplicate its maintainers' documentation.
+
+The [storage reference](storage/README.md) applies this approach to storage, with a brief Kubernetes-specific exception for orientation. The [network reference](network/README.md) focuses on reusable networking concepts and points to official documentation when a particular tool's behavior is involved. The [Python reference](python/README.md) is another deliberate exception: Python is used frequently here, so it includes practical Python examples alongside concepts such as object-oriented programming, functions, exceptions, and logging that are useful in other languages too.
+
+---
+
 ## Why I Document
 
 > “Your professional success and quality of life depend directly on your ability to manage information effectively.” — Tiago Forte
@@ -18,7 +40,9 @@ I document concepts, decisions, commands, and lessons that are useful beyond the
 
 That is why this reference is centralized in DevHub rather than repeated in each project. General concepts belong here once; separate projects such as the [homelab](https://github.com/CollinPoetoehena/devhub-homelab) can link to that shared foundation and keep their own documentation focused on their specific design and implementation.
 
-**Why not in specific projects like `homelab/docs/`?** This documentation is all generic and not tied to any single project, making it reusable across multiple projects and contexts. This avoids having to duplicate the same reference material in each project, and keeps the information centralized and easier to maintain. Finally, the project-specific documentation can focus on implementation details and use cases, while this reference folder provides the foundational and general knowledge.
+**Why not in specific projects like `homelab/docs/`?** Most of this reference covers concepts and practices that can be reused across multiple projects and contexts, so documenting them here avoids duplication and makes them easier to maintain. A small number of tool-specific examples are included when they are especially useful, but they remain intentionally limited rather than trying to replace official product documentation. Project-specific documentation can therefore focus on its implementation details and use cases, while this reference provides the shared foundations.
+
+---
 
 ## Contents
 
@@ -28,6 +52,7 @@ That is why this reference is centralized in DevHub rather than repeated in each
 | [Code_Editor.md](Code_Editor.md) | Personal code editor setup, account separation, Settings Sync, subscriptions, and Git with personal and work accounts. |
 | [Software_Engineering_Principles.md](Software_Engineering_Principles.md) | Language-agnostic coding and design principles (DRY, KISS, YAGNI, SOLID, coupling/cohesion, Clean Architecture, Twelve-Factor, etc.). |
 | [Network Reference](network/README.md) | Networking theory, general architecture (segmentation, trust zones and traffic flows), and Linux networking commands. Split into multiple files — see the network README for the full index. |
-| [OS and Related Hardware Reference](./os_hardware/README.md) | OS and related hardware concepts and theory. |
-| [Storage_Background_Commands.md](Storage_Background_Commands.md) | Storage concepts (filesystems, mounting, LVM, RAID, NFS) and Kubernetes storage (Volumes, PV, PVC, StorageClass). |
-| [Other Reference](other/README.md) | Other general reference material, including tmux terminal multiplexer reference. |
+| [Compute Reference](compute/README.md) | General-purpose computer hardware fundamentals, component roles and inspection commands. |
+| [Operating Systems Reference](os/README.md) | OS fundamentals across Linux, Windows and macOS, plus a general boot/install overview. |
+| [Storage Reference](storage/README.md) | Storage media and architecture, data protection, Linux storage background and commands, plus a short Kubernetes-specific exception with links to official documentation. |
+| [Other Reference](other/README.md) | Other general reference material, including background-process concepts and a focused tmux guide. |

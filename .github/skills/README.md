@@ -12,6 +12,8 @@ Skills capture reusable task instructions, repeatable processes, and multi-step 
 
 > **Prefer skills over prompt files:** Do not create new `.prompt.md` files for DevHub; use skills for reusable tasks and processes instead. VS Code has deprecated prompt files for Agent Host sessions, where they are not loaded, although they still work with the Local agent for now. See the [central recommendation](../AI.md#which-customization-should-i-use) and [official migration guidance](https://code.visualstudio.com/docs/agent-customization/migrate-customizations#_convert-prompt-files-to-skills). Ordinary one-off chat prompts remain appropriate.
 
+---
+
 ## Table of contents
 
 - [Available skills](#available-skills)

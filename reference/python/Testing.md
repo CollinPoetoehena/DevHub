@@ -14,7 +14,10 @@ All packages should follow the best practices/conventions from Python and pytest
 
 **Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
+---
+
 ## Table of Contents
+
 - [General principles](#general-principles)
 - [Structure](#structure)
 - [Running against the latest source](#running-against-the-latest-source)

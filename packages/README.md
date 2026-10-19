@@ -16,6 +16,7 @@ This section covers all reusable packages maintained under DevHub — including 
 ---
 
 ## Packages Design
+
 DevHub started as a monorepo containing all reusable components—Terraform modules, Ansible roles, and more. However, this approach has a practical limitation: Git does not support cloning only a subdirectory of a repository. Cloning the repo always pulls everything, which is wasteful and inconvenient when a consumer only needs one component type.
 
 To address this, each component type now lives in its own dedicated repository. This is also the industry best practice for distributing reusable components/packages, and offers several benefits:

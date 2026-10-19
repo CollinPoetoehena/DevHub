@@ -4,6 +4,8 @@ This guide describes my code editor setup and the account and Git configuration 
 
 > **Note:** This is my personal guide for setting up and using a code editor. It describes the approach that works for me; adapt it to your own accounts, devices, and employer policies.
 
+---
+
 ## Contents
 
 - [Personal DevHub AI customizations](#personal-devhub-ai-customizations)

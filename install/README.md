@@ -2,6 +2,8 @@
 
 This is the central entry point for installing DevHub resources locally. A single [install.py](./install.py) contains installation, uninstall, and focused component functions; currently it installs personal Copilot skills and agents only. Future components could install shared command-line utilities into a user-local tools directory without coupling them to AI customization setup.
 
+---
+
 ## Table of contents
 
 - [Requirements and trust](#requirements-and-trust)

@@ -11,6 +11,8 @@ Language-specific conventions live next to the language:
 - [Terraform](../packages/Terraform.md)
 - [Helm](../packages/Helm.md)
 
+---
+
 ## Table of Contents
 
 - [How to apply these principles](#how-to-apply-these-principles)

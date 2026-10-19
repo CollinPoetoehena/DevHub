@@ -4,9 +4,13 @@ Reusable [Helm](https://helm.sh/) charts, used for packaging and deploying Kuber
 
 Each chart lives in its own dedicated repository. This file serves as the index and reference for all Helm charts, and documents conventions shared across them.
 
+---
+
 ## DevHub
 
 This repository ([DevHub](https://github.com/CollinPoetoehena/DevHub)) is the central reference for all Helm charts, see [README.md](README.md) for the full design and index of all component types.
+
+---
 
 ## Structure
 
@@ -29,9 +33,13 @@ Where:
 - `README.md` provides documentation specific to the chart, including usage instructions, values descriptions, and any other relevant information.
 - `templates/` contains the Kubernetes manifest templates rendered by Helm.
 
+---
+
 ## Naming Convention
 
 See [DevHub Global Naming Convention](./README.md#repositories--naming-conventions) for the overall naming rules applied across all DevHub components. Specifically for Helm, you can find some general tips in the [Helm best practices](https://helm.sh/docs/chart_best_practices/conventions/#chart-names). 
+
+---
 
 ## Usage
 
@@ -57,11 +65,15 @@ helm dependency update
 helm install <release-name> .
 ```
 
+---
+
 ## Charts
 
 | Chart | Repository | Description |
 |-------|------------|-------------|
 | _(none yet)_ | | Helm Charts will be listed here as they are added |
+
+---
 
 ## README Template
 

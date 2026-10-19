@@ -1,6 +1,6 @@
 # DHCP Client Commands
 
-Commands for inspecting and managing DHCP leases from the **client** side (the device requesting an IP, such as a VM). For server-side DHCP management (lease files, reservations, debugging, etc.), see the [dnsmasq reference](../dnsmasq.md#commands-dhcp).
+Commands for inspecting and managing DHCP leases from the **client** side (the device requesting an IP, such as a VM). Server diagnostics that are portable across implementations are in [DHCP and DNS Server Diagnostics](dns_dhcp.md); configuration and lease tools vary by server product, so consult its official documentation.
 
 ---
 
@@ -74,13 +74,13 @@ The `valid_lft` value in `ip addr` output shows the remaining lease time in seco
 
 ## Inspect DHCP Traffic
 
-Use [`tcpdump`](packet_capture.md#tcpdump) to capture live DHCP traffic and see exactly what the client sends and what the server responds:
+Use [`tcpdump`](packet_capture_analysis.md#tcpdump) to capture live DHCP traffic and see exactly what the client sends and what the server responds:
 
 ```bash
 sudo tcpdump -i eth0 -n port 67 or port 68
 ```
 
-See the [tcpdump section](packet_capture.md#tcpdump) for full details, flags, and output format.
+See the [tcpdump section](packet_capture_analysis.md#tcpdump) for full details, flags, and output format.
 
 ---
 

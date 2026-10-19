@@ -11,6 +11,8 @@ description: "Create or maintain a self-contained GitHub Copilot skill or custom
 
 Create or maintain exactly the requested kind of GitHub Copilot customization: either an Agent Skill or a custom agent. Do not create or update both unless asked. Keep the result useful outside one specific project unless the request explicitly requires project-specific context.
 
+---
+
 ## Decide Whether It Adds Value
 
 1. Identify the repeated problem and the intended users.
@@ -18,6 +20,8 @@ Create or maintain exactly the requested kind of GitHub Copilot customization: e
 3. Avoid a new customization for every small task or variation. Combine closely related tasks when they share a process; split only where differences materially change the role or workflow.
 4. Keep instructions, skills, and agents self-contained. Include the essential rules, workflow, and context in the customization itself; do not rely on another customization, a Git-hosted file, external documentation, or another URL to supply required material. Links may provide optional background, but the customization must remain usable if linked material is unavailable. If a skill needs supplemental resources, keep them in its own directory and explain when to use them; otherwise put the content directly in the skill or agent. Do not require a skill to find or invoke another skill: supported Copilot experiences do not provide a reliable skill-to-skill invocation contract. Limited duplication is preferable to an expanding, unreliable dependency chain. Use AI to maintain duplicated guidance consistently across skills when it changes, then review the full diff and confirm each skill still stands on its own; AI assistance does not replace human review.
 5. DevHub is a personal collection usable for personal projects and at work where policy permits; generic workflows discover and follow the consuming project's requirements rather than impose personal preferences. Prefer project-specific additions over duplicating generic workflows. A separate team-generic collection is optional and adds maintenance; create one only when real shared differences justify it.
+
+---
 
 ## Design for Automatic Context Discovery
 
@@ -29,6 +33,8 @@ Use automatic discovery as much as possible, both while authoring a customizatio
 4. Encode the same discovery behavior in each resulting skill or agent, tailored to its task. Avoid hard-coded consuming-project paths, mandatory user-supplied guideline files, and setup parameters that can be inferred reliably from repository evidence. Keep DevHub authoring locations distinct from assumptions about consuming projects.
 5. Do not invent missing context or treat discovered commands as permission to execute them. Preserve safety boundaries and ask for goals, material decisions, authorization, or inaccessible information only when these cannot be established safely through discovery.
 6. Require completion reports to identify the files actually used for guidelines and structure, their roles, inferred conventions, and missing guidance. Do not claim discovery will always succeed or report unread files as evidence.
+
+---
 
 ## Create a Skill
 
@@ -51,6 +57,8 @@ For DevHub, put each skill in `.github/skills/devhub-<short-name>/SKILL.md`.
 
 11. Require the skill to inspect `git diff`, `git diff --cached`, and `git status --short`, and review relevant untracked files before composing the commit message. The message must describe the complete pending change set that `git add -A` will stage, including earlier session changes, not just the latest task or the AI's own edits. Require it to flag unrelated or unreviewed changes without claiming ownership or validation of others' work.
 
+---
+
 ## Create a Custom Agent
 
 For DevHub, put a repository custom agent in `.github/agents/devhub-<short-role>.agent.md`.
@@ -63,6 +71,8 @@ For DevHub, put a repository custom agent in `.github/agents/devhub-<short-role>
 
    > **Maintenance note for users:** This agent is maintained in [DevHub](https://github.com/CollinPoetoehena/DevHub/blob/main/.github/agents/<agent-filename>). This is provenance information only; AI agents do not need to follow the link to use the agent.
 
+---
+
 ## Update Existing Customization Lists
 
 Automatically discover any existing catalog, index, or README that lists the project's skills or agents. In DevHub, these lists are in `.github/skills/README.md` and `.github/agents/README.md`; other repositories may use different locations.
@@ -70,6 +80,8 @@ Automatically discover any existing catalog, index, or README that lists the pro
 - Add each new skill or agent to the appropriate existing list with a working relative link and a concise description, following its ordering and formatting conventions.
 - When renaming, moving, or changing a customization's purpose, update its existing entry and directly affected references rather than adding a duplicate or leaving stale links.
 - If no list exists after discovery, report that fact; do not create a new catalog unless requested or required by project guidance.
+
+---
 
 ## Check the Result
 
@@ -88,6 +100,8 @@ Automatically discover any existing catalog, index, or README that lists the pro
   - [Custom instructions in VS Code](https://code.visualstudio.com/docs/agent-customization/custom-instructions)
   - [Custom agents in VS Code](https://code.visualstudio.com/docs/agent-customization/custom-agents)
 - Report the created or updated file and any host-specific behavior that remains unverified.
+
+---
 
 ## Completion Report
 

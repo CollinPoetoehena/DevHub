@@ -6,6 +6,8 @@ Practical reference on AI — what it is, agents, prompt engineering, and how I 
 
 > **Scope and examples:** This guide focuses on reusable concepts and principles, while using tools such as GitHub Copilot and Microsoft 365 Copilot to make them concrete. The product-specific instructions and links are examples, not a commitment to document or continually maintain every tool in detail. If you use Codex or another assistant, the same principles generally apply; consult that tool's documentation for its equivalent setup and features, and adapt only the tool-specific details that matter rather than rewriting the whole guide and continually maintaining this document.
 
+---
+
 ## Table of Contents
 
 - [AI & ML Background](#ai--ml-background)

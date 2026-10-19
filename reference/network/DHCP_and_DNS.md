@@ -36,7 +36,7 @@ Dynamic Host Configuration Protocol — the protocol that automatically assigns 
 
 **DHCP conflicts:** If two DHCP servers run on the same subnet, devices may receive duplicate addresses, causing connectivity failures. This is a common mistake when connecting a Proxmox host or second router directly to the home network — its bridged interface can start responding to DHCP requests alongside the ISP modem.
 
-> This homelab uses [dnsmasq](dnsmasq.md) as the DHCP server on the lab router. See the dnsmasq reference for configuration, lease management, and debugging commands.
+DHCP is a protocol, not a particular server product. Server implementations expose different configuration and lease-management interfaces; use their official documentation for product-specific setup. For portable client-side and packet-level diagnostics, see the [DHCP and DNS commands](./commands/dns_dhcp.md), [DHCP client commands](./commands/dhcp_client.md), and [DNS lookup commands](./commands/dns.md).
 
 ### DNS
 
@@ -78,7 +78,7 @@ In practice the recursive resolver almost always has `.com` and many popular dom
 **Key concepts:**
 
 - **DNS server (resolver):** The server your device queries. Provided by DHCP (the DHCP server tells devices which DNS server to use) or configured manually. On Linux, see `/etc/resolv.conf` for the configured nameserver(s).
-- **DNS forwarding:** A local DNS server (e.g. `dnsmasq` on the lab router) that receives queries from local devices and forwards them upstream to a public resolver. Useful when you want to add local hostname resolution on top of regular internet DNS.
+- **DNS forwarding:** A local resolver that receives queries from local devices and forwards them upstream to another resolver. This can provide caching or local hostname resolution; the implementation and configuration are product-specific.
 - **Local DNS:** A DNS server that resolves names for hosts within a private network (e.g. `pi.lab` → `10.42.10.1`). Public resolvers have no knowledge of private hostnames; a local resolver handles them.
 - **TTL (Time To Live):** How long a DNS response may be cached before it must be re-queried. Set by the domain owner. Short TTL = more DNS queries but faster propagation of IP changes; long TTL = fewer queries but slower propagation.
 - **Common record types:** `A` = hostname → IPv4; `AAAA` = hostname → IPv6; `CNAME` = hostname alias → another hostname; `PTR` = IP → hostname (reverse DNS); `MX` = mail server for a domain.

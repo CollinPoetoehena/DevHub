@@ -6,6 +6,8 @@ For general AI concepts, prompt-writing guidance, and the [framework for matchin
 
 Return to the [shared GitHub customizations overview](./OVERVIEW.md) for other topics.
 
+---
+
 ## Table of contents
 
 - [Why I developed and use these customizations](#why-i-developed-and-use-these-customizations)

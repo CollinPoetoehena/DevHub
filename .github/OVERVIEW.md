@@ -4,6 +4,8 @@
 
 This is the entry point for DevHub's shared GitHub customizations: reusable AI guidance and GitHub Actions workflows.
 
+---
+
 ## Table of contents
 
 - [AI customizations](#ai-customizations)

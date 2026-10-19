@@ -15,6 +15,8 @@ The other DevHub skills include commit-message guidance as the final handoff to 
 
 Some overlap with the other skills is intentional: repeating the necessary steps makes this workflow independently discoverable and usable even when no other customization is active. It must not rely on the other skills for instructions or become a prerequisite for them. Keep it focused on reviewing pending changes and preparing a message and commands; for a one-off message that does not need this workflow, use ordinary Copilot chat instead.
 
+---
+
 ## Table of contents
 
 - [Discover Repository Guidance](#discover-repository-guidance)

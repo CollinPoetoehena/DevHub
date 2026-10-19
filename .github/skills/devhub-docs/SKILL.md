@@ -13,6 +13,8 @@ Create or update documentation for the request in the correct location and at th
 
 Before editing, read the relevant project instructions, existing documentation, and source material. Follow the owning project's terminology, structure, links, formatting, and security requirements. Do not invent product behavior or claim implementation details that have not been verified. If the repository has its own writing guidelines, read and apply them; they are project context, not part of this generic workflow.
 
+---
+
 ## Discover Project Guidance and Structure
 
 Automatically discover the consuming project's documentation guidelines and organization before editing. Do not assume DevHub's layout or ask the user to locate guidance that you can find in the repository.
@@ -24,6 +26,8 @@ Automatically discover the consuming project's documentation guidelines and orga
 5. If those locations do not reveal the guidance or structure, discover it yourself: inspect the repository and package layout, search filenames and content for documentation, writing, style, contribution, and navigation guidance, and follow relevant links from existing entry points. Keep the search scoped to the task and respect access restrictions.
 6. Track the actual files read and what each establishes. Distinguish explicit writing rules from conventions inferred from examples. If no dedicated guidelines exist after discovery, follow applicable project instructions and the nearest consistent documentation patterns, and report that limitation. Ask the user only when an unresolved ambiguity materially affects the work.
 
+---
+
 ## Writing and Editing
 
 1. Identify the intended audience and purpose; keep the change focused on that purpose.
@@ -31,6 +35,8 @@ Automatically discover the consuming project's documentation guidelines and orga
 3. Keep examples safe and nonfunctional where credentials, addresses, or environment details are involved.
 4. Update tables of contents, indexes, and directly affected links when adding, moving, or renaming content.
 5. Preserve unrelated edits and avoid changing implementation files unless explicitly requested.
+
+---
 
 ## Validation and Report
 

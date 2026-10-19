@@ -8,6 +8,8 @@ Patterns that need extra attention or specific information to this codebase are 
 
 **Only the conventions that need extra attention, or that are specific to this codebase, are documented below.**
 
+---
+
 ## Table of Contents
 
 - [Pattern: built-in Python exception chaining](#pattern-built-in-python-exception-chaining)

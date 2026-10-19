@@ -6,6 +6,8 @@
 
 Start with the shared [Create and maintain customizations](../AI.md#create-and-maintain-customizations) guidance for design, automatic context discovery, self-contained roles, and validation. This page adds agent-specific details. These agents are part of my [personal collection, reusable for personal projects and at work](../AI.md#personal-preferences-and-workplace-reuse); prefer project-specific additions rather than another generic collection.
 
+---
+
 ## Table of contents
 
 - [DevHub agents](#devhub-agents)

@@ -7,6 +7,8 @@ The name reflects the purpose:
 - **Dev** means development and DevOps: building, automating, and learning through practical work.
 - **Hub** means a central place to navigate to the related resources and projects.
 
+---
+
 ## Table of Contents
 
 - [Why I Maintain DevHub](#why-i-maintain-devhub)
