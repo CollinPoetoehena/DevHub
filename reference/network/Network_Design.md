@@ -2,7 +2,7 @@
 
 General network architecture and security-design principles: define responsibilities, trust boundaries, permitted flows, and recovery paths before selecting equipment or configuring services. These principles apply across physical, virtual, and cloud environments; the implementation depends on the requirements and available enforcement mechanisms.
 
-For their application at home scale, see the public [homelab network guide](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/docs/2_HLD/Network/README.md). It owns household/lab isolation examples, router arrangements, equipment choices, placement, and recovery trade-offs rather than repeating this general reference. The [repository relationship](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/README.md#how-devhub-and-the-homelab-repositories-fit-together) explains the division between reusable principles, public examples, and private implementation records.
+For their application at home scale, see the public [homelab network guide](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/docs/02-architecture/network.md). It owns household/lab isolation examples, router arrangements, equipment choices, placement, and recovery trade-offs rather than repeating this general reference. The [repository relationship](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/README.md#how-devhub-and-the-homelab-repositories-fit-together) explains the division between reusable principles, public examples, and private implementation records.
 
 ---
 
