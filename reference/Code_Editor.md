@@ -11,6 +11,7 @@ This guide describes my code editor setup and the account and Git configuration 
 - [Personal DevHub AI customizations](#personal-devhub-ai-customizations)
 - [Scope](#scope)
 - [Editor](#editor)
+- [Grouping Related Repositories in VS Code Workspaces](#grouping-related-repositories-in-vs-code-workspaces)
 - [VS Code Settings and Extensions](#vs-code-settings-and-extensions)
     - [File Associations and Language Modes](#file-associations-and-language-modes)
     - [Main Extensions](#main-extensions)
@@ -56,6 +57,31 @@ Do not sync secrets, company data, or confidential work configuration to a perso
 ## Editor
 
 I use [Visual Studio Code (VS Code)](https://code.visualstudio.com/) as my code editor. It is a lightweight, extensible editor with a large ecosystem of language tools and extensions, and it works well across personal projects and work repositories.
+
+---
+
+## Grouping Related Repositories in VS Code Workspaces
+
+When work spans several related repositories, I find it useful to group the repositories I need into one VS Code workspace. Choose a group around work that is genuinely related and repositories you regularly access together, rather than putting every clone into one large workspace. The right grouping depends on how you work: repositories that are separate in Git can still be convenient to view together when they share a service, toolchain or package ecosystem. This is a practical default for cross-repository work, not a rule that every task requires a group workspace: you can still open a repository on its own when the task is isolated or you want a narrower context.
+
+For example, a workspace might bring together:
+
+- the repositories for one service, such as its application, deployment configuration and documentation;
+- related tooling, such as shared Ansible roles, Terraform modules and the automation that consumes them;
+- packages of a particular type, such as a team's Python libraries and their shared examples or test fixtures; or
+- several closely related project repositories, such as DevHub and the public and private homelab repositories.
+
+These are alternative ways to organize work, not a prescription to combine every such repository. A focused workspace keeps relevant files, instructions and search results easier to find, while an unrelated collection can add Explorer and search noise, unnecessary file scanning, and competing project instructions. A larger workspace may also use more resources and make useful AI context harder to distinguish from irrelevant files. Make separate workspaces for distinct activities—for example, one per service, toolchain or package family—and include a repository when you often need to inspect or change it alongside the others. This keeps each workspace useful without requiring repositories to be merged: every clone remains an independent Git repository with its own history, changes and remote.
+
+You can open a shared parent folder containing the repositories, or create a [multi-root workspace](https://code.visualstudio.com/docs/editing/workspaces/multi-root-workspaces) by adding selected repository folders. A parent folder is straightforward when the repositories are already organized together on disk. A multi-root workspace is useful when the repositories live in different locations or you want to select only some of them; save it as a `.code-workspace` file if you want to reopen it later. Keep machine-specific workspace files outside a repository unless the workspace is deliberately maintained and shared with that project.
+
+Grouping repositories can make cross-project work easier: related code and documentation are visible in one window, so it is simpler to compare them, navigate between them and make coordinated changes without repeatedly switching windows. Keeping one focused group open instead of several separate editor windows can also reduce duplicated window-level work and resource use. This is not a guaranteed memory saving, though; the number and type of extensions and the size of the workspace matter, and opening too many repositories can increase scanning and resource use.
+
+Use the grouped workspace when you frequently move between its repositories or need to understand how they fit together. For a task confined to one repository, opening that repository individually can reduce distractions and make the active project boundary clearer. You can switch between these approaches as the work changes; choosing a workspace does not alter the repositories or their independence.
+
+A focused workspace can also make related repositories and their instructions available to AI tools that use local workspace context. For cross-repository tasks, having shared principles, project-specific guidance and relevant source material nearby can help an AI follow ownership boundaries, reuse existing explanations and keep related changes consistent. It may also avoid the extra work and AI usage of switching workspaces or retrieving context through separate GitHub URLs; private repositories may not be available remotely to a tool at all.
+
+Workspace availability is not the same as the AI reading or understanding every file. Tools differ in how they discover and use local context, and their context limits still apply. Keep the workspace focused, identify the repository being changed and point the AI to the relevant files and instructions. Respect privacy and access boundaries: do not include work and personal repositories in an AI context unless the service is permitted to access both.
 
 ---
 
