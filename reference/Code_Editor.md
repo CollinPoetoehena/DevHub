@@ -354,7 +354,30 @@ ssh -T git@git-personal
 ssh -T git@git-work
 ```
 
-The response depends on the Git platform and its SSH setup. Look for confirmation that the key was accepted; interactive shell access is usually disabled for Git SSH connections. For example, GitHub may respond `Hi <username>! You've successfully authenticated, but GitHub does not provide shell access.` Bitbucket Server may instead report `shell request failed on channel 0`. This can be correct if it appears after the SSH key is accepted: `ssh -T` makes an SSH connection without running a Git command, so the server may reject the requested shell even though it allows Git operations over SSH. The shell-request message alone does not prove authentication succeeded; check for a preceding authentication failure, and verify access with an operation on a repository you are allowed to use, such as `git ls-remote <ssh-repository-url>`. Check your platform's documentation if the response is unclear.
+The response depends on the Git platform and its SSH setup. Look for confirmation that the key was accepted; interactive shell access is usually disabled for Git SSH connections. For example, GitHub may respond `Hi <username>! You've successfully authenticated, but GitHub does not provide shell access.` Bitbucket Server may instead report `shell request failed on channel 0`. This can be correct if it appears after the SSH key is accepted: `ssh -T` makes an SSH connection without running a Git command, so the server may reject the requested shell even though it allows Git operations over SSH.
+
+If the outcome is inconclusive, optionally add `-v` for verbose output about connection setup and authentication (see the [OpenSSH client manual](https://man.openbsd.org/ssh#v)):
+
+```bash
+ssh -vT git@git-work
+```
+
+For example, with the `git-work-bitbucket` alias from [Configure Multiple Work Git Platforms](#configure-multiple-work-git-platforms), a server that accepts the key but disables shell access might show the following. This is an abbreviated, sanitized example; the host and IP address are reserved example values, and key paths and fingerprints are omitted:
+
+```text
+$ ssh -T git@git-work-bitbucket
+shell request failed on channel 0
+
+$ ssh -vT git@git-work-bitbucket
+debug1: Connecting to git.company.example [192.0.2.10] port 7999.
+debug1: Connection established.
+...
+Authenticated to git.company.example ([192.0.2.10]:7999) using "publickey".
+...
+shell request failed on channel 0
+```
+
+`Connection established.` only confirms that the TCP connection reached the server; it does not prove SSH authentication succeeded. The `Authenticated to ... using "publickey".` line confirms successful public-key authentication. A subsequent `shell request failed on channel 0` can therefore be expected for a Git-only server. The shell-request message alone does not prove authentication succeeded, and successful authentication does not guarantee access to a particular repository. Verify repository access with an operation on a repository you are allowed to use, such as `git ls-remote <ssh-repository-url>`. Check your platform's documentation if the response is unclear, and redact hostnames, usernames, IP addresses, key paths, and fingerprints before sharing verbose logs.
 
 #### Configure Multiple Work Git Platforms
 
