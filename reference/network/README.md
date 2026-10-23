@@ -16,8 +16,10 @@ The [network design reference](./Network_Design.md) explains reusable principles
 ## Concepts
 
 - [Network Design](./Network_Design.md) — General architecture, layered responsibilities, segmentation and access, addressing decisions, trust-zone models including Upper/Lower Red, traffic flows, and policy verification.
+- [Network Modes and Virtual Connectivity](./Network_Modes.md) — VM/container attachment modes, overlay versus underlay, VXLAN packet flow, MTU overhead and native-routing trade-offs, with text diagrams and verification guidance.
+- [VLANs and Tagged Ethernet](./VLANs.md) — Broadcast domains, VLAN IDs versus subnets/VNIs, PVID/native membership, access/trunk links, frame forwarding, routing policy and verification.
 - [Network Models & Packets](Network_Models_and_Packets.md) — OSI model (7 layers), TCP/IP model (4 layers), encapsulation, and detailed anatomy of frames, packets, and segments with examples of how data flows from application to wire.
-- [Network Devices & Interfaces](Network_Devices.md) — ISP modem/gateway, routers, switches, VLANs (tagged vs untagged), and network interfaces. Covers what each device does, how NAT and IPv6 work at the modem level, double NAT, routing tables, and firewalls.
+- [Network Devices & Interfaces](Network_Devices.md) — ISP modem/gateway, routers, switches and network interfaces, with links to the dedicated VLAN guide. Covers what each device does, how NAT and IPv6 work at the modem level, double NAT, routing tables, and firewalls.
 - [Subnets & IP Addresses](Subnets_and_IP_Addresses.md) — Subnets, CIDR notation, IPv4 (private ranges, address exhaustion), NAT in detail (types, connection tracking, step-by-step packet flow), IPv6 (format, address types, SLAAC, DHCPv6, privacy extensions, dual-stack), and how all of this applies to the homelab.
 - [DHCP & DNS](DHCP_and_DNS.md) — How DHCP assigns network configuration (DORA handshake, leases, reservations, conflicts) and how DNS resolves hostnames (resolution chain, record types, forwarding, local DNS).
 

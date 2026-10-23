@@ -29,7 +29,7 @@ Use **edge, core, distribution and access** as responsibilities, not a requireme
 
 The layers make **ownership and traffic paths** visible. Draw where clients enter, where trunks aggregate, where routing happens, and which device or service enforces policy. Several responsibilities can be collapsed into shared infrastructure when capacity, failure impact, and operations allow it. Logical layers do not create independent failure domains.
 
-If a Layer 3 switch routes traffic, a perimeter firewall does not automatically inspect it. The same consideration applies to virtual switches, workload overlays, and cloud routing: enforcement must be placed on the actual traffic path. Start with responsibilities and dependencies, then select the components that implement them rather than copying an enterprise three-tier diagram with unused boxes.
+If a Layer 3 switch routes traffic, a perimeter firewall does not automatically inspect it. The same consideration applies to virtual switches, workload overlays, and cloud routing: enforcement must be placed on the actual traffic path. See [overlay and underlay networks](./Network_Modes.md#overlay-and-underlay-networks) for the distinction between workload paths and the transport carrying them. Start with responsibilities and dependencies, then select the components that implement them rather than copying an enterprise three-tier diagram with unused boxes.
 
 ---
 
@@ -37,7 +37,7 @@ If a Layer 3 switch routes traffic, a perimeter firewall does not automatically 
 
 Choose segments according to trust, asset sensitivity, required services, and the consequences of compromise. Separate administration, ordinary clients, application workloads, untrusted devices, visitors, or exposed services when they need different policies. A functional name alone does not establish the appropriate trust boundary.
 
-VLANs separate Layer 2 domains, not availability or all communication. Same-VLAN traffic may never cross a gateway. Protect router services separately from forwarded traffic; namespaces, NAT, and SSID names are not firewall isolation. Use the [device and VLAN reference](./Network_Devices.md#vlan-virtual-lan) for the underlying mechanisms.
+VLANs separate Layer 2 domains, not availability or all communication. Same-VLAN traffic may never cross a gateway. Protect router services separately from forwarded traffic; namespaces, NAT, and SSID names are not firewall isolation. Use [VLANs and Tagged Ethernet](./VLANs.md) for the underlying mechanisms.
 
 Use non-overlapping address ranges and explicit access/trunk membership. Match native/tagged settings along links and limit trunks to required segments. Include connected sites, VPNs, and container/pod/service networks in overlap checks. Plan IPv6 prefix allocation and equivalent policy/control traffic before enabling it; an explicitly documented IPv4-only baseline can be appropriate while that is unresolved.
 
@@ -54,6 +54,8 @@ A DMZ is a controlled network segment, **not** a consumer-router "DMZ host" feat
 Treat traffic **through** a firewall separately from traffic **to** the gateway. An inter-segment block may not stop a client reaching the router console; DHCP/DNS permissions should not grant unrestricted management. Same-segment flows may bypass the routed firewall entirely, requiring host firewalls, device controls, or supported client isolation.
 
 Service discovery such as mDNS is a deliberate cross-boundary feature. Allow it narrowly only when needed, and distinguish discovering a device from permission to connect to it. NAT hides or translates addresses; it does not replace an access policy. Host bridges and multi-homed systems must not accidentally join otherwise separated trust networks.
+
+For the attachment mechanisms behind those paths, see [Network Modes and Virtual Connectivity](./Network_Modes.md): bridged, NAT, routed, host-only and internal VM networks differ from container bridge and host modes. Its diagrams show which paths exist before firewall policy is applied.
 
 ### Addressing and VLAN Membership
 
