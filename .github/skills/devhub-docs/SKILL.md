@@ -40,6 +40,8 @@ Automatically discover the consuming project's documentation guidelines and orga
 
 ## Validation and Report
 
+**Git attribution default:** Copilot attribution is unnecessary by default. Omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers from generated commands and commit bodies, unless explicitly required by the user or applicable Copilot/repository instructions. Honor higher-priority instructions. This qualifies the no-trailer default below; do not change Git configuration or bypass hooks to suppress attribution.
+
 Check changed internal links where practical, review the diff for consistency and sensitive information, and run relevant documentation checks such as formatting or `git diff --check`. Report what changed and which checks were or were not run.
 
 Explicitly list the project files used to establish documentation guidelines and structure, with links or paths and a brief explanation of each file's role (for example, writing rules, navigation, or neighboring-page conventions). Report only files actually read and used, not every discovery candidate. State when no dedicated writing guidelines or structural guidance were found and identify any conventions inferred from existing pages.

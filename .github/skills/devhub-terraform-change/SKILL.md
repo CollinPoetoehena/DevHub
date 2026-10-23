@@ -9,6 +9,8 @@ description: "Implement or fix Terraform modules and configurations. Discover pr
 
 # Terraform Change
 
+Act as a senior software engineer working in the current repository.
+
 Implement the requested Terraform change in the owning repository. Establish expected behavior, scope, and acceptance criteria; resolve material ambiguity before editing. This workflow is self-contained and does not require another skill.
 
 ---
@@ -36,6 +38,15 @@ Automatically discover project guidance; do not assume the consuming repository 
 
 ---
 
+## Comments and Code Documentation
+
+- For HCL, YAML, and similar configuration files, decide whether comments help based on the current file and project conventions. Do not require top-of-file comments or introduce comments just because a file is new or changed; an uncommented file may remain uncommented. Maintain useful existing comments and preserve required license or tool headers; do not edit generated or vendored files just to add comments.
+- Document public input/output contracts with native `description` attributes, including units, sensitivity, defaults, or constraints when not obvious. HCL has no Python-style module or function docstrings; do not invent them. The source-code documentation guidance is generic: for supporting scripts or test code in Python, Go, or other programming languages, add or update native file-purpose and function docstrings or declaration comments for new or materially changed code.
+- Use inline comments only for non-obvious reasoning such as lifecycle choices, provider workarounds, dependency ordering, state compatibility, or replacement risks. Do not narrate resource attributes or repeat expressions.
+- Decide length from complexity, risk, and local conventions: prefer a short useful summary, expanding only for subtle contracts. Update stale comments and use established documentation generators/checks where available; avoid unrelated documentation churn.
+
+---
+
 ## Tests and Validation
 
 DevHub Terraform projects generally do not have implemented automated tests. Discover the consuming project's actual state rather than assuming this applies everywhere.
@@ -50,6 +61,8 @@ DevHub Terraform projects generally do not have implemented automated tests. Dis
 ---
 
 ## Completion Report
+
+**Git attribution default:** Copilot attribution is unnecessary by default. Omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers from generated commands and commit bodies, unless explicitly required by the user or applicable Copilot/repository instructions. Honor higher-priority instructions. This qualifies the no-trailer default below; do not change Git configuration or bypass hooks to suppress attribution.
 
 Summarize changes, key files, compatibility and replacement risks, commands actually run and results, and checks skipped with reasons. State whether meaningful tests were found or only placeholders, and identify remaining manual verification or migration steps.
 

@@ -59,6 +59,29 @@ For DevHub, put each skill in `.github/skills/devhub-<short-name>/SKILL.md`.
 
 ---
 
+## Authoring Change Skills
+
+Near the top of every change skill, immediately after its title, include: "Act as a senior software engineer working in the current repository." This establishes the expected engineering judgment: understand context, address root causes, preserve compatibility, keep changes maintainable, and verify outcomes within the requested scope.
+
+When creating or maintaining a code-change skill, include the following guidance directly in that skill rather than requiring another skill to supply it. The documentation rules are generic programming-language guidance for Python, Go, and other code, not YAML-specific requirements. Keep the generic change skill the most detailed treatment; give specialized skills concise, language-appropriate rules.
+
+1. Require concise file-purpose documentation at the top of new or materially changed source files when missing or inaccurate, using native module docstrings or header comments. Preserve shebangs, encoding declarations, licenses, generated markers, and language/tool directives in their required positions. Exclude generated and vendored files from comment-only edits.
+2. Require native function/method docstrings or declaration comments for new and materially changed contracts, explaining relevant inputs, outputs, errors, side effects, and constraints. Python uses a first-statement docstring; Go uses comments before declarations. Do not force redundant boilerplate on trivial private helpers or add fake docstrings to YAML/HCL.
+3. Reserve inline comments for special, non-obvious reasoning, edge cases, workarounds, ordering, and trade-offs. Explain why rather than narrating obvious code; prefer clear code over explanatory clutter.
+4. Decide documentation length from complexity, audience, risk, and local style, not a fixed line count. Keep simple summaries short and expand for subtle contracts; update stale comments with code. Use existing documentation checks without adding unnecessary tooling.
+5. Preserve each skill's self-contained discovery, safety, validation, and reporting. Tailor tests and compatibility checks to the language and actual project setup, rather than merely renaming the generic skill.
+6. For YAML, HCL, templates, and similar configuration formats, make comments optional based on the current file and project conventions. Do not impose the source-code file-header requirement: an uncommented file may remain uncommented. Maintain useful existing comments and native descriptions; add comments only where they provide meaningful clarification.
+
+---
+
+## Git Attribution Default
+
+For generated commit/push commands, no Copilot attribution is necessary by default. Explicitly omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers, including in a commit body. An explicit user request or applicable Copilot/repository instructions may require attribution; honor that requirement and higher-priority instructions. This qualifies every no-trailer default in this skill. Do not change Git configuration or bypass hooks to suppress attribution.
+
+Include this default and its exceptions directly in every skill created or maintained, and verify them when checking the result.
+
+---
+
 ## Create a Custom Agent
 
 For DevHub, put a repository custom agent in `.github/agents/devhub-<short-role>.agent.md`.
@@ -91,6 +114,7 @@ Automatically discover any existing catalog, index, or README that lists the pro
 - Confirm every skill created or maintained includes the invocation-specific precedence note near the top, with an example and the higher-priority instruction and safety caveat.
 - Ensure the description makes intended activation clear and the content is focused. Confirm the skill contains its essential rules, workflow, and context without relying on another customization, Git-hosted file, external documentation, or URL; any links are optional context, and any supplemental skill resources are included in its directory and explained.
 - Confirm agents likewise contain their essential task guidance directly rather than relying on linked material to supply required steps or context.
+- Confirm every created or maintained change skill includes the senior software engineer role statement immediately after its title.
 - Confirm every created or updated skill states the Git command handoff requirement directly, including a concrete commit message without a co-author trailer, safe push-target discovery, the all-changes warning, and no automatic commit or push.
 - Confirm commit-message guidance requires reviewing unstaged and staged diffs plus status and relevant untracked files, and describes the full pending scope rather than only the latest task.
 - Verify that automatic discovery is explicit, includes a fallback beyond common locations, and does not require unnecessary project-specific user inputs. Confirm the report identifies the project files actually used and discovery limitations.

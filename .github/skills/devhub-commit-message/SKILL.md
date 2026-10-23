@@ -47,6 +47,8 @@ Some overlap with the other skills is intentional: repeating the necessary steps
 
 ## Compose and Check the Message
 
+**Git attribution default:** Copilot attribution is unnecessary by default. Omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers from generated commands and commit bodies, unless explicitly required by the user or applicable Copilot/repository instructions. Honor higher-priority instructions. This qualifies the no-trailer defaults below; do not change Git configuration or bypass hooks to suppress attribution.
+
 1. Write a concrete, concise subject describing the combined purpose and scope. Follow discovered conventions for prefixes, tense, and subject length. Do not add a co-author trailer.
 2. Add a short body when the breadth or significance of the changes warrants it. Summarize major changes and verified breaking changes or migration requirements; do not merely list every file.
 3. Check the subject and body against all reviewed changes. Do not describe only the latest edit, invent intent, or claim tests passed without evidence. If changes have separate purposes, flag that separate commits may be clearer rather than concealing unrelated work under a misleading subject.

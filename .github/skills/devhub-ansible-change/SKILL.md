@@ -9,6 +9,8 @@ description: "Implement or fix Ansible roles, playbooks, and collections. Discov
 
 # Ansible Change
 
+Act as a senior software engineer working in the current repository.
+
 Implement the requested Ansible change in the owning repository. Establish expected behavior, scope, and acceptance criteria; resolve material ambiguity before editing. This workflow is self-contained and does not require another skill.
 
 ---
@@ -36,6 +38,15 @@ Automatically discover project guidance; do not assume the consuming repository 
 
 ---
 
+## Comments and Embedded Code Documentation
+
+- For YAML, templates, and similar configuration files, decide whether comments help based on the current file and project conventions. Do not require top-of-file comments or introduce comments just because a file is new or changed; an uncommented file may remain uncommented. Maintain useful existing comments, preserving required licenses and template directives.
+- Prefer descriptive task names, variable documentation, and collection argument specifications for normal behavior. Reserve inline comments for non-obvious conditions, ordering, idempotence decisions, platform workarounds, or security constraints; explain why, not obvious module arguments.
+- The source-code documentation guidance is generic: for Python plugins, supporting scripts, or other programming-language code, add or update native file-purpose and function docstrings or declaration comments for new or materially changed code, covering relevant contracts, errors, and side effects. YAML itself has no docstrings; do not invent them.
+- Choose length according to complexity and local conventions: one useful sentence may suffice; expand for subtle contracts. Avoid redundant private-helper boilerplate, keep comments accurate, and do not add unrelated headers to untouched, generated, or vendored files. Use existing documentation checks when present.
+
+---
+
 ## Tests and Validation
 
 DevHub Ansible projects generally do not have implemented automated tests. Discover the consuming project's actual state rather than assuming this applies everywhere.
@@ -50,6 +61,8 @@ DevHub Ansible projects generally do not have implemented automated tests. Disco
 ---
 
 ## Completion Report
+
+**Git attribution default:** Copilot attribution is unnecessary by default. Omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers from generated commands and commit bodies, unless explicitly required by the user or applicable Copilot/repository instructions. Honor higher-priority instructions. This qualifies the no-trailer default below; do not change Git configuration or bypass hooks to suppress attribution.
 
 Summarize changes, key files, compatibility and operational risks, commands actually run and results, and checks skipped with reasons. State whether meaningful tests were found or only scaffolding, and identify remaining runtime or idempotence verification.
 

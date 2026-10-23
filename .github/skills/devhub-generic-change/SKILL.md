@@ -42,8 +42,22 @@ Automatically discover the consuming project's guidance before editing; do not a
 1. Make the smallest maintainable change that meets the objective. Fix root causes rather than masking symptoms.
 2. Follow existing conventions and reuse suitable code, dependencies, and test helpers. Avoid unrelated refactoring and unnecessary dependencies.
 3. Preserve existing user changes. Do not overwrite changes unrelated to the request.
-4. Add concise comments where non-obvious reasoning, constraints, edge cases, or trade-offs need explanation. Explain why, not what the code already makes clear; avoid narrating obvious code or adding comments merely for coverage. Follow local style and update or remove comments made inaccurate by the change.
+4. Apply the file, function, and inline documentation guidance below to new and materially changed code. Follow local syntax and conventions; keep documentation accurate without unrelated comment-only churn.
 5. Update directly related documentation and keep it consistent with the implementation. If a changelog exists, update it accordingly.
+
+---
+
+## File, Function, and Inline Documentation
+
+Use documentation to explain purpose, contracts, and reasoning, not to restate code. This guidance applies generically to programming languages such as Python, Go, and others, not specifically to YAML or configuration files. Apply it within the requested change, respecting applicable project instructions and language conventions.
+
+1. **File purpose:** For a new source file, add a short top-level docstring or language-appropriate header explaining what the file provides, its responsibility, and any important usage constraints. For an existing file being materially changed, add or update that summary when missing or inaccurate. Preserve required shebangs, encoding declarations, licenses, generated-file markers, and language directives in their required positions. Do not edit generated or vendored files just to add documentation.
+2. **Function contracts:** Add or update docstrings or language-appropriate documentation comments for new and materially changed functions, methods, and public types where they clarify a contract. Cover purpose, non-obvious inputs and outputs, units, errors, side effects, invariants, or concurrency requirements as relevant. Keep trivial private helpers brief or omit redundant documentation when local conventions permit; do not add boilerplate to every accessor. Put documentation where the language expects it, not indiscriminately inside function bodies: Python docstrings are the first statement, while Go documentation comments precede declarations.
+3. **Inline reasoning:** Add inline or nearby block comments only for special, non-obvious details: surprising edge cases, compatibility workarounds, security constraints, ordering requirements, algorithm choices, or trade-offs. Explain why the code is necessary and, for a workaround, what would allow removal. Do not narrate assignments, loops, or obvious control flow.
+4. **Proportionate length:** Decide length from complexity, audience, risk, and established style, not a fixed quota. A one-line purpose or function summary is often enough; expand only for information maintainers cannot reliably infer. Use the project's structured docstring format when present, without duplicating type annotations or signatures unnecessarily.
+5. **Correctness and maintenance:** Prefer clear names and simple code over comments compensating for confusing design. Update or remove stale comments with the implementation, including misleading examples and documented defaults. Do not include secrets, speculative claims, commented-out code, or unrelated historical notes.
+6. **Language and format fit:** Use native documentation mechanisms and preserve tool compatibility. Python supports module/function docstrings; Go uses package and declaration comments. For YAML, HCL, templates, and similar configuration formats, decide whether comments help based on the current file and established project style. Do not require a file header or introduce comments merely because a file is new or changed; a currently uncommented file can remain uncommented. Maintain existing useful comments and native descriptions as needed, and add a targeted comment only when it clarifies something non-obvious. Do not invent docstring syntax or add prose to formats that forbid comments.
+7. **Review:** Check that documentation matches observable behavior, errors, and supported versions. Use established documentation linting or generation checks when present; do not introduce a documentation framework just for this change.
 
 ---
 
@@ -70,6 +84,8 @@ Discover the consuming project's actual test setup; do not assume automated test
 ---
 
 ## Completion Report
+
+**Git attribution default:** Copilot attribution is unnecessary by default. Omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers from generated commands and commit bodies, unless explicitly required by the user or applicable Copilot/repository instructions. Honor higher-priority instructions. This qualifies the no-trailer default below; do not change Git configuration or bypass hooks to suppress attribution.
 
 Summarize the changes, key files, checks actually run and their results, checks skipped and why, plus remaining risks or manual steps. State whether meaningful tests were found, only placeholders were found, or tests were absent, and explain the resulting testing decision. Clearly distinguish verified results from untested expectations.
 

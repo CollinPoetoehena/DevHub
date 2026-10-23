@@ -18,6 +18,8 @@ Skills capture reusable task instructions, repeatable processes, and multi-step 
 
 - [Available skills](#available-skills)
   - [Choosing a change skill](#choosing-a-change-skill)
+  - [Comments and code documentation](#comments-and-code-documentation)
+  - [Git attribution default](#git-attribution-default)
 - [Use or install a skill](#use-or-install-a-skill)
 - [Create a skill](#create-a-skill)
 - [Examples beyond DevHub](#examples-beyond-devhub)
@@ -29,7 +31,9 @@ Skills capture reusable task instructions, repeatable processes, and multi-step 
 - [`devhub-ai-customization`](./devhub-ai-customization/SKILL.md) — create or maintain a self-contained DevHub skill or custom agent (mainly used in this DevHub repository itself, but reusable across other repositories as well).
 - [`devhub-commit-message`](./devhub-commit-message/SKILL.md) — create a commit message and copy-ready Git handoff from all current changes, without editing files or committing.
 - [`devhub-docs`](./devhub-docs/SKILL.md) — create or update documentation using the owning project's conventions (can be used for any project since it is not tied to DevHub-specific practices, it automatically adapts to the project's existing documentation structure and guidelines).
-- [`devhub-generic-change`](./devhub-generic-change/SKILL.md) — implement and verify generic code changes using discovered project conventions and existing test setup, with comments for non-obvious reasoning (see specific skills below for more specific tool guidance, such as Ansible, etc.).
+- [`devhub-generic-change`](./devhub-generic-change/SKILL.md) — implement and verify generic code changes using discovered project conventions and existing test setup, with detailed file/function documentation and selective inline-comment guidance.
+- [`devhub-python-change`](./devhub-python-change/SKILL.md) — change Python packages, applications, and scripts with interpreter compatibility, docstrings, and project-specific validation.
+- [`devhub-go-change`](./devhub-go-change/SKILL.md) — change Go packages and modules with API/concurrency safety, native documentation comments, and project-specific validation.
 - [`devhub-terraform-change`](./devhub-terraform-change/SKILL.md) — change Terraform code with infrastructure-specific safety and validation.
 - [`devhub-ansible-change`](./devhub-ansible-change/SKILL.md) — change Ansible roles and playbooks with idempotence, safe targeting, and validation.
 
@@ -39,18 +43,38 @@ Keeping it as a standalone skill gives this distinct, recurring task its own dir
 
 ### Choosing a change skill
 
+Every change skill begins with "Act as a senior software engineer working in the current repository." This sets the expectation to understand project context, fix root causes, preserve compatibility, make maintainable changes, and verify outcomes within the requested scope.
+
 Use [`devhub-generic-change`](./devhub-generic-change/SKILL.md) for generic code changes, features, and bug fixes. When a tool needs more specific instructions, choose the matching tool-specific skill instead:
 
 | Skill | Use for | Tool-specific additions |
 | --- | --- | --- |
+| [`devhub-python-change`](./devhub-python-change/SKILL.md) | Python packages, applications, and scripts | Interpreter compatibility, public contracts, typing, async/resource behavior, and native docstrings |
+| [`devhub-go-change`](./devhub-go-change/SKILL.md) | Go packages, modules, applications, and tools | Toolchain/module boundaries, exported APIs, errors, concurrency, and native documentation comments |
 | [`devhub-terraform-change`](./devhub-terraform-change/SKILL.md) | Terraform modules and configurations | Resource/state compatibility, replacement risks, provider-aware validation, and infrastructure side effects |
 | [`devhub-ansible-change`](./devhub-ansible-change/SKILL.md) | Ansible roles, playbooks, and collections | Idempotence, variable precedence, handlers, inventories, and safe managed-host targeting |
 
-The tool-specific skills add infrastructure safety and validation to the generic code-change workflow. All three change skills discover the consuming project's actual test setup rather than assuming tests exist. If meaningful tests exist in the owning project or package, update or add coverage for the change using that suite; otherwise skip test creation and execution by default and report the reason. This also applies to standalone scripts without tests: a code change alone does not justify introducing a suite or framework. To add tests where none exist, explicitly request them, unless applicable project requirements already mandate them.
+The language- and tool-specific skills add compatibility, safety, documentation, and validation guidance tailored to their ecosystems. All five change skills discover the consuming project's actual test setup rather than assuming tests exist. If meaningful tests exist in the owning project or package, update or add coverage for the change using that suite; otherwise skip test creation and execution by default and report the reason. This also applies to standalone scripts without tests: a code change alone does not justify introducing a suite or framework. To add tests where none exist, explicitly request them, unless applicable project requirements already mandate them.
 
 An existing `test/` or `tests/` directory alone is not evidence of implemented tests: generated Ansible role test playbooks and other default/basic scaffolding without real behavioral verification count as placeholders. DevHub Terraform and Ansible projects generally do not have implemented automated tests, but discovery establishes the consuming project's actual state.
 
 Skipping tests does not skip applicable formatting, linting, syntax, or static validation. Explicit test requests and project requirements take precedence. Each change skill automatically discovers local guidance and structure, reports which files informed the work, and is self-contained; the tool-specific skills do not require invoking the generic skill first.
+
+---
+
+### Comments and code documentation
+
+All change skills cover file-purpose summaries, function contracts, and selective inline comments. The generic change skill provides the most detailed guidance; each specialized skill includes its own concise, native equivalent and remains usable on its own.
+
+For new or materially changed programming-language source files and functions, add or update purpose and contract documentation where missing or inaccurate. This is generic guidance for Python, Go, and other code: use native module/function docstrings or package/declaration comments rather than forcing one syntax everywhere. Preserve required headers and directives, and avoid generated/vendor edits or unrelated documentation churn. Trivial private helpers do not need redundant boilerplate.
+
+For YAML, HCL, templates, and similar configuration formats, comments are optional and should follow the current file and project conventions. Do not require file headers or introduce comments merely because a file is new or changed; an uncommented file can remain uncommented. Maintain useful existing comments and native descriptions, adding targeted comments only when they clarify non-obvious details.
+
+Use inline comments only for non-obvious reasoning, constraints, edge cases, and workarounds, not narration of ordinary code. Decide length from complexity, audience, risk, and local conventions: a short summary may suffice, while subtle contracts need more detail. Keep documentation accurate as code changes.
+
+### Git attribution default
+
+DevHub skills explicitly omit `-m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"` and equivalent co-author trailers from generated Git handoffs by default; attribution is not necessary. Explicit user requests or applicable Copilot/repository instructions may require attribution, and higher-priority instructions still apply. Do not change Git configuration or bypass hooks to suppress it. Skills provide commands for review, not permission to commit or push.
 
 ---
 
@@ -77,6 +101,8 @@ Apply the shared [authoring guidance](../AI.md#create-and-maintain-customization
 - Add or update the skill's entry in [Available skills](#available-skills).
 - Include the [Git command handoff requirement](../AI.md#end-skill-reports-with-ready-to-run-git-commands) directly in the skill: end reports for Git-backed changes with `git add -A`, a concrete commit message, and the appropriate `git push` command. Warn about staging unrelated edits and do not execute the commands without authorization.
 - Require the commit message to describe the full pending change set, including earlier session changes: inspect `git diff`, `git diff --cached`, and `git status --short`, and review relevant untracked files before composing it.
+- State the [Git attribution default and its exceptions](#git-attribution-default) directly in every skill. For change skills, include self-contained, language-appropriate [comment and documentation guidance](#comments-and-code-documentation), keeping the generic skill the most detailed.
+- For every change skill, place "Act as a senior software engineer working in the current repository." immediately after its title, as described in [Choosing a change skill](#choosing-a-change-skill).
 
 The [`devhub-ai-customization` skill](./devhub-ai-customization/SKILL.md) provides the complete self-contained workflow for creating or maintaining a DevHub skill or agent.
 
