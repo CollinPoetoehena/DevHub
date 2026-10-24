@@ -30,11 +30,18 @@ Automatically discover the consuming project's documentation guidelines and orga
 
 ## Writing and Editing
 
-1. Identify the intended audience and purpose; keep the change focused on that purpose.
-2. Reuse established sections and cross-link to authoritative explanations rather than duplicating them.
-3. Keep examples safe and nonfunctional where credentials, addresses, or environment details are involved.
-4. Update tables of contents, indexes, and directly affected links when adding, moving, or renaming content.
-5. Preserve unrelated edits and avoid changing implementation files unless explicitly requested.
+The rules below are self-contained. Optional background: [documentation concepts](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/engineering/Concepts.md#documentation); do not require this link to perform the task.
+
+1. Identify the intended reader, task, and information gap. Add text when it helps someone use or maintain the software, make a decision, or avoid a meaningful risk; every explanation creates review and maintenance work. Do not document something merely because it can be documented.
+2. Choose the authoritative location: README for orientation, setup, and discovery; guides for workflows; API documentation for supported contracts; design notes for significant rationale and trade-offs; runbooks for operational recovery. Reuse established sections rather than adding overlapping documents.
+3. Explain prerequisites, supported behavior, inputs and outputs, important defaults, failure modes, and verification where relevant. Distinguish a working procedure from an illustrative example, and observed behavior from recommendations. Keep detail proportionate to the audience and risk.
+4. Document public contracts with the language's native mechanism. Reserve nearby code comments for important, non-obvious constraints, workarounds, or special cases. Prefer clear code; do not restate routine syntax, type annotations, control flow, or every implementation detail.
+5. Link shared practices once from the consuming project's README, using section links when useful. Reference authoritative upstream documentation for language concepts and version-dependent tooling; do not duplicate tutorials or scatter best-practice/compliance links throughout source files.
+6. For intentional deviations from shared guidance, record the relevant practice, reason, scope, and consequences in the README or linked design documentation. Use a local code comment only for a specific implementation constraint. Update central guidance when an exception becomes a shared decision.
+7. Use the smallest example that explains the behavior. Keep credentials, addresses, and environment details safe and clearly illustrative; identify prerequisites and destructive effects before commands. Verify examples against available evidence rather than claiming unexecuted procedures work.
+8. Update tables of contents, indexes, and directly affected links when adding, moving, or renaming content. Keep the README a discoverable entry point rather than a duplicate of every detailed guide.
+9. Review documentation with the behavior it describes. Remove stale claims, redundant text, and unsupported AI-generated assertions; refresh directly affected examples and links. Do not compensate for uncertainty with confident filler or claim complete coverage where the guide is selective.
+10. Preserve unrelated edits and avoid changing implementation files unless explicitly requested.
 
 ---
 

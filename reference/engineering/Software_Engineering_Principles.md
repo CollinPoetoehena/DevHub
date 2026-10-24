@@ -1,15 +1,12 @@
 # Coding & Software Engineering Principles
 
-Language-agnostic principles that apply across every project in this repository — Python packages, Ansible roles, Terraform modules, shell scripts, and any potential future languages (e.g. Java, Go, etc.) alike.
+Language-agnostic principles that apply across libraries, applications, automation, and infrastructure.
 
 These principles are **heuristics, not laws**. They exist to reduce the cost of the *next* change; when two of them conflict (and they often do), pick the one that keeps the code easiest to understand and change.
 
-Language-specific conventions live next to the language:
+This guide is part of the Engineering & Coding Reference. See [Scope and approach](README.md#scope-and-approach) for why it presents selected principles and illustrative trade-offs rather than a complete design handbook, and where to explore further.
 
-- [Python Reference & Best Practices](./python/README.md)
-- [Ansible](../packages/Ansible.md)
-- [Terraform](../packages/Terraform.md)
-- [Helm](../packages/Helm.md)
+Implementation-specific conventions and official references are centralized in [Languages & Tools](Languages_and_Tools.md). Cross-cutting topics such as observability, error handling, and documentation are covered in [Engineering Concepts](Concepts.md).
 
 ---
 
@@ -110,14 +107,33 @@ Judging which side you are on is a skill built by reading and changing code over
 
 | Principle | One-line rule | Smell it prevents |
 |---|---|---|
-| DRY (Don't Repeat Yourself) | Every piece of *knowledge* has one authoritative home. | Same rule changed in three places, two of them forgotten. |
-| KISS (Keep It Simple, Stupid) | Prefer the boring solution that a tired reader understands. | Clever one-liners, needless metaprogramming. |
-| YAGNI (You Aren't Gonna Need It) | Build what is needed now, not what might be needed. | Config flags and plugin hooks nobody uses. |
-| SOLID (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion) | Small, substitutable, dependency-inverted units. | God classes, `isinstance` ladders, rigid inheritance. |
-| Low coupling / high cohesion | Things that change together live together. | Shotgun surgery across many modules for one change. |
-| Separation of concerns | Business rules, I/O, and presentation are separate. | SQL and HTML in the same function. |
-| Fail fast | Invalid state stops at the boundary, loudly. | Corrupt data discovered three layers later. |
-| Least astonishment | Behaviour matches the name and the convention. | `get_user()` that also writes to the database. |
+| [Applying principles](#how-to-apply-these-principles) | Scale structure to the concrete problem and stakes. | Rigid checklists and unnecessary indirection. |
+| [DRY (Don't Repeat Yourself)](#dry--dont-repeat-yourself) | Every piece of *knowledge* has one authoritative home. | Same rule changed in three places, two of them forgotten. |
+| [KISS (Keep It Simple)](#kiss--keep-it-simple) | Prefer the boring solution that a tired reader understands. | Clever one-liners, needless metaprogramming. |
+| [YAGNI (You Aren't Gonna Need It)](#yagni--you-arent-gonna-need-it) | Build what is needed now, not what might be needed. | Config flags and plugin hooks nobody uses. |
+| [SOLID](#solid) | Small, substitutable, dependency-inverted units. | God classes, rigid inheritance, and dependencies that resist change. |
+| [Single Responsibility](#s--single-responsibility) | Give a module one reason to change. | Unrelated stakeholder needs changing the same unit. |
+| [Open/Closed](#o--openclosed) | Extend stable variation points without repeatedly rewriting their callers. | Growing conditionals scattered across consumers. |
+| [Liskov Substitution](#l--liskov-substitution) | Implementations preserve the contract expected by callers. | Subclasses that reject valid base-class operations. |
+| [Interface Segregation](#i--interface-segregation) | Depend on the narrow interface a consumer needs. | Callers forced to depend on irrelevant methods. |
+| [Dependency Inversion](#d--dependency-inversion) | High-level policy depends on abstractions, not infrastructure details. | Business rules coupled to one database or client. |
+| [Low coupling / high cohesion](#coupling--cohesion) | Things that change together live together. | Shotgun surgery across many modules for one change. |
+| [Separation of concerns](#separation-of-concerns) | Business rules, I/O, and presentation are separate. | SQL and HTML in the same function. |
+| [Composition over inheritance](#composition-over-inheritance) | Assemble behavior before creating a rigid class hierarchy. | Subclasses coupled to unrelated base-class internals. |
+| [Law of Demeter](#law-of-demeter) | Work through immediate collaborators, not their internal object graphs. | Chains of foreign internals that amplify refactors. |
+| [Fail fast](#fail-fast--principle-of-least-astonishment) | Invalid state stops at the boundary, loudly. | Corrupt data discovered three layers later. |
+| [Least astonishment](#fail-fast--principle-of-least-astonishment) | Behavior matches the name and the convention. | A getter that also writes to the database. |
+| [Clean Architecture](#clean-architecture) | Source dependencies point toward domain policy. | Business rules dependent on a framework or database. |
+| [Twelve-Factor App](#twelve-factor-app) | Keep deployable services configurable, reproducible, and disposable. | Host-specific deployments and hidden runtime state. |
+| [Object-oriented programming](#oop--object-oriented-programming) | Use objects to group coherent state and behavior when useful. | Classes and inheritance introduced without a real modeling need. |
+| [Boy Scout Rule](#working-principles) | Improve nearby code without mixing unrelated cleanup into a change. | Neglected code or sprawling cleanup PRs. |
+| [Work, then refine, then optimize](#working-principles) | Establish correctness before measured performance work. | Premature optimization and clever but incorrect code. |
+| [Technical debt](#working-principles) | Make shortcuts explicit and plan their repayment. | Forgotten compromises that become permanent. |
+| [Small, reversible changes](#working-principles) | Keep each change focused and easy to undo. | Large changes that are hard to review or bisect. |
+| [Behavior-focused tests](#working-principles) | Test the supported contract rather than private internals. | Refactors breaking tests without changing behavior. |
+| [Automation](#working-principles) | Automate recurring work when doing so is worthwhile. | Repeated manual steps and inconsistent outcomes. |
+| [Document the why](#working-principles) | Preserve important reasoning rather than narrating code. | Lost context and redundant commentary. |
+| [Resolving conflicts](#when-principles-conflict) | Compare the real maintenance costs of competing principles. | Following one rule while making the next change harder. |
 
 ---
 
@@ -279,7 +295,7 @@ Chained access hard-codes the structure of unrelated classes into the caller, so
 
 - **Fail fast** — validate at the system boundary and stop immediately on invalid state, with a message that names the offending value. Do not "helpfully" continue with a default that hides a bug; a crash at the boundary is cheaper to debug than corrupt data found later.
 - **Least astonishment** — behaviour must match what the name, signature, and surrounding conventions promise. No hidden writes in a getter, no silent retries, no swallowed exceptions.
-- **Errors are part of the API** — document what a unit raises and let unexpected exceptions propagate rather than catching broadly (see [Exceptions](./python/Exceptions.md)).
+- **Errors are part of the API** — document failure contracts and let unexpected errors propagate rather than catching broadly (see [Error handling and resilience](Concepts.md#error-handling-and-resilience)).
 
 ---
 
@@ -356,7 +372,7 @@ The factors most often violated:
 
 ## OOP — Object-Oriented Programming
 
-This is a programming paradigm based on the concept of "objects", which are instances of classes that encapsulate both data and behavior. OOP aims to promote code reuse, modularity, and maintainability through principles such as encapsulation, inheritance, and polymorphism. See for explanation [Python reference: Classes & Generics](./python/Classes_Generics.md#object-oriented-programming--fundamentals)
+Object-oriented programming groups related state and behavior into objects. Encapsulation, abstraction, inheritance, and polymorphism can support modularity, but should serve a clear modeling need rather than dictate every design. See [Data modeling and contracts](Concepts.md#data-modeling-and-contracts) for general context and [Languages & Tools](Languages_and_Tools.md) for implementation-specific references.
 
 ---
 
@@ -392,4 +408,4 @@ The single question worth asking during review: **what will it cost to change th
 - [The Twelve-Factor App](https://12factor.net/)
 - [The Clean Architecture (blog.cleancoder.com)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [The Pragmatic Programmer](https://pragprog.com/titles/tpp20/the-pragmatic-programmer-20th-anniversary-edition/) — DRY, orthogonality, tracer bullets.
-- [PEP 20 — The Zen of Python](https://peps.python.org/pep-0020/) — the same ideas, condensed into 19 lines.
+- [Languages & Tools](Languages_and_Tools.md) — implementation-specific practices and authoritative language/tool references.

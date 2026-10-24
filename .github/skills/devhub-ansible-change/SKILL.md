@@ -40,10 +40,14 @@ Automatically discover project guidance; do not assume the consuming repository 
 
 ## Comments and Embedded Code Documentation
 
+The rules below are self-contained. Optional background: [documentation concepts](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/engineering/Concepts.md#documentation); do not require this link to perform the task.
+
 - For YAML, templates, and similar configuration files, decide whether comments help based on the current file and project conventions. Do not require top-of-file comments or introduce comments just because a file is new or changed; an uncommented file may remain uncommented. Maintain useful existing comments, preserving required licenses and template directives.
 - Prefer descriptive task names, variable documentation, and collection argument specifications for normal behavior. Reserve inline comments for non-obvious conditions, ordering, idempotence decisions, platform workarounds, or security constraints; explain why, not obvious module arguments.
 - The source-code documentation guidance is generic: for Python plugins, supporting scripts, or other programming-language code, add or update native file-purpose and function docstrings or declaration comments for new or materially changed code, covering relevant contracts, errors, and side effects. YAML itself has no docstrings; do not invent them.
 - Choose length according to complexity and local conventions: one useful sentence may suffice; expand for subtle contracts. Avoid redundant private-helper boilerplate, keep comments accurate, and do not add unrelated headers to untouched, generated, or vendored files. Use existing documentation checks when present.
+- Document for a reader's task or meaningful risk, not maximum volume. Keep role usage and operational procedures in the README or linked guides, substantial rationale in design notes, contracts in variable/argument documentation, and local constraints near affected tasks. Do not embed YAML or Ansible tutorials or repeat module arguments.
+- Link shared practices once from the consuming project's README, not throughout task files. Record intentional deviations with their reason, scope, and consequences in the README or linked design notes; update central guidance if a deviation becomes shared practice. Use a local comment only for a specific implementation constraint.
 
 ---
 

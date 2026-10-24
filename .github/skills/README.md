@@ -66,11 +66,17 @@ Skipping tests does not skip applicable formatting, linting, syntax, or static v
 
 All change skills cover file-purpose summaries, function contracts, and selective inline comments. The generic change skill provides the most detailed guidance; each specialized skill includes its own concise, native equivalent and remains usable on its own.
 
+The broader [documentation concepts](../../reference/engineering/Concepts.md#documentation) explain audience, placement, examples, maintenance, and why documentation should add value rather than maximize volume. This section describes how those practices are applied in AI workflows: the documentation skill handles prose and navigation, while change skills keep related explanations consistent with code. The essential rules remain inside each skill; this reference is optional background, not an installation or runtime dependency.
+
 For new or materially changed programming-language source files and functions, add or update purpose and contract documentation where missing or inaccurate. This is generic guidance for Python, Go, and other code: use native module/function docstrings or package/declaration comments rather than forcing one syntax everywhere. Preserve required headers and directives, and avoid generated/vendor edits or unrelated documentation churn. Trivial private helpers do not need redundant boilerplate.
 
 For YAML, HCL, templates, and similar configuration formats, comments are optional and should follow the current file and project conventions. Do not require file headers or introduce comments merely because a file is new or changed; an uncommented file can remain uncommented. Maintain useful existing comments and native descriptions, adding targeted comments only when they clarify non-obvious details.
 
 Use inline comments only for non-obvious reasoning, constraints, edge cases, and workarounds, not narration of ordinary code. Decide length from complexity, audience, risk, and local conventions: a short summary may suffice, while subtle contracts need more detail. Keep documentation accurate as code changes.
+
+Put setup and usage in the consuming project's README or linked guides, substantial rationale in design documentation, public contracts in native code documentation, and local implementation constraints near the affected code. Do not embed language tutorials, repeated best-practice links, or compliance reminders in source files.
+
+Link shared practices once from the consuming project's README instead of copying them throughout its code. Document intentional exceptions with their reason, scope, and consequences in that README or linked design notes. Update the shared guidance if an exception becomes a shared decision. This is distinct from retaining concise essential rules inside standalone skills so they work independently.
 
 ### Git attribution default
 

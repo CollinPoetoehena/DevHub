@@ -24,7 +24,7 @@ This is the guiding principle for DevHub's Reference: prioritize general concept
 
 This reference is not intended to be a catalog of every possible product, platform, or command. Tools such as Kubernetes and specific networking products can have extensive, version-dependent behavior; reproducing all of that here would make the reference harder to maintain and could leave it out of date. Instead, DevHub includes only the tool-specific context or examples that help explain a broader concept, and links to the official documentation for current details and comprehensive instructions. The goal is to understand the fundamentals, not to collect every tool or duplicate its maintainers' documentation.
 
-The [storage reference](storage/README.md) applies this approach to storage, with a brief Kubernetes-specific exception for orientation. The [network reference](network/README.md) focuses on reusable networking concepts and points to official documentation when a particular tool's behavior is involved. The [Python reference](python/README.md) is another deliberate exception: Python is used frequently here, so it includes practical Python examples alongside concepts such as object-oriented programming, functions, exceptions, and logging that are useful in other languages too.
+The [storage reference](storage/README.md) applies this approach to storage, with a brief Kubernetes-specific exception for orientation. The [network reference](network/README.md) focuses on reusable networking concepts and points to official documentation when a particular tool's behavior is involved. The [engineering reference](engineering/README.md) centralizes concise [language and tool practices](engineering/Languages_and_Tools.md), [generic concepts](engineering/Concepts.md), and package organization without maintaining a separate language tutorial collection.
 
 ---
 
@@ -50,7 +50,7 @@ That is why this reference is centralized in DevHub rather than repeated in each
 |------|-------------|
 | [AI.md](AI.md) | AI background, agents, prompt engineering, and how to use AI (and which model tier) effectively for Software Engineering work. |
 | [Code_Editor.md](Code_Editor.md) | Personal code editor setup, account separation, Settings Sync, subscriptions, and Git with personal and work accounts. |
-| [Software_Engineering_Principles.md](Software_Engineering_Principles.md) | Language-agnostic coding and design principles (DRY, KISS, YAGNI, SOLID, coupling/cohesion, Clean Architecture, Twelve-Factor, etc.). |
+| [Engineering & Coding Reference](engineering/README.md) | Package design, language and component guidance, and [software engineering principles](engineering/Software_Engineering_Principles.md), centralized for reuse across projects. |
 | [Network Reference](network/README.md) | Networking theory, general architecture (segmentation, trust zones and traffic flows), and Linux networking commands. Split into multiple files — see the network README for the full index. |
 | [Compute Reference](compute/README.md) | General-purpose computer hardware fundamentals, component roles and inspection commands. |
 | [Operating Systems Reference](os/README.md) | OS fundamentals across Linux, Windows and macOS, plus a general boot/install overview. |

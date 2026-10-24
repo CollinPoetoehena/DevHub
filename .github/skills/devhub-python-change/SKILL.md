@@ -39,10 +39,14 @@ Implement the requested Python change in the owning repository or package. Estab
 
 ## Docstrings and Comments
 
+The rules below are self-contained. Optional background: [documentation concepts](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/engineering/Concepts.md#documentation); do not require this link to perform the task.
+
 - Add or update a concise module docstring describing the purpose of new or materially changed source files when missing or inaccurate. Place it after required shebang/encoding lines and before imports, including `__future__` imports; preserve license and tool requirements.
 - Use a first-statement docstring for new or materially changed functions, methods, and public classes where it clarifies their contract. Follow the project's format and document relevant inputs, outputs, exceptions, side effects, units, or async/resource constraints. Avoid repeating type annotations or boilerplate for trivial private helpers.
 - Reserve inline comments for special reasoning: non-obvious edge cases, compatibility workarounds, ordering, security constraints, and trade-offs. Explain why, not obvious code.
 - Decide length from complexity, audience, risk, and local style; use a short summary for simple code and expand for subtle contracts. Keep comments accurate, prefer clear code, and avoid unrelated headers in untouched, generated, or vendored files. Use established docstring checks when present.
+- Document for a reader's task or meaningful risk, not maximum volume. Keep setup and usage in the README or linked guides, substantial rationale in design notes, contracts in docstrings, and local constraints near the code. Do not embed Python tutorials or repeat obvious syntax.
+- Link shared practices once from the consuming project's README, not throughout source files. Record intentional deviations with their reason, scope, and consequences in the README or linked design notes; update central guidance if a deviation becomes shared practice. Use a local comment only for a specific implementation constraint.
 
 ---
 

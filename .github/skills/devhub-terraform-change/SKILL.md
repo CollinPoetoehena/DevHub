@@ -40,10 +40,14 @@ Automatically discover project guidance; do not assume the consuming repository 
 
 ## Comments and Code Documentation
 
+The rules below are self-contained. Optional background: [documentation concepts](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/engineering/Concepts.md#documentation); do not require this link to perform the task.
+
 - For HCL, YAML, and similar configuration files, decide whether comments help based on the current file and project conventions. Do not require top-of-file comments or introduce comments just because a file is new or changed; an uncommented file may remain uncommented. Maintain useful existing comments and preserve required license or tool headers; do not edit generated or vendored files just to add comments.
 - Document public input/output contracts with native `description` attributes, including units, sensitivity, defaults, or constraints when not obvious. HCL has no Python-style module or function docstrings; do not invent them. The source-code documentation guidance is generic: for supporting scripts or test code in Python, Go, or other programming languages, add or update native file-purpose and function docstrings or declaration comments for new or materially changed code.
 - Use inline comments only for non-obvious reasoning such as lifecycle choices, provider workarounds, dependency ordering, state compatibility, or replacement risks. Do not narrate resource attributes or repeat expressions.
 - Decide length from complexity, risk, and local conventions: prefer a short useful summary, expanding only for subtle contracts. Update stale comments and use established documentation generators/checks where available; avoid unrelated documentation churn.
+- Document for a reader's task or meaningful risk, not maximum volume. Keep module usage and migration steps in the README or linked guides, substantial rationale in design notes, contracts in native descriptions, and local constraints near the configuration. Do not embed HCL tutorials or duplicate generated reference tables manually.
+- Link shared practices once from the consuming project's README, not throughout configuration files. Record intentional deviations with their reason, scope, and consequences in the README or linked design notes; update central guidance if a deviation becomes shared practice. Use a local comment only for a specific implementation constraint.
 
 ---
 

@@ -39,10 +39,14 @@ Implement the requested Go change in the owning repository or module. Establish 
 
 ## Documentation Comments
 
+The rules below are self-contained. Optional background: [documentation concepts](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/engineering/Concepts.md#documentation); do not require this link to perform the task.
+
 - Go has documentation comments, not Python-style docstrings. Add or update a concise package-purpose comment before a package clause in an appropriate file for new or materially changed packages when missing or inaccurate. Avoid repeating package documentation in every file; other new or materially changed files may have a short file-purpose header where useful.
 - Preserve build constraints, required blank lines, license headers, generated markers, and directives in their required positions. Do not edit generated or vendored files just to add documentation.
 - Document new or materially changed exported functions, methods, types, and other exported declarations with comments immediately before declarations, normally starting with the declared name. Explain relevant returns, errors, side effects, concurrency, ownership, or cancellation contracts. Document private helpers only when useful rather than repeating their signatures.
 - Reserve inline comments for special, non-obvious reasoning, edge cases, workarounds, synchronization, or trade-offs. Choose length from complexity, audience, risk, and local style: short summaries for simple code, more detail for subtle contracts. Keep comments accurate and use established documentation checks when present.
+- Document for a reader's task or meaningful risk, not maximum volume. Keep setup and usage in the README or linked guides, substantial rationale in design notes, contracts in declaration comments, and local constraints near the code. Do not embed Go tutorials or repeat obvious syntax.
+- Link shared practices once from the consuming project's README, not throughout source files. Record intentional deviations with their reason, scope, and consequences in the README or linked design notes; update central guidance if a deviation becomes shared practice. Use a local comment only for a specific implementation constraint.
 
 ---
 
