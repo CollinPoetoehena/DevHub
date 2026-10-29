@@ -6,6 +6,8 @@ The goal of this folder is to provide a central place for technical knowledge an
 
 It is not intended to be a complete guide of Software Engineering/IT in general and all technologies and tools used in this project, but rather a curated and carefully selected collection of information that is highly relevant for myself and some of the projects I work on (e.g. homelab, Python packages, etc.).
 
+> **Generic theory only:** This folder contains general concepts, practices, and commands that apply beyond DevHub. It may use examples from or link to other parts of DevHub, but DevHub's own conventions and decisions belong in [`docs/`](../docs); see the [repository scope](../README.md#repository-scope).
+
 ---
 
 ## Table of Contents

@@ -1,6 +1,6 @@
 # Engineering & Coding Reference
 
-Concise engineering guidance shared across projects, within DevHub's [Reference](../README.md). Keep each topic in one place rather than duplicating language tutorials, package templates, and design notes.
+Concise engineering guidance shared across projects, part of the [Reference](../README.md). Keep each topic in one place rather than duplicating language tutorials, package templates, and design notes.
 
 ---
 
@@ -22,7 +22,7 @@ This area follows the broader Reference [Scope and Tool Specificity](../README.m
 - **One source of truth:** Keep shared guidance in the appropriate guide within this engineering reference, including language- and package-type-specific practices, rather than creating competing design pages in every consumer repository. The [contents](#contents) separate related topics without duplicating them. Consuming projects, including those in separate repositories, should link here once from their README, using section links where useful; their own documentation covers behavior, setup, decisions, and intentional exceptions rather than copying shared guidance.
 - **Use code as the implementation example:** A detail does not need a separate explanation merely because that exact setup is not documented online. For example, routine logging configuration can be understood from the working code instead of being duplicated as a walkthrough here or in large source comments. If a choice matters for consistent behavior or prevents a recurring mistake, capture the practice and reason briefly; document public contracts and non-obvious local constraints where readers need them.
 - **Maintainability matters:** Every copied explanation creates another item to review and keep accurate. Stale theory, duplicated examples, and contradictory guidance become liabilities even when they originally seemed helpful. Prefer an authoritative link and a small amount of durable reasoning; remove redundant material rather than measuring completeness by volume. The [documentation concept](Concepts.md#documentation) explains this burden, appropriate placement, and my personal shift toward concise documentation.
-- **Keep guidance versioned and accessible:** Maintain this reference in DevHub's Git repository so related guidance and code changes can be reviewed and versioned in their owning repositories, searched together in the IDE, and read offline after cloning. A separate documentation service can support collaboration, but should not be required to retrieve essential engineering context. READMEs can link directly to the relevant guide or section; individual source comments do not need to repeat those links. Cross-repository changes still need coordination, and consumers should check that the current guidance applies to their supported versions.
+- **Keep guidance versioned and accessible:** Maintain shared engineering guidance in a Git repository so related guidance and code changes can be reviewed and versioned in their owning repositories, searched together in the IDE, and read offline after cloning. A separate documentation service can support collaboration, but should not be required to retrieve essential engineering context. READMEs can link directly to the relevant guide or section; individual source comments do not need to repeat those links. Cross-repository changes still need coordination, and consumers should check that the current guidance applies to their supported versions.
 
 ---
 
@@ -31,6 +31,7 @@ This area follows the broader Reference [Scope and Tool Specificity](../README.m
 | Guide | Scope |
 |-------|-------|
 | [Languages & Tools](Languages_and_Tools.md) | Short practices and authoritative references for languages, runtimes, and tools; framework details stay with their official docs and consuming projects. |
-| [Package Design & Organization](Packages.md) | Package boundaries, monorepo/polyrepo, team SDKs, specialized tools, scripts, documentation, and releases. |
+| [Repository & Project Organization](Repository_Organization.md) | Repository boundaries, placement decisions, component setup, CI and release separation, migration steps, and industry examples. |
+| [Package Design & Organization](Packages.md) | Package boundaries, naming, team SDKs, specialized tools, scripts, documentation, and releases. |
 | [Engineering Concepts](Concepts.md) | SDLC, system-level reuse, automation, security, observability, error handling, testing, lifecycle, modeling, and practical documentation guidance. |
 | [Software Engineering Principles](Software_Engineering_Principles.md) | Design principles, their trade-offs, and a linked short list. |

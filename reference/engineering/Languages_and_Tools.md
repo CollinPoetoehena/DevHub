@@ -181,4 +181,4 @@ Official references: [Docker documentation](https://docs.docker.com/) and [Docke
 ### Configuration and markup
 
 - **YAML:** Use the owning tool's schema and validation; keep configuration readable and avoid relying on ambiguous implicit types. See the [YAML specification](https://yaml.org/spec/1.2.2/).
-- **Markdown:** Keep navigation and links current and document for the reader rather than reproducing theory. See [CommonMark](https://spec.commonmark.org/) and the local [Documentation Guidelines](../../DOCUMENTATION.md).
+- **Markdown:** Keep navigation and links current and document for the reader rather than reproducing theory. See [CommonMark](https://spec.commonmark.org/) and the local [Documentation Guidelines](../../docs/DOCUMENTATION.md).

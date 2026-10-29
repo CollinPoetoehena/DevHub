@@ -2,6 +2,8 @@
 
 Generic guidance for organizing, distributing, and maintaining reusable packages within a team. Language- and tool-specific practices belong in [Languages & Tools](Languages_and_Tools.md); general documentation, testing, and error-handling practices belong in [Engineering Concepts](Concepts.md).
 
+For repository boundaries, project placement, monorepo/polyrepo decisions, and setup steps, see [Repository & Project Organization](Repository_Organization.md). A separate package does not automatically require a separate repository.
+
 See [Scope and approach](README.md#scope-and-approach) for why these are illustrative considerations rather than a complete package-design specification, and where to explore further.
 
 ---
@@ -9,8 +11,7 @@ See [Scope and approach](README.md#scope-and-approach) for why these are illustr
 ## Table of Contents
 
 - [Package boundaries and ownership](#package-boundaries-and-ownership)
-- [DevHub package naming](#devhub-package-naming)
-- [Monorepo and polyrepo](#monorepo-and-polyrepo)
+- [Package naming](#package-naming)
 - [Team workflows and reusable layers](#team-workflows-and-reusable-layers)
   - [Working across languages](#working-across-languages)
 - [Shared SDKs and specialized packages](#shared-sdks-and-specialized-packages)
@@ -34,31 +35,17 @@ See [Scope and approach](README.md#scope-and-approach) for why these are illustr
 
 ---
 
-## DevHub package naming
+## Package naming
 
-These are DevHub conventions for identifying its reusable components, not universal naming requirements for other projects. Repository names and installable package, module, chart, or import names are related but do not have to be identical.
+Repository names and installable package, module, chart, or import names are related but separate contracts; they do not have to be identical. Choose a convention once per project or team, record it in that project's own documentation, and record deliberate exceptions. For one applied convention, see [DevHub's naming conventions](../../docs/PROJECT-STRUCTURE.md#naming-conventions).
 
-- **Repository names:** Use `devhub-<type>-<topic>`, where `type` identifies the ecosystem, such as `python`, `go`, `ansible`, `terraform`, or `helm`, and `topic` describes the capability. Examples such as `devhub-python-dns-tools` and `devhub-go-backup` illustrate the pattern; they are not a package inventory. Keep the `devhub` prefix so the origin remains recognizable.
-- **Clear, stable topics:** Use descriptive lowercase names, digits where useful, and hyphens between repository-name words. Avoid spaces, unnecessary abbreviations, and version numbers in names; versions belong in release metadata and tags. Describe what the component provides rather than naming every dependency or creating a repository for every technology it uses.
-- **Python names:** Adapt hyphens to underscores for importable identifiers: a repository and distribution named `devhub-python-dns-tools` can expose `devhub_python_dns_tools`. Distribution names and import names are separate contracts; [distribution-name normalization](https://packaging.python.org/en/latest/specifications/name-normalization/) does not automatically create or rename the import package.
-- **Go names:** The module path follows the actual repository location, while package declarations use short, valid Go identifiers rather than the full hyphenated repository name. For example, a repository named `devhub-go-backup` might contain package `backup`. Follow the [Go module and package guidance](Languages_and_Tools.md#go), including major-version path rules where applicable.
+- **Recognizable pattern:** A prefix-type-topic pattern such as `<prefix>-<type>-<topic>` keeps origin, ecosystem, and capability visible, for example `acme-python-storage-tools` or `acme-go-backup`. A multi-component hub or product can use a broader name; a naming convention is not a reason to split it.
+- **Clear, stable topics:** Use descriptive lowercase names, digits where useful, and hyphens between repository-name words. Avoid spaces, unnecessary abbreviations, and version numbers in names; versions belong in release metadata and tags. Describe what the component provides rather than naming every dependency or technology it uses.
+- **Python names:** Adapt hyphens to underscores for importable identifiers: a distribution named `acme-python-storage-tools` can expose `acme_python_storage_tools`. Distribution names and import names are separate contracts; [distribution-name normalization](https://packaging.python.org/en/latest/specifications/name-normalization/) does not automatically create or rename the import package.
+- **Go names:** The module path follows the actual repository location, while package declarations use short, valid Go identifiers rather than the full hyphenated repository name. For example, a repository named `acme-go-backup` might contain package `backup`. Follow the [Go module and package guidance](Languages_and_Tools.md#go), including major-version path rules where applicable.
 - **Automation artifacts:** Use the ecosystem's own identifier rules rather than copying the repository name blindly. Ansible collections use `namespace.collection` with valid namespace and collection identifiers; roles have their own names. Helm chart names use lowercase letters, digits, and hyphens, not Python-style underscores. See [Ansible practices](Languages_and_Tools.md#ansible) and [Helm naming conventions](https://helm.sh/docs/chart_best_practices/conventions/#chart-names).
-- **Registry requirements take precedence:** A DevHub Terraform repository installed directly from Git can use `devhub-terraform-<provider>-<topic>`. The public [Terraform Registry](https://developer.hashicorp.com/terraform/registry/modules/publish), however, requires repository names in the form `terraform-<provider>-<name>`; use that required format when publishing there and identify DevHub ownership through the namespace and documentation. Record such naming exceptions instead of claiming the default prefix works with every registry.
+- **Registry requirements take precedence:** The public [Terraform Registry](https://developer.hashicorp.com/terraform/registry/modules/publish), for example, requires repository names in the form `terraform-<provider>-<name>`, even when a project's own convention differs for modules installed directly from Git. Identify ownership through the registry namespace and documentation instead of assuming one prefix works with every registry.
 - **Preserve consumer compatibility:** Document repository, distribution, import, and registry identifiers in the package README when they differ. Do not rename established public identifiers merely for cosmetic consistency; a rename can affect dependency declarations, imports, source URLs, and release discovery, so provide a migration path when a change is necessary.
-
----
-
-## Monorepo and polyrepo
-
-| Approach | Useful when | Cost to manage |
-|----------|-------------|----------------|
-| **Monorepo** | Related packages benefit from coordinated changes, shared CI, testing, documentation, and dependency management. | Needs clear package boundaries, ownership, and selective validation/releases as it grows. |
-| **Polyrepo** | Products have separate owners, permissions, consumers, or release and operational lifecycles. | Cross-repository changes and dependency updates need coordination; standards and pipelines can drift. |
-
-- A separate package does not automatically need a separate repository. Several independently versioned packages can share a monorepo.
-- A team package repository can hold a shared SDK and related tools; a separate product or framework can live elsewhere while linking to the same conventions.
-- Share release automation and design guidance where useful, without forcing every package to share a version or release date.
-- Choose based on actual coordination needs, not a claim that either layout is universally standard. For a concrete large-scale example, see [Google's monorepo discussion](https://research.google/pubs/why-google-stores-billions-of-lines-of-code-in-a-single-repository/).
 
 ---
 
@@ -127,11 +114,11 @@ An SDK can initially seem like more work than calling an API directly. The usefu
 
 ## Package documentation and layout
 
-For packages using these practices, add one discoverable DevHub reference near the top of the package README. The following Markdown is copy-ready; keep package-specific instructions and exceptions in that README rather than copying the shared guide:
+Link shared engineering guidance once, near the top of the package README, rather than copying it; keep package-specific instructions and exceptions in that README. For example:
 
 ```markdown
-> For shared package design and engineering practices, see
-[DevHub's Engineering & Coding Reference](https://github.com/CollinPoetoehena/DevHub/blob/main/reference/engineering/README.md). This README covers this package's setup, usage, design decisions, and exceptions.
+> For shared package design and engineering practices, see the
+[team engineering guide](<link-to-shared-guide>). This README covers this package's setup, usage, design decisions, and exceptions.
 ```
 
 > **Why no fixed template?** Earlier guidance included specific package templates. Packages now have the flexibility to choose documentation and source layouts that fit their type, size, and consumers: an Ansible collection, Python distribution, and Go module need not have identical structures. Keeping fixed templates here would duplicate evolving ecosystem guidance and create another set of examples to maintain. Use the relevant official conventions and the topics below as guidance, not a prescribed scaffold.

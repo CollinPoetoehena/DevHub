@@ -115,7 +115,7 @@ For coding assistants, reusable customizations can preserve guidance and workflo
 
 Use reusable guidance when it saves repeating context or steps, but the available customization types and how to create or use them depend on the tool. This reference covers general principles only; it is not intended to explain product-specific setup or workflows.
 
-For **GitHub Copilot**, see the [DevHub AI customization guide](../.github/AI.md) and its links to specific guidance, as well as [GitHub's Copilot documentation](https://docs.github.com/en/copilot) and [official skill guide](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). For **Microsoft Copilot**, see the [official Microsoft Copilot documentation](https://learn.microsoft.com/en-us/microsoft-365/copilot/) and [Microsoft Copilot Studio guidance for reusable agent flows](https://learn.microsoft.com/en-us/microsoft-copilot-studio/flows-overview) and [agents](https://learn.microsoft.com/en-us/microsoft-copilot-studio/fundamentals-what-is-copilot-studio). For any other AI tool, consult that tool's official documentation for its supported features and setup.
+For **GitHub Copilot**, see the [DevHub AI customization guide](../docs/AI-CUSTOMIZATIONS.md) and its links to specific guidance, as well as [GitHub's Copilot documentation](https://docs.github.com/en/copilot) and [official skill guide](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). For **Microsoft Copilot**, see the [official Microsoft Copilot documentation](https://learn.microsoft.com/en-us/microsoft-365/copilot/) and [Microsoft Copilot Studio guidance for reusable agent flows](https://learn.microsoft.com/en-us/microsoft-copilot-studio/flows-overview) and [agents](https://learn.microsoft.com/en-us/microsoft-copilot-studio/fundamentals-what-is-copilot-studio). For any other AI tool, consult that tool's official documentation for its supported features and setup.
 
 ---
 
@@ -173,7 +173,7 @@ These tools are usually billed at the **individual user level**, meaning each us
 
 See the [4-Tier Model Framework](#4-tier-model-framework-credit-efficiency) below for how to pick a model tier within Copilot (or similar tools) efficiently and avoid wasting credits.
 
-> **Reuse recurring coding work:** Maintain task-specific prompts, shared repository instructions, and specialist agents for implementation, testing, and code review. See [Reusable AI Workflows and Agents](#reusable-ai-workflows-and-agents) for general design principles. For GitHub Copilot setup, see the [DevHub AI customization guide](../.github/AI.md) and its linked specific guides.
+> **Reuse recurring coding work:** Maintain task-specific prompts, shared repository instructions, and specialist agents for implementation, testing, and code review. See [Reusable AI Workflows and Agents](#reusable-ai-workflows-and-agents) for general design principles. For GitHub Copilot setup, see the [DevHub AI customization guide](../docs/AI-CUSTOMIZATIONS.md) and its linked specific guides.
 
 > **Note:** This is just a reference with general explanation (as explained before), for the full tutorial and guide on how to use VS Code with GitHub Copilot, refer to the [official documentation and tutorials provided by GitHub](https://docs.github.com/en/copilot), such as [Getting Started with GitHub Copilot in VS Code](https://docs.github.com/en/copilot/get-started/quickstart?tool=vscode).
 

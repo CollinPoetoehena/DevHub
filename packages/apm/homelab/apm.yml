@@ -1,0 +1,5 @@
+# Shared DevHub instructions; generated primitives are synced from .github.
+name: devhub-homelab
+version: 1.0.0
+description: Homelab-specific coding, documentation and tooling instructions
+target: copilot
