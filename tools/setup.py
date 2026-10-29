@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Update a trusted DevHub clone and link its Copilot files into a personal workspace.
+"""Remove recorded links from the retired clone-based Copilot setup.
 
-Requires Linux/WSL, Python 3.10+, and Git. Uses no packages or user-global
-customizations. Run with --workspace PATH; --no-pull applies the clean local
-checkout offline, and --uninstall removes only recorded, unchanged links.
+Requires Linux/WSL, Python 3.10+, Git, and the original clone location.
+Only --uninstall is supported; missing historical source files are allowed.
+Use the common APM package for new installations and updates.
 """
 
 import argparse
@@ -12,10 +12,8 @@ import json
 import os
 from pathlib import Path
 import re
-import runpy
 import subprocess
 import sys
-import tempfile
 
 
 ENTRY = re.compile(
@@ -23,8 +21,14 @@ ENTRY = re.compile(
     r"|skills/devhub-[a-z0-9.-]+|agents/devhub-[a-z0-9.-]+\.agent\.md"
 )
 STATE = ".devhub-setup.json"
-# Canonical customization sources; the clone's .github/ entries are symlinks to them.
+# Historical targets used only to recognize unchanged links during uninstall.
 CUSTOMIZATIONS = Path("docs/copilot")
+RETIRED = (
+    "Legacy Copilot install/update is retired. Use the common APM package: "
+    "see packages/apm/common/README.md in the DevHub clone. "
+    "To remove historical links, rerun with --workspace PATH --uninstall "
+    "from the original clone location."
+)
 
 
 def git(source: Path, *arguments: str) -> str:
@@ -34,22 +38,6 @@ def git(source: Path, *arguments: str) -> str:
         text=True, capture_output=True, check=True, timeout=30,
     )
     return result.stdout.strip()
-
-
-def atomic_write(path: Path, content: str) -> None:
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", dir=path.parent, delete=False
-    ) as temporary:
-        name = Path(temporary.name)
-        try:
-            temporary.write(content)
-        except OSError:
-            name.unlink(missing_ok=True)
-            raise
-    try:
-        name.replace(path)
-    finally:
-        name.unlink(missing_ok=True)
 
 
 def directory(path: Path) -> None:
@@ -78,79 +66,26 @@ def read_state(path: Path, source: Path) -> set[str]:
     return set(state["entries"])
 
 
-def write_state(path: Path, source: Path, entries: set[str], commit: str | None) -> None:
-    atomic_write(path, json.dumps({
-        "version": 1, "source": str(source), "entries": sorted(entries),
-        "commit": commit,
-    }, indent=2) + "\n")
-
-
 def owned_link(path: Path, target: Path) -> bool:
     return path.is_symlink() and os.readlink(path) == str(target)
 
 
-def desired_entries(source: Path) -> set[str]:
-    root = source / CUSTOMIZATIONS
-    baseline = root / "copilot-instructions.md"
-    if not baseline.is_file():
-        raise ValueError(f"Missing baseline instructions: {baseline}")
-    entries = {"copilot-instructions.md"}
-    for path in (root / "instructions").glob("*.instructions.md"):
-        entries.add(path.relative_to(root).as_posix())
-    for path in (root / "agents").glob("devhub-*.agent.md"):
-        entries.add(path.relative_to(root).as_posix())
-    for path in (root / "skills").glob("devhub-*/SKILL.md"):
-        entries.add(path.parent.relative_to(root).as_posix())
-    for entry in entries:
-        if not ENTRY.fullmatch(entry):
-            raise ValueError(f"Unsupported customization name: {entry}")
-        path = root / entry
-        if not path.resolve().is_relative_to(root.resolve()):
-            raise ValueError(f"Customization points outside the clone: {path}")
-        if not (path.is_dir() if entry.startswith("skills/") else path.is_file()):
-            raise ValueError(f"Invalid customization: {path}")
-    return entries
-
-
 def synchronize(source: Path, workspace: Path, uninstall: bool) -> None:
+    if not uninstall:
+        raise ValueError(RETIRED)
     root = workspace / ".github"
     state = root / STATE
     previous = read_state(state, source)
-    desired = set() if uninstall else desired_entries(source)
-    for kind in sorted({e.split("/")[0] for e in previous | desired if "/" in e}):
+    for kind in sorted({e.split("/")[0] for e in previous if "/" in e}):
         directory(root / kind)
-
-    conflicts = [
-        str(root / e) for e in sorted(desired)
-        if ((root / e).exists() or (root / e).is_symlink())
-        and not (e in previous and owned_link(root / e, source / CUSTOMIZATIONS / e))
-    ]
-    if conflicts:
-        raise ValueError(
-            "Conflict: move these files aside after review, then retry:\n"
-            + "\n".join(conflicts)
-        )
-    if not uninstall:
-        # Journal ownership before changing links, so interrupted runs can recover.
-        write_state(state, source, previous | desired, None)
-    for entry in sorted(desired):
-        path = root / entry
-        if not path.is_symlink():
-            path.symlink_to(source / CUSTOMIZATIONS / entry,
-                            target_is_directory=entry.startswith("skills/"))
-    for entry in sorted(previous - desired):
+    for entry in sorted(previous):
         path = root / entry
         if owned_link(path, source / CUSTOMIZATIONS / entry):
             path.unlink()
         elif path.exists() or path.is_symlink():
             print(f"Preserving personal replacement: {path}", file=sys.stderr)
-    if uninstall:
-        state.unlink(missing_ok=True)
-        print("DevHub workspace links removed. Remove the shell hook to stop updates.")
-    else:
-        commit = git(source, "rev-parse", "HEAD")
-        write_state(state, source, desired, commit)
-        print(f"DevHub workspace is current at {commit}")
+    state.unlink(missing_ok=True)
+    print("DevHub workspace links removed. Remove the legacy shell hook; use APM for updates.")
 
 
 def main() -> int:
@@ -158,7 +93,7 @@ def main() -> int:
     parser.add_argument("--workspace", type=Path, required=True,
                         help="Existing personal-only workspace parent directory")
     parser.add_argument("--no-pull", action="store_true",
-                        help="Apply a clean local checkout without network access")
+                        help="Legacy option; install/update is no longer supported")
     parser.add_argument("--uninstall", action="store_true",
                         help="Remove recorded workspace links offline; keep the clone")
     args = parser.parse_args()
@@ -167,6 +102,8 @@ def main() -> int:
     source = Path(__file__).resolve().parents[1]
     workspace = args.workspace.expanduser().resolve()
     try:
+        if not args.uninstall:
+            raise ValueError(RETIRED)
         if not workspace.is_dir() or workspace.is_relative_to(source):
             raise ValueError("Choose an existing personal workspace outside the DevHub clone.")
         if Path(git(source, "rev-parse", "--show-toplevel")).resolve() != source:
@@ -187,20 +124,7 @@ def main() -> int:
             except BlockingIOError:
                 raise ValueError("Another DevHub setup is running; retry after it finishes.") from None
             read_state(root / STATE, source)
-            if args.uninstall:
-                synchronize(source, workspace, True)
-            else:
-                if git(source, "status", "--porcelain"):
-                    raise ValueError("DevHub clone has local changes. Commit or move them before updating.")
-                if not args.no_pull:
-                    git(source, "symbolic-ref", "--quiet", "HEAD")
-                    git(source, "rev-parse", "--abbrev-ref", "@{upstream}")
-                    if git(source, "rev-list", "--count", "@{upstream}..HEAD") != "0":
-                        raise ValueError("DevHub clone has unpublished commits. Use a clean update clone.")
-                    git(source, "pull", "--ff-only", "--no-rebase")
-                # Apply this revision's code, including a setup.py updated by pull.
-                updated = runpy.run_path(str(source / "tools/setup.py"))
-                updated["synchronize"](source, workspace, False)
+            synchronize(source, workspace, True)
         return 0
     except subprocess.CalledProcessError as error:
         print(

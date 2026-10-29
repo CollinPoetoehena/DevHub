@@ -19,7 +19,7 @@ I originally captured homelab ideas in a Word document, but without a clear stat
 
 Small tasks, visible status, and a resumption note let me stop deliberately and return without reconstructing the context. A single overview also avoids coordinating separate backlogs for packages, automation, shared guidance, and their consumers. I am the only maintainer, and all this work is part of my wider DevHub.
 
-GitHub Projects keeps issues, pull requests, and planning together without another service to host or task descriptions to synchronize. This uses lightweight [SDLC activities](../reference/engineering/Concepts.md#software-development-lifecycle), not sprints, estimates, deadlines, or a team delivery process.
+[GitHub Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) keeps issues, pull requests, and planning together without another service to host or task descriptions to synchronize. I use it for lightweight planning, implementation, and verification, not sprints, estimates, deadlines, or a team delivery process.
 
 TODO: add more explanation why central tracking, such as I treat personal projects as basically 1 team/job where you have 1 central backlog to manage all tasks, priorities, and progress consistently across different repositories and projects. I only have so much time for personal projects and that central tracking helps me allocate it effectively without losing sight of any ongoing work; if you have 1 backlog per project it would not be very good, etc.
 
@@ -58,4 +58,4 @@ The repository's existing [TODO notes](../TODO.md) are working material to triag
 
 A private project does **not** make a public issue private. Keep private designs, inventories, operational results, and sensitive planning out of public issues; secrets belong in protected storage, not task descriptions.
 
-Task tracking is meant to reduce pressure. Do not mix personal tasks into work time or treat an alert or a waiting build as a demand to start more work. For homelab-specific enjoyment, focus, and optional timeboxes, follow its [goals and scope](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/docs/01-foundations/goals-and-scope.md#relaxation-and-enjoyment-over-productivity-and-pressure); the task workflow itself has one home here.
+Task tracking is meant to reduce pressure. Do not mix personal tasks into work time or treat an alert or a waiting build as a demand to start more work. For homelab-specific enjoyment, focus, and optional timeboxes, follow its [goals and scope](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/01-foundations/goals-and-scope.md#relaxation-and-enjoyment-over-productivity-and-pressure); the task workflow itself has one home here.

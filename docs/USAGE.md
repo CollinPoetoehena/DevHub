@@ -26,23 +26,31 @@ devhub-workspace/
 
 Open the parent folder in VS Code, or add the selected clones to a [multi-root workspace](https://code.visualstudio.com/docs/editing/workspaces/multi-root-workspaces). Include only the projects you regularly work on together; open a project on its own for isolated work. Each clone remains its own Git repository with its own history, remote, and permissions, and private access is not required to work with the public projects.
 
-The workspace keeps shared standards, reusable code, and their consumers in one window, so related changes and AI context stay consistent. See [grouping related repositories in VS Code workspaces](../reference/Code_Editor.md#grouping-related-repositories-in-vs-code-workspaces) for the generic rationale and trade-offs, and the rest of the [code editor guide](../reference/Code_Editor.md) for editor, account, and Git setup.
+The workspace keeps shared guidance, reusable code, and their consumers together for navigation and coordinated work. Keep machine-specific workspace files outside Git. Grouping repositories does not merge their permissions or install AI customizations into every clone; use the consumer-root setup below and keep AI context focused on the task.
 
 ---
 
 ## AI customizations
 
-TODO: explain here it uses the [apm/common/README.md](../packages/apm/common/README.md) for AI customizations, which defines the baseline instructions, language instructions, skills, and agents applied across the personal project workspace.
+The [common APM package](../packages/apm/common/README.md) distributes reusable role agents, scoped language/tool instructions, and on-demand skills. Generic coding, documentation, and testing standards live in their respective agents; there is no all-files general coding instruction. See [concepts and design](../packages/apm/common/README.md#ai-customizations-concepts-and-design) for the division of responsibilities.
 
-TODO: explain here the [copilot-instructions.md](../.github/copilot-instructions.md) for DevHub-specific AI customizations, which builds on top of the common instructions defined in the APM package (the common APM package uses these instructions for DevHub specific edits). TODO: reference to README.md section in the [apm/common/README.md](../packages/apm/common/README.md) that explains how to extend it and provide specific instructions for a project, etc.
+Declare `CollinPoetoehena/DevHub/packages/apm/common` under `dependencies.apm` in each consumer repository's `apm.yml`. DevHub's [root manifest](../apm.yml) uses the local `./packages/apm/common` dependency instead. With [APM installed](https://microsoft.github.io/apm/consumer/), open the consumer workspace root and run:
 
-TODO: add here shortly the old AI part with the model selection: auto model by default because it selects good, if needed or selects the more expensive model too often you can manually select but auto is best. And if credits done from GitHub Copilot, can use Microsoft Copilot with a good model like Claude Sonnet or another one also, etc.
+```sh
+apm install --only apm --target copilot
+```
+
+Select **Orchestrator** in VS Code Chat; refresh or reopen the chat if necessary. A manifest entry alone does not activate the package. Follow [Using the Orchestrator](../packages/apm/common/README.md#using-the-orchestrator) for discovery and host limitations.
+
+Keep repository-wide context in each project's `.github/copilot-instructions.md` ([DevHub's file](../.github/copilot-instructions.md)), scoped constraints in instruction files, and project-only procedures in skills. Follow [project-specific guidance](../packages/apm/common/README.md#project-specific-guidance) for extension locations and shared sibling packages; do not copy specialist agents or assume local instructions automatically override shared ones.
+
+My default is **Auto** model selection where offered; choose an explicit model when results or cost warrant it. Options depend on the host and account; see [VS Code model selection](https://code.visualstudio.com/docs/agent-customization/language-models#use-auto-model-selection). If GitHub Copilot credits are exhausted, check the access, models, and limits available to your account in alternatives such as [Microsoft Copilot](https://www.microsoft.com/en-us/copilot/solutions/individuals); do not assume a particular model is included.
 
 ---
 
 ## Applying DevHub standards in a project
 
-- Link to the relevant DevHub guidance from the project README instead of copying it; see the [package README link](PROJECT-STRUCTURE.md#package-readme-link).
-- Apply the shared [conventions and standards](CONVENTIONS_STANDARDS.md) and use the [central backlog](TASK-TRACKING.md) for all personal projects, including the homelab.
+- Follow the shared [repository and package guidelines](GUIDELINES.md), and link to relevant DevHub guidance from the project README instead of copying it.
+- Use the common package's [agent standards](../packages/apm/common/README.md#agent-standards) for shared role guidance and the [central backlog](TASK-TRACKING.md) for all personal projects, including the homelab.
 - Keep project-specific decisions, setup, and exceptions in the project's own documentation.
-- Follow [DevHub's project structure](PROJECT-STRUCTURE.md#separate-repositories) to decide whether work belongs in DevHub or in its own repository.
+- Follow [DevHub's project structure](ARCHITECTURE.md#separate-repositories) to decide whether work belongs in DevHub or in its own repository.

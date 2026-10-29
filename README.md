@@ -1,6 +1,6 @@
 # DevHub
 
-**DevHub is my central development hub: the standards, reusable resources, and entry point I use for all my personal projects.** I maintain it primarily for myself: to organize what I learn, keep useful guidance and tools easy to find, and connect the projects I work on. It is also public, so it can serve as a portfolio that shows how I approach development, automation, documentation, and ongoing learning.
+**DevHub is my central development hub: the standards, reusable resources, and entry point I use for all my personal projects.** I maintain it primarily for myself: to record project decisions, keep useful guidance and tools easy to find, and connect the projects I work on. It is also public, so it can serve as a portfolio that shows how I approach development, automation, documentation, and ongoing learning.
 
 The name reflects the purpose:
 
@@ -21,7 +21,7 @@ The name reflects the purpose:
 
 > **Scope of this README:** This is a concise introduction to DevHub's purpose and structure, not a full explanation of every area or project. More detail belongs in the relevant documentation linked below; the root README should stay short enough to work as a clear entry point.
 
-For documentation changes, follow the [Documentation Guidelines](docs/DOCUMENTATION.md).
+For documentation changes, follow the owning project's instructions and the [common Documenter guidance](packages/apm/common/.apm/agents/documenter.agent.md).
 
 ---
 
@@ -43,9 +43,9 @@ For me, the lesson is not that knowledge is unimportant or that looking somethin
 
 This also means becoming comfortable with not knowing: asking questions, testing ideas, and learning through unfamiliar or uncomfortable work. Tools and technologies change, so I value the ability to keep learning and adapting more than memorizing today's answers. DevHub supports that mindset by keeping useful knowledge accessible and making my reasoning, assumptions, and decisions available to revisit as my understanding develops.
 
-Development work generates more information, decisions, commands, and lessons than I can reliably remember. Writing down what matters gives me an external reference I can return to, helps me explain my thinking clearly, and reduces the effort of rediscovering or relearning the same things. Documentation supports understanding and practical experience rather than replacing them; the [Reference](./reference/README.md#why-i-document) explains how I put this documentation approach into practice.
+Writing down project-specific decisions, constraints, and setup helps me return to work without rediscovering its context. It does not create an obligation to record everything I learn. General knowledge belongs in authoritative documentation, not a parallel encyclopedia; the [reference retirement decision](archive/REFERENCE.md) explains why I no longer maintain one.
 
-Maintaining DevHub is worthwhile because it turns individual problem-solving into knowledge I can reuse: across future tasks, across separate projects, and when reviewing why a decision was made. Shared scripts, generic workflows, and reference material also help me apply practices consistently without copying the same guidance into every project. I curate this for practical use rather than trying to document everything; information is useful when I can find it, understand its context, and keep it accurate.
+Maintaining DevHub is worthwhile because it turns individual problem-solving into resources I can reuse: across future tasks, across separate projects, and when reviewing why a decision was made. Shared scripts, workflows, and project guidance help me apply practices consistently without copying the same guidance into every project. I curate this for practical use, not exhaustive knowledge collection.
 
 The public repository has a second purpose as a portfolio. It provides an honest view of the work behind my projects—not only finished code, but also the designs, trade-offs, automation, and learning that shaped them. The portfolio aspect is valuable, but it is secondary to the repository's role as a working hub for myself. I want it to remain useful and maintainable for my own development, rather than turn it into a showcase that is disconnected from the work I actually do.
 
@@ -53,7 +53,7 @@ The public repository has a second purpose as a portfolio. It provides an honest
 
 ## Standards for my personal projects
 
-DevHub holds the [standards I apply to all my personal projects](./docs/CONVENTIONS_STANDARDS.md): documentation and coding guidelines, engineering practices, AI customizations, automation, and tooling. The [reference](./reference/README.md) stays part of that: it holds the essential general knowledge the standards build on.
+DevHub holds the guidance I apply to my personal projects: [repository and package guidelines](docs/GUIDELINES.md), [engineering AI customizations](packages/apm/common/README.md), [project boundaries](docs/ARCHITECTURE.md), automation, and tooling. Each project records its own setup, decisions, and exceptions; general technical background is linked to official sources where needed.
 
 I manage my personal projects the way a professional team manages its projects, with consistent standards and practices; they are effectively a team with one developer. This is not to mimic enterprise or industry practice. It is worth the time because it adds real value: clear and consistent projects, automation and tooling that save me time, and documentation that keeps decisions self-explanatory when I return to a project later.
 
@@ -71,8 +71,8 @@ It remains public, so others can read and reuse what is useful, and it serves as
 
 Each part of DevHub has a clear scope, so information has one home:
 
-- **[`reference/`](./reference/README.md)** contains only general theory, practices, and commands. It may use examples from or link to other parts of DevHub, but contains no DevHub-specific conventions or decisions.
-- **[`docs/`](./docs/README.md)** contains DevHub-specific documentation: its [project structure](./docs/PROJECT-STRUCTURE.md), standards, decisions, GitHub/AI guides, and [usage](./docs/USAGE.md). Copilot instructions, skills, and agents are also maintained in [`docs/copilot/`](./docs/copilot/); `.github/` holds only workflow configuration and symbolic links that keep them discoverable.
+- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), decisions, and [usage](./docs/USAGE.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
+- **[`archive/`](./archive/README.md)** records retired approaches and their rationale, not an actively maintained technical knowledge base.
 - **Area READMEs**, such as [`packages/README.md`](./packages/README.md) and [`tools/README.md`](./tools/README.md), own local commands and component contracts.
 
 ---
@@ -87,17 +87,17 @@ I track DevHub and all my personal projects, including the public and private ho
 
 DevHub is intended to grow through broadly reusable material, not by absorbing the implementation of every project:
 
-- **[Reference documentation](./reference/README.md)** collects general concepts, practical commands, and reusable guidance. Its [engineering reference](./reference/engineering/README.md) centralizes package design, language guidance, and software engineering principles so theory and best practices have one discoverable home.
 - **[Tools](tools/README.md)** contains shared tooling that is not owned by one specific project.
-- **[Personal setup](docs/COPILOT-SETUP.md)** uses one script under `tools/` to fast-forward a trusted clone and keep workspace instructions and AI customizations current.
-- **[Generic GitHub workflows and AI customizations](docs/GITHUB.md)** explain how to use GitHub Copilot instructions, skills, and agents, and provide reusable GitHub Actions and skills.
+- **[Personal workspace and AI setup](docs/USAGE.md)** explains how related repositories and shared guidance are used together.
+- **[GitHub workflows](docs/GITHUB-ACTIONS.md)** records the intended reusable-workflow contract; publishing automation is still a placeholder.
+- **[Common AI customizations](packages/apm/common/README.md)** provides the active reusable agents, instructions, and skills.
 - **[Reusable packages](packages/README.md)** groups related package work within DevHub. Package contents, dependencies, and release boundaries remain explicit; sharing a repository does not require one version for everything.
 
-The [package design guide](./reference/engineering/Packages.md) covers reusable SDKs, specialized tools, scripts, and distribution. The [repository and project organization guide](reference/engineering/Repository_Organization.md) covers placement decisions, setup steps, and repository boundaries, with industry examples.
+The [shared guidelines](docs/GUIDELINES.md) cover repository and package placement, naming, and setup. The [architecture guide](docs/ARCHITECTURE.md) records the rationale, boundaries, and release decisions. Native packaging details belong in the [Python Packaging User Guide](https://packaging.python.org/en/latest/overview/) and [Go module documentation](https://go.dev/doc/modules/developing).
 
-I frequently change these resources together. Keeping them in one larger repository avoids managing many repositories, making separate commits for coordinated changes, and copying or synchronizing reusable actions, workflows, and AI customization. As the sole maintainer, keeping many related repositories current within the same context would be unsustainable. The goal is convenient, coherent maintenance, not as many repositories as possible; see [why DevHub is one repository](docs/PROJECT-STRUCTURE.md#why-devhub-is-one-repository).
+I frequently change these resources together. Keeping them in one larger repository avoids managing many repositories, making separate commits for coordinated changes, and copying or synchronizing reusable actions, workflows, and AI customization. As the sole maintainer, keeping many related repositories current within the same context would be unsustainable. The goal is convenient, coherent maintenance, not as many repositories as possible; see [why DevHub is one repository](docs/ARCHITECTURE.md#why-devhub-is-one-repository).
 
-I accept more workflows, somewhat more complex CI selection, and a larger shared history because they cost less than distributing and coordinating the same setup across many closely related repositories. Path- and dependency-aware checks, component tags, and published package or container versions can keep validation and consumption selective; see [the trade-offs and mitigations](reference/engineering/Repository_Organization.md#where-the-complexity-lives).
+I accept more workflows, somewhat more complex CI selection, and a larger shared history because they cost less than distributing and coordinating the same setup across many closely related repositories. Path- and dependency-aware checks, component tags, and published package or container versions can keep validation and consumption selective; these are [design choices, not implemented publishing guarantees](docs/ARCHITECTURE.md#release-and-versioning-units).
 
 DevHub can therefore grow while retaining a clear purpose: shared development resources and entry points, not unrelated service or environment implementations.
 

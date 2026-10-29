@@ -1,4 +1,4 @@
-"""Exercise clone updates and workspace ownership using temporary local repositories."""
+"""Test legacy setup rejection and safe offline cleanup using local repositories."""
 
 import fcntl
 import json
@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "setup.py"
@@ -76,67 +77,62 @@ class SetupTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
-    def test_setup_repeat_and_repair_includes_instructions(self):
-        self.setup()
-        self.assertEqual((self.target / self.baseline.name).read_text(), "baseline\n")
-        self.assertEqual((self.target / "skills/devhub-example/resource.txt").read_text(), "support\n")
-        self.assertTrue((self.target / "agents" / self.agent.name).is_symlink())
-        self.assertEqual((self.target / "instructions" / self.instruction.name).read_text(),
-                         self.instruction.read_text())
-        self.assertEqual(json.loads(self.state.read_text())["commit"],
-                         self.git(self.clone, "rev-parse", "HEAD"))
-        (self.target / self.baseline.name).unlink()
-        self.setup()
-        self.assertTrue((self.target / self.baseline.name).is_symlink())
-        self.assertFalse((self.home / ".copilot").exists())
-        self.assertEqual(self.git(self.clone, "status", "--porcelain"), "")
+    def historical_setup(self):
+        """Seed the version-1 journal and links produced by the retired installer."""
+        self.target.mkdir()
+        entries = [
+            "copilot-instructions.md", "skills/devhub-example",
+            "agents/devhub-example.agent.md", "instructions/python.instructions.md",
+        ]
+        for entry in entries:
+            path = self.target / entry
+            path.parent.mkdir(exist_ok=True)
+            path.symlink_to(self.clone / "docs/copilot" / entry,
+                            target_is_directory=entry.startswith("skills/"))
+        self.state.write_text(json.dumps({
+            "version": 1, "source": str(self.clone), "entries": entries,
+            "commit": self.git(self.clone, "rev-parse", "HEAD"),
+        }))
+        return entries
 
-    def test_pull_updates_instructions_and_uses_updated_script(self):
-        self.setup()
+    def test_install_and_no_pull_rejected_before_pull_or_workspace_mutation(self):
+        before = self.git(self.clone, "rev-parse", "HEAD")
         self.baseline.write_text("new baseline\n")
-        script = self.source / "tools/setup.py"
-        script.write_text(script.read_text().replace(
-            'print(f"DevHub workspace is current at {commit}")',
-            'print(f"new script applied {commit}")',
-        ))
-        commit = self.commit(self.source)
-        result = self.setup()
-        self.assertIn("new script applied", result.stdout)
-        self.assertEqual((self.target / self.baseline.name).read_text(), "new baseline\n")
-        self.assertEqual(json.loads(self.state.read_text())["commit"], commit)
-
-    def test_conflict_preserves_existing_file_and_does_not_record_success(self):
-        self.target.mkdir()
-        local = self.target / self.baseline.name
-        local.write_text("personal")
-        result = self.setup(success=False)
-        self.assertIn("Conflict", result.stderr)
-        self.assertEqual(local.read_text(), "personal")
-        self.assertFalse(self.state.exists())
-        self.assertFalse((self.target / "agents" / self.agent.name).exists())
-
-    def test_unrecorded_link_is_not_claimed(self):
-        self.target.mkdir()
-        (self.target / self.baseline.name).symlink_to(self.clone / "docs/copilot" / self.baseline.name)
-        self.assertIn("Conflict", self.setup(success=False).stderr)
-
-    def test_removed_entries_pruned_and_personal_replacements_preserved(self):
-        self.setup()
-        replaced = self.target / "agents" / self.agent.name
-        replaced.unlink()
-        replaced.write_text("mine")
-        self.agent.unlink()
-        self.instruction.unlink()
-        shutil.rmtree(self.skill)
         self.commit(self.source)
-        result = self.setup()
-        self.assertIn("Preserving personal replacement", result.stderr)
-        self.assertEqual(replaced.read_text(), "mine")
-        self.assertFalse((self.target / "skills/devhub-example").is_symlink())
-        self.assertFalse((self.target / "instructions" / self.instruction.name).is_symlink())
+        for options in ((), ("--no-pull",)):
+            with self.subTest(options=options):
+                result = self.setup(*options, success=False)
+                self.assertIn("install/update is retired", result.stderr)
+                self.assertIn("packages/apm/common/README.md", result.stderr)
+                self.assertIn("--uninstall", result.stderr)
+                self.assertFalse(self.target.exists())
+                self.assertFalse((self.clone / ".git/devhub-setup.lock").exists())
+                self.assertEqual(self.git(self.clone, "rev-parse", "HEAD"), before)
+                self.assertEqual(self.git(self.clone, "status", "--porcelain"), "")
+
+    def test_update_rejection_preserves_historical_state_and_links(self):
+        entries = self.historical_setup()
+        state = self.state.read_bytes()
+        shutil.rmtree(self.clone / "docs/copilot")
+        for options in ((), ("--no-pull",)):
+            with self.subTest(options=options):
+                self.assertIn("APM", self.setup(*options, success=False).stderr)
+                self.assertEqual(self.state.read_bytes(), state)
+                for entry in entries:
+                    self.assertEqual(os.readlink(self.target / entry),
+                                     str(self.clone / "docs/copilot" / entry))
+                self.assertFalse((self.target / ".devhub-setup.lock").exists())
+
+    def test_install_rejected_without_git_or_destination_helper_calls(self):
+        main = runpy.run_path(str(SCRIPT))["main"]
+        with mock.patch.object(sys, "argv", [str(SCRIPT), "--workspace", str(self.workspace)]):
+            with mock.patch.dict(main.__globals__, git=mock.Mock(), directory=mock.Mock()):
+                self.assertEqual(main(), 1)
+                main.__globals__["git"].assert_not_called()
+                main.__globals__["directory"].assert_not_called()
 
     def test_uninstall_offline_preserves_other_files_and_is_repeatable(self):
-        self.setup()
+        self.historical_setup()
         local = self.target / "skills/local"
         local.mkdir()
         (local / "keep").write_text("mine")
@@ -152,39 +148,36 @@ class SetupTests(unittest.TestCase):
         self.setup("--uninstall")
         self.assertTrue(self.clone.is_dir())
 
-    def test_pull_failure_keeps_commit_record(self):
-        self.setup()
-        state = self.state.read_text()
-        self.git(self.clone, "remote", "set-url", "origin", str(self.root / "unavailable"))
-        self.assertIn("Git operation failed", self.setup(success=False).stderr)
-        self.assertEqual(self.state.read_text(), state)
-        self.assertEqual((self.target / self.baseline.name).read_text(), "baseline\n")
-        self.setup("--no-pull")
-
-    def test_dirty_checkout_is_rejected_without_overwrite(self):
-        path = self.clone / "docs/copilot" / self.baseline.name
-        path.write_text("local edits")
-        self.assertIn("local changes", self.setup(success=False).stderr)
-        self.assertEqual(path.read_text(), "local edits")
-        self.assertFalse(self.state.exists())
-
-    def test_untracked_files_are_rejected(self):
-        (self.clone / "untracked").write_text("mine")
-        self.assertIn("local changes", self.setup(success=False).stderr)
-
-    def test_unpublished_commits_are_rejected(self):
-        (self.clone / "local").write_text("mine")
-        self.commit(self.clone)
-        self.assertIn("unpublished commits", self.setup(success=False).stderr)
-        self.assertFalse(self.state.exists())
-
-    def test_detached_head_is_rejected(self):
+    def test_uninstall_removes_recorded_broken_links_without_old_sources(self):
+        entries = self.historical_setup()
+        shutil.rmtree(self.clone / "docs/copilot")
         self.git(self.clone, "checkout", "--detach", "-q")
-        self.setup(success=False)
+        self.git(self.clone, "remote", "set-url", "origin", str(self.root / "unavailable"))
+        self.setup("--uninstall", "--no-pull")
+        for entry in entries:
+            self.assertFalse((self.target / entry).is_symlink(), entry)
         self.assertFalse(self.state.exists())
+        self.assertFalse((self.clone / "docs/copilot").exists())
+
+    def test_uninstall_preserves_unrecorded_and_retargeted_links(self):
+        self.historical_setup()
+        unrecorded = self.target / "agents/devhub-personal.agent.md"
+        unrecorded.symlink_to(self.clone / "docs/copilot/agents/devhub-personal.agent.md")
+        replaced = self.target / "instructions" / self.instruction.name
+        replaced.unlink()
+        replaced.symlink_to(self.root / "personal-instructions.md")
+        result = self.setup("--uninstall")
+        self.assertIn("Preserving personal replacement", result.stderr)
+        self.assertEqual(os.readlink(unrecorded),
+                         str(self.clone / "docs/copilot/agents/devhub-personal.agent.md"))
+        self.assertEqual(os.readlink(replaced), str(self.root / "personal-instructions.md"))
+
+    def test_uninstall_without_setup_does_not_create_workspace_directory(self):
+        self.setup("--uninstall")
+        self.assertFalse(self.target.exists())
 
     def test_invalid_state_does_not_mutate_links(self):
-        self.setup()
+        self.historical_setup()
         state = json.loads(self.state.read_text())
         state["entries"].append("../outside")
         self.state.write_text(json.dumps(state))
@@ -192,35 +185,39 @@ class SetupTests(unittest.TestCase):
         self.assertTrue((self.target / self.baseline.name).is_symlink())
 
     def test_wrong_source_in_state_is_rejected(self):
-        self.setup()
+        self.historical_setup()
         state = json.loads(self.state.read_text())
         state["source"] = "/another/clone"
         self.state.write_text(json.dumps(state))
-        self.assertIn("different source clone", self.setup(success=False).stderr)
+        self.assertIn("different source clone", self.setup("--uninstall", success=False).stderr)
+        self.assertTrue((self.target / self.baseline.name).is_symlink())
 
-    def test_interrupted_setup_recovers_from_journal(self):
-        self.setup()
+    def test_uninstall_accepts_interrupted_install_journal(self):
+        entries = self.historical_setup()
         state = json.loads(self.state.read_text())
         state["commit"] = None
         self.state.write_text(json.dumps(state))
         (self.target / self.baseline.name).unlink()
-        self.setup()
-        self.assertIsNotNone(json.loads(self.state.read_text())["commit"])
-        self.assertTrue((self.target / self.baseline.name).is_symlink())
+        self.setup("--uninstall")
+        self.assertFalse(self.state.exists())
+        for entry in entries:
+            self.assertFalse((self.target / entry).is_symlink())
 
     def test_symlinked_destination_directory_is_rejected(self):
+        self.historical_setup()
         elsewhere = self.root / "elsewhere"
         elsewhere.mkdir()
-        self.target.mkdir()
+        (self.target / "instructions" / self.instruction.name).unlink()
+        (self.target / "instructions").rmdir()
         (self.target / "instructions").symlink_to(elsewhere)
-        self.assertIn("symlinked destination", self.setup(success=False).stderr)
+        self.assertIn("symlinked destination", self.setup("--uninstall", success=False).stderr)
         self.assertEqual(list(elsewhere.iterdir()), [])
 
     def test_symlinked_root_is_rejected(self):
         elsewhere = self.root / "elsewhere"
         elsewhere.mkdir()
         self.target.symlink_to(elsewhere)
-        self.assertIn("symlinked destination", self.setup(success=False).stderr)
+        self.assertIn("symlinked destination", self.setup("--uninstall", success=False).stderr)
         self.assertEqual(list(elsewhere.iterdir()), [])
 
     def test_symlinked_state_is_rejected(self):
@@ -228,38 +225,37 @@ class SetupTests(unittest.TestCase):
         outside = self.root / "keep"
         outside.write_text("mine")
         self.state.symlink_to(outside)
-        self.assertIn("symlinked state", self.setup(success=False).stderr)
+        self.assertIn("symlinked state", self.setup("--uninstall", success=False).stderr)
         self.assertEqual(outside.read_text(), "mine")
 
     def test_concurrent_setup_is_rejected(self):
+        self.historical_setup()
         with (self.clone / ".git/devhub-setup.lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.assertIn("Another DevHub setup", self.setup(success=False).stderr)
+            self.assertIn("Another DevHub setup", self.setup("--uninstall", success=False).stderr)
 
     def test_clone_cannot_be_its_own_workspace(self):
         self.workspace = self.clone
-        self.assertIn("outside the DevHub clone", self.setup(success=False).stderr)
+        self.assertIn("outside the DevHub clone", self.setup("--uninstall", success=False).stderr)
 
-    def test_missing_baseline_does_not_remove_existing_links(self):
-        self.setup()
-        self.baseline.unlink()
-        self.commit(self.source)
-        self.assertIn("Missing baseline", self.setup(success=False).stderr)
-        self.assertTrue((self.target / "agents" / self.agent.name).is_symlink())
+    def test_uninstall_without_state_preserves_existing_links(self):
+        self.historical_setup()
+        self.state.unlink()
+        self.setup("--uninstall")
+        self.assertTrue((self.target / self.baseline.name).is_symlink())
 
 
 class RepositoryLayoutTests(unittest.TestCase):
-    def test_github_discovery_entries_link_to_docs(self):
+    def test_retired_source_is_not_required_for_cleanup(self):
         repository = SCRIPT.parents[1]
-        canonical = repository / "docs/copilot"
-        for entry in ("copilot-instructions.md", "instructions", "agents", "skills"):
-            path = repository / ".github" / entry
-            self.assertTrue(path.is_symlink(), path)
-            self.assertFalse(os.path.isabs(os.readlink(path)), path)
-            self.assertEqual(path.resolve(), (canonical / entry).resolve())
-        entries = runpy.run_path(str(SCRIPT))["desired_entries"](repository)
-        self.assertIn("copilot-instructions.md", entries)
-        self.assertTrue(any(e.startswith("skills/devhub-") for e in entries))
+        module = runpy.run_path(str(SCRIPT))
+        self.assertEqual(module["CUSTOMIZATIONS"], Path("docs/copilot"))
+        self.assertTrue((repository / "packages/apm/common/apm.yml").is_file())
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            with self.assertRaisesRegex(ValueError, "APM"):
+                module["synchronize"](repository, workspace, False)
+            self.assertEqual(list(workspace.iterdir()), [])
 
 
 if __name__ == "__main__":

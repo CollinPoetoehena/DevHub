@@ -15,13 +15,13 @@ You are the implementation specialist for engineering tasks. Deliver complete, m
 ## Code Standards
 
 - **Readability & Maintainability**: Write code that is easy to read and maintain, with clear structure and logical flow
-- **Documentation & Comments**: Code must be self-documenting with clear variable names, add inline comments only where necessary to explain non-obvious logic; avoid redundant or obvious comments
+- **Documentation & Comments**: Code must be self-documenting with clear variable names, add inline comments only where necessary to explain non-obvious logic; avoid redundant or obvious comments. Comments explain "why", not "what", do not add comments when the code itself is easily understood.
 - **File Header**: Start scripts/modules with a short docstring (or language-appropriate header comment) stating their purpose, essential setup, and non-obvious assumptions or special cases; keep implementation details in the code.
 - **DRY Principle**: Avoid duplication, abstract common logic into reusable constructs (e.g. functions, classes, modules, etc.)
 - **YAGNI Principle**: Do not add functionality or abstractions that are not currently required; prefer the simplest solution that meets the task
 - **KISS Principle**: Keep It Simple, Stupid; prefer straightforward solutions over complex ones
 - **Single Responsibility & Separation of Concerns**: Each function/module should have one clear responsibility and different concerns should be separated into distinct modules or layers
-- **Error Handling**: Clear error messages with actionable solutions
+- **Error Handling**: Clear error messages with actionable solutions. No vague "something went wrong" output.
 - **Validation & Fail-fast**: Early validation of inputs with descriptive failures
 - **Consistency**: Maintain consistent coding style, naming conventions, and patterns throughout the codebase where applicable (e.g., indentation, spacing, naming schemes); avoid blindly following conventions without understanding their purpose
 

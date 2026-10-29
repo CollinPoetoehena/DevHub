@@ -2,10 +2,7 @@
 
 `devhub-common` is an [Agent Package Manager (APM)](https://microsoft.github.io/apm/) package of reusable engineering agents, skills, and scoped instructions. Start with the Orchestrator; extend project context without copying the specialist agents.
 
-
-TODO: this is now done and checked, only add this now:
-- in apm.yml add some reusable skills and instructions maybe?? Goal is not to reinvent all, just the general things for myself
-- TODO: select a couple from 
+DevHub's human-facing repository and package conventions are in the [shared guidelines](../../../docs/GUIDELINES.md); this package owns the reusable AI role standards and workflows.
 
 ## Table of Contents
 
@@ -118,11 +115,29 @@ The diagram shows responsibilities, not a mandatory sequence or a requirement to
 
 ### Why orchestrate
 
-The extra role and coordination layer is intended to improve quality and autonomy on work that benefits from multiple kinds of expertise. The Coder can focus on implementation while a separately prompted Reviewer checks the result; a Tester can verify behavior, and an Architect or Documenter can own their specialist work. Independent responsibilities and fresh context provide useful checks that one undifferentiated prompt may miss.
+The additional orchestration and delegation layer is intended to improve the overall quality and autonomy of larger tasks. Instead of relying on a single agent to implement, validate, review, and document its own work, the [Orchestrator](.apm/agents/orchestrator.agent.md) can delegate parts of the task to specialized agents with independent responsibilities and fresh context.
 
-Delegation does add setup, coordination, and token cost, and it is not worthwhile for every small task. For a substantial task, one orchestrated run can iterate through implementation, validation, and review with fewer user handoffs. Work that might otherwise take several short chats can instead run as one longer task (for example, around 30 minutes rather than repeated 5–10-minute sessions), leaving the user free to do other work while agents proceed. These are illustrative outcomes, not time or cost guarantees; the orchestrator should choose a lighter workflow for simple tasks.
+Key benefits of this approach are:
 
-In the VS Code **Local** harness, the Orchestrator's `agents` allowlist names the available workers and the `agent` tool enables delegation; the description helps discovery but does not grant that capability. The VS Code Copilot harness and other hosts have different field support and delegation tools, so verify behavior for the selected harness rather than assuming this Local configuration transfers unchanged. See [subagent configuration](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_subagent-configuration) and [harness compatibility](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
+- **Specialized responsibilities** – The specialist agents like [Coder](.apm/agents/coder.agent.md), [Reviewer](.apm/agents/reviewer.agent.md), [Tester](.apm/agents/tester.agent.md), [Architect](.apm/agents/architect.agent.md), and [Documenter](.apm/agents/documenter.agent.md) can each focus on the part of the task they are specifically designed for.
+- **Independent review** – The agent reviewing or testing the implementation is not necessarily the same agent that created it, providing a fresh perspective that can catch issues or improvements the original implementation pass missed.
+- **Better overall quality** – Multiple focused passes can improve not only the code itself, but also tests, documentation, architecture, consistency, and completeness of the final result.
+- **Iterative improvement** – Findings from testing or review can result in further implementation and validation rather than treating the first generated solution as the finished result.
+- **Fresh context** – Delegating work to another agent introduces a separate context and reasoning path instead of repeatedly asking the same context to evaluate its own decisions.
+- **Better separation of concerns** – Implementation, review, testing, architecture, and documentation remain distinct responsibilities while still contributing to the same overall task.
+- **More autonomous execution** – The [Orchestrator](.apm/agents/orchestrator.agent.md) can coordinate several stages of a task without requiring the user to manually prompt every next step.
+- **Fewer interruptions** – Instead of several short implementation → review → fix → test → documentation interactions, a substantial task can progress through those stages in a longer coordinated run.
+- **Less context switching for the user** – While the agents continue working through the task, the user can focus on something else and return when there is a more complete result to review.
+- **More efficient final review** – The user can review the implementation, tests, documentation, and findings together and step by step, rather than repeatedly reviewing small intermediate changes.
+- **Scales with task complexity** – The [Orchestrator](.apm/agents/orchestrator.agent.md) can use a lightweight approach for simple work and involve additional specialist agents when a task benefits from deeper implementation, validation, or review.
+
+There is, of course, a trade-off. Delegation adds coordination, token usage, and potentially a longer overall run. For small and straightforward tasks, that additional overhead may not be worthwhile (smaller tasks are automatically handled without full orchestration by the [Orchestrator](.apm/agents/orchestrator.agent.md)). For more substantial tasks, this is an accepted trade-off: a longer autonomous run can be preferable to many shorter user-driven interactions when it results in a more thoroughly implemented, tested, reviewed, and documented outcome.
+
+In the VS Code **Local** harness, the Orchestrator's `agents` allowlist defines the available workers and the `agent` tool enables delegation; the description helps discovery but does not itself grant that capability. Other Copilot harnesses or hosts may support different fields and delegation mechanisms, so the configuration should be verified for the selected harness. See [subagent configuration](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_subagent-configuration) and [harness compatibility](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
+
+For more details on each agent's role and responsibilities, refer to their respective documentation in the `.apm/agents` directory.
+
+> **Personal note:** I was honestly really surprised by the results after using this approach. The overall quality was noticeably better, not just in the code, but also in the documentation, testing, reviews, and completeness of the result. Although an orchestrated task can take longer to run, I found that this actually improved my productivity over the longer term. Instead of having many short interruptions where I had to review something, provide another prompt, wait for another change, and repeat the process, I could continue working on something else while the agents worked through the task. When I returned, there was a much more complete result that I could review all at once, step by step. For me, the longer autonomous runs, fewer interruptions, and higher-quality results made the overall workflow feel both more productive and more efficient.
 
 ---
 

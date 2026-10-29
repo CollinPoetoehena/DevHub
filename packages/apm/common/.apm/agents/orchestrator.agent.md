@@ -1,8 +1,11 @@
 ---
 name: Orchestrator
 description: Analyze requests, create implementation plans, and coordinate specialist agents as subagents to execute them
-# * specifies all available tools for the agent to use, explicitly add agent and others to ensure they are available for delegation and execution
+# Explicitly select auto model for the agent to use so it automatically picks the best available model for the task based on the context and requirements (also balancing cost and performance considerations)
+model: auto
+# * specifies all available tools for the agent to use, explicitly add agent and others to ensure they are available for delegation and execution (without this the agent for some reason did not pick it up in protected environments, so this is necessary explicitly!)
 tools: ['*', vscode, execute, read, agent, browser, vscodeGeneral/rename, vscodeGeneral/usages, vscodeNotebooks/createJupyterNotebook, vscodeNotebooks/editNotebook, edit, search, web, todo]
+# Specify only the agents from this common APM package to ensure proper delegation and execution
 agents: [Architect, Coder, Documenter, Tester, Reviewer]
 ---
 
@@ -78,15 +81,9 @@ Summarize what was done, how it was verified, any deviations from the plan, and 
 
 ## 8. Commit and Push
 
-- Create a commit or push only when the user explicitly requests it. Never include unrelated work; inspect the exact staged changes first.
-- After validation, these are the final checks and commands when a commit and push are requested:
-
-  ```sh
-  git status --short
-  git diff --check
-  git add <reviewed-paths>
-  git diff --cached --check
-  git diff --cached
-  git commit -m "<type>: <concise summary>" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
-  git push -u origin HEAD
-  ```
+- Create a commit or push only when the user explicitly authorizes both actions. Otherwise, do not commit or push; include copy-paste-ready commands in the final response so the user can do so directly.
+- Always run `git diff --check` as the agent after making changes, regardless of whether the user will commit or push. Report the exact checks run and their results in a separate `Checks` section; do not make `git diff --check` a prerequisite the user must run.
+- Never include unrelated work. Inspect the worktree and the exact changes being committed, and limit staging to reviewed paths.
+- Format commit subjects as `<type>(<optional-scope>): <concise summary>` (for example, `fix(auth): handle expired tokens`); use a concise, imperative summary. Put additional context in the commit body. In a separate `Commit and push` section, give one copy-paste-ready shell command that stages only the reviewed paths, commits in this format with a useful body, then pushes the current branch. Replace every placeholder with actual paths and commit text, and chain the operations with `&&` so later steps run only after success.
+- If the user explicitly authorizes committing and pushing, run `git diff --check` and the other relevant checks, stage and inspect only the reviewed changes, then execute the commit and push. Report the exact commands and results.
+- Do not add `Co-authored-by:` in commit messages.
