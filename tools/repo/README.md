@@ -7,8 +7,10 @@ The authoritative design and operating guide for my repository inventory and Git
 - [Scope and design](#scope-and-design)
   - [Why automate](#why-automate)
   - [Design options](#design-options)
+  - [Why Terraform](#why-terraform)
   - [Inventory and common profile](#inventory-and-common-profile)
   - [Protection and solo reviews](#protection-and-solo-reviews)
+  - [What is not automated and why](#what-is-not-automated-and-why)
 - [GitHub App authentication](#github-app-authentication)
 - [State management](#state-management)
 - [Adopt existing repositories](#adopt-existing-repositories)
@@ -44,7 +46,11 @@ My repositories are a team with one maintainer. An explicit inventory and common
 
 There is no custom Python or Go command, generator, service, workflow engine, or parallel YAML inventory. This is one directly operated Terraform root, not a reusable module. See the [Terraform GitHub provider](https://registry.terraform.io/providers/integrations/github/6.13.0/docs) for supported resources.
 
-Repository files are deliberately outside automation. Copy an APM manifest, README, or workflow into a project when needed, then maintain it as that project's content. Building code to create or continually synchronize those few files costs more than manual copy/paste returns at this scale. Reference the [common APM package](../../packages/apm/common/README.md) and shared workflows where applicable instead of maintaining another content-distribution mechanism.
+### Why Terraform
+
+The goal is consistent repository settings with minimal custom code and maintenance, not a repository factory. Terraform and the GitHub provider supply state tracking, imports, dependency ordering, and reviewable plans. A Python or Go implementation would require writing and maintaining API calls, authentication, drift comparisons, update logic, error handling, and tests for those same responsibilities.
+
+Keeping one declarative configuration avoids that custom maintenance and an extra orchestration layer. The trade-off is maintaining Terraform state and reviewing provider upgrades; for this small inventory, that is simpler than owning a custom reconciliation tool. Terraform runs on demand, so drift is checked during a plan, not continuously.
 
 ### Inventory and common profile
 
@@ -79,6 +85,17 @@ Archived repositories are retained in the existence inventory but do not receive
 Rules target exactly `refs/heads/main`, not an arbitrary default branch. Active repositories must already use `main` as their default; a postcondition rejects another branch. For new repositories, set the account's [default branch name](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/managing-the-default-branch-name-for-your-repositories) to `main` first. GitHub's minimal `auto_init` creates the initial commit/README so the branch exists before rules are applied; no profile files or subsequent content are managed. This does not rename existing branches. A failed initialization/postcondition can leave a newly created repository requiring manual correction before retry.
 
 Rulesets on public repositories are available with GitHub Free; private repositories require an eligible plan such as GitHub Pro for this personal account. Confirm current [ruleset availability](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets) before rollout. Other existing rulesets and classic protections still apply; this configuration does not silently remove or bypass them.
+
+### What is not automated and why
+
+Not everything is automated, some tasks are intentionally left for manual handling because they either require human judgment, are infrequent or not valuable enough to not justify automation, or involve repository-specific decisions that cannot be generalized.
+
+- **Repository templates and initial project files:** APM manifests such as `apm.yml`, workflows, README files, and other starter content are copied manually when needed. For a few repositories, a generator and its configuration, tests, and exceptions cost more to maintain than occasional copy/paste. GitHub's minimal initial README from `auto_init` is only used to establish a branch, not to scaffold a project.
+- **Ongoing file synchronization:** this root does not update files across repositories or open synchronization PRs. That would require conflict handling, versioning, and decisions about local modifications. Each repository owns its content; reference the [common APM package](../../packages/apm/common/README.md) and shared workflows where appropriate rather than building another distribution mechanism.
+- **End-to-end onboarding:** setting up the GitHub App, importing existing repositories, reviewing plans, copying project files, and preparing an existing default branch remain deliberate operator steps. Terraform owns repository existence and the declared policy, not the whole development workflow. See [adoption](#adopt-existing-repositories) and [repository rollout](#add-and-roll-out-a-repository).
+- **Unrelated GitHub configuration:** settings outside the declared policy, such as topics, descriptions, Pages, and project-specific features, are not reconciled. The exclusions in [main.tf](main.tf) preserve those choices instead of taking ownership of every available setting.
+
+Reconsider scaffolding only if repeated manual work becomes a measurable burden. A native GitHub template would be the first option for initial files; continuous synchronization is a separate requirement, not a reason to introduce Python or Go now.
 
 ---
 
