@@ -22,10 +22,5 @@ TODO: add a TODO for homelab public actions where it checks that each file follo
 ### Rollout & Integration
 TODO: make a TODO for roll out and integration.
 
-## Tools setup such as packaging & Actions design
-TODO: see dns-devhub, use the same setup here with a `devhub-tools` package used for all things like packaging, etc.
-TODO: add same reasoning in that README.md as with my work projects such as independently versioned, local usage, not vendor-lockin for GitHub Actions, etc. And also it can be properly tested, etc.
-TODO: GitHub Actions are wrappers that use that tooling, etc.
-TODO: add the package `devhub-tools` in separate repo and link to it in this DevHub repo.
-TODO: make it in Python; add in README.md tool choice Python because it is widely used, has a rich ecosystem for packaging and tooling, and allows for easy integration with GitHub Actions and other automation workflows, etc.
-
+## Package tooling
+TODO: add packaging automation under `tools/package/` when needed, with its own design and usage README. GitHub Actions should call the same tooling used interactively.

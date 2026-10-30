@@ -1,7 +1,5 @@
 # Changelog
 
-## 2026-TODO
+## 2026-10-30
 
-Initial release
-
-TODO: publish with APM and test, then this is done.
+Initial release.

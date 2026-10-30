@@ -7,8 +7,12 @@ How DevHub is organized and why. This page records project boundaries and setup 
 ## Table of Contents
 
 - [Layout and scope](#layout-and-scope)
-- [Why DevHub is one repository](#why-devhub-is-one-repository)
-  - [Sole maintainer](#sole-maintainer)
+- [Why DevHub is a monorepo](#why-devhub-is-a-monorepo)
+  - [Coordinated development](#coordinated-development)
+  - [Shared maintenance and contributor context](#shared-maintenance-and-contributor-context)
+  - [Independent artifacts and releases](#independent-artifacts-and-releases)
+  - [Why not a polyrepo for every component](#why-not-a-polyrepo-for-every-component)
+  - [When a separate repository is better](#when-a-separate-repository-is-better)
   - [Accepted trade-offs](#accepted-trade-offs)
 - [Separate repositories](#separate-repositories)
 - [Established repository structures](#established-repository-structures)
@@ -27,40 +31,73 @@ How DevHub is organized and why. This page records project boundaries and setup 
 | [`.github/`](../.github/) | Project instructions and workflow configuration |
 | [`archive/`](../archive/README.md) | Decision notices for retired approaches; historical content stays in Git history |
 | [`packages/`](../packages/README.md) | Reusable packages, each with native metadata and its own release boundary |
-| [`tools/`](../tools/README.md) | Setup, repository management, and maintenance tooling not owned by one project |
+| [`tools/`](../tools/README.md) | Shared automation, including [Terraform repository inventory and policy](../tools/repo/README.md) |
 
 Each area's README owns the details of that area. The [root README](../README.md#repository-scope) summarizes this scope.
 
 ---
 
-## Why DevHub is one repository
+## Why DevHub is a monorepo
 
-The goal is not as many repositories as possible, but a structure that fits the work and the people maintaining it. DevHub's packages, tooling, setup, GitHub automation, and AI customizations meet that criterion: a change to a practice can touch project guidance, an instruction or skill, a workflow, and a package at the same time. Keep related work together when it shares ownership and access and is routinely changed or validated together; split it when distinct ownership, access, operation, or publication boundaries make independent work worthwhile.
+DevHub groups related development resources under one maintainer: project guidance, shared AI customizations, GitHub automation, tools, and reusable packages. This is a repository boundary, not a claim that DevHub is one application, one package, or one release unit. The deciding factors are shared ownership and the practical frequency of changes that cross these areas—not a package-count threshold or a requirement to use one language.
 
-Separate repositories for these parts caused recurring overhead:
+These parts are often used and maintained together. A change to a shared practice can affect its documentation, an AI instruction or skill, a workflow, and the tool or package that applies it. Keeping that work in one repository lets the source, affected in-repository callers, and validation change together when appropriate. The [layout and scope](#layout-and-scope) describes what each area owns.
 
-- managing many repositories, each with its own settings, branch rules, and dependency updates;
-- making a separate commit and pull request in each repository for one coordinated change;
-- copying and synchronizing reusable actions, workflows, and AI customizations to every repository;
-- distributing the same CI setup, such as adding GitHub Actions to each repository.
+### Coordinated development
 
-I often opened those repositories in one workspace anyway. That helped navigation, but did not remove the maintenance overhead; one repository does.
+- **Review related changes together:** A pull request can show a change to shared guidance alongside the affected workflow, tool, or package. Reviewers can assess the intended practice and its implementation at the same revision instead of coordinating linked pull requests and compatible intermediate states.
+- **Find impact in one checkout:** Maintainers can search package metadata, shared tooling, guidance, and in-repository callers together. This helps identify direct dependencies and duplicated implementations; it is not a complete inventory of external consumers or deployed versions.
+- **Keep shared practices discoverable:** Contributors can locate existing automation and AI customizations before creating a separate copy. Shared guidance has a central home, while project-specific setup and exceptions remain with their owning project.
+- **Give contributors and assistants a common source context:** Related implementation, documentation, tests, and design decisions can be inspected from the same source revision, subject to access restrictions. Co-location does not automatically load every file or replace deliberate context selection and verification.
 
-### Sole maintainer
+For example, a change to a common AI customization or development standard may also require updates to its usage guidance and the project setup that consumes it. Those related changes can be reviewed together. If an independently published package must change, its release and consumer upgrade remain separate steps.
 
-I am the only maintainer of DevHub. With many separate but related repositories, every coordinated change multiplies the commits, reviews, releases, and synchronization I have to do myself, and keeping them all current within the same context becomes a maintenance burden that one person cannot sustain. There is no team, ownership, or access boundary between these parts that a split would serve, so splitting adds cost without a matching benefit.
+### Shared maintenance and contributor context
+
+I am the sole maintainer of DevHub. Keeping related assets together means maintaining common repository settings, contribution conventions, and automation in one place instead of repeating repository-level setup for each component. It also gives me one entry point and shared history when returning to work after a break.
+
+This reduces coordination and configuration drift, but does not eliminate component-specific maintenance. Packages still own their native metadata, dependencies, tests, supported interfaces, and consumer documentation. Shared workflows and standards can be maintained centrally; individual components still need configuration appropriate to their language and lifecycle.
+
+### Independent artifacts and releases
+
+DevHub contains different kinds of assets, including Python and Go packages, Helm charts, tools, documentation, and AI customizations. Sharing source history does not require consumers to install every package, use one runtime, or release all components together.
+
+Each package retains its native metadata and release boundary. A consumer selects published versions or other explicit references, rather than relying on an implicit dependency on the current repository checkout. A related set of artifacts may use a coordinated release when that combination is the supported contract; independently consumed packages can keep independent versions. Publishing automation is not yet implemented for the release approaches described in [release and versioning units](#release-and-versioning-units).
+
+### Why not a polyrepo for every component
+
+A polyrepo gives each component its own repository, history, settings, and contribution workflow. That isolation is useful when it reflects a real boundary. For DevHub's related assets under one maintainer, a repository per component would often move work into cross-repository coordination rather than remove it.
+
+| Concern | DevHub monorepo | Repository per component |
+|---|---|---|
+| Coordinated change | One pull request can show shared guidance, implementation, and affected in-repository callers together. | Related pull requests must be linked and kept compatible across repositories. |
+| Impact discovery | Source and package metadata are searchable in one checkout. | Discovery requires multiple checkouts, cross-repository search, or a maintained catalog. |
+| Shared standards and automation | Common definitions have one source location. | Reusable workflows help, but each repository still has to adopt and update its references and configuration. |
+| Contributor workflow | One checkout provides context for related assets. | Individual checkouts are smaller, but multi-component changes require assembling compatible revisions. |
+| Administration | Common settings and conventions are maintained together. | Repository-specific permissions and settings provide isolation but add setup and maintenance. |
+| Release independence | Components need explicit metadata and release discipline. | Separate histories make source isolation explicit, but compatibility and release ordering still need management. |
+| Access and failure isolation | Related assets share a repository access boundary, and broad workflow changes can affect other components. | Separate permissions and CI boundaries are easier to maintain. |
+
+Neither layout is inherently simpler in every situation. Polyrepos can reduce overhead with shared tooling and automation; a monorepo also requires deliberate CI selection and release boundaries. Independent versions, external consumers, or different release cadences alone do not require a split, but neither do they justify keeping components together when a more meaningful boundary exists.
+
+### When a separate repository is better
+
+Separate a component when doing so supports genuinely distinct ownership, restricted access, product governance, or an independently operated lifecycle. These boundaries matter more than keeping every related project under one repository. For example, the homelab has separate repositories because it is an independently operated service with different access requirements; DevHub provides shared guidance and workspace setup without owning its implementation. See [separate repositories](#separate-repositories) for that boundary.
+
+DevHub is therefore a bounded monorepo within a broader set of personal projects: shared development resources live here, while independently operated projects remain in their own repositories. The [shared guidelines](GUIDELINES.md#choosing-a-repository-boundary) provide placement criteria.
 
 ### Accepted trade-offs
 
-A single repository moves some complexity into the repository itself:
+A single repository also has costs:
 
-- more GitHub Actions workflows in one place;
-- somewhat more complex CI selection, so a change only validates the affected components;
-- a larger shared history.
+- more workflows and component configurations in one place;
+- more involved CI selection to validate affected components without needlessly validating everything;
+- a larger shared history and a shared repository access boundary;
+- the possibility that broad workflow or configuration changes affect unrelated components.
 
-These are accepted because they cost less than distributing and coordinating the same setup across many closely related repositories. The intended mitigations are selective checks that account for affected consumers, component-specific release tags, and explicit published versions rather than sibling-checkout dependencies. Publishing automation is still a placeholder; see [release and versioning units](#release-and-versioning-units).
+These trade-offs are accepted because they are proportionate to the shared ownership and coordinated maintenance of the current scope. Selective checks, component-specific release tags, and explicit published versions can limit coupling; co-location alone does not run cross-component checks or establish compatibility. The publishing workflow remains a placeholder; see [release and versioning units](#release-and-versioning-units).
 
-This remains a choice for the current scope, not a permanent rule. Extract a component when a real boundary appears, such as a different owner, consumer, access requirement, or independently operated service. The [shared guidelines](GUIDELINES.md#choosing-a-repository-boundary) give the brief placement criteria.
+This is a choice for the current scope, not a permanent rule. Extract a component when its ownership, access, operation, or publication boundaries make independent work worthwhile.
 
 ---
 
@@ -106,7 +143,7 @@ A managed thing is the unit I maintain, validate, and offer to consumers togethe
 | Managed thing | Repository and release approach |
 |---|---|
 | A monitoring capability with a Python package and Helm chart deployed together | Keep both in one repository and use one coordinated capability release when tested combinations are the supported contract |
-| DevHub's related setup script, shared automation, AI customizations, and documentation | Maintain together and use a DevHub release/ref for a coherent set; the shell updater follows a commit rather than requiring every component to share a package version |
+| DevHub's shared automation, AI customizations, and documentation | Maintain together and use a DevHub release/ref for a coherent set; independently published packages retain their own versions |
 | An SDK consumed independently by several applications | Give it its own version and compatibility contract, in DevHub with component tags or in its own repository when a real boundary warrants extraction |
 | Several independently consumed packages | Keep independent versions and native manifests; share a repository when coordinated source maintenance is convenient |
 

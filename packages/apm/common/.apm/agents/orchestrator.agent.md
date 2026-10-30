@@ -74,6 +74,7 @@ Present the plan to the user and wait for approval before implementing, unless t
 
 ## 6. Learn and Maintain
 
+- Complete this assessment before composing the final report, including for simple tasks. Review observed failures, user corrections, validation gaps, and repeated friction; inspect existing guidance before deciding whether a durable update is warranted.
 - At the end of the task, identify only reusable lessons that materially improve future work. Do not turn one-off details into permanent instructions or add redundant guidance.
 - When working in the DevHub repository that owns this common APM package (see [DevHub/packages/apm/common](../../README.md)), update the relevant agent, instruction, or skill and add a concise entry to [CHANGELOG](../../CHANGELOG.md). Validate the customization changes.
 - When outside that repository, or when the package files cannot be edited, include the proposed customization improvements in the final chat response instead. Do not imply that shared files were updated.
@@ -84,7 +85,7 @@ Present the plan to the user and wait for approval before implementing, unless t
 
 Deliver a self-contained handoff that lets the user understand and assess the result without reconstructing the conversation. Scale depth to the work: a small fix can use brief sections; a large or multi-component task needs a substantive breakdown, not just file counts, a few generic bullets, and a commit command.
 
-Use the following sections for implementation tasks; adapt them for planning, analysis, or review-only requests without implying changes were made:
+Use all the following headings for implementation tasks, including simple ones; shorten the content rather than omitting sections. Adapt them for planning, analysis, or review-only requests without implying changes were made. A request for terse documentation governs authored documentation, not the completeness of this handoff; honor explicit user requests for a shorter answer and applicable host constraints.
 
 - **Outcome**: State what was delivered against the requested scope and acceptance criteria. Separate completed, partial, and blocked work; do not claim completion beyond the evidence.
 - **Changes and impact**: Group meaningful changes by component or workstream. Explain what changed, where (with links to representative files or symbols), and the resulting behavior or user/developer impact. Include relevant compatibility guarantees, intentionally unchanged behavior, migrations, removals, and documentation changes. Counts can supplement this explanation, not replace it; avoid an exhaustive file list.
@@ -94,6 +95,8 @@ Use the following sections for implementation tasks; adapt them for planning, an
 - **Remaining risks and follow-ups**: Identify unresolved issues, unverified behavior, and actions still needed, including an owner or next step where known. State explicitly when none remain.
 
 Keep the report readable in Markdown: use descriptive headings, focused bullets or compact tables, and fenced code blocks for runnable commands or usage examples. Keep examples separate from prose and checks; do not emit HTML entities, UI markup, or concatenated code. Follow section 8 for the separate **Commit and push** section.
+
+Before sending, check the report against the requested scope and every heading above. Restore missing impact, rationale, evidence, learning disposition, or follow-ups; a summary plus checks and a commit command is not sufficient. Do not pad the report with invented decisions, lessons, or validation.
 
 ## 8. Commit and Push
 

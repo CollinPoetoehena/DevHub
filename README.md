@@ -87,7 +87,8 @@ I track DevHub and all my personal projects, including the public and private ho
 
 DevHub is intended to grow through broadly reusable material, not by absorbing the implementation of every project:
 
-- **[Tools](tools/README.md)** contains shared tooling that is not owned by one specific project.
+- **[Tools](tools/README.md)** contains shared automation, including [Terraform repository inventory and policy](tools/repo/README.md).
+- **[How-tos](docs/how-to/README.md)** provides task-oriented entry points, including creating a repository in the DevHub ecosystem.
 - **[Personal workspace and AI setup](docs/USAGE.md)** explains how related repositories and shared guidance are used together.
 - **[GitHub workflows](docs/GITHUB-ACTIONS.md)** records the intended reusable-workflow contract; publishing automation is still a placeholder.
 - **[Common AI customizations](packages/apm/common/README.md)** provides the active reusable agents, instructions, and skills.

@@ -9,6 +9,7 @@ How to set up DevHub for my personal projects: the shared workspace, the AI cust
 - [Personal project workspace](#personal-project-workspace)
 - [AI customizations](#ai-customizations)
 - [Applying DevHub standards in a project](#applying-devhub-standards-in-a-project)
+- [Task-oriented how-tos](#task-oriented-how-tos)
 
 ---
 
@@ -58,3 +59,9 @@ My default is **Auto** model selection where offered; choose an explicit model w
 - Use the common package's [guidance layers](../packages/apm/common/README.md#how-guidance-is-layered) for shared standards and role guidance, and the [central backlog](TASK-TRACKING.md) for all personal projects, including the homelab.
 - Keep project-specific decisions, setup, and exceptions in the project's own documentation.
 - Follow [DevHub's project structure](ARCHITECTURE.md#separate-repositories) to decide whether work belongs in DevHub or in its own repository.
+
+---
+
+## Task-oriented how-tos
+
+The [how-to index](how-to/README.md) provides task entry points. Start with [creating a repository](how-to/CREATE-REPOSITORY.md) for a new personal project; it links to the authoritative Terraform inventory, review, and rollout procedure rather than repeating it.

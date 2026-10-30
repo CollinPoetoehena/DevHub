@@ -10,6 +10,7 @@ The existing [DevHub project board](https://github.com/users/CollinPoetoehena/pr
 - [How the board is organized](#how-the-board-is-organized)
 - [Using Current Iteration to focus](#using-current-iteration-to-focus)
 - [Everyday workflow](#everyday-workflow)
+  - [Drafting an issue](#drafting-an-issue)
 - [Visibility and boundaries](#visibility-and-boundaries)
 - [References](#references)
 
@@ -53,6 +54,18 @@ This is a way to narrow the choices and make progress easier to resume, not stri
 4. Record useful progress and decisions on the issue or draft item. The board provides the status and cross-repository overview; the issue remains the place for repository-specific discussion.
 5. When complete, verify the result, link the relevant pull request or change, close the issue where applicable, and mark it **Done**. Capture follow-ups separately.
 6. Before stopping, leave the last result and next step in a comment. Defer or drop tasks freely; the backlog is not a debt or a commitment.
+
+### Drafting an issue
+
+Use the common APM package's [draft-github-issue skill](../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md) with the task idea and this guide as context. It returns only Markdown: a proposed title followed by the issue body, without publishing an issue or changing the board.
+
+For DevHub, identify the owning repository, keep the work small enough to pause and resume, and include priority with a short rationale and a rough effort estimate with uncertainty. If either is unknown, say so rather than inventing it. Use observable acceptance criteria, link dependencies where relevant, and include a clear first action. Keep status and Current Iteration on the board rather than duplicating them in the issue body; iteration dates are not deadlines. Follow the [visibility rules](#visibility-and-boundaries) before sharing context.
+
+Example request:
+
+> Use draft-github-issue to draft an issue for DevHub: \<task idea\>. Tailor it using docs/TASK-TRACKING.md. Return only the issue Markdown.
+
+Review the draft, use its first heading as the GitHub title and the remainder as the body, then add the issue to the [DevHub board](https://github.com/users/CollinPoetoehena/projects/7). Ideas without a clear repository or scope can remain draft items.
 
 ## Visibility and boundaries
 

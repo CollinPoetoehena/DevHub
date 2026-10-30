@@ -111,10 +111,12 @@ Instructions supplement one another. A project-specific instruction is not autom
 ### Installation
 
 1. Open the **consumer workspace root** in VS Code. Its `apm.yml` must declare this package as a dependency; for this repository, [the root manifest apm.yml](../../../apm.yml) already points to `./packages/apm/common`.
-2. From that workspace root, install the Copilot customizations:
+2. From that workspace root, install the Copilot customizations (make sure APM is installed; see [APM installation](https://microsoft.github.io/apm/getting-started/installation/)):
 
    ```sh
    apm install --only apm --target copilot
+   # Or install directly with:
+   apm install 'CollinPoetoehena/DevHub/packages/apm/common' --target copilot
    ```
 
 3. Configure VS Code Chat using the [recommended setup](#recommended-chat-setup), then select **Orchestrator** for a coordinated task, or an individual specialist or the default Copilot Agent for direct work.
@@ -251,7 +253,7 @@ The [Coder](.apm/agents/coder.agent.md) is responsible for making its implementa
 
 The Orchestrator follows a bounded maintenance feedback loop: it identifies durable lessons, updates the relevant common customization when working in the repository that owns it, and otherwise reports proposed improvements to the user. This is explicit maintenance of the package, not persistent model training or a claim that agents autonomously change their own instructions in every repository.
 
-Its final report describes meaningful changes by component, their impact, significant decisions, validation evidence, and remaining gaps. A **Self-learning and maintenance** section makes the feedback loop visible: the observed problem, why the lesson is reusable, where guidance was updated or merely proposed, and how the update was validated. If no durable lesson emerged, the report says so rather than inventing one. Report depth scales with the task; a large change needs more than file counts and a few implementation bullets.
+Its final report uses explicit headings for outcome, changes and impact, decisions and deviations, checks, self-learning and maintenance, and remaining risks and follow-ups, followed by commit and push guidance. These apply to simple implementation tasks too: depth scales with the task, not by dropping the learning or decision sections. The learning assessment happens before reporting and distinguishes applied updates, proposals, existing coverage, and no durable lesson. This requires evidence, not invented learning or persistent model training.
 
 ### Model selection
 
@@ -294,6 +296,8 @@ common/
       github-actions.instructions.md
       python.instructions.md
     skills/
+      draft-github-issue/
+        SKILL.md
       manage-skills/
         SKILL.md
 ```
@@ -318,7 +322,10 @@ The specialist agents set `agents: []` to prevent nested delegation where the ho
 
 #### Skills and prompts
 
-[manage-skills](.apm/skills/manage-skills/SKILL.md) guides autonomous skill creation and maintenance within the assigned scope: inspect existing capabilities, choose the right primitive, author or consolidate, validate, and report limitations. The [manifest](apm.yml) also declares the community skills described under [Reuse before authoring](#reuse-before-authoring); their sources remain upstream, outside the local tree above. Other available skills can be used without copying them into this package. This package currently defines no prompt files; prompts are appropriate for reusable, user-invoked task templates rather than persistent role rules or procedures.
+- [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md) produces only a proposed issue title and body in Markdown, grounded in repository context with bounded scope and verifiable acceptance criteria. It does not publish or manage GitHub items; unlike the community [github-issues skill](https://github.com/github/awesome-copilot/tree/main/skills/github-issues), it needs no GitHub tooling. DevHub-specific usage belongs in [Task Tracking](../../../docs/TASK-TRACKING.md#drafting-an-issue).
+- [manage-skills](.apm/skills/manage-skills/SKILL.md) guides autonomous skill creation and maintenance within the assigned scope: inspect existing capabilities, choose the right primitive, author or consolidate, validate, and report limitations.
+
+The [manifest](apm.yml) also declares the community skills described under [Reuse before authoring](#reuse-before-authoring); their sources remain upstream, outside the local tree above. Other available skills can be used without copying them into this package. This package currently defines no prompt files; prompts are appropriate for reusable, user-invoked task templates rather than persistent role rules or procedures.
 
 ---
 
@@ -345,6 +352,8 @@ apm compile --validate --local-only
 This checks agents and instructions; also validate skill metadata and resource links. An isolated install from the repository root with `apm install --only apm --target copilot --root <scratch-directory>` checks deployment without replacing workspace customizations. For the Copilot target, agents and instructions land under `.github/`, and skills under `.agents/skills/`.
 
 Use the [APM consumer guide](https://microsoft.github.io/apm/consumer/) for dependency installation and target options. After installation, check host discovery and exercise a representative task; static validation alone does not prove that the correct agent or skill was invoked. Keep consumer-specific customizations separate from installed package files.
+
+Package source edits do not refresh an already installed agent. If behavior reflects older instructions, compare the source [Orchestrator](.apm/agents/orchestrator.agent.md) with the consuming workspace's `.github/agents/orchestrator.agent.md`. Refresh the consumer's installation after reviewing local customization changes, then start a new chat and select Orchestrator. Use a small implementation task to check that all report headings appear and learning is explicitly assessed; the instructions guide behavior but do not guarantee compliance. See [VS Code custom agents](https://code.visualstudio.com/docs/agent-customization/custom-agents) for agent selection and configuration.
 
 ---
 
