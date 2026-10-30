@@ -6,7 +6,7 @@ applyTo: "**/*.agent.md,**/*.instructions.md,**/*.prompt.md,**/SKILL.md,**/AGENT
 # AI Customization Design
 
 - Be concise: capture the essence, triggers, boundaries, and expected outcome. Do not write enormous prompts or duplicate guidance already supplied by another primitive.
-- Use agents for roles and reusable role standards, skills for on-demand procedures, and targeted instructions for project/language/tool constraints. Keep all-files guidance minimal.
+- Use agents for role identity, responsibilities, boundaries, and workflow. Put shared engineering standards in the common instructions; use scoped instructions for technology-, tool-, task-, or project-specific constraints. Use skills for on-demand procedures.
 - Inspect existing customizations before adding another. Extend an appropriate existing primitive rather than creating overlapping triggers or conflicting rules.
 - Use specific descriptions for discovery and narrow `applyTo` globs for file instructions. Give skills valid names matching their directories.
 - Keep detailed resources separate and load them only when needed. Add scripts, templates, or reference files only when they serve the workflow.
