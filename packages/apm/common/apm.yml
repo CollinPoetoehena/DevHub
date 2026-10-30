@@ -1,0 +1,9 @@
+# Reusable DevHub AI customizations: agents, skills, and scoped instructions.
+name: devhub-common
+version: 1.0.0
+description: Common engineering AI customizations; agents, skills, and scoped instructions for DevHub repositories
+target: copilot
+dependencies:
+  apm:
+    - github/awesome-copilot/skills/git-commit#5269f7ea2d6c3a9bfda5ed878b6726cf509121fd
+    - github/awesome-copilot/skills/webapp-testing#5269f7ea2d6c3a9bfda5ed878b6726cf509121fd

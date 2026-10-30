@@ -1,0 +1,29 @@
+# Dependabot configuration for automated GitHub Actions updates
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Monitor GitHub Actions for updates
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "wednesday"
+      time: "07:00"
+      timezone: "Europe/Amsterdam"
+    # Delay version update PRs until releases are at least 5 days old to ensure stability and avoid immediate updates after a new release
+    cooldown:
+      default-days: 5
+    # Group all GitHub Actions updates into a single PR to avoid multiple separate PRs for each action update
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    # Limit open PRs to avoid clutter
+    open-pull-requests-limit: 5
+    labels:
+      - "devhub"
+    # Commit message configuration: use "ci" as prefix and include the scope in the commit message
+    commit-message:
+      prefix: "ci"
+      include: "scope"

@@ -1,0 +1,8 @@
+# DevHub consumes its locally generated common instruction package.
+name: devhub
+version: 1.0.0
+description: DevHub agent configuration
+target: copilot
+dependencies:
+  apm:
+    - ./packages/apm/common
