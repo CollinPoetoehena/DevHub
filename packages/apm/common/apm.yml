@@ -1,6 +1,6 @@
 # Reusable DevHub AI customizations: agents, skills, and scoped instructions.
 name: devhub-common
-version: 1.0.0
+version: 1.0.1
 description: Common engineering AI customizations; agents, skills, and scoped instructions for DevHub repositories
 target: copilot
 dependencies:

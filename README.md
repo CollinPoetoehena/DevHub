@@ -53,7 +53,7 @@ The public repository has a second purpose as a portfolio. It provides an honest
 
 ## Standards for my personal projects
 
-DevHub holds the guidance I apply to my personal projects: [repository and package guidelines](docs/GUIDELINES.md), [engineering AI customizations](packages/apm/common/README.md), [project boundaries](docs/ARCHITECTURE.md), automation, and tooling. Each project records its own setup, decisions, and exceptions; general technical background is linked to official sources where needed.
+DevHub holds the guidance I apply to my personal projects: [repository and package guidelines](docs/GUIDELINES.md), [personal-project principles](docs/GUIDELINES.md#relaxation-and-enjoyment-over-productivity-and-pressure), [engineering AI customizations](packages/apm/common/README.md), [project boundaries](docs/ARCHITECTURE.md), automation, and tooling. Each project records its own setup, decisions, and exceptions; general technical background is linked to official sources where needed.
 
 I manage my personal projects the way a professional team manages its projects, with consistent standards and practices; they are effectively a team with one developer. This is not to mimic enterprise or industry practice. It is worth the time because it adds real value: clear and consistent projects, automation and tooling that save me time, and documentation that keeps decisions self-explanatory when I return to a project later.
 

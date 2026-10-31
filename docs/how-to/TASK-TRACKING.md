@@ -73,7 +73,7 @@ A public issue in a public repository is expected to remain public when added to
 
 Keep information that should not be public—such as private designs, inventories, or operational details—out of public issues. Use an appropriately private repository or project draft for private planning, and store secrets only in protected storage, never in task descriptions. Project visibility and repository/issue visibility are separate settings.
 
-These are personal projects meant to be fun and enjoyable, not another source of stress on top of a job. There is no quota, schedule, deadline, or obligation to keep the board moving. Take breaks, change focus, defer work, or drop tasks freely. Do not mix personal tasks into work time or treat an alert or a waiting build as a demand to start more work. For homelab-specific enjoyment, focus, and optional timeboxes, follow its [goals and scope](https://github.com/CollinPoetoehena/devhub-homelab/blob/main/01-foundations/goals-and-scope.md#relaxation-and-enjoyment-over-productivity-and-pressure); the task workflow itself has one home here.
+These are personal projects meant to be fun and enjoyable, not another source of stress on top of a job. There is no quota, schedule, deadline, or obligation to keep the board moving. Take breaks, change focus, defer work, or drop tasks freely. Do not mix personal tasks into work time or treat an alert or a waiting build as a demand to start more work. See [Relaxation and Enjoyment over Productivity and Pressure](../GUIDELINES.md#relaxation-and-enjoyment-over-productivity-and-pressure) for the shared guidance; this document owns the task workflow.
 
 ## References
 

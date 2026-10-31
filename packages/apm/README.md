@@ -14,6 +14,7 @@ This guide owns personal AI usage principles and the shared concepts, setup, aut
   - [Choose the right customization](#choose-the-right-customization)
   - [How guidance is layered](#how-guidance-is-layered)
   - [Nested instructions](#nested-instructions)
+  - [Reliable customization design](#reliable-customization-design)
 - [Repository setup](#repository-setup)
   - [Verify activation](#verify-activation)
 - [Authoring repository guidance](#authoring-repository-guidance)
@@ -132,7 +133,7 @@ The diagram shows context composition, not precedence or a promise that every li
 
 Keep common standards in one shared instruction source rather than dispersing them among role definitions. Explicit references from agents and repository guidance help locate that source even when a task does not edit matching files. Scoped instructions add only the relevant constraints; their discovery and attachment remain harness-dependent.
 
-For example, Coder and Reviewer both need the engineering baseline: keeping coding standards only in Coder would leave review and other roles without the same quality bar. Keep shared engineering, testing, and documentation expectations coherent in the common baseline, while scoped instructions supply specialized constraints. The common package's [design and execution flow](common/README.md#design) explains how its roles use this context.
+For example, Coder and Reviewer both need the engineering baseline: keeping coding standards only in Coder would leave review and other roles without the same quality bar. Keep the universal core small, while scoped instructions supply documentation, technology, and tool constraints. The common package's [design and execution flow](common/README.md#design) explains how its roles use this context.
 
 ### Nested instructions
 
@@ -143,6 +144,35 @@ Start with one root `AGENTS.md` and links to component READMEs. A nested file is
 3. A root link to the component's owning documentation does not adequately cover the need.
 
 A different language, large folder, or separate package alone is insufficient. Record the reason in the owning documentation and verify nested discovery in the chosen harness. Do not rely on a universal "nearest file wins" rule.
+
+### Reliable customization design
+
+Keep every setup small: one entry point, clear ownership, short rules, and repeatable procedures in skills. More emphatic prose, repeated instructions, or additional agents do not guarantee compliance.
+
+| Concern | Design rule |
+|---|---|
+| Entry and routing | Select the intended workflow agent explicitly. Define a narrow lightweight exception and a default workflow; uncertainty follows the default. Discovery descriptions help selection but do not guarantee invocation. |
+| Context | Resolve and read required guidance before work and pass actual paths to specialists. File-pattern attachment, Markdown links, and installed files are not proof of loading. Missing required context is a blocker. |
+| Workflow | State required stages and observable acceptance criteria. Keep optional roles optional, but do not make essential review or validation discretionary. |
+| Completion | Maintain task evidence in persistent session storage outside versioned sources. Track final changes, checks, review, learning, and actual publishing state across turns. Later edits invalidate affected checks and review. |
+| Enforcement | Use small validators, existing Git hooks, CI, permissions, and approvals for verifiable requirements. Keep enforcement separate from role prose and protect policy changes with approval. |
+| Publishing | Treat commit and push as independently authorized operations. Verify the actual commit message and remote state; displayed commands are not execution evidence. Never publish automatically from a stop hook. |
+| Maintenance | Assess observed friction; retain only reusable lessons with an owner and validation. A proposal or no durable lesson is valid. Guidance edits join the final validation/review cycle. |
+
+Start with a short checklist and existing tools. Add scripts, schemas, fingerprint tracking, or hooks only for a demonstrated need; do not turn an ordinary handoff or Git workflow into a custom execution framework. The common [finalization skill](common/.apm/skills/finalize-task/SKILL.md) uses ordinary Git commands without bundled code or hooks.
+
+Hooks and tools enforce only the conditions they actually check. Agent-authored evidence is an attestation, not proof of a review or permission. Local hooks can be bypassed, host lifecycle hooks differ by runtime, and failures or timeouts need explicit verification. Do not install enforcement globally or overwrite existing hooks as part of ordinary package deployment. See [VS Code hooks](https://code.visualstudio.com/docs/agent-customization/hooks), [Copilot hook contracts](https://docs.github.com/en/copilot/reference/hooks-reference), and [Git hooks](https://git-scm.com/docs/githooks).
+
+Before adopting or changing a workflow, repeat representative scenarios in the intended harness:
+
+- A mechanical edit takes the lightweight route; a small behavioral fix and uncertainty take the default route.
+- Missing guidance, unavailable required agents, failed checks, and unresolved review findings block completion.
+- A correction or learning edit after review requires renewed applicable validation and review.
+- Unrelated staged work is preserved; commit-only authorization does not authorize push.
+- A prohibited commit trailer is rejected, including when a hook adds it; push failure is reported as failure.
+- A retained lesson has evidence and an owner; an unrelated task does not trigger specialized procedures.
+
+Static validation, deployment, discovery, and repeated behavioral checks are separate evidence. Record limitations rather than promising reliable behavior from file presence alone. The [common Orchestrator design](common/README.md#design) applies these rules to this package.
 
 ---
 
@@ -182,7 +212,7 @@ A manifest, successful installation, and instruction compliance are three differ
 - **Static setup:** verify manifest and skill metadata, relative links, file scopes, and the absence of conflicting or duplicate guidance using the [validation procedure](#validation).
 - **Deployment:** confirm that the intended target received the common instructions, scoped instructions, agents, and skills. Merely checking out the package does not activate it.
 - **Host discovery:** in the selected harness, confirm the root repository guidance and installed customizations are discoverable. Refresh or start a new session after changes.
-- **Behavior:** exercise a small task with an observable criterion that depends on a local convention. Inspect references or debug evidence where supported, plus the actual result and validation activity. Check one relevant scoped instruction and, when used, the setup skill.
+- **Behavior:** exercise a small task with an observable criterion that depends on a local convention. Inspect references or debug evidence where supported, plus the actual result and validation activity. Check one relevant scoped instruction and, when used, the setup skill. For coordinated workflows, also check routing, mandatory review, corrections, and blocked completion; use the [reliability scenarios](#reliable-customization-design).
 
 For VS Code's Local harness, root `AGENTS.md` discovery is controlled by `chat.useAgentsMdFile` (enabled by default); nested discovery additionally requires `chat.useNestedAgentsMdFiles` (disabled by default). These settings do not control other harnesses. Shared-parent and multi-root discovery also need separate verification; see [workspace setup](../../docs/USAGE.md#personal-project-workspace).
 
@@ -313,9 +343,9 @@ Decide frames the loop; Request, Iterate, and Validate repeat until "done" is me
 
 ## Working with agents
 
-Orchestration can coordinate analysis, implementation, validation, documentation, review, and corrections for larger tasks. Bounded specialist assignments provide focused context, clear ownership, and another opportunity to detect assumptions or coverage gaps. Parallelize genuinely independent work, not shared-file edits or dependent stages.
+Orchestration coordinates analysis, implementation, validation, documentation, review, and corrections for Standard implementations. Bounded specialist assignments provide focused context, clear ownership, and another opportunity to detect assumptions or coverage gaps. Parallelize genuinely independent work, not shared-file edits or dependent stages.
 
-This can reduce repeated user-driven handoffs and make a consolidated result easier to review. It also adds coordination, model usage, and elapsed time, and does not guarantee an unbiased or defect-free result. Scale the workflow to the task: simple work should remain direct; substantial or high-risk work may warrant specialists and independent review.
+This can reduce repeated user-driven handoffs and make a consolidated result easier to review. It also adds coordination, model usage, and elapsed time, and does not guarantee an unbiased or defect-free result. Keep only Tiny mechanical work direct; the common workflow requires implementation ownership and independent review for every other implementation.
 
 Keep implementation and its tests with one owner; use review to assess correctness and test adequacy rather than making routine testing a separate handoff. Package READMEs describe the actual roles and restrictions they provide.
 
@@ -331,7 +361,7 @@ Autopilot auto-approves tools; disabling terminal sandboxing removes its filesys
 
 ### Choosing an agent
 
-The common Orchestrator is the recommended entry point for end-to-end tasks and handles simple work directly. Specialists or the default agent remain supported for focused work. Use custom roles only when their boundaries or workflow add value; do not invoke every role merely because it is available.
+Select the common Orchestrator for end-to-end engineering work. It handles only Tiny mechanical implementations directly; all other implementations use its Standard plan, Coder, and independent Reviewer cycle. Specialists or the default agent remain supported for focused requests, but do not implicitly provide the Orchestrator workflow. Do not invoke every role merely because it is available.
 
 Delegation depends on the harness and configured tools/allowlists. Discovery descriptions do not grant tool capabilities, and role instructions are not a security sandbox. Verify support and ensure each assignment includes relevant common/project guidance, constraints, and acceptance criteria.
 
@@ -362,6 +392,8 @@ Auto and Copilot Fusion expose different cost, quality, and effort controls depe
 Maintain package sources under `.apm/`, not installed deployment copies. Keep package READMEs limited to contents, dependencies, and package-specific decisions; update this guide for shared design or procedures, and the owning project docs for local knowledge.
 
 Review customizations when experience reveals a recurring gap or the supported workflow changes. Retain only reusable, evidence-backed lessons; update the appropriate source and its changelog where maintained. Report proposals when that owner cannot be edited. This is explicit documentation maintenance, not persistent model training or automatic self-modification.
+
+The common [self-learning skill](common/.apm/skills/self-learning/SKILL.md) supplies this assessment procedure without adding another routine agent. Changes to enforcement, tool permissions, or publishing policy require explicit approval; maintenance does not authorize weakening safeguards.
 
 Refresh consumer installations deliberately after source/dependency changes and review collisions first. Source edits do not refresh a running session or already installed agent. If behavior appears stale, compare source and deployed definitions before reinstalling, then start a fresh chat and verify behavior.
 
