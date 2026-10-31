@@ -53,9 +53,9 @@ The problem was this combination and scope, not skills themselves. Focused, reus
 
 The [common APM package](../packages/apm/common/README.md) distributes shared customizations from one source:
 
-- **Agents own roles and role standards:** Orchestrator, Architect, Coder, Documenter, Tester, and Reviewer. The Orchestrator handles simple work directly and delegates when useful; every task does not need a team.
-- **Instructions supply scoped conventions and constraints:** AI customization, Ansible, Dockerfiles, GitHub Actions, and Python. Generic coding standards live in the Coder, not an all-files instruction.
+- **Agents own roles:** Orchestrator, Architect, Coder, Documenter, and Reviewer. The Orchestrator handles simple work directly and delegates when useful; Coder owns testing with implementation.
+- **Instructions supply shared standards and scoped constraints:** the common engineering baseline applies across roles; AI customization, Ansible, Dockerfiles, GitHub Actions, and Python add focused guidance.
 - **Skills supply reusable, on-demand procedures:** the package currently includes [manage-skills](../packages/apm/common/.apm/skills/manage-skills/SKILL.md). Add a skill for a proven workflow, not another skills-only policy dump.
-- **Projects extend rather than copy:** keep repository context and local constraints with the consumer; use the [project-specific guidance](../packages/apm/common/README.md#project-specific-guidance) instead of forking shared role definitions.
+- **Projects extend rather than copy:** keep repository context and local constraints with the consumer; use the [consumer-specific guidance](../packages/apm/README.md#consumer-specific-guidance) instead of forking shared role definitions.
 
 This separates responsibilities, reduces duplicated rules, and keeps procedural detail out of routine work. APM distributes the files; it does not enforce compliance or guarantee discovery in every host. See [current usage](../docs/USAGE.md#ai-customizations) and the official [VS Code customization concepts](https://code.visualstudio.com/docs/agents/concepts/customization).

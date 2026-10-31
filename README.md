@@ -74,6 +74,7 @@ Each part of DevHub has a clear scope, so information has one home:
 - **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), decisions, and [usage](./docs/USAGE.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
 - **[`archive/`](./archive/README.md)** records retired approaches and their rationale, not an actively maintained technical knowledge base.
 - **Area READMEs**, such as [`packages/README.md`](./packages/README.md) and [`tools/README.md`](./tools/README.md), own local commands and component contracts.
+- **[Root agent guidance](AGENTS.md)** routes AI agents to that owning context; [APM design and setup](packages/apm/README.md) explains the common baseline and repository-specific customization pattern.
 
 ---
 

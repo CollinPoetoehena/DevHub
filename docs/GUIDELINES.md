@@ -17,7 +17,7 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 
 ## Shared guidance and AI customizations
 
-This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Using DevHub](USAGE.md), [project architecture](ARCHITECTURE.md), and [task tracking](TASK-TRACKING.md). Link to those docs when useful instead of copying them into Copilot instructions.
+This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Using DevHub](USAGE.md), [project architecture](ARCHITECTURE.md), and [task tracking](TASK-TRACKING.md). Link to those docs when useful instead of copying them into agent instructions.
 
 Reusable AI customizations, shared engineering standards, and workflows live in the [common APM package](../packages/apm/common/README.md), which is the authoring source for these customizations:
 
@@ -25,7 +25,7 @@ Reusable AI customizations, shared engineering standards, and workflows live in 
 - The [common instructions](../packages/apm/common/.apm/instructions/common.instructions.md) are the single source for shared engineering, testing, and documentation standards. Technology- or tool-specific instructions add relevant constraints, such as [AI customization](../packages/apm/common/.apm/instructions/ai-customization.instructions.md), [Ansible](../packages/apm/common/.apm/instructions/ansible.instructions.md), [Dockerfile](../packages/apm/common/.apm/instructions/dockerfile.instructions.md), [GitHub Actions](../packages/apm/common/.apm/instructions/github-actions.instructions.md), and [Python](../packages/apm/common/.apm/instructions/python.instructions.md).
 - Skills capture focused, repeatable procedures; the current shared example is [manage-skills](../packages/apm/common/.apm/skills/manage-skills/SKILL.md).
 
-Consumer-specific constraints belong in that consumer's project AI customizations, such as `copilot-instructions.md`, `AGENTS.md`, or scoped instructions. These supplement the common package; do not duplicate shared standards or assume one instruction automatically overrides another. See the common package README for the full layering and usage model.
+Consumer-specific context belongs in one root `AGENTS.md`, with scoped instructions or local skills only for a demonstrated need. Follow the [APM design and setup guide](../packages/apm/README.md) for ownership, authoring, and discovery verification. These customizations supplement the common package; do not duplicate shared standards or assume one instruction automatically overrides another.
 
 The engineering and documentation rules are intentionally not repeated in this file: `GUIDELINES.md` is the shared human-facing home for repository and package conventions, while `common.instructions.md` is the reusable AI-facing source for engineering standards. Keeping each topic in one authoritative place avoids drift when one copy is updated and another is missed, prevents conflicting or stale directions, and makes clear which guidance to maintain.
 

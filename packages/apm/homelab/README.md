@@ -1,7 +1,7 @@
 # DevHub Homelab Instructions
 
-The `devhub-homelab` [Agent Package Manager (APM)](https://microsoft.github.io/apm/) package distributes shared TODO: add here for homelab and why it is managed here in DevHub (in short because it is a personal project and DevHub is my personal development hub, etc., and this way it can be distributed and added in both public and private homelab repos, etc.).
+`devhub-homelab` is a placeholder APM package for guidance shared by the public and private homelab repositories. Its [manifest](apm.yml) defines the package identity; it currently contains no active instructions, agents, or skills.
 
-TODO: state here `devhub-common` is still the central instructions file because it contains the generic coding standards and things that apply to all DevHub repositories, while `devhub-homelab` contains homelab-specific things but it should not overwrite the generic ones, etc.
+The [common package](../common/README.md) remains the engineering baseline and owns shared roles and procedures. Homelab-specific additions belong here only when they are suitable for sharing across those repositories; private implementation and operational values stay with their protected owner.
 
-TODO: state this is just merely a selective addition for that project, this does not have agents, or other things, it focuses solely on the homelab-specific instructions and configurations -> agents and workflow orchestration, etc., remain in common.
+Follow the [APM design and setup guide](../README.md) for [package selection](../README.md#design-and-ownership), [repository guidance](../README.md#authoring-repository-guidance), and [maintenance and validation](../README.md#maintenance-and-validation). This package does not replace the common baseline.

@@ -1,4 +1,4 @@
-# DevHub consumes its locally generated common instruction package.
+# DevHub consumes its common AI customization package as a local dependency.
 name: devhub
 version: 1.0.0
 description: DevHub agent configuration

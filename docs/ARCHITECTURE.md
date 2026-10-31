@@ -27,8 +27,9 @@ How DevHub is organized and why. This page records project boundaries and setup 
 
 | Path | Owns |
 |---|---|
+| [Root `AGENTS.md`](../AGENTS.md) | Repository-specific agent entry point, linked to owning documentation rather than duplicated in nested files |
 | [`docs/`](.) | DevHub-specific [guidelines](GUIDELINES.md), architecture, decisions, and usage |
-| [`.github/`](../.github/) | Project instructions and workflow configuration |
+| [`.github/`](../.github/) | Workflow configuration and Copilot-target customizations when installed |
 | [`archive/`](../archive/README.md) | Decision notices for retired approaches; historical content stays in Git history |
 | [`packages/`](../packages/README.md) | Reusable packages, each with native metadata and its own release boundary |
 | [`tools/`](../tools/README.md) | Shared automation, including [Terraform repository inventory and policy](../tools/repo/README.md) |
