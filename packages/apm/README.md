@@ -2,7 +2,7 @@
 
 [APM](https://microsoft.github.io/apm/) distributes shared AI customizations to supported agent harnesses. DevHub uses it for a common baseline across personal projects, with repository-specific guidance in a root `AGENTS.md`. The harness loads the resulting context; APM does not execute the agent or guarantee compliance.
 
-This guide owns the shared concepts, setup, authoring, usage, maintenance, and validation of AI customizations. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), describe only their contents, dependencies, and package-specific decisions. [Using DevHub](../../docs/USAGE.md) owns shared-workspace arrangements.
+This guide owns personal AI usage principles and the shared concepts, setup, authoring, usage, maintenance, and validation of AI customizations. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), describe only their contents, dependencies, and package-specific decisions. [Using DevHub](../../docs/USAGE.md) owns shared-workspace arrangements.
 
 ---
 
@@ -19,6 +19,10 @@ This guide owns the shared concepts, setup, authoring, usage, maintenance, and v
 - [Authoring repository guidance](#authoring-repository-guidance)
   - [Consumer-specific guidance](#consumer-specific-guidance)
   - [Use the setup skill](#use-the-setup-skill)
+- [AI usage](#ai-usage)
+  - [Personal usage: stay the expert](#personal-usage-stay-the-expert)
+  - [Prompt engineering](#prompt-engineering)
+  - [The DRIVE method](#the-drive-method)
 - [Working with agents](#working-with-agents)
   - [Recommended Chat setup](#recommended-chat-setup)
   - [Choosing an agent](#choosing-an-agent)
@@ -259,6 +263,50 @@ For discussion only, explicitly request a proposal without edits or installation
 
 ---
 
+## AI usage
+
+### Personal usage: stay the expert
+
+Use AI as a colleague or assistant that amplifies my capabilities, not as a replacement for my thinking. These are personal reminders, not an exhaustive guide:
+
+- **Stay the expert.** Understand and verify generated work, challenge assumptions, and reason independently or alongside AI. AI can make mistakes; responsibility for quality and final decisions stays with me.
+- **Engineering judgment remains the differentiator.** Producing code is only part of engineering. Architecture, domain understanding, boundaries, technology trade-offs, priorities, scalability, maintainability, and testing, rollout, and operational risks require judgment. AI can explore options and expose blind spots; I must decide what fits the actual problem and own the consequences.
+- **Maintain core skills.** Keep practicing writing, communication, coding, debugging, and problem-solving. Small tasks may be faster to do myself and provide useful practice; combine my own reasoning with AI feedback and implementation help where it adds value. Avoid dependence that weakens understanding or confidence without AI.
+- **Use AI strategically, not maximally.** Brainstorming, research, explanations, reviews, code/tests, automation, and documentation can benefit. Complex, unfamiliar, or high-impact work especially benefits from exploring alternatives and challenging assumptions, while decision-making stays human. Optimize for speed, quality, learning, and insight, not the amount of AI used.
+- **Keep context and sources trustworthy.** Start a fresh chat for a new task or stale context. Check claims against official documentation, actual code, tests, and logs rather than treating fluent answers as evidence. Use approved tools for work and do not share secrets or restricted information; a paid subscription alone does not establish safety.
+
+### Prompt engineering
+
+Prompt engineering means shaping input to get more accurate, useful output:
+
+- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [testing and validation standards](common/.apm/instructions/common.instructions.md#testing-and-validation). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
+- **Show the target.** Supply examples of desired input/output or existing code/style to match; specify output format, length, and tone when needed.
+- **Set boundaries.** State exclusions such as no unrelated edits or new dependencies. Assign a role when a particular review perspective helps.
+- **Iterate and challenge.** Treat the first result as a draft, refine it with feedback, and request assumptions, trade-offs, and a concise explanation for difficult problems. An explanation is not proof of correctness.
+- **Reuse what works.** Save recurring requests and procedures through the appropriate [customization type](#choose-the-right-customization), rather than rewriting or duplicating guidance.
+
+See the official [OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering), [Gemini](https://ai.google.dev/gemini-api/docs/prompting-strategies), and [IBM](https://www.ibm.com/think/topics/prompt-engineering) guides for more detail.
+
+### The DRIVE method
+
+[DRIVE](https://www.robertpeake.com/ai/drive) (Robert Peake) is a five-step discipline for working with AI. AI makes producing work cheap, so the hard parts move to both ends: *judgment* at the front (what is worth doing, and to what standard) and *verification* at the back (whether the result is actually right). The middle can go to the machine; trust my practice, not the model.
+
+```text
+Decide --> Request --> Iterate --> Validate --> done --> Evolve
+              ^                        |
+              +------- not yet --------+
+```
+
+- **D - Decide:** define what "done" means and the standard, in one sentence, before any request. It keeps the task mine and tells the loop when to stop; without it, work is unbounded.
+- **R - Request:** brief intent, context, constraints, success criteria, and assumptions; agree the plan first. Unstated assumptions are the usual cause of fluent but wrong results.
+- **I - Iterate (can also be called Isolate):** read output as it takes shape and steer it; correct small errors early and test each suggestion against "done". Limit parallel agents to what I can still oversee. In other words, break down complex tasks into manageable parts and handle them sequentially to maintain control and accuracy.
+- **V - Validate:** check the result against the criteria from Decide using evidence (tests, real figures, a second source), sized to the stakes. A confident tone is not evidence.
+- **E - Evolve:** after the work, debrief and promote lessons into reusable context: standards, references, templates, or instructions (see [ongoing maintenance](#ongoing-maintenance)). Prune stale rules, and check whether I could redo the work without AI.
+
+Decide frames the loop; Request, Iterate, and Validate repeat until "done" is met; Evolve improves what the next task starts from.
+
+---
+
 ## Working with agents
 
 Orchestration can coordinate analysis, implementation, validation, documentation, review, and corrections for larger tasks. Bounded specialist assignments provide focused context, clear ownership, and another opportunity to detect assumptions or coverage gaps. Parallelize genuinely independent work, not shared-file edits or dependent stages.
@@ -404,4 +452,6 @@ This guide records DevHub's choices and essential concepts. Use these official s
 
 - [OpenAI prompt engineering](https://developers.openai.com/api/docs/guides/prompt-engineering?api-mode=responses): practical prompting guidance.
 - [Gemini prompt design strategies](https://ai.google.dev/gemini-api/docs/prompting-strategies): provider-specific techniques.
+- [IBM prompt engineering](https://www.ibm.com/think/topics/prompt-engineering): prompting concepts and techniques.
+- [The DRIVE method](https://www.robertpeake.com/ai/drive): a five-step discipline for working with AI (Decide, Request, Iterate, Validate, Evolve).
 - [IBM: What are AI agents?](https://www.ibm.com/think/topics/ai-agents): background on agent concepts and architectures.

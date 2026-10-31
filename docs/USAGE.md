@@ -60,4 +60,4 @@ My default is **Auto** model selection where offered; choose an explicit model w
 
 ## Task-oriented how-tos
 
-The [how-to index](how-to/README.md) provides task entry points. Start with [creating a repository](how-to/CREATE-REPOSITORY.md) for a new personal project; it links to the authoritative Terraform inventory, review, and rollout procedure rather than repeating it.
+The [how-to index](how-to/README.md) provides task entry points. Start with [creating a repository](how-to/CREATE-REPOSITORY.md) for a new personal project; it links to the authoritative Terraform inventory, review, and rollout procedure rather than repeating it. Use [setting up a code editor](how-to/SET-UP-CODE-EDITOR.md) when preparing a new device or reinstalling VS Code, Git, and SSH.
