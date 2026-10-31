@@ -1,4 +1,4 @@
-# Repository and Package Guidelines
+# DevHub Guidelines
 
 These are shared, human-readable conventions for organizing DevHub and its projects. Each repository owns its own implementation, user-facing documentation, and exceptions.
 
@@ -9,6 +9,7 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 - [Shared guidance and AI customizations](#shared-guidance-and-ai-customizations)
 - [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure)
 - [Choosing a repository boundary](#choosing-a-repository-boundary)
+  - [Monorepo or polyrepo?](#monorepo-or-polyrepo)
 - [Placing packages and components](#placing-packages-and-components)
 - [Setting up a project or package](#setting-up-a-project-or-package)
 - [Naming conventions](#naming-conventions)
@@ -19,6 +20,8 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 ## Shared guidance and AI customizations
 
 This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Using DevHub](USAGE.md), [project architecture](ARCHITECTURE.md), and [task tracking](how-to/TASK-TRACKING.md). Link to those docs when useful instead of copying them into agent instructions.
+
+Keep related project-wide documentation in one cohesive, sectioned authoritative file rather than splitting it into many small files by default. For example, DevHub's overall architecture, repository boundaries, and release rationale belong in [docs/ARCHITECTURE.md](ARCHITECTURE.md); component- or package-specific setup and usage belong in each owner's README. A separate focused document is warranted when it has a distinct owner, audience, or lifecycle, or when its size or format materially improves usability. Choose one owning document for each topic and link to it elsewhere; this is a default, not a mandate to combine unrelated topics into a giant document.
 
 The shared principles for approaching personal projects—including enjoyment, attention, sustainable scope, and freedom from unnecessary pressure—are in [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure). Individual projects should link to that guidance and keep only their local application and technical details.
 
@@ -56,7 +59,20 @@ The details below describe how to put this principle into practice:
 
 Keep related work together when it shares ownership and access, changes together, and is maintained or validated as a coordinated unit. Split it when a distinct service, owner, access requirement, operational lifecycle, or publication boundary makes independent work valuable. Size, language, or independent package versions alone do not require a repository split.
 
-DevHub keeps shared development resources, tooling, guidance, and setup together because one maintainer frequently changes them in coordination; the [architecture guide](ARCHITECTURE.md#why-devhub-is-one-repository) records the rationale and accepted trade-offs. Distinct applications and services belong in their own repositories when those boundaries apply.
+### Monorepo or polyrepo?
+
+A **monorepo** keeps multiple projects or components in one repository; a **polyrepo** gives each project or service its own repository.
+
+| Layout | Advantages | Disadvantages | Best fit |
+|---|---|---|---|
+| Monorepo | Related changes, shared tooling, and ownership stay together and are easy to discover. | Components share an access boundary; large checkouts and CI need deliberate management. | Projects with the same owner, access needs, and coordinated changes. |
+| Polyrepo | Each project can have independent access, ownership, workflows, and lifecycle. | Cross-repository changes need coordination, and settings or tooling may be repeated. | Distinct services or genuine ownership, access, operational, or publication boundaries. |
+
+Start with a monorepo by default: for most related work it is the easiest first choice and remains suitable for a long time. Split only when a real boundary or a demonstrated scale constraint outweighs the coordination and administration cost; use separate repositories from the start when access rights or an independent service require it.
+
+For further reading, see [Atlassian's monorepo guide](https://www.atlassian.com/git/tutorials/monorepos), [Google's experience and trade-offs with a single repository](https://research.google/pubs/why-google-stores-billions-of-lines-of-code-in-a-single-repository/), and [GitHub's repository visibility documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
+
+DevHub keeps shared development resources, tooling, guidance, and setup together because one maintainer frequently changes them in coordination; the [architecture guide](ARCHITECTURE.md#why-devhub-is-a-monorepo) records the rationale and accepted trade-offs. Distinct applications and services belong in their own repositories when those boundaries apply.
 
 ---
 

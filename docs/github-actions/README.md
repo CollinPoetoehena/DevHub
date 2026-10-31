@@ -1,0 +1,2 @@
+TODO: add here github-actions explanations, with a subfolder for reusable workflows and actions.
+TODO: add explanation later why separate folder in docs -> you do not add docs in the .github/actions or .github/workflows files because they should only contain the workflow and action definitions, not explanatory content. And these are separate workflows and actions and therefore a separate folder with 1 documentation file per workflow and action so it can be explained well, etc.

@@ -40,7 +40,7 @@ Each area's README owns the details of that area. The [root README](../README.md
 
 ## Why DevHub is a monorepo
 
-DevHub groups related development resources under one maintainer: project guidance, shared AI customizations, GitHub automation, tools, and reusable packages. This is a repository boundary, not a claim that DevHub is one application, one package, or one release unit. The deciding factors are shared ownership and the practical frequency of changes that cross these areas—not a package-count threshold or a requirement to use one language.
+DevHub groups related development resources under one maintainer: project guidance, shared AI customizations, GitHub automation, tools, and reusable packages. This is a repository boundary, not a claim that DevHub is one application, one package, or one release unit. The deciding factors are shared ownership and the practical frequency of changes that cross these areas—not a package-count threshold or a requirement to use one language. For the general monorepo default and when a separate repository is warranted, see the [repository-boundary guidance](GUIDELINES.md#monorepo-or-polyrepo).
 
 These parts are often used and maintained together. A change to a shared practice can affect its documentation, an AI instruction or skill, a workflow, and the tool or package that applies it. Keeping that work in one repository lets the source, affected in-repository callers, and validation change together when appropriate. The [layout and scope](#layout-and-scope) describes what each area owns.
 
