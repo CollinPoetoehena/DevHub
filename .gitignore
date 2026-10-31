@@ -82,3 +82,8 @@ ansible.log
 
 # Ansible writes newly created Proxmox API token credentials here.
 .secrets/
+
+# APM dependency cache and local installation state
+# Keep apm.yml, apm.lock.yaml, and deployed customizations versioned.
+apm_modules/
+.apm-local/

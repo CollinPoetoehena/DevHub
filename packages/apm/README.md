@@ -170,6 +170,7 @@ A different language, large folder, or separate package alone is insufficient. R
    ```
 
    For this target, installed agents and instructions are under `.github/`, and skills under `.agents/skills/`. Those package-installed files are deployment artifacts, not another authoring source. Keep local customizations distinct from package-owned paths and review collisions before accepting replacements. Resolve dependency or policy failures before treating setup as complete; do not bypass policy or force replacements to make a check succeed.
+   Keep `apm_modules/` and `.apm-local/` ignored: they hold restored dependencies and local installation state. Version `apm.yml`, `apm.lock.yaml`, and reviewed target-owned customizations, including installed agents, instructions, and skills; do not blanket-ignore `.github/`, `.agents/`, or authored `.apm/` package sources. See APM's [what to commit](https://microsoft.github.io/apm/quickstart/#3-install-a-package).
 5. Verify activation as described below. Keep a repository-level setup even when a parent-workspace install is used for convenience; verify standalone repository use separately.
 
 Copilot natively reads installed instruction files, so root-context compilation is not needed for this setup. Other targets may require native adapters or `apm compile`; consult the target matrix and compile reference before selecting them. Compilation can write root context files, including `AGENTS.md`: inspect planned output in isolation and establish ownership before writing to a repository with an authored file. Do not overwrite local guidance to make shared instructions available.
@@ -274,6 +275,9 @@ Use AI as a colleague or assistant that amplifies my capabilities, not as a repl
 - **Maintain core skills.** Keep practicing writing, communication, coding, debugging, and problem-solving. Small tasks may be faster to do myself and provide useful practice; combine my own reasoning with AI feedback and implementation help where it adds value. Avoid dependence that weakens understanding or confidence without AI.
 - **Use AI strategically, not maximally.** Brainstorming, research, explanations, reviews, code/tests, automation, and documentation can benefit. Complex, unfamiliar, or high-impact work especially benefits from exploring alternatives and challenging assumptions, while decision-making stays human. Optimize for speed, quality, learning, and insight, not the amount of AI used.
 - **Keep context and sources trustworthy.** Start a fresh chat for a new task or stale context. Check claims against official documentation, actual code, tests, and logs rather than treating fluent answers as evidence. Use approved tools for work and do not share secrets or restricted information; a paid subscription alone does not establish safety.
+- **The future of Software Engineering.** Less focus on manual typing, more on architecture, strategy, domain logic, and system thinking — engineers shift toward being architects, designers, analysts, reviewers, with value moving from writing code to problem-solving and engineering judgement.
+
+> **Personal Conclusion:** AI is a game changer for Software Engineers and in general life — but only if used wisely. Use it as a powerful assistant that enhances your capabilities, accelerates learning, and improves the speed and quality of your work, while you remain the expert responsible for the thinking, decision-making, architecture, and problem-solving. The most effective engineers use AI to amplify their expertise, not replace it.
 
 ### Prompt engineering
 

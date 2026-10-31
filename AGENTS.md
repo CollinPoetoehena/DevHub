@@ -20,7 +20,7 @@ Read only the documentation relevant to the task, then inspect the affected impl
 | Shared AI configuration and setup | [APM design and setup](packages/apm/README.md), then the [common package](packages/apm/common/README.md) or affected domain package |
 | Shared automation | [Tools overview](tools/README.md), then the affected tool's README |
 | Workspace and related repositories | [Using DevHub](docs/USAGE.md) |
-| Issues, planning, and privacy | [Central task tracking](docs/TASK-TRACKING.md) |
+| Issues, planning, and privacy | [Central task tracking](docs/how-to/TASK-TRACKING.md) |
 | Retired approaches | [Archive](archive/README.md); do not treat historical material as active guidance |
 
 ---

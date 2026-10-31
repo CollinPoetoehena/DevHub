@@ -1,0 +1,278 @@
+lockfile_version: '1'
+apm_version: 0.35.0
+dependencies:
+- repo_url: _local/common
+  name: devhub-common
+  version: 1.0.0
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/draft-github-issue
+  - .agents/skills/draft-github-issue/SKILL.md
+  - .agents/skills/manage-skills
+  - .agents/skills/manage-skills/SKILL.md
+  - .agents/skills/setup-ai-customizations
+  - .agents/skills/setup-ai-customizations/SKILL.md
+  - .github/agents/architect.agent.md
+  - .github/agents/coder.agent.md
+  - .github/agents/documenter.agent.md
+  - .github/agents/orchestrator.agent.md
+  - .github/agents/reviewer.agent.md
+  - .github/instructions/ai-customization.instructions.md
+  - .github/instructions/ansible.instructions.md
+  - .github/instructions/common.instructions.md
+  - .github/instructions/dockerfile.instructions.md
+  - .github/instructions/github-actions.instructions.md
+  - .github/instructions/python.instructions.md
+  deployed_file_hashes:
+    .agents/skills/draft-github-issue/SKILL.md: sha256:6308db52634deeb7918a0ff55b80e79e54f5ac8bac1c83019095cf4fc02533b9
+    .agents/skills/manage-skills/SKILL.md: sha256:f148120d98adfcad37901336ea360c7b489940e9dfa7a3652caf276c7abc4632
+    .agents/skills/setup-ai-customizations/SKILL.md: sha256:5802c4bd5c7f97b128b40638af8df72c88655182263ad656720215efdb6d4e3b
+    .github/agents/architect.agent.md: sha256:467047643135270387c26df41bde848ceeeb98854e0e5af2b37b3fcdb9ad7e23
+    .github/agents/coder.agent.md: sha256:1fdd337c3fd0d7b462f7246ce18fb89a0629ba15419d61c4eaef0eb9b2176c3e
+    .github/agents/documenter.agent.md: sha256:126be94e429461bb6f1f2b5eaa1c15bd663ea4e47ed6055484e46297ab181e89
+    .github/agents/orchestrator.agent.md: sha256:dcb36b22685e2575a3f39323cbff4d369de33ca159563d08c7cafbe0c30e7006
+    .github/agents/reviewer.agent.md: sha256:f902ed86522b621b9285e1d2bee23e437bb6babd462d07919bd2850d3a90fcd1
+    .github/instructions/ai-customization.instructions.md: sha256:841ae7d13634e200ed1c062315358c0e485ca47e84cffdfbb66693cd86a2e90d
+    .github/instructions/ansible.instructions.md: sha256:a35b76981d9a6841b9c5262f513a74c2ceeadb931fda3a2ff8cd45cc46082e36
+    .github/instructions/common.instructions.md: sha256:0de1529e7857582f2c24ae0d1169abcbea0163c703b0c66378aa3e4acd03e171
+    .github/instructions/dockerfile.instructions.md: sha256:d9ffa93bf6a45945e37a019f2f38c55b692c4fa0c076edbe4b00ac93c748109e
+    .github/instructions/github-actions.instructions.md: sha256:a3b5465472c60c4db9ac040548a5e6af0abf721a0bff1d828b666428ca39916c
+    .github/instructions/python.instructions.md: sha256:e69c5acf2943bcd92fe88a3a3599c85dbd838bf596e96755b8c32599c66a4b27
+  source: local
+  local_path: ./packages/apm/common
+  content_hash: sha256:c14dc45fabc6e762c0d59a1cd34fc20edccbd0cd83d3dd368090a2675a4e5300
+- repo_url: github/awesome-copilot
+  name: git-commit
+  host: github.com
+  resolved_commit: 5269f7ea2d6c3a9bfda5ed878b6726cf509121fd
+  resolved_ref: 5269f7ea2d6c3a9bfda5ed878b6726cf509121fd
+  version: unknown
+  virtual_path: skills/git-commit
+  is_virtual: true
+  depth: 2
+  resolved_by: _local/common
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/git-commit
+  - .agents/skills/git-commit/SKILL.md
+  deployed_file_hashes:
+    .agents/skills/git-commit/SKILL.md: sha256:2ba71a0d5ba0add9f8414567d2f54906def78ea843e3c05f3791e485a1e82e3b
+  content_hash: sha256:78b6a33700091345cd449f9e3642ddd611b479b341efc9d6c750f7e04d15216a
+- repo_url: github/awesome-copilot
+  name: webapp-testing
+  host: github.com
+  resolved_commit: 5269f7ea2d6c3a9bfda5ed878b6726cf509121fd
+  resolved_ref: 5269f7ea2d6c3a9bfda5ed878b6726cf509121fd
+  version: unknown
+  virtual_path: skills/webapp-testing
+  is_virtual: true
+  depth: 2
+  resolved_by: _local/common
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/webapp-testing
+  - .agents/skills/webapp-testing/SKILL.md
+  - .agents/skills/webapp-testing/assets/test-helper.js
+  deployed_file_hashes:
+    .agents/skills/webapp-testing/SKILL.md: sha256:c4629221463d79c84555721ae2a30a6c345dd4d16c38cf6dbe735126e2426044
+    .agents/skills/webapp-testing/assets/test-helper.js: sha256:4a9b5c0f27cfe63ad5b4c781d4c96d7149870d8ac3d5ef32fd51b0f90f78766f
+  content_hash: sha256:ef6fdb26c90b74f35123f134bcacf69fa854f86dda589a073777e679b8fe4866
+deployments:
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/draft-github-issue
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/draft-github-issue/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:6308db52634deeb7918a0ff55b80e79e54f5ac8bac1c83019095cf4fc02533b9
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/git-commit
+  runtime: null
+  scope: project
+  owners:
+  - github/awesome-copilot/skills/git-commit
+  active_owner: github/awesome-copilot/skills/git-commit
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/git-commit/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - github/awesome-copilot/skills/git-commit
+  active_owner: github/awesome-copilot/skills/git-commit
+  content_hash: sha256:2ba71a0d5ba0add9f8414567d2f54906def78ea843e3c05f3791e485a1e82e3b
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/manage-skills
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/manage-skills/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:f148120d98adfcad37901336ea360c7b489940e9dfa7a3652caf276c7abc4632
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/setup-ai-customizations
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/setup-ai-customizations/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:5802c4bd5c7f97b128b40638af8df72c88655182263ad656720215efdb6d4e3b
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/webapp-testing
+  runtime: null
+  scope: project
+  owners:
+  - github/awesome-copilot/skills/webapp-testing
+  active_owner: github/awesome-copilot/skills/webapp-testing
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/webapp-testing/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - github/awesome-copilot/skills/webapp-testing
+  active_owner: github/awesome-copilot/skills/webapp-testing
+  content_hash: sha256:c4629221463d79c84555721ae2a30a6c345dd4d16c38cf6dbe735126e2426044
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/webapp-testing/assets/test-helper.js
+  runtime: null
+  scope: project
+  owners:
+  - github/awesome-copilot/skills/webapp-testing
+  active_owner: github/awesome-copilot/skills/webapp-testing
+  content_hash: sha256:4a9b5c0f27cfe63ad5b4c781d4c96d7149870d8ac3d5ef32fd51b0f90f78766f
+- kind: project-relative
+  target: copilot
+  value: .github/agents/architect.agent.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:467047643135270387c26df41bde848ceeeb98854e0e5af2b37b3fcdb9ad7e23
+- kind: project-relative
+  target: copilot
+  value: .github/agents/coder.agent.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:1fdd337c3fd0d7b462f7246ce18fb89a0629ba15419d61c4eaef0eb9b2176c3e
+- kind: project-relative
+  target: copilot
+  value: .github/agents/documenter.agent.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:126be94e429461bb6f1f2b5eaa1c15bd663ea4e47ed6055484e46297ab181e89
+- kind: project-relative
+  target: copilot
+  value: .github/agents/orchestrator.agent.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:dcb36b22685e2575a3f39323cbff4d369de33ca159563d08c7cafbe0c30e7006
+- kind: project-relative
+  target: copilot
+  value: .github/agents/reviewer.agent.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:f902ed86522b621b9285e1d2bee23e437bb6babd462d07919bd2850d3a90fcd1
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/ai-customization.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:841ae7d13634e200ed1c062315358c0e485ca47e84cffdfbb66693cd86a2e90d
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/ansible.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:a35b76981d9a6841b9c5262f513a74c2ceeadb931fda3a2ff8cd45cc46082e36
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/common.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:0de1529e7857582f2c24ae0d1169abcbea0163c703b0c66378aa3e4acd03e171
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/dockerfile.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:d9ffa93bf6a45945e37a019f2f38c55b692c4fa0c076edbe4b00ac93c748109e
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/github-actions.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:a3b5465472c60c4db9ac040548a5e6af0abf721a0bff1d828b666428ca39916c
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/python.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - ./packages/apm/common
+  active_owner: ./packages/apm/common
+  content_hash: sha256:e69c5acf2943bcd92fe88a3a3599c85dbd838bf596e96755b8c32599c66a4b27

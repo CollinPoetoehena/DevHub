@@ -17,7 +17,7 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 
 ## Shared guidance and AI customizations
 
-This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Using DevHub](USAGE.md), [project architecture](ARCHITECTURE.md), and [task tracking](TASK-TRACKING.md). Link to those docs when useful instead of copying them into agent instructions.
+This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Using DevHub](USAGE.md), [project architecture](ARCHITECTURE.md), and [task tracking](how-to/TASK-TRACKING.md). Link to those docs when useful instead of copying them into agent instructions.
 
 Reusable AI customizations, shared engineering standards, and workflows live in the [common APM package](../packages/apm/common/README.md), which is the authoring source for these customizations:
 

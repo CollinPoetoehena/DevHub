@@ -48,7 +48,7 @@ There is no custom Python or Go command, generator, service, workflow engine, or
 
 ### Why Terraform
 
-The goal is consistent repository settings with minimal custom code and maintenance, not a repository factory. Terraform and the GitHub provider supply state tracking, imports, dependency ordering, and reviewable plans. A Python or Go implementation would require writing and maintaining API calls, authentication, drift comparisons, update logic, error handling, and tests for those same responsibilities.
+The goal is consistent repository settings with minimal custom code and maintenance, not a repository factory. [Terraform](https://developer.hashicorp.com/terraform/docs) and the GitHub provider supply state tracking, imports, dependency ordering, and reviewable plans. A Python or Go implementation would require writing and maintaining API calls, authentication, drift comparisons, update logic, error handling, and tests for those same responsibilities.
 
 Keeping one declarative configuration avoids that custom maintenance and an extra orchestration layer. The trade-off is maintaining Terraform state and reviewing provider upgrades; for this small inventory, that is simpler than owning a custom reconciliation tool. Terraform runs on demand, so drift is checked during a plan, not continuously.
 
@@ -101,7 +101,7 @@ Reconsider scaffolding only if repeated manual work becomes a measurable burden.
 
 ## GitHub App authentication
 
-Use an App installation for a dedicated automation identity and short-lived credentials. The provider handles JWT and installation-token generation; no custom authentication code is needed.
+Use an App installation for a dedicated automation identity rather than tying repository management to a personal access token. GitHub Apps provide explicit repository access, fine-grained permissions, and short-lived installation tokens; the installation can be revoked independently of personal account access. The provider handles JWT and installation-token generation, so no custom authentication code is needed. See GitHub's [reasons to use a GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/deciding-when-to-build-a-github-app).
 
 Follow GitHub's [App registration guide](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app):
 

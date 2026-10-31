@@ -9,7 +9,7 @@ The existing [DevHub project board](https://github.com/users/CollinPoetoehena/pr
 - [Why track work centrally](#why-track-work-centrally)
 - [How the board is organized](#how-the-board-is-organized)
 - [Using Current Iteration to focus](#using-current-iteration-to-focus)
-- [Everyday workflow](#everyday-workflow)
+- [General workflow](#general-workflow)
   - [Drafting an issue](#drafting-an-issue)
 - [Visibility and boundaries](#visibility-and-boundaries)
 - [References](#references)
@@ -46,10 +46,10 @@ Use **Current Iteration** to select a manageable portion of the backlog to focus
 
 This is a way to narrow the choices and make progress easier to resume, not strict planning. Do not treat the iteration's date range as a deadline, promise, or requirement to finish everything assigned to it. Move, defer, or remove items whenever priorities, energy, or available time change.
 
-## Everyday workflow
+## General workflow
 
 1. Capture work in the repository issue when it is specific to that repository. State the goal, relevant context, priority, estimate (helps scoping and planning), and a check for completion. Use a draft item for early ideas that do not need a repository issue yet. Add it to the board to keep it visible and track its status (see [GitHub Issues documentation: Creating an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-an-issue) and [GitHub Projects documentation: Adding items to your project](https://docs.github.com/en/issues/planning-and-tracking-with-projects/managing-items-in-your-project/adding-items-to-your-project)).
-2. Break large efforts into small related tasks with a clear next action (see [GitHub Projects documentation: Best practices for projects; breaking down large issues](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/best-practices-for-projects#break-down-large-issues-into-smaller-issues)). Link design notes or other context instead of duplicating them in every item.
+2. Break large efforts into small related tasks with a clear next action (see [GitHub Projects documentation: Best practices for projects; breaking down large issues](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/best-practices-for-projects#break-down-large-issues-into-smaller-issues)). Use **1 estimate unit = 4 hours (chosen because I generally plan in these blocks for personal projects, such as Friday afternoon and/or Saturday morning, etc.)** of rough effort; **0.5 = 2 hours**, with smaller fractions when useful. Aim for tasks of at most one unit, splitting larger efforts into roughly four-hour chunks that can be paused and resumed. Estimates help choose work that fits the available time; they are not deadlines or a requirement to finish in one sitting. Link design notes or other context instead of duplicating them in every item.
 3. Use **Current Iteration** to pick a manageable portion of TODOs for your current focus. Choose one that fits the time available, move it to **In progress**, and avoid starting more work than can be kept in view.
 4. Record useful progress and decisions on the issue or draft item. The board provides the status and cross-repository overview; the issue remains the place for repository-specific discussion.
 5. When complete, verify the result, link the relevant pull request or change, close the issue where applicable, and mark it **Done**. Capture follow-ups separately.
@@ -57,13 +57,13 @@ This is a way to narrow the choices and make progress easier to resume, not stri
 
 ### Drafting an issue
 
-Use the common APM package's [draft-github-issue skill](../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md) with the task idea and this guide as context. It returns only Markdown: a proposed title followed by the issue body, without publishing an issue or changing the board.
+Use the common APM package's [draft-github-issue skill](../../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md) with the task idea and this guide as context. It returns only Markdown: a proposed title followed by the issue body, without publishing an issue or changing the board.
 
 For DevHub, identify the owning repository, keep the work small enough to pause and resume, and include priority with a short rationale and a rough effort estimate with uncertainty. If either is unknown, say so rather than inventing it. Use observable acceptance criteria, link dependencies where relevant, and include a clear first action. Keep status and Current Iteration on the board rather than duplicating them in the issue body; iteration dates are not deadlines. Follow the [visibility rules](#visibility-and-boundaries) before sharing context.
 
 Example request:
 
-> Use draft-github-issue to draft an issue for DevHub: \<task idea\>. Tailor it using docs/TASK-TRACKING.md. Return only the issue Markdown.
+> Use draft-github-issue to draft an issue for DevHub: \<task idea\>. Tailor it using docs/how-to/TASK-TRACKING.md. Return only the issue Markdown.
 
 Review the draft, use its first heading as the GitHub title and the remainder as the body, then add the issue to the [DevHub board](https://github.com/users/CollinPoetoehena/projects/7). Ideas without a clear repository or scope can remain draft items.
 

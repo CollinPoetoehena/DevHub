@@ -80,7 +80,7 @@ Each part of DevHub has a clear scope, so information has one home:
 
 ## Task tracking
 
-I track DevHub and all my personal projects, including the public and private homelab, in one private GitHub Project. They are parts of one personal development hub, even when permissions or release boundaries require separate repositories. Small tasks and a clear next step make it easy to pause and resume without keeping unfinished work in my head; see [Central DevHub Task Tracking](./docs/TASK-TRACKING.md) for the board, privacy rules, and workflow.
+I track DevHub and all my personal projects, including the public and private homelab, in one private GitHub Project. They are parts of one personal development hub, even when permissions or release boundaries require separate repositories. Small tasks and a clear next step make it easy to pause and resume without keeping unfinished work in my head; see [Central DevHub Task Tracking](./docs/how-to/TASK-TRACKING.md) for the board, privacy rules, and workflow.
 
 ---
 

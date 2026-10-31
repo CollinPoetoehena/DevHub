@@ -57,6 +57,8 @@ For example, a change to a common AI customization or development standard may a
 
 I am the sole maintainer of DevHub. Keeping related assets together means maintaining common repository settings, contribution conventions, and automation in one place instead of repeating repository-level setup for each component. It also gives me one entry point and shared history when returning to work after a break.
 
+Many components share a specific setup: Python packages, for example, have similar packaging, linting, and testing conventions. A repository per package would multiply repository administration and adoption of those shared practices without necessarily adding a useful boundary. Keeping them together makes common setup easier to maintain while preserving package-specific requirements.
+
 This reduces coordination and configuration drift, but does not eliminate component-specific maintenance. Packages still own their native metadata, dependencies, tests, supported interfaces, and consumer documentation. Shared workflows and standards can be maintained centrally; individual components still need configuration appropriate to their language and lifecycle.
 
 ### Independent artifacts and releases
@@ -79,7 +81,9 @@ A polyrepo gives each component its own repository, history, settings, and contr
 | Release independence | Components need explicit metadata and release discipline. | Separate histories make source isolation explicit, but compatibility and release ordering still need management. |
 | Access and failure isolation | Related assets share a repository access boundary, and broad workflow changes can affect other components. | Separate permissions and CI boundaries are easier to maintain. |
 
-Neither layout is inherently simpler in every situation. Polyrepos can reduce overhead with shared tooling and automation; a monorepo also requires deliberate CI selection and release boundaries. Independent versions, external consumers, or different release cadences alone do not require a split, but neither do they justify keeping components together when a more meaningful boundary exists.
+Neither layout removes the underlying scalability and workflow requirements: every component still needs appropriate CI/CD, dependency management, validation, and release discipline, whether it lives in one repository or many. The layout changes where that complexity is managed—selective checks and shared configuration in a monorepo, or distributed pipelines and cross-repository coordination in a polyrepo—not whether it exists.
+
+Choose what fits the team size, ownership, usage, scope, and tooling rather than treating either layout as inherently simpler. Polyrepos can reduce overhead with shared tooling and automation; a monorepo also requires deliberate CI selection and release boundaries. DevHub's current shared ownership and closely related components favor a monorepo. Independent versions, external consumers, or different release cadences alone do not require a split, but neither do they justify keeping components together when a more meaningful boundary exists.
 
 ### When a separate repository is better
 
@@ -98,7 +102,7 @@ A single repository also has costs:
 
 These trade-offs are accepted because they are proportionate to the shared ownership and coordinated maintenance of the current scope. Selective checks, component-specific release tags, and explicit published versions can limit coupling; co-location alone does not run cross-component checks or establish compatibility. The publishing workflow remains a placeholder; see [release and versioning units](#release-and-versioning-units).
 
-This is a choice for the current scope, not a permanent rule. Extract a component when its ownership, access, operation, or publication boundaries make independent work worthwhile.
+This is a choice for the current scope, not a permanent rule. Reassess if the codebase grows enough that checkout size, tooling, or CI performance becomes a material constraint, or if ownership, access, operation, or publication boundaries change. Extract selected components when an independent repository addresses the demonstrated constraint better than improving the monorepo tooling.
 
 ---
 
@@ -108,7 +112,7 @@ The homelab is a distinct service and has different access requirements, so it h
 
 - **Homelab:** [devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab) (public) and devhub-homelab-private (private) have their own lifecycle, permissions, pipelines, and private configuration. DevHub owns the shared guidance and the workspace and AI setup they use; the homelab repositories own its design and implementation.
 
-The homelab is part of DevHub as my overall personal development hub, even though its source and private operational record need separate repositories. Shared standards, workspace setup, and [task tracking](TASK-TRACKING.md) stay central; implementation, access rights, and publication boundaries stay with the homelab. Other independently operated applications follow the same distinction: link to DevHub for shared guidance, but keep implementation in the owning project.
+The homelab is part of DevHub as my overall personal development hub, even though its source and private operational record need separate repositories. Shared standards, workspace setup, and [task tracking](how-to/TASK-TRACKING.md) stay central; implementation, access rights, and publication boundaries stay with the homelab. Other independently operated applications follow the same distinction: link to DevHub for shared guidance, but keep implementation in the owning project.
 
 ---
 

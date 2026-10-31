@@ -52,7 +52,7 @@ My default is **Auto** model selection where offered; choose an explicit model w
 ## Applying DevHub standards in a project
 
 - Follow the shared [repository and package guidelines](GUIDELINES.md), and link to relevant DevHub guidance from the project README instead of copying it.
-- Use the APM guide's [guidance layers](../packages/apm/README.md#how-guidance-is-layered) for shared standards and role guidance, and the [central backlog](TASK-TRACKING.md) for all personal projects, including the homelab.
+- Use the APM guide's [guidance layers](../packages/apm/README.md#how-guidance-is-layered) for shared standards and role guidance, and the [central backlog](how-to/TASK-TRACKING.md) for all personal projects, including the homelab.
 - Keep project-specific decisions, setup, and exceptions in the project's own documentation.
 - Follow [DevHub's project structure](ARCHITECTURE.md#separate-repositories) to decide whether work belongs in DevHub or in its own repository.
 
