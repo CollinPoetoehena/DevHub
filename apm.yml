@@ -6,3 +6,4 @@ target: copilot
 dependencies:
   apm:
     - ./packages/apm/common
+    - CollinPoetoehena/DevHub/packages/apm/common#manage-repos-automatically

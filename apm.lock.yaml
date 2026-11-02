@@ -5,11 +5,28 @@ dependencies:
   name: devhub-common
   version: 1.0.0
   package_type: apm_package
+  source: local
+  local_path: ./packages/apm/common
+  content_hash: sha256:c14dc45fabc6e762c0d59a1cd34fc20edccbd0cd83d3dd368090a2675a4e5300
+- repo_url: collinpoetoehena/devhub
+  materialization_repo_url: CollinPoetoehena/DevHub
+  name: devhub-common
+  host: github.com
+  resolved_commit: acdcb3b5c0b956ffb02dfef180cdec3c1b5bb8a4
+  resolved_ref: manage-repos-automatically
+  version: 1.0.1
+  virtual_path: packages/apm/common
+  is_virtual: true
+  package_type: apm_package
   deployed_files:
   - .agents/skills/draft-github-issue
   - .agents/skills/draft-github-issue/SKILL.md
+  - .agents/skills/finalize-task
+  - .agents/skills/finalize-task/SKILL.md
   - .agents/skills/manage-skills
   - .agents/skills/manage-skills/SKILL.md
+  - .agents/skills/self-learning
+  - .agents/skills/self-learning/SKILL.md
   - .agents/skills/setup-ai-customizations
   - .agents/skills/setup-ai-customizations/SKILL.md
   - .github/agents/architect.agent.md
@@ -21,26 +38,28 @@ dependencies:
   - .github/instructions/ansible.instructions.md
   - .github/instructions/common.instructions.md
   - .github/instructions/dockerfile.instructions.md
+  - .github/instructions/documentation.instructions.md
   - .github/instructions/github-actions.instructions.md
   - .github/instructions/python.instructions.md
   deployed_file_hashes:
     .agents/skills/draft-github-issue/SKILL.md: sha256:6308db52634deeb7918a0ff55b80e79e54f5ac8bac1c83019095cf4fc02533b9
+    .agents/skills/finalize-task/SKILL.md: sha256:7941880d0b55ad55b072b0cc69b55c0114d384db07ad08b61b06f7e122970fb6
     .agents/skills/manage-skills/SKILL.md: sha256:f148120d98adfcad37901336ea360c7b489940e9dfa7a3652caf276c7abc4632
-    .agents/skills/setup-ai-customizations/SKILL.md: sha256:5802c4bd5c7f97b128b40638af8df72c88655182263ad656720215efdb6d4e3b
-    .github/agents/architect.agent.md: sha256:467047643135270387c26df41bde848ceeeb98854e0e5af2b37b3fcdb9ad7e23
-    .github/agents/coder.agent.md: sha256:1fdd337c3fd0d7b462f7246ce18fb89a0629ba15419d61c4eaef0eb9b2176c3e
-    .github/agents/documenter.agent.md: sha256:126be94e429461bb6f1f2b5eaa1c15bd663ea4e47ed6055484e46297ab181e89
-    .github/agents/orchestrator.agent.md: sha256:dcb36b22685e2575a3f39323cbff4d369de33ca159563d08c7cafbe0c30e7006
-    .github/agents/reviewer.agent.md: sha256:f902ed86522b621b9285e1d2bee23e437bb6babd462d07919bd2850d3a90fcd1
+    .agents/skills/self-learning/SKILL.md: sha256:7855828fc99e8919b9708fd05c108ec0ee94ecc61bce0a150965369cfb9a9772
+    .agents/skills/setup-ai-customizations/SKILL.md: sha256:eb3f8f47a89398e29775ae213379ef416b439b177bf897edf0f0ee92e59e7ca1
+    .github/agents/architect.agent.md: sha256:259a8695228d58bfa00c73ec3e0fb955f0c2533b8a73ab247e166eeb3f364159
+    .github/agents/coder.agent.md: sha256:a3c23b9165ae20f909738be280192d2497c6d66bdae50b147e4e0a3c6fe3d51d
+    .github/agents/documenter.agent.md: sha256:f7822471604e2009109fc9069a1a22ba17bb008bddc3b123993940d70640186c
+    .github/agents/orchestrator.agent.md: sha256:b006d5b9c691af6376fbe334a2d4fcfe9950310f4c759379193dc8d557e08329
+    .github/agents/reviewer.agent.md: sha256:59553f49b49d1ac613076db62883fa14691e667ea5fad800fdc91ddf1ebdc37c
     .github/instructions/ai-customization.instructions.md: sha256:841ae7d13634e200ed1c062315358c0e485ca47e84cffdfbb66693cd86a2e90d
     .github/instructions/ansible.instructions.md: sha256:a35b76981d9a6841b9c5262f513a74c2ceeadb931fda3a2ff8cd45cc46082e36
-    .github/instructions/common.instructions.md: sha256:0de1529e7857582f2c24ae0d1169abcbea0163c703b0c66378aa3e4acd03e171
+    .github/instructions/common.instructions.md: sha256:9f6948f33e800de18bf5b65b326a821f3a3acb21150c258ff2f285715cf55c62
     .github/instructions/dockerfile.instructions.md: sha256:d9ffa93bf6a45945e37a019f2f38c55b692c4fa0c076edbe4b00ac93c748109e
+    .github/instructions/documentation.instructions.md: sha256:be69db3df18a0d4d4fc23250fe3fca6df0b194b46f30687f99007df8bba89155
     .github/instructions/github-actions.instructions.md: sha256:a3b5465472c60c4db9ac040548a5e6af0abf721a0bff1d828b666428ca39916c
     .github/instructions/python.instructions.md: sha256:e69c5acf2943bcd92fe88a3a3599c85dbd838bf596e96755b8c32599c66a4b27
-  source: local
-  local_path: ./packages/apm/common
-  content_hash: sha256:c14dc45fabc6e762c0d59a1cd34fc20edccbd0cd83d3dd368090a2675a4e5300
+  content_hash: sha256:29612e335a664f7d07cd8369069efddfe323d989fb2cede6aef06077e656c1f5
 - repo_url: github/awesome-copilot
   name: git-commit
   host: github.com
@@ -84,8 +103,8 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: null
 - kind: project-relative
   target: copilot
@@ -93,9 +112,27 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:6308db52634deeb7918a0ff55b80e79e54f5ac8bac1c83019095cf4fc02533b9
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/finalize-task
+  runtime: null
+  scope: project
+  owners:
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/finalize-task/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:7941880d0b55ad55b072b0cc69b55c0114d384db07ad08b61b06f7e122970fb6
 - kind: project-relative
   target: copilot
   value: .agents/skills/git-commit
@@ -120,8 +157,8 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: null
 - kind: project-relative
   target: copilot
@@ -129,17 +166,35 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:f148120d98adfcad37901336ea360c7b489940e9dfa7a3652caf276c7abc4632
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/self-learning
+  runtime: null
+  scope: project
+  owners:
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/self-learning/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:7855828fc99e8919b9708fd05c108ec0ee94ecc61bce0a150965369cfb9a9772
 - kind: project-relative
   target: copilot
   value: .agents/skills/setup-ai-customizations
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: null
 - kind: project-relative
   target: copilot
@@ -147,9 +202,9 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:5802c4bd5c7f97b128b40638af8df72c88655182263ad656720215efdb6d4e3b
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:eb3f8f47a89398e29775ae213379ef416b439b177bf897edf0f0ee92e59e7ca1
 - kind: project-relative
   target: copilot
   value: .agents/skills/webapp-testing
@@ -183,53 +238,53 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:467047643135270387c26df41bde848ceeeb98854e0e5af2b37b3fcdb9ad7e23
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:259a8695228d58bfa00c73ec3e0fb955f0c2533b8a73ab247e166eeb3f364159
 - kind: project-relative
   target: copilot
   value: .github/agents/coder.agent.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:1fdd337c3fd0d7b462f7246ce18fb89a0629ba15419d61c4eaef0eb9b2176c3e
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:a3c23b9165ae20f909738be280192d2497c6d66bdae50b147e4e0a3c6fe3d51d
 - kind: project-relative
   target: copilot
   value: .github/agents/documenter.agent.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:126be94e429461bb6f1f2b5eaa1c15bd663ea4e47ed6055484e46297ab181e89
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:f7822471604e2009109fc9069a1a22ba17bb008bddc3b123993940d70640186c
 - kind: project-relative
   target: copilot
   value: .github/agents/orchestrator.agent.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:dcb36b22685e2575a3f39323cbff4d369de33ca159563d08c7cafbe0c30e7006
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:b006d5b9c691af6376fbe334a2d4fcfe9950310f4c759379193dc8d557e08329
 - kind: project-relative
   target: copilot
   value: .github/agents/reviewer.agent.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:f902ed86522b621b9285e1d2bee23e437bb6babd462d07919bd2850d3a90fcd1
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:59553f49b49d1ac613076db62883fa14691e667ea5fad800fdc91ddf1ebdc37c
 - kind: project-relative
   target: copilot
   value: .github/instructions/ai-customization.instructions.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:841ae7d13634e200ed1c062315358c0e485ca47e84cffdfbb66693cd86a2e90d
 - kind: project-relative
   target: copilot
@@ -237,8 +292,8 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:a35b76981d9a6841b9c5262f513a74c2ceeadb931fda3a2ff8cd45cc46082e36
 - kind: project-relative
   target: copilot
@@ -246,26 +301,35 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
-  content_hash: sha256:0de1529e7857582f2c24ae0d1169abcbea0163c703b0c66378aa3e4acd03e171
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:9f6948f33e800de18bf5b65b326a821f3a3acb21150c258ff2f285715cf55c62
 - kind: project-relative
   target: copilot
   value: .github/instructions/dockerfile.instructions.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:d9ffa93bf6a45945e37a019f2f38c55b692c4fa0c076edbe4b00ac93c748109e
+- kind: project-relative
+  target: copilot
+  value: .github/instructions/documentation.instructions.md
+  runtime: null
+  scope: project
+  owners:
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
+  content_hash: sha256:be69db3df18a0d4d4fc23250fe3fca6df0b194b46f30687f99007df8bba89155
 - kind: project-relative
   target: copilot
   value: .github/instructions/github-actions.instructions.md
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:a3b5465472c60c4db9ac040548a5e6af0abf721a0bff1d828b666428ca39916c
 - kind: project-relative
   target: copilot
@@ -273,6 +337,6 @@ deployments:
   runtime: null
   scope: project
   owners:
-  - ./packages/apm/common
-  active_owner: ./packages/apm/common
+  - collinpoetoehena/devhub/packages/apm/common
+  active_owner: collinpoetoehena/devhub/packages/apm/common
   content_hash: sha256:e69c5acf2943bcd92fe88a3a3599c85dbd838bf596e96755b8c32599c66a4b27

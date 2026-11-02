@@ -166,6 +166,8 @@ Hooks and tools enforce only the conditions they actually check. Agent-authored 
 Before adopting or changing a workflow, repeat representative scenarios in the intended harness:
 
 - A mechanical edit takes the lightweight route; a small behavioral fix and uncertainty take the default route.
+- Diagnosis-only work uses Investigator when helpful or requested and stops at findings, even when a fix is obvious. An explicitly requested unavailable Investigator is a blocker.
+- Fix-authorized unclear failures may use Investigator before Coder; understood fixes do not require investigation. Coder checks implementation-critical assumptions from the handoff, owns validation, and Standard retains independent review.
 - Missing guidance, unavailable required agents, failed checks, and unresolved review findings block completion.
 - A correction or learning edit after review requires renewed applicable validation and review.
 - Unrelated staged work is preserved; commit-only authorization does not authorize push.
@@ -362,6 +364,8 @@ Autopilot auto-approves tools; disabling terminal sandboxing removes its filesys
 ### Choosing an agent
 
 Select the common Orchestrator for end-to-end engineering work. It handles only Tiny mechanical implementations directly; all other implementations use its Standard plan, Coder, and independent Reviewer cycle. Specialists or the default agent remain supported for focused requests, but do not implicitly provide the Orchestrator workflow. Do not invoke every role merely because it is available.
+
+Choose Investigator for diagnosis-only bugs, regressions, failing tests, or troubleshooting. It returns evidence and correction direction, not fixes. Orchestrator can also use it optionally for unclear failures when fixes are authorized; understood fixes go directly to Coder. See [diagnosis and correction handoff](common/README.md#diagnosis-and-correction-handoff) for boundaries and evidence transfer.
 
 Delegation depends on the harness and configured tools/allowlists. Discovery descriptions do not grant tool capabilities, and role instructions are not a security sandbox. Verify support and ensure each assignment includes relevant common/project guidance, constraints, and acceptance criteria.
 

@@ -14,6 +14,7 @@ The [APM overview](../README.md) owns shared setup, authoring, usage, and [relia
 - [Design](#design)
   - [Reliability](#reliability)
   - [Two implementation modes](#two-implementation-modes)
+  - [Diagnosis and correction handoff](#diagnosis-and-correction-handoff)
   - [Guidance and task evidence](#guidance-and-task-evidence)
   - [Validation and independent review](#validation-and-independent-review)
   - [Self-learning and maintenance feedback](#self-learning-and-maintenance-feedback)
@@ -31,6 +32,7 @@ The [APM overview](../README.md) owns shared setup, authoring, usage, and [relia
 |---|---|
 | [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point; routes, coordinates, verifies, and owns delivery. |
 | [Architect](.apm/agents/architect.agent.md) | Resolves material design decisions and defines boundaries. |
+| [Investigator](.apm/agents/investigator.agent.md) | Diagnoses bugs, regressions, and failing tests; returns evidence without fixes. |
 | [Coder](.apm/agents/coder.agent.md) | Owns implementation, tests, and focused validation. |
 | [Documenter](.apm/agents/documenter.agent.md) | Maintains verified, concise documentation. |
 | [Reviewer](.apm/agents/reviewer.agent.md) | Independently reviews actual changes and validation adequacy. |
@@ -72,11 +74,13 @@ Select Orchestrator explicitly for the coordinated workflow. Its description aid
 ```text
 Request intent
   +-- Discussion / plan / review only: respect that scope
+  +-- Diagnosis only: Investigator when helpful or requested -> findings, no fixes
   |
   +-- Implementation: load guidance and classify
          +-- Tiny: direct change and focused validation
          |
-         +-- Standard: short plan -> Coder and validation
+         +-- Standard: short plan -> optional Investigator for unclear failures
+                                    -> Coder implementation and testing + (optional Documenter)
                                     |
                       self-learning assessment and any retained edits
                                     |
@@ -89,7 +93,7 @@ Request intent
                       Separately authorized commit / push, then report
 ```
 
-Architect and Documenter are optional, based on material design decisions or documentation ownership. Independent, disjoint assignments can run in parallel; dependent or shared-file work cannot. Tiny work also runs the learning assessment before its completion check, but does not require an independent Reviewer.
+Architect, Investigator, and Documenter are optional, based on design decisions, diagnostic uncertainty, or documentation ownership. Independent, disjoint assignments can run in parallel; dependent or shared-file work cannot. Tiny work also runs the learning assessment before its completion check, but does not require an independent Reviewer.
 
 ### Reliability
 
@@ -113,6 +117,12 @@ These choices reduce ambiguity and context overhead; they do not guarantee model
 | **Standard** | Everything else, including uncertainty. Plan briefly, use Coder for implementation/validation, and Reviewer for independent review. |
 
 A typo or known broken link can be Tiny; a small behavioral bug fix is Standard even in one file. Promote immediately when investigation or edits invalidate a Tiny condition. Missing required agents or tools blocks the Standard workflow rather than making review optional.
+
+### Diagnosis and correction handoff
+
+Diagnosis-only requests do not authorize fixes. Use [Investigator](.apm/agents/investigator.agent.md) when helpful or explicitly requested; an explicitly requested but unavailable Investigator is a blocker. With fix authorization, unclear failures may benefit from investigation before Coder; understood fixes go directly to Coder. This is optional routing, not a third implementation mode or a prerequisite for every fix.
+
+Investigator returns observations, reproduction conditions, exact diagnostic commands/outcomes, supported causes or ranked hypotheses with confidence basis, and unknowns. Pass that evidence to Coder, who verifies implementation-critical assumptions without automatically repeating the entire investigation. Coder still owns validation, and Standard still requires independent Reviewer review.
 
 ### Guidance and task evidence
 
@@ -157,8 +167,10 @@ Do not suggest broad staging or a commit that captures unrelated staged work. Mi
 ## Agent constraints
 
 - Orchestrator requests `model: auto` and retains a broad wildcard tool list with explicit coordination/execution aliases for the existing protected-environment setup. This is not a narrow capability restriction; actual availability and Auto routing depend on the active harness.
-- Its Local-harness agent allowlist contains Architect, Coder, Documenter, and Reviewer. Specialists declare `agents: []` where honored and never publish.
+- Its Local-harness agent allowlist contains Architect, Investigator, Coder, Documenter, and Reviewer. Specialists declare `agents: []` where honored and never publish.
+- Investigator declares read/search/execute tools for diagnosis only: no source/configuration/test/documentation edits, fixes, installs, environment repair, deployment, publishing, or delegation. It inspects commands/scripts/fixtures and side effects before bounded, known-safe local checks; no live infrastructure, secret dumps, snapshot updates, autofixes, migrations, or service changes. Unsafe or unavailable experiments stop with a reported limitation. Temporary output stays in disposable task-scoped or repository-required results locations, never user data.
 - Reviewer declares read/search/execute tools; execution is for read-only inspection or safe checks. This is a role boundary, not an operating-system sandbox.
+- Investigator's `execute` access likewise is not a sandbox or an enforced read-only filesystem; its diagnostic boundaries depend on compliance and host permissions.
 - Field and tool support vary by harness; Copilot does not honor every Local field, including the `agents` allowlist. Verify the [current agent schema](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference) and actual tool/agent availability.
 - Source validation cannot prove discovery, mandatory delegation, or compliance in a running session.
 
