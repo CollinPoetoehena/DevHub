@@ -89,7 +89,7 @@ Choose what fits the team size, ownership, usage, scope, and tooling rather than
 
 Separate a component when doing so supports genuinely distinct ownership, restricted access, product governance, or an independently operated lifecycle. These boundaries matter more than keeping every related project under one repository. For example, the homelab has separate repositories because it is an independently operated service with different access requirements; DevHub provides shared guidance and workspace setup without owning its implementation. See [separate repositories](#separate-repositories) for that boundary.
 
-DevHub is therefore a bounded monorepo within a broader set of personal projects: shared development resources live here, while independently operated projects remain in their own repositories. The [shared guidelines](GUIDELINES.md#choosing-a-repository-boundary) provide placement criteria.
+DevHub is therefore a bounded monorepo within a broader set of personal projects: shared development resources live here, while independently operated projects remain in their own repositories. The [monorepo or polyrepo guidance](GUIDELINES.md#monorepo-or-polyrepo) provides placement criteria.
 
 ### Accepted trade-offs
 

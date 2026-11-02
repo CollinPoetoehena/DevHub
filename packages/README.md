@@ -2,13 +2,17 @@
 
 Reusable packages for my personal projects. Each package owns its native metadata, supported interface, dependencies, and validation; sharing this repository does not require one version or runtime.
 
-The Python and Go SDKs are foundations without vendor integrations. Shared AI customizations live in the common APM package; the homelab package is a placeholder. [DevHub architecture](../docs/ARCHITECTURE.md) records repository and release boundaries; technical background belongs in official ecosystem documentation.
+Related packages stay together for coordinated maintenance, not a shared runtime or mandatory lockstep release. [DevHub architecture](../docs/ARCHITECTURE.md#release-and-versioning-units) owns the repository and release rationale; [package guidelines](../docs/GUIDELINES.md#placing-packages-and-components) cover placement.
 
 ---
 
-## Table of Contents
+## Package index
 
-TODO: later make this.
-TODO: add here general design and overview, such as why in 1 repo, etc.
-TODO: then add README.md per package type such as Go, Python, etc.
-TODO: add here references to each type, such as python/README.md, go/README.md and there can add the overall design of each part, etc.
+| Area | Purpose and current state |
+|---|---|
+| [Python](python/README.md) | Design and setup guidance for future Python packages; no implemented packages yet. |
+| [Go](go/README.md) | Design and setup guidance for future Go modules and packages; no implemented modules yet. |
+| [Helm](helm/README.md) | Placeholder for future charts; no chart implementation yet. |
+| [APM](apm/README.md) | Shared AI customization design and setup, with the active [common package](apm/common/README.md) and a [homelab placeholder](apm/homelab/README.md). |
+
+Each area README is the entry point for its ecosystem. As implementations are added, keep each independently consumed package's native manifest, dependencies, tests, and usage/release documentation with its source. Use small, cohesive packages with narrow public contracts; introduce shared dependencies only for demonstrated reuse.

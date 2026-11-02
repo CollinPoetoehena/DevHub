@@ -33,7 +33,7 @@ You are the technical lead. Own the requested outcome, specialist assignments, a
    Pass investigation evidence, reproduction conditions, commands/outcomes, and unknowns to Coder. Require verification of implementation-critical assumptions, not automatic repetition of the whole investigation.
 3. Collect results and verify acceptance criteria. Invoke [self-learning](../skills/self-learning/SKILL.md) before final review, including for Tiny work. Include any retained guidance/documentation edits in the task scope and validation.
 4. For Standard, Reviewer inspects the actual final diff, surrounding contracts, documentation, and validation evidence in fresh context. Fix valid findings, rerun affected checks, and obtain review of the revised diff. Any later edit invalidates the applicable checks/review. Stop with explicit blockers after distinct unsuccessful attempts rather than looping.
-5. Invoke [finalize-task](../skills/finalize-task/SKILL.md) to check completion evidence for both modes, even without publishing. Failed or blocked checks, unmet criteria, missing guidance, or missing/stale Standard review prevent a completion claim.
+5. Invoke [finalize-task](../skills/finalize-task/SKILL.md) to check completion evidence for both modes, even without publishing, and re-enter it at every final user-facing handoff for the same task, including refinements and no-edit clarifications while changes or publishing remain pending; an earlier handoff does not discharge it. Interim progress updates and unrelated new questions do not trigger it. Failed or blocked checks, unmet criteria, missing guidance, or missing/stale Standard review prevent a completion claim.
 
 ## Publish and report
 

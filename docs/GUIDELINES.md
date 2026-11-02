@@ -8,8 +8,10 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 
 - [Shared guidance and AI customizations](#shared-guidance-and-ai-customizations)
 - [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure)
-- [Choosing a repository boundary](#choosing-a-repository-boundary)
+- [Version control and repository strategy](#version-control-and-repository-strategy)
   - [Monorepo or polyrepo?](#monorepo-or-polyrepo)
+  - [Branches and reviews](#branches-and-reviews)
+  - [GitHub Pro for personal practice](#github-pro-for-personal-practice)
 - [Placing packages and components](#placing-packages-and-components)
 - [Setting up a project or package](#setting-up-a-project-or-package)
 - [Naming conventions](#naming-conventions)
@@ -55,7 +57,7 @@ The details below describe how to put this principle into practice:
 
 ---
 
-## Choosing a repository boundary
+## Version control and repository strategy
 
 Keep related work together when it shares ownership and access, changes together, and is maintained or validated as a coordinated unit. Split it when a distinct service, owner, access requirement, operational lifecycle, or publication boundary makes independent work valuable. Size, language, or independent package versions alone do not require a repository split.
 
@@ -73,6 +75,19 @@ Start with a monorepo by default: for most related work it is the easiest first 
 For further reading, see [Atlassian's monorepo guide](https://www.atlassian.com/git/tutorials/monorepos), [Google's experience and trade-offs with a single repository](https://research.google/pubs/why-google-stores-billions-of-lines-of-code-in-a-single-repository/), and [GitHub's repository visibility documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
 
 DevHub keeps shared development resources, tooling, guidance, and setup together because one maintainer frequently changes them in coordination; the [architecture guide](ARCHITECTURE.md#why-devhub-is-a-monorepo) records the rationale and accepted trade-offs. Distinct applications and services belong in their own repositories when those boundaries apply.
+
+### Branches and reviews
+
+- Use short-lived feature branches from an up-to-date `main` for a focused change. Merge once reviewed and validated, then delete the branch; avoid accumulating unrelated work or long-lived divergence.
+- Keep commits and reviews focused, including directly coupled tests and documentation. Split unrelated changes so each review has a clear purpose.
+- Keep `main` usable: run relevant checks before merging and fix or revert regressions promptly.
+- Follow each project's documented contribution, review, and release workflow, including required checks and approvals. Shared guidance does not replace repository-specific requirements.
+
+### GitHub Pro for personal practice
+
+For my personal account, GitHub Pro is the lowest-cost paid plan for an individual account. The small recurring investment is worthwhile for access to private-repository protections and hands-on practice configuring and maintaining a professional setup independently: branch protection, required pull request reviews, and passing status checks before merging. See [GitHub's plans](https://docs.github.com/en/get-started/learning-about-github/githubs-plans#github-pro) and [current pricing](https://github.com/pricing).
+
+This is a personal subscription choice, not repository policy or a prerequisite for contributors or every repository. GitHub Free already includes unlimited private repositories and branch protection for public repositories; Pro extends branch protection and required reviewers to private repositories owned by the personal account. Availability depends on plan, repository visibility, and ownership; organization-owned private repositories need an eligible organization plan, not the maintainer's personal Pro subscription. Check [protected-branch availability and settings](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) before choosing controls.
 
 ---
 

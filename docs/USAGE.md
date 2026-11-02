@@ -29,7 +29,7 @@ Open the parent folder in VS Code, or add the selected clones to a [multi-root w
 
 One workspace makes it easier to navigate and edit related repositories together and gives AI tools access to their shared context. For example, when the homelab uses DevHub guidance or reusable code, an agent can inspect both the source and its consumer and make coordinated edits instead of relying on copied context. Keep the included repositories and AI context relevant to the task.
 
-Keep machine-specific workspace files outside Git. Grouping repositories does not merge their permissions or install AI customizations; choose the workspace-root or repository-root setup below.
+Keep machine-specific workspace files outside Git. Grouping repositories does not merge their permissions or install AI customizations; use the repository-root setup below, optionally supplemented by a workspace-root installation.
 
 ---
 
@@ -39,7 +39,25 @@ The [APM design and setup guide](../packages/apm/README.md) owns the cross-repos
 
 Use the manifest and installation procedure in [repository setup](../packages/apm/README.md#repository-setup) for each consumer root. DevHub's [root manifest](../apm.yml) uses the local `./packages/apm/common` dependency for development.
 
-For shared-folder use, you can also place an `apm.yml` in the parent folder (`devhub-workspace/` in the example), declare the same dependency, and run the install command from there. Opening that parent folder in VS Code makes the installed AI customizations available across its repositories, subject to host discovery support. This does not install them into each clone: keep a repository-level manifest and installation when you also want the customizations available with only that repository open. For a multi-root workspace, verify discovery in the selected host rather than assuming a parent-folder installation is loaded.
+For shared-folder use, optionally add an `apm.yml` in the parent folder (`devhub-workspace/` in the example):
+
+```yaml
+name: devhub-workspace
+version: 1.0.0
+targets:
+  - copilot
+dependencies:
+  apm:
+    - CollinPoetoehena/DevHub/packages/apm/common
+```
+
+With APM installed, run from that workspace root:
+
+```sh
+apm install --only apm --target copilot
+```
+
+This is an additional convenience, not a replacement for a checked-in manifest/lockfile and installation in every consumer repository. It installs at the parent root, not into each clone. Follow the APM guide's dependency-reference and ownership guidance for both setups. Verify that the selected host discovers the parent-installed customizations, especially in multi-root workspaces; opening a shared folder does not guarantee discovery. Verify standalone repository use separately.
 
 Select **Orchestrator** in VS Code Chat; refresh or reopen the chat if necessary. A manifest entry alone does not activate the package. Follow [repository setup](../packages/apm/README.md#repository-setup) and [choosing an agent](../packages/apm/README.md#choosing-an-agent) for discovery and host limitations.
 
