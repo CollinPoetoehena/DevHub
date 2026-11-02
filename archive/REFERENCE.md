@@ -4,7 +4,7 @@ DevHub's former `reference/` folder was a personal knowledge base covering softw
 
 The attempt to build a software-engineering encyclopedia created an open-ended obligation to record everything I learned. Every explanation and command added another accuracy and maintenance burden, without a useful stopping point. Understanding in my head and being able to apply that understanding matter more than maintaining an exhaustive written record. Learning something does not create an obligation to document it. 
 
-The command cheatsheet once saved repeated lookups, but became obsolete as tools and workflows evolved. It no longer adds enough value over official documentation, search, or AI-assisted lookup to justify maintaining a parallel source. AI can help locate or explain information; authoritative documentation and actual behavior remain the checks on its answers.
+The former command collection is replaced by [simple, concise cheat sheets](../docs/cheatsheets/README.md) for selected useful commands. They save repeated lookups without recreating the reference library: no concept chapters, exhaustive option lists, or completeness goal. Official documentation, Linux man pages, and command help remain the sources for details. AI can help locate or explain information; authoritative documentation and actual behavior remain the checks on its answers.
 
 Active project documentation links to official sources where general background is needed and records only the brief project-specific setup, decisions, constraints, or exceptions readers need. If a source disappears, I can find a current replacement rather than preserve a local encyclopedia.
 
