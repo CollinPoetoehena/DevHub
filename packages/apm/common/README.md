@@ -51,8 +51,8 @@ The documentation file's pattern targets Markdown edits, and its description sup
 | [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md) | Drafts issues without publishing or implementing them. |
 | [manage-skills](.apm/skills/manage-skills/SKILL.md) | Creates and maintains focused skills. |
 | [setup-ai-customizations](.apm/skills/setup-ai-customizations/SKILL.md) | Sets up the shared baseline and local repository context. |
-| [self-learning](.apm/skills/self-learning/SKILL.md) | Assesses task evidence and retains only reusable lessons with an owner. |
-| [finalize-task](.apm/skills/finalize-task/SKILL.md) | Checks completion and separately authorized commit/push operations using ordinary Git commands. |
+| [self-learning](.apm/skills/self-learning/SKILL.md) | Assesses task evidence, retains reusable lessons with an owner, and reports the disposition and reason. |
+| [finalize-task](.apm/skills/finalize-task/SKILL.md) | Checks completion and authorized publishing; provides copy-ready commands for remaining Git actions. |
 
 ### Pinned upstream skills
 
@@ -134,7 +134,7 @@ Review can increase cost and elapsed time and is not proof of correctness. Its v
 
 The [self-learning skill](.apm/skills/self-learning/SKILL.md) owns the repeatable assessment. No separate Learning agent is included: this is a procedure, not another routine role or handoff.
 
-Assess failures, corrections, review findings, and recurring friction; inspect existing guidance before retaining a lesson. Record `updated`, `proposed`, `already-covered`, or `none`, with observation, rationale, owner, action, and validation where applicable. Missing evidence is a blocker, not a reason to invent a lesson.
+Assess failures, corrections, review findings, and recurring friction; inspect existing guidance before retaining a lesson. Record `updated`, `proposed`, `already-covered`, or `none`, with observation, rationale, owner, action, and validation where applicable. Always include the disposition and an evidence-based reason in the final user-facing handoff, not only task notes. Link owning edits and report validation for `updated`; identify the intended owner and why a proposal was not applied for `proposed`; link the existing rule and explain its coverage for `already-covered`; explain why no durable lesson emerged for `none`. Missing evidence is a blocker, not a reason to invent a lesson.
 
 Update shared source only in the owning repository and within authorized scope; keep project knowledge local and propose changes when the owner cannot be edited. Changes to enforcement, permissions, or publishing policy require explicit approval. This is controlled maintenance, not persistent model training. All retained edits join validation and final review.
 
@@ -148,7 +148,9 @@ Inspect the actual committed changes and full message before push, including any
 
 The skill is a short procedure with no bundled code, tests, hooks, runtime dependency, or evidence-file setup. It guides behavior rather than automatically enforcing it. Existing repository hooks, permissions, and CI remain separate controls; do not install, replace, or bypass them as part of finalization.
 
-Reports stay proportional: outcome, meaningful decisions, exact checks/review, learning disposition, blockers, and actual publishing state. Do not repeat suggested command blocks merely because changes remain uncommitted.
+Reports stay proportional: outcome, meaningful decisions, exact checks/review, self-learning disposition and reason, blockers, and actual publishing state. Whenever task changes remain uncommitted or unpushed, include one copy-ready shell block, labeled as not executed and for the user to review before running. For uncommitted work, chain explicit task-path `git add`, a concrete Conventional Commits `git commit` message, and explicit `git push` with `&&`. Do not split push into another block or insert an interactive confirmation: the user can execute the reviewed sequence immediately. An already committed and verified task gets only the remaining push. Commands use the verified repository, branch, remote, and outgoing history and safe quoting. This user-executed sequence does not authorize agent execution; the agent's own publishing still requires separate permission and post-commit inspection.
+
+Do not suggest broad staging or a commit that captures unrelated staged work. Mixed task/unrelated changes, failed checks or review, detached HEAD, an unknown destination, or unrelated outgoing commits require an explicit blocker and only safe commands, not guessed values or an unsafe publish sequence. If all publishing is verified complete or there are no task changes, state that instead of providing redundant commands.
 
 ---
 

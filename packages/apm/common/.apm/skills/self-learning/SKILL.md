@@ -18,4 +18,11 @@ Assess every implementation task, including Tiny tasks. This is controlled maint
 
 ## Output
 
-Record `updated`, `proposed`, `already-covered`, or `none` in persistent task evidence. For retained lessons include observation, reuse rationale, owner, action, and validation; for proposals include why they were not applied. For `none`, give a brief evidence-based reason. Missing evidence is a blocker, not `none`. Do not claim a proposal was saved or that the model learned persistently.
+Record `updated`, `proposed`, `already-covered`, or `none` in persistent task evidence and always surface the disposition with a brief evidence-based reason in the final user-facing handoff:
+
+- `updated`: summarize the observed issue and reusable lesson, link the owning edits, and report their validation.
+- `proposed`: summarize the lesson, intended owner, and why it was not applied; identify where the proposal was recorded, if saved.
+- `already-covered`: identify the observation and link the existing guidance that covers it; explain why no edit was needed.
+- `none`: state why the assessed task evidence yielded no durable reusable lesson, rather than merely saying "no changes."
+
+For retained lessons, keep observation, reuse rationale, owner, action, and validation in the task evidence. Missing evidence is a blocker, not `none`. Do not invent lessons to fill the report or claim a proposal was saved or that the model learned persistently.
