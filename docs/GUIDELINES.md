@@ -7,6 +7,9 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 ## Table of Contents
 
 - [Shared guidance and AI customizations](#shared-guidance-and-ai-customizations)
+- [Documentation Design](#documentation-design)
+  - [Documentation ownership](#documentation-ownership)
+  - [Documentation placement](#documentation-placement)
 - [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure)
 - [Version control and repository strategy](#version-control-and-repository-strategy)
   - [Monorepo or polyrepo?](#monorepo-or-polyrepo)
@@ -21,7 +24,7 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 
 ## Shared guidance and AI customizations
 
-This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Using DevHub](USAGE.md), [project architecture](ARCHITECTURE.md), and [task tracking](how-to/TASK-TRACKING.md). Link to those docs when useful instead of copying them into agent instructions.
+This file is the single home for shared, human-facing repository, package, and setup conventions. Project docs own user-facing concepts and usage, getting started, local setup, architecture decisions, and task tracking; see [Getting Started](GETTING-STARTED.md), [project architecture](ARCHITECTURE.md), and [task tracking](how-to/TASK-TRACKING.md). Link to those docs when useful instead of copying them into agent instructions.
 
 Keep related project-wide documentation in one cohesive, sectioned authoritative file rather than splitting it into many small files by default. For example, DevHub's overall architecture, repository boundaries, and release rationale belong in [docs/ARCHITECTURE.md](ARCHITECTURE.md); component- or package-specific setup and usage belong in each owner's README. A separate focused document is warranted when it has a distinct owner, audience, or lifecycle, or when its size or format materially improves usability. Choose one owning document for each topic and link to it elsewhere; this is a default, not a mandate to combine unrelated topics into a giant document.
 
@@ -36,6 +39,31 @@ Reusable AI customizations, shared engineering standards, and workflows live in 
 Consumer-specific context belongs in one root `AGENTS.md`, with scoped instructions or local skills only for a demonstrated need. Follow the [APM design and setup guide](../packages/apm/README.md) for ownership, authoring, and discovery verification. These customizations supplement the common package; do not duplicate shared standards or assume one instruction automatically overrides another.
 
 The engineering and documentation rules are intentionally not repeated in this file: `GUIDELINES.md` is the shared human-facing home for repository and package conventions, while `common.instructions.md` is the reusable AI-facing source for engineering standards. Keeping each topic in one authoritative place avoids drift when one copy is updated and another is missed, prevents conflicting or stale directions, and makes clear which guidance to maintain.
+
+---
+
+## Documentation Design
+
+### Documentation ownership
+
+Each part or component of the repository owns documentation for its behavior, setup, and decisions. Keep one authoritative home for each topic, place it with the part it describes, and link to it from other relevant documentation rather than duplicating it. Use repository-level documentation for topics that span components or describe the repository as a whole.
+
+For Markdown formatting and writing conventions, follow the shared [documentation instructions](../packages/apm/common/.apm/instructions/documentation.instructions.md).
+
+### Documentation placement
+
+Keep documentation about a project's code, setup, architecture, decisions, and operation in the project repository whenever it belongs with that project. Use Markdown files near the code or configuration they explain, or in the repository's `docs/` directory when the material spans multiple areas. The repository should have one clear, authoritative home for each topic.
+
+Keeping this documentation in Git makes it part of the project rather than a separate reference to maintain:
+
+- Git history records how guidance changed and why; branches, pull requests, and reviews let documentation be considered alongside related code or configuration changes.
+- A local checkout keeps the documentation available with the code, including for offline work. Contributors can search it and follow relative links without switching tools or locating a separate page.
+- Markdown files can link directly to implementation, configuration, and other documentation. Their proximity makes it easier to keep explanations aligned with the version of the project they describe.
+- AI tools working in the repository, such as GitHub Copilot in VS Code, can use local documentation and code together as context. With documentation in an external service such as Confluence, that context may require separate access, integrations, search, or manual copying, and can be harder to keep aligned with a particular checkout, which is unnecessary extra complexity. So, prefer keeping documentation in the repository whenever possible.
+
+An external documentation tool can still be useful for material whose audience, collaboration needs, access controls, or lifecycle are better served there. When it refers to project documentation, make the repository document authoritative and link to it from the external page—for example, link to the relevant README or file in `docs/`—rather than maintaining a second full copy. This keeps the external tool useful as an index or entry point without creating competing versions that can drift.
+
+Choose the storage location based on the content and its access requirements. Do not put secrets or restricted information in a repository unless its access controls and policies explicitly allow it; use an approved system for material that must remain outside source control.
 
 ---
 
@@ -106,7 +134,7 @@ For the architectural rationale and release examples, see [Release and versionin
 
 - Give each project and package an owning README that explains its purpose, setup, supported use, and project-specific decisions. Keep detailed commands and operational procedures with the component.
 - Before publishing a component, document its consumers, native metadata, validation commands, release tags, artifact destination, and upgrade or rollback steps.
-- Link to shared DevHub guidance from the project's README instead of copying it. The [workspace and AI setup guide](USAGE.md) explains how consumers use shared resources.
+- Link to shared DevHub guidance from the project's README instead of copying it. The [getting-started guide](GETTING-STARTED.md) explains how consumers use shared resources.
 - Consumers own their triggers, credentials, and deployment configuration when using shared automation.
 
 Use the official [Python Packaging User Guide](https://packaging.python.org/en/latest/overview/) and [Go module documentation](https://go.dev/doc/modules/developing) for ecosystem-specific mechanics.

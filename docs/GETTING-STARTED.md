@@ -1,15 +1,22 @@
-# Using DevHub
+# Getting Started
 
-How to set up DevHub for my personal projects: the shared workspace, the AI customizations, and how projects link to DevHub's standards. DevHub is the central place for these instructions; personal project repositories link here instead of repeating them.
+This guide covers getting started in DevHub, setting up a shared workspace, and using DevHub guidance from personal projects. DevHub is the central place for these instructions; personal project repositories link here instead of repeating them.
 
 ---
 
 ## Table of Contents
 
+- [Getting started in this repository](#getting-started-in-this-repository)
 - [Personal project workspace](#personal-project-workspace)
 - [AI customizations](#ai-customizations)
 - [Applying DevHub standards in a project](#applying-devhub-standards-in-a-project)
 - [Task-oriented how-tos](#task-oriented-how-tos)
+
+---
+
+## Getting started in this repository
+
+Clone DevHub and open the repository root in VS Code. Start with the [repository overview](../README.md), then follow [DevHub's own setup](../packages/apm/README.md#devhubs-own-setup) to install its local AI customization package. For where project and component documentation belongs, see [Documentation Design](GUIDELINES.md#documentation-design), especially [Documentation ownership](GUIDELINES.md#documentation-ownership).
 
 ---
 

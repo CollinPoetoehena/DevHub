@@ -16,4 +16,4 @@ These notes explain why an approach was retired and what remains useful from it.
 - Learning does not create an obligation to record every fact. Document what helps future work, not an unbounded backlog of everything learned.
 - Give guidance one appropriate home. Use instructions for conventions, agents for roles, and skills for reusable on-demand workflows—not skills-only policy dumps.
 
-For active setup and shared guidance, start with [Using DevHub](../docs/USAGE.md).
+For active setup and shared guidance, start with [Getting Started](../docs/GETTING-STARTED.md).

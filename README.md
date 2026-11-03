@@ -71,7 +71,7 @@ It remains public, so others can read and reuse what is useful, and it serves as
 
 Each part of DevHub has a clear scope, so information has one home:
 
-- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), decisions, [usage](./docs/USAGE.md), and concise [command cheat sheets](./docs/cheatsheets/README.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
+- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), decisions, [getting-started guide](./docs/GETTING-STARTED.md), and concise [command cheat sheets](./docs/cheatsheets/README.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
 - **[`archive/`](./archive/README.md)** records retired approaches and their rationale, not an actively maintained technical knowledge base.
 - **Area READMEs**, such as [`packages/README.md`](./packages/README.md) and [`tools/README.md`](./tools/README.md), own local commands and component contracts.
 - **[Root agent guidance](AGENTS.md)** routes AI agents to that owning context; [APM design and setup](packages/apm/README.md) explains the common baseline and repository-specific customization pattern.
@@ -90,7 +90,7 @@ DevHub is intended to grow through broadly reusable material, not by absorbing t
 
 - **[Tools](tools/README.md)** contains shared automation, including [Terraform repository inventory and policy](tools/repo/README.md).
 - **[How-tos](docs/how-to/README.md)** provides task-oriented entry points, including creating a repository in the DevHub ecosystem and setting up my code editor, accounts, and Git.
-- **[Personal workspace and AI setup](docs/USAGE.md)** explains how related repositories and shared guidance are used together.
+- **[Getting started](docs/GETTING-STARTED.md)** explains how to set up DevHub and use shared guidance across related repositories.
 - **[GitHub workflows](docs/GITHUB-ACTIONS.md)** records the intended reusable-workflow contract; publishing automation is still a placeholder.
 - **[Common AI customizations](packages/apm/common/README.md)** provides the active reusable agents, instructions, and skills.
 - **[Reusable packages](packages/README.md)** groups related package work within DevHub. Package contents, dependencies, and release boundaries remain explicit; sharing a repository does not require one version for everything.
@@ -111,7 +111,7 @@ Separate repositories are useful for independently operated services, different 
 
 - **[Home lab — devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab)** is part of DevHub, with separate public guidance and private implementation repositories for its distinct service lifecycle and access/publication boundaries. Its standards, personal workspace setup, and task tracking remain central here; actual configuration and operational secrets stay in the appropriate protected systems.
 
-The distinction is about ownership and reuse, not whether a project is related to development. A homelab is a development platform, but its specific implementation is still a distinct project. DevHub links projects together and provides the generic material they share; it does not need to contain each project's implementation. [Using DevHub](docs/USAGE.md) is the central setup guide for the shared workspace and AI customizations used across these projects.
+The distinction is about ownership and reuse, not whether a project is related to development. A homelab is a development platform, but its specific implementation is still a distinct project. DevHub links projects together and provides the generic material they share; it does not need to contain each project's implementation. [Getting started](docs/GETTING-STARTED.md) is the central setup guide for the shared workspace and AI customizations used across these projects.
 
 > The home-lab setup previously lived in DevHub, but it has since been removed from this repository and is maintained in its own project for the above reasons. Some commits from the old setup may remain; they describe an obsolete configuration that is no longer used and therefore do not expose sensitive information.
 

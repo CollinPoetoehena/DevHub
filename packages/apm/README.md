@@ -2,7 +2,7 @@
 
 [APM](https://microsoft.github.io/apm/) distributes shared AI customizations to supported agent harnesses. DevHub uses it for a common baseline across personal projects, with repository-specific guidance in a root `AGENTS.md`. The harness loads the resulting context; APM does not execute the agent or guarantee compliance.
 
-This guide owns personal AI usage principles and the shared concepts, setup, authoring, usage, maintenance, and validation of AI customizations. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), describe only their contents, dependencies, and package-specific decisions. [Using DevHub](../../docs/USAGE.md) owns shared-workspace arrangements.
+This guide owns personal AI usage principles and the shared concepts, setup, authoring, usage, maintenance, and validation of AI customizations. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), describe only their contents, dependencies, and package-specific decisions. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
 
 ---
 
@@ -180,7 +180,7 @@ Static validation, deployment, discovery, and repeated behavioral checks are sep
 
 ## Repository setup
 
-Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`, plus installation from that repository root. The manifest declares a consistent baseline and the lockfile pins its resolved dependencies; repository-local deployment supports discovery when the repository is opened alone. Once installed, this gives supported editors and review workflows a shared setup, subject to their discovery rules. Do not assume every host or reviewer automatically installs or loads it. The optional [parent-workspace setup](../../docs/USAGE.md#ai-customizations) is an additional convenience, not a replacement.
+Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`, plus installation from that repository root. The manifest declares a consistent baseline and the lockfile pins its resolved dependencies; repository-local deployment supports discovery when the repository is opened alone. Once installed, this gives supported editors and review workflows a shared setup, subject to their discovery rules. Do not assume every host or reviewer automatically installs or loads it. The optional [parent-workspace setup](../../docs/GETTING-STARTED.md#ai-customizations) is an additional convenience, not a replacement.
 
 1. Inspect existing manifests, instructions, skills, documentation, and local changes. Preserve useful repository guidance and user-authored customizations; do not blindly replace an existing setup.
 2. Declare the common dependency in the repository's `apm.yml`. For a new consumer, adapt this example to the repository's identity and reviewed dependency-reference conventions:
@@ -218,7 +218,7 @@ A manifest, successful installation, and instruction compliance are three differ
 - **Host discovery:** in the selected harness, confirm the root repository guidance and installed customizations are discoverable. Refresh or start a new session after changes.
 - **Behavior:** exercise a small task with an observable criterion that depends on a local convention. Inspect references or debug evidence where supported, plus the actual result and validation activity. Check one relevant scoped instruction and, when used, the setup skill. For coordinated workflows, also check routing, mandatory review, corrections, and blocked completion; use the [reliability scenarios](#reliable-customization-design).
 
-For VS Code's Local harness, root `AGENTS.md` discovery is controlled by `chat.useAgentsMdFile` (enabled by default); nested discovery additionally requires `chat.useNestedAgentsMdFiles` (disabled by default). These settings do not control other harnesses. Shared-parent and multi-root discovery also need separate verification; see [workspace setup](../../docs/USAGE.md#personal-project-workspace).
+For VS Code's Local harness, root `AGENTS.md` discovery is controlled by `chat.useAgentsMdFile` (enabled by default); nested discovery additionally requires `chat.useNestedAgentsMdFiles` (disabled by default). These settings do not control other harnesses. Shared-parent and multi-root discovery also need separate verification; see [workspace setup](../../docs/GETTING-STARTED.md#personal-project-workspace).
 
 Instructions guide behavior. Tests, CI, access controls, and approvals remain the mechanisms for verifying or enforcing requirements. Report missing discovery or unverified behavior explicitly; do not treat installation as proof of compliance.
 

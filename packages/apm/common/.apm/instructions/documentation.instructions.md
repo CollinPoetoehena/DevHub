@@ -10,6 +10,16 @@ applyTo: "**/*.md"
 - Describe behavior, not the editing history. Link to owning code and authoritative external documentation instead of copying extensive explanations.
 - Keep each topic in its existing owning README or focused document; avoid parallel explanations and unnecessary files. Follow existing descriptive naming and casing.
 - Use a small fenced plain-text diagram when relationships or flow benefit from it. Preserve useful diagrams in their owning document; verify arrows and distinguish required and optional steps.
-- Wrap prose at natural boundaries and indent list continuations; do not add enters mid-sentence within paragraphs. Use consistent headings and `---` between major level-two sections.
+- Use consistent headings and `---` between level-two (##) sections to separate major topics. 
+- Avoid splitting sentences across lines unnecessarily; do not add enters mid-sentence within paragraphs. An explicit example is added below since AI often gets this wrong:
+```text
+Incorrect (contains mid-sentence enters):
+This is a sentence 
+being written
+down.
+
+Correction (no mid-sentence enters):
+This is a sentence being written down.
+```
 - Add a table of contents for longer documents, covering levels two through four. Omit it for short documents and agent instruction files.
 - Use plain bullets, no emoji status indicators, and no reading-time headers.

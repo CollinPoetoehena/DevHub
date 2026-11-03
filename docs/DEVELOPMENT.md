@@ -1,1 +1,1 @@
-TODO: what to put here, maybe nothing since we have USAGE.md and GUIDELINES.md, etc., already??
+TODO: what to put here, maybe nothing since we have GETTING-STARTED.md and GUIDELINES.md, etc., already??

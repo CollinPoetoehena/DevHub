@@ -34,7 +34,7 @@ This guide describes my code editor setup and the account and Git configuration 
 
 ## Personal DevHub AI customizations
 
-My shared Copilot agents, instructions, and skills are distributed with [APM](https://microsoft.github.io/apm/) from the [common package](../../packages/apm/common/README.md). Declare and install it per repository or workspace root, then verify discovery in the host, as described in [AI customizations](../USAGE.md#ai-customizations) and the APM guide's [repository setup](../../packages/apm/README.md#repository-setup) and [activation checks](../../packages/apm/README.md#verify-activation).
+My shared Copilot agents, instructions, and skills are distributed with [APM](https://microsoft.github.io/apm/) from the [common package](../../packages/apm/common/README.md). Declare and install it per repository or workspace root, then verify discovery in the host, as described in [AI customizations](../GETTING-STARTED.md#ai-customizations) and the APM guide's [repository setup](../../packages/apm/README.md#repository-setup) and [activation checks](../../packages/apm/README.md#verify-activation).
 
 Install inside the environment where Copilot runs, such as WSL. Settings Sync does not replace this installation: it syncs editor preferences and user-level prompts, not repository-installed APM customizations.
 
@@ -65,7 +65,7 @@ For example, a workspace might bring together:
 - the repositories for one service, such as its application, deployment configuration and documentation;
 - related tooling, such as shared Ansible roles, Terraform modules and the automation that consumes them;
 - packages of a particular type, such as a team's Python libraries and their shared examples or test fixtures; or
-- several closely related project repositories, such as DevHub and the public and private homelab repositories (see DevHub's [personal project workspace](../USAGE.md#personal-project-workspace)).
+- several closely related project repositories, such as DevHub and the public and private homelab repositories (see DevHub's [personal project workspace](../GETTING-STARTED.md#personal-project-workspace)).
 
 These are alternative ways to organize work, not a prescription to combine every such repository. A focused workspace keeps relevant files, instructions and search results easier to find, while an unrelated collection can add Explorer and search noise, unnecessary file scanning, and competing project instructions. A larger workspace may also use more resources and make useful AI context harder to distinguish from irrelevant files. Make separate workspaces for distinct activities—for example, one per service, toolchain or package family—and include a repository when you often need to inspect or change it alongside the others. This keeps each workspace useful without requiring repositories to be merged: every clone remains an independent Git repository with its own history, changes and remote.
 

@@ -126,7 +126,7 @@ Investigator returns observations, reproduction conditions, exact diagnostic com
 
 ### Guidance and task evidence
 
-Every role resolves and reads the common baseline, matching scoped instructions, repository entry guidance, and relevant owning documentation. The Orchestrator passes actual readable paths and task constraints to each specialist; neither context inheritance nor automatic instruction attachment is assumed.
+Every role resolves and reads the common baseline, matching scoped instructions, repository entry guidance, and relevant owning documentation. Custom-agent subagents do not inherit the Orchestrator's loaded instructions, and `applyTo` instructions only attach once matching files enter their context. The Orchestrator therefore starts every specialist prompt, including re-invocations, with a guidance block of absolute readable paths (common, matching scoped, repository entry, owning documentation, and skills) and brief task-critical rules. Specialists also discover applicable instructions and skills themselves in case the block is incomplete and report additions separately; the Orchestrator checks each reported guidance read against the block and carries additions into later blocks. See [VS Code subagents](https://code.visualstudio.com/docs/agents/run/subagents).
 
 Keep brief task notes in persistent session storage outside versioned sources. Track mode, scope, acceptance criteria, guidance read, exact check/review results, learning disposition, and separate publishing authorizations/results. Carry these notes across follow-up turns and renew affected checks and review after edits. No custom schema or fingerprint tooling is required.
 
