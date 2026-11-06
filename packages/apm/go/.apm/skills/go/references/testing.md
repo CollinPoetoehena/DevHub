@@ -1,28 +1,8 @@
 # Go Testing
 
-> Placeholder: test layout, fixtures, mocking, and coverage; content still to be adapted from the sources in the package reuse registry.
-
-TODO
-
-https://github.com/affaan-m/ECC/blob/main/skills/golang-testing/SKILL.md
----
-name: golang-testing
-description: Go testing patterns including table-driven tests, subtests, benchmarks, fuzzing, and test coverage. Follows TDD methodology with idiomatic Go practices. Use when writing Go tests — table-driven cases, subtests, benchmarks, fuzzing, or coverage.
-metadata:
-  origin: ECC
----
-
-# Go Testing Patterns
+Adapted from [ECC `golang-testing`](https://github.com/affaan-m/ECC/blob/main/skills/golang-testing/SKILL.md). Repository configuration and the Go and common instructions take precedence over this reference.
 
 Comprehensive Go testing patterns for writing reliable, maintainable tests following TDD methodology.
-
-## When to Activate
-
-- Writing new Go functions or methods
-- Adding test coverage to existing code
-- Creating benchmarks for performance-critical code
-- Implementing fuzz tests for input validation
-- Following TDD workflow in Go projects
 
 ## TDD Workflow for Go
 
@@ -725,4 +705,10 @@ test:
         awk -F'%' '{if ($1 < 80) exit 1}'
 ```
 
-**Remember**: Tests are documentation. They show how your code is meant to be used. Write them clearly and keep them up to date.
+## References
+
+- [testing package](https://pkg.go.dev/testing)
+- [Table-driven tests](https://go.dev/wiki/TableDrivenTests)
+- [Go fuzzing](https://go.dev/doc/security/fuzz/)
+- [Coverage for Go applications](https://go.dev/doc/build-cover)
+- [net/http/httptest package](https://pkg.go.dev/net/http/httptest)

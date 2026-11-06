@@ -81,7 +81,7 @@ Language-independent:
 
 ## Comments
 
-- Add, edit, review, and remove code comments, doc comments, docstrings, markers, and suppressions with the [code-comments skill](../../skills/code-comments/SKILL.md); the default is no comment.
+- Add, edit, review, and remove code comments, doc comments, docstrings, markers, and suppressions with the [code-comments skill](../skills/code-comments/SKILL.md); the default is no comment.
 
 ## Code Quality Checklist
 
@@ -94,6 +94,11 @@ Before marking work complete:
 - [ ] No hardcoded values (use constants or config where applicable)
 - [ ] No mutation (immutable patterns used)
 
-## Reference
+## Related Instructions
 
-TODO: for documentation use the `common/documentation.instructions.md` file, for general instructions and resolving conflicts use the `common/instructions.instructions.md` file, etc.
+- **Documentation:** [documentation instructions](documentation.instructions.md) for Markdown, READMEs, and guides.
+- **Security:** [security instructions](security.instructions.md) for untrusted content, secrets, and secure defaults.
+- **Git:** [Git instructions](git.instructions.md) for commits and history.
+- **Languages and tools:** the instructions of the opt-in stack packages, such as Python, Go, Java, containerization, and infrastructure as code, refine these rules for their files.
+
+When instructions conflict, the most specific scope wins: the repository's own configuration and `AGENTS.md`, then language and tool instructions, then these common instructions.

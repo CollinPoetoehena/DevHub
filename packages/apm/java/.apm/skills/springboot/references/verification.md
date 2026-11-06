@@ -1,23 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/springboot-verification
+# Spring Boot Verification
 
----
-name: springboot-verification
-description: Run the full Spring Boot verification loop — Maven or Gradle build, SpotBugs, PMD, and Checkstyle static analysis, unit and Testcontainers integration tests with JaCoCo coverage, OWASP dependency and secret scans, and diff review — producing a pass/fail readiness report. Use when preparing a Spring Boot pull request, validating coverage thresholds, or running pre-deploy verification.
-metadata:
-  origin: ECC
----
-
-# Spring Boot Verification Loop
+Adapted from [ECC `springboot-verification`](https://github.com/affaan-m/ECC/blob/main/skills/springboot-verification/SKILL.md). Repository configuration and the Java and common instructions take precedence over this reference.
 
 Run before PRs, after major changes, and pre-deploy.
-
-## When to Activate
-
-- Before opening a pull request for a Spring Boot service
-- After major refactoring or dependency upgrades
-- Pre-deployment verification for staging or production
-- Running full build → lint → test → security scan pipeline
-- Validating test coverage meets thresholds
 
 ## Phase 1: Build
 
@@ -208,27 +193,10 @@ Checklist:
 - Transactions and validation present where needed
 - Config changes documented
 
-## Output Template
+## References
 
-```
-VERIFICATION REPORT
-===================
-Build:     [PASS/FAIL]
-Static:    [PASS/FAIL] (spotbugs/pmd/checkstyle)
-Tests:     [PASS/FAIL] (X/Y passed, Z% coverage)
-Security:  [PASS/FAIL] (CVE findings: N)
-Diff:      [X files changed]
-
-Overall:   [READY / NOT READY]
-
-Issues to Fix:
-1. ...
-2. ...
-```
-
-## Continuous Mode
-
-- Re-run phases on significant changes or every 30–60 minutes in long sessions
-- Keep a short loop: `mvn -T 4 test` + spotbugs for quick feedback
-
-**Remember**: Fast feedback beats late surprises. Keep the gate strict—treat warnings as defects in production systems.
+- [Spring Boot reference](https://docs.spring.io/spring-boot/index.html)
+- [SpotBugs](https://spotbugs.github.io/)
+- [PMD](https://pmd.github.io/)
+- [Checkstyle](https://checkstyle.org/)
+- [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)

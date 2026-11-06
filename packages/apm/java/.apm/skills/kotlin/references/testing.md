@@ -1,33 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/kotlin-testing
+# Kotlin Testing
 
----
-name: kotlin-testing
-description: Kotlin testing patterns with Kotest, MockK, coroutine testing, property-based testing, and Kover coverage. Follows TDD methodology with idiomatic Kotlin practices. Use when writing Kotlin tests with Kotest or MockK, or testing coroutines and checking coverage.
-metadata:
-  origin: ECC
----
-
-# Kotlin Testing Patterns
+Adapted from [ECC `kotlin-testing`](https://github.com/affaan-m/ECC/blob/main/skills/kotlin-testing/SKILL.md). Repository configuration and the Kotlin and common instructions take precedence over this reference.
 
 Comprehensive Kotlin testing patterns for writing reliable, maintainable tests following TDD methodology with Kotest and MockK.
-
-## When to Use
-
-- Writing new Kotlin functions or classes
-- Adding test coverage to existing Kotlin code
-- Implementing property-based tests
-- Following TDD workflow in Kotlin projects
-- Configuring Kover for code coverage
-
-## How It Works
-
-1. **Identify target code** — Find the function, class, or module to test
-2. **Write a Kotest spec** — Choose a spec style (StringSpec, FunSpec, BehaviorSpec) matching the test scope
-3. **Mock dependencies** — Use MockK to isolate the unit under test
-4. **Run tests (RED)** — Verify the test fails with the expected error
-5. **Implement code (GREEN)** — Write minimal code to pass the test
-6. **Refactor** — Improve the implementation while keeping tests green
-7. **Check coverage** — Run `./gradlew koverHtmlReport` and verify 80%+ coverage
 
 ## Examples
 
@@ -824,4 +799,9 @@ test:
         token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-**Remember**: Tests are documentation. They show how your Kotlin code is meant to be used. Use Kotest's expressive matchers to make tests readable and MockK for clean mocking of dependencies.
+## References
+
+- [Kotest](https://kotest.io/)
+- [MockK](https://mockk.io/)
+- [kotlinx-coroutines-test](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/)
+- [Kover](https://kotlin.github.io/kotlinx-kover/gradle-plugin/)

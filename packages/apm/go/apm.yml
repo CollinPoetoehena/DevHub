@@ -1,5 +1,9 @@
 # Go stack guidance for DevHub repositories; opt in next to devhub-common.
 name: devhub-go
 version: 0.1.0
-description: Go instructions and skills for DevHub repositories that use Go
+description: Go instruction and skill for DevHub repositories that use Go
 target: copilot
+dependencies:
+  apm:
+    # Common DevHub AI customizations that every repository uses; stack packages only add to them
+    - CollinPoetoehena/DevHub/packages/apm/common

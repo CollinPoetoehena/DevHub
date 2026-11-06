@@ -1,27 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/kotlin-patterns
+# Kotlin Patterns
 
----
-name: kotlin-patterns
-description: Idiomatic Kotlin patterns, best practices, and conventions for building robust, efficient, and maintainable Kotlin applications with coroutines, null safety, and DSL builders. Use when writing or reviewing Kotlin code and idiomatic structure or null safety is in question.
-metadata:
-  origin: ECC
----
-
-# Kotlin Development Patterns
+Adapted from [ECC `kotlin-patterns`](https://github.com/affaan-m/ECC/blob/main/skills/kotlin-patterns/SKILL.md). Repository configuration and the Kotlin and common instructions take precedence over this reference.
 
 Idiomatic Kotlin patterns and best practices for building robust, efficient, and maintainable applications.
-
-## When to Use
-
-- Writing new Kotlin code
-- Reviewing Kotlin code
-- Refactoring existing Kotlin code
-- Designing Kotlin modules or libraries
-- Configuring Gradle Kotlin DSL builds
-
-## How It Works
-
-This skill enforces idiomatic Kotlin conventions across seven key areas: null safety using the type system and safe-call operators, immutability via `val` and `copy()` on data classes, sealed classes and interfaces for exhaustive type hierarchies, structured concurrency with coroutines and `Flow`, extension functions for adding behaviour without inheritance, type-safe DSL builders using `@DslMarker` and lambda receivers, and Gradle Kotlin DSL for build configuration.
 
 ## Examples
 
@@ -711,4 +692,9 @@ user?.let { u ->
 user?.address?.city?.let { process(it) }
 ```
 
-**Remember**: Kotlin code should be concise but readable. Leverage the type system for safety, prefer immutability, and use coroutines for concurrency. When in doubt, let the compiler help you.
+## References
+
+- [Kotlin documentation](https://kotlinlang.org/docs/home.html)
+- [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventions.html)
+- [Idioms](https://kotlinlang.org/docs/idioms.html)
+- [Gradle Kotlin DSL](https://docs.gradle.org/current/userguide/kotlin_dsl.html)

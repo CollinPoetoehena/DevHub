@@ -11,6 +11,8 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 - Make Orchestrator the only agent in the picker; workers set `user-invocable: false` and run as subagents.
 - Target the Copilot harness; the `agents` allowlist remains only for the Local harness.
 - Replace the copy-ready Git add, commit, and push block with a `/git-commit` command; pushing is no longer part of the workflow.
+- Move the Python, Dockerfile, and Ansible instructions to the opt-in `devhub-python`, `devhub-containerization`, and `devhub-iac` packages; consumers that need them add those packages.
+- Remove the `common/` subfolder of `.apm/instructions/`; all common instructions now sit directly in `.apm/instructions/`.
 
 ### Added
 
@@ -27,13 +29,16 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 - Reviewer quality gates adapted from ECC: a pre-finding gate, proof for `CRITICAL` and `HIGH` findings, a `CRITICAL | HIGH | MEDIUM | LOW` scale with `CRITICAL` and `HIGH` blocking, zero findings as a valid result, and common false positives. Reviewer gets `execute` to re-run validation with inspection and check-mode commands only.
 - Planner four-stage process, step format, planning rules for refactors and phasing, plan-level red flags, and a fuller plan format; Architect four-stage process, a per-option trade-off rating against fixed architectural principles, red flags, and ADR-shaped output.
 - A self-evaluation scorecard in the `workflow-learning` skill, adapted from ECC: five workflow axes scored 1 to 5 with cited evidence, where weak axes drive lesson extraction.
-- A reuse registry in the README listing pinned upstream dependencies and the ECC agents used for ideas; language-specific parts are still to be recorded.
+- A reuse registry in the README listing pinned upstream dependencies and the ECC parts used for ideas; language and tool parts are recorded in the stack packages.
+- Pinned awesome-copilot dependencies for authoring instructions, prompts, and hooks, the `create-agentsmd` and `acquire-codebase-knowledge` skills, and the AI prompt safety and DevOps principles instructions.
+- A related-instructions section in the coding instructions with the conflict rule: repository configuration and `AGENTS.md`, then language and tool instructions, then the common instructions.
 
 ### Changed
 
 - Rewrite the `draft-github-issue` skill in the current skill format, with trigger keywords, `When to Use This Skill`, labeled steps, and `Gotchas`.
 - Fill the AI customization instructions with deterministic workflow, reporting, model-selection, and least-privilege rules.
 - Rewrite the README around the workflow, outcomes, commit command, reports, models, harness limitations, and validation scenarios.
+- Default GitHub Actions workflows to GitHub-hosted runners unless the repository names a self-hosted runner, and remove the outdated developer note.
 
 ## [1.0.1] - 2026-11-04
 

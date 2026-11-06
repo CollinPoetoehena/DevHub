@@ -1,24 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/kotlin-ktor-patterns
+# Ktor Patterns
 
----
-name: kotlin-ktor-patterns
-description: Ktor server patterns including routing DSL, plugins, authentication, Koin DI, kotlinx.serialization, WebSockets, and testApplication testing. Use when building a Ktor server — routing, plugins, auth, DI, serialization, or tests.
-metadata:
-  origin: ECC
----
-
-# Ktor Server Patterns
+Adapted from [ECC `kotlin-ktor-patterns`](https://github.com/affaan-m/ECC/blob/main/skills/kotlin-ktor-patterns/SKILL.md). Repository configuration and the Kotlin and common instructions take precedence over this reference.
 
 Comprehensive Ktor patterns for building robust, maintainable HTTP servers with Kotlin coroutines.
-
-## When to Activate
-
-- Building Ktor HTTP servers
-- Configuring Ktor plugins (Auth, CORS, ContentNegotiation, StatusPages)
-- Implementing REST APIs with Ktor
-- Setting up dependency injection with Koin
-- Writing Ktor integration tests with testApplication
-- Working with WebSockets in Ktor
 
 ## Application Structure
 
@@ -689,4 +673,9 @@ fun Application.configureDI() {
 | `by inject<T>()` | Koin dependency injection |
 | `testApplication { }` | Integration testing |
 
-**Remember**: Ktor is designed around Kotlin coroutines and DSLs. Keep routes thin, push logic to services, and use Koin for dependency injection. Test with `testApplication` for full integration coverage.
+## References
+
+- [Ktor documentation](https://ktor.io/docs/welcome.html)
+- [Ktor server testing](https://ktor.io/docs/server-testing.html)
+- [kotlinx.serialization](https://kotlinlang.org/docs/serialization.html)
+- [Koin for Ktor](https://insert-koin.io/docs/reference/koin-ktor/ktor/)

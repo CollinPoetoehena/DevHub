@@ -1,27 +1,8 @@
 # Python Patterns
 
-> Placeholder: idioms, types, error handling, and structure; content still to be adapted from the sources in the package reuse registry.
-
-TODO
-
-https://github.com/affaan-m/ECC/blob/main/skills/python-patterns/SKILL.md
----
-name: python-patterns
-description: Pythonic idioms, PEP 8 standards, type hints, and best practices for building robust, efficient, and maintainable Python applications. Use when writing or reviewing Python code and idiomatic structure, typing, or PEP 8 is in question.
-metadata:
-  origin: ECC
----
-
-# Python Development Patterns
+Adapted from [ECC `python-patterns`](https://github.com/affaan-m/ECC/blob/main/skills/python-patterns/SKILL.md). Repository configuration and the Python and common instructions take precedence over this reference.
 
 Idiomatic Python patterns and best practices for building robust, efficient, and maintainable applications.
-
-## When to Activate
-
-- Writing new Python code
-- Reviewing Python code
-- Refactoring existing Python code
-- Designing Python packages/modules
 
 ## Core Principles
 
@@ -549,8 +530,7 @@ from fastapi import FastAPI
 from mypackage.models import User
 from mypackage.utils import format_name
 
-# Good: Use isort for automatic import sorting
-# pip install isort
+# Good: Let the formatter sort imports (see tooling.md)
 ```
 
 ### __init__.py for Package Exports
@@ -623,73 +603,6 @@ for item in items:
 result = buffer.getvalue()
 ```
 
-## Python Tooling Integration
-
-### Essential Commands
-
-```bash
-# Code formatting
-black .
-isort .
-
-# Linting
-ruff check .
-pylint mypackage/
-
-# Type checking
-mypy .
-
-# Testing
-pytest --cov=mypackage --cov-report=html
-
-# Security scanning
-bandit -r .
-
-# Dependency management
-pip-audit
-safety check
-```
-
-### pyproject.toml Configuration
-
-```toml
-[project]
-name = "mypackage"
-version = "1.0.0"
-requires-python = ">=3.9"
-dependencies = [
-    "requests>=2.31.0",
-    "pydantic>=2.0.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "black>=23.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.5.0",
-]
-
-[tool.black]
-line-length = 88
-target-version = ['py39']
-
-[tool.ruff]
-line-length = 88
-select = ["E", "F", "I", "N", "W"]
-
-[tool.mypy]
-python_version = "3.9"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "--cov=mypackage --cov-report=term-missing"
-```
-
 ## Quick Reference: Python Idioms
 
 | Idiom | Description |
@@ -756,3 +669,12 @@ except SpecificError as e:
 ```
 
 __Remember__: Python code should be readable, explicit, and follow the principle of least surprise. When in doubt, prioritize clarity over cleverness.
+
+## References
+
+- [PEP 8: Style Guide for Python Code](https://peps.python.org/pep-0008/)
+- [typing: Support for type hints](https://docs.python.org/3/library/typing.html)
+- [Errors and Exceptions](https://docs.python.org/3/tutorial/errors.html)
+- [dataclasses](https://docs.python.org/3/library/dataclasses.html)
+- [asyncio](https://docs.python.org/3/library/asyncio.html)
+- [Python Packaging User Guide](https://packaging.python.org/en/latest/)

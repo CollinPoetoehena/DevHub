@@ -1,29 +1,8 @@
 # Java Patterns
 
-> Placeholder: idioms, types, error handling, and structure; content still to be adapted from the sources in the package reuse registry.
-
-TODO
-
-https://github.com/affaan-m/ECC/tree/main/skills/java-coding-standards
----
-name: java-coding-standards
-description: "Java coding standards for Spring Boot and Quarkus services: naming, immutability, Optional usage, streams, exceptions, generics, CDI, reactive patterns, and project layout. Automatically applies framework-specific conventions. Use when writing or reviewing Java in a Spring Boot or Quarkus service."
-metadata:
-  origin: ECC
----
-
-# Java Coding Standards
+Adapted from [ECC `java-coding-standards`](https://github.com/affaan-m/ECC/blob/main/skills/java-coding-standards/SKILL.md). Repository configuration and the Java and common instructions take precedence over this reference.
 
 Standards for readable, maintainable Java (17+) code in Spring Boot and Quarkus services.
-
-## When to Use
-
-- Writing or reviewing Java code in Spring Boot or Quarkus projects
-- Enforcing naming, immutability, or exception handling conventions
-- Working with records, sealed classes, or pattern matching (Java 17+)
-- Reviewing use of Optional, streams, or generics
-- Structuring packages and project layout
-- **[QUARKUS]**: Working with CDI scopes, Panache entities, or reactive pipelines
 
 ## How It Works
 
@@ -388,4 +367,9 @@ class MarketServiceTest {
 }
 ```
 
-**Remember**: Keep code intentional, typed, and observable. Optimize for maintainability over micro-optimizations unless proven necessary.
+## References
+
+- [Java SE documentation](https://docs.oracle.com/en/java/javase/)
+- [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html)
+- [JEP 395: Records](https://openjdk.org/jeps/395)
+- [JEP 409: Sealed Classes](https://openjdk.org/jeps/409)

@@ -1,25 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/springboot-security
+# Spring Boot Security
 
----
-name: springboot-security
-description: Spring Security best practices for authn/authz, validation, CSRF, secrets, headers, rate limiting, and dependency security in Java Spring Boot services. Use when reviewing Spring Security authn/authz, validation, CSRF, secrets, headers, or rate limiting.
-metadata:
-  origin: ECC
----
-
-# Spring Boot Security Review
+Adapted from [ECC `springboot-security`](https://github.com/affaan-m/ECC/blob/main/skills/springboot-security/SKILL.md). Repository configuration and the Java and common instructions take precedence over this reference.
 
 Use when adding auth, handling input, creating endpoints, or dealing with secrets.
-
-## When to Activate
-
-- Adding authentication (JWT, OAuth2, session-based)
-- Implementing authorization (@PreAuthorize, role-based access)
-- Validating user input (Bean Validation, custom validators)
-- Configuring CORS, CSRF, or security headers
-- Managing secrets (Vault, environment variables)
-- Adding rate limiting or brute-force protection
-- Scanning dependencies for CVEs
 
 ## Authentication
 
@@ -272,4 +255,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 - [ ] Dependencies scanned and up to date
 - [ ] Logs free of sensitive data
 
-**Remember**: Deny by default, validate inputs, least privilege, and secure-by-configuration first.
+## References
+
+- [Spring Security reference](https://docs.spring.io/spring-security/reference/)
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)
+- [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)

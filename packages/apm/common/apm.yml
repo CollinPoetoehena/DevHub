@@ -3,12 +3,18 @@ name: devhub-common
 version: 2.0.0
 description: Common engineering AI customizations; agents, skills, and scoped instructions for DevHub repositories
 target: copilot
+# Dependencies for DevHub AI customizations; pinned with "#<commit-hash>" to ensure reproducibility
 dependencies:
   apm:
+    # Managing AI customizations skills from official GitHub Copilot repository
     - github/awesome-copilot/instructions/agents.instructions.md#60dcb90
     - github/awesome-copilot/instructions/agent-skills.instructions.md#60dcb90
-    - github/awesome-copilot/skills/create-agents.md#60dcb90
-    - github/awesome-copilot/skills/git-commit#60dcb90
+    - github/awesome-copilot/skills/create-agentsmd#60dcb90
     - github/awesome-copilot/instructions/hooks.instructions.md#60dcb90
     - github/awesome-copilot/instructions/instructions.instructions.md#60dcb90
     - github/awesome-copilot/instructions/prompt.instructions.md#60dcb90
+    # Other general useful AI customizations
+    - github/awesome-copilot/skills/acquire-codebase-knowledge#60dcb90
+    - github/awesome-copilot/instructions/ai-prompt-engineering-safety-best-practices.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/devops-core-principles.instructions.md#60dcb90
+    - github/awesome-copilot/skills/git-commit#60dcb90

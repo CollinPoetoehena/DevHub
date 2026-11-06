@@ -35,14 +35,16 @@ Only Orchestrator appears in the agent picker; the workers set `user-invocable: 
 
 Instructions:
 
-- [AI customization](.apm/instructions/common/ai-customization.instructions.md): deterministic workflow, reporting, and model-selection rules for authoring customizations.
-- [Coding](.apm/instructions/common/coding.instructions.md), [documentation](.apm/instructions/common/documentation.instructions.md), and [Git](.apm/instructions/common/git.instructions.md): shared engineering standards.
-- [Security](.apm/instructions/common/security.instructions.md): untrusted content, secrets, secure defaults, and review focus for all work.
-- [Ansible](.apm/instructions/ansible.instructions.md), [Dockerfile](.apm/instructions/dockerfile.instructions.md), [GitHub Actions](.apm/instructions/github-actions.instructions.md), and [Python](.apm/instructions/python.instructions.md): scoped technology constraints.
+- [AI customization](.apm/instructions/ai-customization.instructions.md): deterministic workflow, reporting, and model-selection rules for authoring customizations.
+- [Coding](.apm/instructions/coding.instructions.md), [documentation](.apm/instructions/documentation.instructions.md), and [Git](.apm/instructions/git.instructions.md): shared engineering standards.
+- [Security](.apm/instructions/security.instructions.md): untrusted content, secrets, secure defaults, and review focus for all work.
+- [GitHub Actions](.apm/instructions/github-actions.instructions.md): workflow and CI conventions, kept here because nearly every repository uses them.
+
+Language and tool instructions, such as Python, Dockerfile, and Ansible, live in the opt-in [stack packages](../README.md#package-design) and refine these common instructions.
 
 Skills:
 
-- [code-comments](.apm/skills/code-comments/SKILL.md): decides whether comments are warranted and writes, trims, or removes them; linked from the [coding instructions](.apm/instructions/common/coding.instructions.md#comments).
+- [code-comments](.apm/skills/code-comments/SKILL.md): decides whether comments are warranted and writes, trims, or removes them; linked from the [coding instructions](.apm/instructions/coding.instructions.md#comments).
 - [workflow-learning](.apm/skills/workflow-learning/SKILL.md): retains lessons from a workflow run in the owning customization file; used by Documenter in `LEARN` mode.
 - [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md): drafts issues without publishing or implementing them.
 
@@ -52,20 +54,25 @@ Reused upstream parts are listed in the [reuse registry](#reuse-registry).
 
 ## Reuse registry
 
-Reused parts and their local changes, following the [reuse approach](../README.md#reuse-registry). Dependencies are declared in [`apm.yml`](apm.yml); adapted parts live in [`.apm/`](.apm/).
+Reused parts and their local changes, following the [reuse approach](../README.md#reuse-registry). Dependencies are declared in [`apm.yml`](apm.yml) and pinned to the synced commit; ideas-only parts are DevHub files that adopted specific elements from the source. Update parts as described in [maintaining reused content](../README.md#maintaining-reused-content).
 
-> Placeholder: language-specific parts, such as Python skills adapted from ECC, are still to be added.
-
-| Part | Source | Type | Local changes |
-|---|---|---|---|
-| `git-commit` skill | [awesome-copilot](https://github.com/github/awesome-copilot/tree/60dcb90/skills/git-commit) at `60dcb90` | Dependency | None |
-| `agents` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/60dcb90/instructions/agents.instructions.md) at `60dcb90` | Dependency | None |
-| `agent-skills` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/60dcb90/instructions/agent-skills.instructions.md) at `60dcb90` | Dependency | None |
-| Planner agent | [ECC `planner`](https://github.com/affaan-m/ECC/blob/main/agents/planner.md) | Ideas, modified | Adopted the four-stage process (requirements, existing code review, step breakdown, ordering), the step format (file, action, reason, dependencies, risk), the planning rules for specificity, minimal change, failure paths, refactors, and phasing, plan-level red flags, and the plan format. Left out the worked example and code-level red flags, which the coding instructions own |
-| Architect agent | [ECC `architect`](https://github.com/affaan-m/ECC/blob/main/agents/architect.md) | Ideas, modified | Adopted the four-stage process (current state, requirements, options, trade-offs), the architectural principles as a per-option `+ \| 0 \| - \| n/a` trade-off rating, the red flags, and ADR-shaped output. Left out the pattern catalogs, the example architecture, and the scalability plan |
-| Reviewer agent | [ECC `code-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/code-reviewer.md) | Ideas, modified | Adopted the pre-finding gate, proof for `CRITICAL` and `HIGH`, the four-level severity scale, zero findings as a valid result, common false positives, independent re-run of validation, and the AI-generated code focus |
-| Security instructions | [ECC `security-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/security-reviewer.md), [ECC `security-review` skill](https://github.com/affaan-m/ECC/blob/main/skills/security-review/SKILL.md), and the prompt defense baseline | Ideas, modified | Adopted untrusted-content handling, OWASP-aligned secure defaults per area, a pattern table rated on the Reviewer's severity scale, false positives, negative security tests, and the exposed-secret response, as one shared instruction instead of a separate agent. Left out the TypeScript, Supabase, and Solana code examples and the framework-specific checklists |
-| `workflow-learning` skill | [ECC `agent-self-evaluation`](https://github.com/affaan-m/ECC/blob/main/skills/agent-self-evaluation/SKILL.md) | Ideas, modified | Adopted a 1 to 5 scorecard with the evidence rule, independent scoring per axis, a user-agreement self-check, and the anti-patterns. Replaced the output-quality axes with workflow axes derived from trace signals, and weak axes feed lesson extraction instead of a rework step |
+| Part | Source | Type | Synced | Local changes |
+|---|---|---|---|---|
+| `agents` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/agents.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; authoring rules for agent files |
+| `agent-skills` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/agent-skills.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; authoring rules for skills |
+| `instructions` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/instructions.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; authoring rules for instruction files |
+| `prompt` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/prompt.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; authoring rules for prompt files |
+| `hooks` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/hooks.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; authoring rules for hooks |
+| `create-agentsmd` skill | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/skills/create-agentsmd/SKILL.md) | Dependency | `60dcb90` (2026-11-06) | None; generates a repository `AGENTS.md` |
+| `acquire-codebase-knowledge` skill | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/skills/acquire-codebase-knowledge/SKILL.md) | Dependency | `60dcb90` (2026-11-06) | None; maps and documents an existing codebase on request |
+| `ai-prompt-engineering-safety-best-practices` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/ai-prompt-engineering-safety-best-practices.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; prompt engineering and responsible AI practices |
+| `devops-core-principles` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/devops-core-principles.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; DevOps culture and delivery metrics |
+| `git-commit` skill | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/skills/git-commit/SKILL.md) | Dependency | `60dcb90` (2026-11-06) | None; Conventional Commits for the Orchestrator's commit command |
+| Planner agent | [ECC `planner`](https://github.com/affaan-m/ECC/blob/main/agents/planner.md) | Ideas, modified | Not applicable | Adopted the four-stage process (requirements, existing code review, step breakdown, ordering), the step format (file, action, reason, dependencies, risk), the planning rules for specificity, minimal change, failure paths, refactors, and phasing, plan-level red flags, and the plan format. Left out the worked example and code-level red flags, which the coding instructions own |
+| Architect agent | [ECC `architect`](https://github.com/affaan-m/ECC/blob/main/agents/architect.md) | Ideas, modified | Not applicable | Adopted the four-stage process (current state, requirements, options, trade-offs), the architectural principles as a per-option `+ \| 0 \| - \| n/a` trade-off rating, the red flags, and ADR-shaped output. Left out the pattern catalogs, the example architecture, and the scalability plan |
+| Reviewer agent | [ECC `code-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/code-reviewer.md) | Ideas, modified | Not applicable | Adopted the pre-finding gate, proof for `CRITICAL` and `HIGH`, the four-level severity scale, zero findings as a valid result, common false positives, independent re-run of validation, and the AI-generated code focus |
+| Security instructions | [ECC `security-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/security-reviewer.md), [ECC `security-review` skill](https://github.com/affaan-m/ECC/blob/main/skills/security-review/SKILL.md), and the prompt defense baseline | Ideas, modified | Not applicable | Adopted untrusted-content handling, OWASP-aligned secure defaults per area, a pattern table rated on the Reviewer's severity scale, false positives, negative security tests, and the exposed-secret response, as one shared instruction instead of a separate agent. Left out the TypeScript, Supabase, and Solana code examples and the framework-specific checklists |
+| `workflow-learning` skill | [ECC `agent-self-evaluation`](https://github.com/affaan-m/ECC/blob/main/skills/agent-self-evaluation/SKILL.md) | Ideas, modified | Not applicable | Adopted a 1 to 5 scorecard with the evidence rule, independent scoring per axis, a user-agreement self-check, and the anti-patterns. Replaced the output-quality axes with workflow axes derived from trace signals, and weak axes feed lesson extraction instead of a rework step |
 
 The ECC parts are used for ideas only; the DevHub agents and skills keep their own roles, outcomes, and reports. ECC's agents embed long general checklists, principles, pattern catalogs, language- and framework-specific examples, and worked examples. Those were not copied: the models already know general practice, the shared instructions own DevHub's standards, and language-specific guidance belongs in scoped instructions or skills. Only the parts that make the output checkable, such as gates, proof rules, and fixed formats, were adopted. The prompt defense baseline's rules against outputting code, scripts, and links were left out because they conflict with engineering work.
 
@@ -137,7 +144,7 @@ Each lesson reports `UPDATED`, `PROPOSED`, or `ALREADY_COVERED`, with its eviden
 
 ### Commit
 
-A completed route that changed files ends with a copy-ready `/git-commit` command for the pinned [`git-commit`](https://github.com/github/awesome-copilot/tree/main/skills/git-commit) skill. It lists only the paths workers changed, uses one command per logical change, and carries a Conventional Commits message without `Co-authored-by:` trailers, as required by the [Git instructions](.apm/instructions/common/git.instructions.md). It is suggested only after review returned `PASS` or when the route requires no review.
+A completed route that changed files ends with a copy-ready `/git-commit` command for the pinned [`git-commit`](https://github.com/github/awesome-copilot/tree/main/skills/git-commit) skill. It lists only the paths workers changed, uses one command per logical change, and carries a Conventional Commits message without `Co-authored-by:` trailers, as required by the [Git instructions](.apm/instructions/git.instructions.md). It is suggested only after review returned `PASS` or when the route requires no review.
 
 The suggestion is not authorization. When the user explicitly authorizes the commit, rule `R0 COMMIT` delegates it to Engineer, which runs the skill, because Orchestrator has no terminal access. The user can also run the command in a chat whose agent has terminal access. Pushing is never part of the workflow and requires its own explicit authorization.
 

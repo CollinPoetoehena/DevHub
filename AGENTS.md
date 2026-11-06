@@ -4,7 +4,7 @@ DevHub is the central development hub for my personal projects. Start with the [
 
 ## Shared baseline
 
-- Follow the [common engineering instructions](packages/apm/common/.apm/instructions/common.instructions.md) and matching technology/tool instructions in the [common APM package](packages/apm/common/README.md). These supplement this repository's guidance; surface conflicts rather than assuming an override.
+- Follow the [common engineering instructions](packages/apm/common/.apm/instructions/) of the [common APM package](packages/apm/common/README.md) and the matching language and tool instructions of the [stack packages](packages/apm/README.md#package-design). These supplement this repository's guidance; surface conflicts rather than assuming an override.
 - The [root manifest](apm.yml) declares the local common package. Declaration is not activation; use the [AI setup guide](packages/apm/README.md#repository-setup) to install and verify it for the selected harness.
 
 ---

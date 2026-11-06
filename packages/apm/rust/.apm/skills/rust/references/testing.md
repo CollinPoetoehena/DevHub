@@ -1,39 +1,8 @@
 # Rust Testing
 
-> Placeholder: test layout, fixtures, mocking, and coverage; content still to be adapted from the sources in the package reuse registry.
-
-TODO
-
-https://github.com/affaan-m/ECC/blob/main/skills/rust-testing/SKILL.md
-
----
-name: rust-testing
-description: Rust testing patterns including unit tests, integration tests, async testing, property-based testing, mocking, and coverage. Follows TDD methodology. Use when writing Rust tests — unit, integration, async, property-based, or coverage.
-metadata:
-  origin: ECC
----
-
-# Rust Testing Patterns
+Adapted from [ECC `rust-testing`](https://github.com/affaan-m/ECC/blob/main/skills/rust-testing/SKILL.md). Repository configuration and the Rust and common instructions take precedence over this reference.
 
 Comprehensive Rust testing patterns for writing reliable, maintainable tests following TDD methodology.
-
-## When to Use
-
-- Writing new Rust functions, methods, or traits
-- Adding test coverage to existing code
-- Creating benchmarks for performance-critical code
-- Implementing property-based tests for input validation
-- Following TDD workflow in Rust projects
-
-## How It Works
-
-1. **Identify target code** — Find the function, trait, or module to test
-2. **Write a test** — Use `#[test]` in a `#[cfg(test)]` module, rstest for parameterized tests, or proptest for property-based tests
-3. **Mock dependencies** — Use mockall to isolate the unit under test
-4. **Run tests (RED)** — Verify the test fails with the expected error
-5. **Implement (GREEN)** — Write minimal code to pass
-6. **Refactor** — Improve while keeping tests green
-7. **Check coverage** — Use cargo-llvm-cov, target 80%+
 
 ## TDD Workflow for Rust
 
@@ -506,4 +475,11 @@ test:
       run: cargo llvm-cov --fail-under-lines 80
 ```
 
-**Remember**: Tests are documentation. They show how your code is meant to be used. Write them clearly and keep them up to date.
+## References
+
+- [Writing automated tests](https://doc.rust-lang.org/book/ch11-00-testing.html)
+- [cargo test](https://doc.rust-lang.org/cargo/commands/cargo-test.html)
+- [proptest](https://proptest-rs.github.io/proptest/)
+- [mockall](https://docs.rs/mockall/latest/mockall/)
+- [Criterion.rs](https://bheisler.github.io/criterion.rs/book/)
+- [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov)

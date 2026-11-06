@@ -1,23 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/kotlin-coroutines-flows
+# Kotlin Coroutines and Flows
 
----
-name: kotlin-coroutines-flows
-description: Kotlin Coroutines and Flow patterns for Android and KMP — structured concurrency, Flow operators, StateFlow, error handling, and testing. Use when writing coroutines or Flow code on Android or KMP, or debugging cancellation and concurrency.
-metadata:
-  origin: ECC
----
-
-# Kotlin Coroutines & Flows
+Adapted from [ECC `kotlin-coroutines-flows`](https://github.com/affaan-m/ECC/blob/main/skills/kotlin-coroutines-flows/SKILL.md). Repository configuration and the Kotlin and common instructions take precedence over this reference.
 
 Patterns for structured concurrency, Flow-based reactive streams, and coroutine testing in Android and Kotlin Multiplatform projects.
-
-## When to Activate
-
-- Writing async code with Kotlin coroutines
-- Using Flow, StateFlow, or SharedFlow for reactive data
-- Handling concurrent operations (parallel loading, debounce, retry)
-- Testing coroutines and Flows
-- Managing coroutine scopes and cancellation
 
 ## Structured Concurrency
 
@@ -283,5 +268,6 @@ class FakeItemRepository : ItemRepository {
 
 ## References
 
-See skill: `compose-multiplatform-patterns` for UI consumption of Flows.
-See skill: `android-clean-architecture` for where coroutines fit in layers.
+- [Coroutines guide](https://kotlinlang.org/docs/coroutines-guide.html)
+- [Asynchronous Flow](https://kotlinlang.org/docs/flow.html)
+- [kotlinx-coroutines-test](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/)

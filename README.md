@@ -21,7 +21,7 @@ The name reflects the purpose:
 
 > **Scope of this README:** This is a concise introduction to DevHub's purpose and structure, not a full explanation of every area or project. More detail belongs in the relevant documentation linked below; the root README should stay short enough to work as a clear entry point.
 
-For documentation changes, follow the owning project's instructions and the [common documentation instructions](packages/apm/common/.apm/instructions/common/documentation.instructions.md).
+For documentation changes, follow the owning project's instructions and the [common documentation instructions](packages/apm/common/.apm/instructions/documentation.instructions.md).
 
 ---
 

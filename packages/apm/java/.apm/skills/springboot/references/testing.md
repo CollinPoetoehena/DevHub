@@ -1,21 +1,8 @@
-https://github.com/affaan-m/ECC/tree/main/skills/springboot-tdd
+# Spring Boot Testing
 
----
-name: springboot-tdd
-description: Test-driven development for Spring Boot using JUnit 5, Mockito, MockMvc, Testcontainers, and JaCoCo. Use when adding features, fixing bugs, or refactoring.
-metadata:
-  origin: ECC
----
-
-# Spring Boot TDD Workflow
+Adapted from [ECC `springboot-tdd`](https://github.com/affaan-m/ECC/blob/main/skills/springboot-tdd/SKILL.md). Repository configuration and the Java and common instructions take precedence over this reference.
 
 TDD guidance for Spring Boot services with 80%+ coverage (unit + integration).
-
-## When to Use
-
-- New features or endpoints
-- Bug fixes or refactors
-- Adding data access logic or security rules
 
 ## Workflow
 
@@ -158,4 +145,9 @@ class MarketBuilder {
 - Maven: `mvn -T 4 test` or `mvn verify`
 - Gradle: `./gradlew test jacocoTestReport`
 
-**Remember**: Keep tests fast, isolated, and deterministic. Test behavior, not implementation details.
+## References
+
+- [Spring Boot testing](https://docs.spring.io/spring-boot/reference/testing/index.html)
+- [JUnit User Guide](https://docs.junit.org/current/user-guide/)
+- [Testcontainers for Java](https://java.testcontainers.org/)
+- [JaCoCo](https://www.jacoco.org/jacoco/trunk/doc/)

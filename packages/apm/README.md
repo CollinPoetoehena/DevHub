@@ -2,7 +2,7 @@
 
 [APM](https://microsoft.github.io/apm/) distributes shared AI customizations to supported agent harnesses. DevHub uses it to give every personal project the same engineering baseline, with repository-specific context in a root `AGENTS.md`. The harness loads the resulting context; APM does not execute the agent or guarantee compliance.
 
-This guide owns the general approach: why to customize AI, the concepts, the reuse-first design, setup, usage, and maintenance. Package READMEs, such as [common](common/README.md), the stack packages ([python](python/README.md), [java](java/README.md), [go](go/README.md), [rust](rust/README.md)), and [homelab](homelab/README.md), own their contents, design, and reuse registry. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
+This guide owns the general approach: why to customize AI, the concepts, the reuse-first design, setup, usage, and maintenance. Package READMEs, such as [common](common/README.md) and the stack packages ([python](python/README.md), [java](java/README.md), [go](go/README.md), [rust](rust/README.md), [containerization](containerization/README.md), and [iac](iac/README.md)), own their contents, design, and reuse registry. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
 
 ---
 
@@ -13,11 +13,13 @@ This guide owns the general approach: why to customize AI, the concepts, the reu
 - [Design](#design)
   - [The 80/20 rule: reuse, then tailor](#the-8020-rule-reuse-then-tailor)
   - [What to own: the 20%](#what-to-own-the-20)
+  - [How much detail is enough](#how-much-detail-is-enough)
   - [Why orchestrate](#why-orchestrate)
   - [Deterministic by design](#deterministic-by-design)
   - [Why not install entire collections](#why-not-install-entire-collections)
   - [Reference collections](#reference-collections)
   - [Reuse registry](#reuse-registry)
+  - [Official dependencies](#official-dependencies)
   - [Model selection](#model-selection)
   - [Custom instructions in subagents](#custom-instructions-in-subagents)
   - [How guidance is layered](#how-guidance-is-layered)
@@ -33,7 +35,9 @@ This guide owns the general approach: why to customize AI, the concepts, the reu
   - [Choosing an agent](#choosing-an-agent)
   - [Recommended Chat setup](#recommended-chat-setup)
 - [Maintenance and validation](#maintenance-and-validation)
+  - [Managing AI customizations](#managing-ai-customizations)
   - [Updating APM packages and the CLI](#updating-apm-packages-and-the-cli)
+  - [Maintaining reused content](#maintaining-reused-content)
   - [Validation](#validation)
 - [DevHub's own setup](#devhubs-own-setup)
 - [References](#references)
@@ -114,6 +118,21 @@ Decide per reusable part:
 | Unique to DevHub | Author locally |
 | Unique to one repository | Keep in that repository, not in a shared package |
 
+### How much detail is enough
+
+AI customizations are a means to an end. The goal is to build good, maintainable software, not to perfect the customizations. This work has no natural end: every language, framework, and tool can get another rule, reference, or example, and it is easy to spend more time tuning customizations than building the software they are meant to help with. Find the balance between three forces:
+
+- **Usability:** enough guidance that agents follow the conventions and avoid known mistakes.
+- **Maintainability:** every owned file must be kept current with its sources, tools, and models, so more files and more detail mean more maintenance.
+- **Time:** time spent on customizations is time not spent building software.
+
+The current setup is enough: the common package with the Orchestrator workflow and shared standards, plus one stack package per language or tool area, built from the [reference collections](#reference-collections). Do not go much further than that:
+
+- **Do not over-perfect:** general guidance from good sources is enough. Do not rewrite copied content to make it perfect, add exhaustive rules, or anticipate every edge case.
+- **Add specifics when encountered:** add a language, framework, or tool when a project actually uses it, and a rule when an agent got something wrong or a convention is missing. The [learning step](common/README.md#learning) records such lessons from real runs.
+- **Source first, then tailor:** take new guidance from the reference collections or official documentation, copy it, and use AI to adapt it to the DevHub setup instead of writing it from scratch.
+- **Stop at good enough:** when agents produce work that meets the standards with normal review, the customizations are done; spend the time on building instead.
+
 ### Why orchestrate
 
 A single default agent doing everything in one long conversation works for small tasks, but becomes unreliable for larger ones: context fills up with unrelated detail, the agent reviews its own work, and planning, implementation, and review all use the same model and tools. A thin orchestrator in front of focused worker agents addresses that:
@@ -158,7 +177,7 @@ Apply the same principle to every customization, not only agents:
 - **Skills:** a description with concrete trigger phrases, numbered steps, explicit decision rules, and gotchas instead of general advice. See [Creating effective skills](https://awesome-copilot.github.com/learning-hub/creating-effective-skills/).
 - **Instructions:** short, specific, testable rules scoped with `applyTo`, such as "use `pathlib` for file paths" rather than "write clean code". See [Defining custom instructions](https://awesome-copilot.github.com/learning-hub/defining-custom-instructions/).
 
-Determinism in prompts is still guidance, not enforcement: a model can ignore a rule. Use tools, permissions, hooks, or CI where a requirement must hold, and validate behavior with representative scenarios. The full rule set is in the [AI customization instructions](common/.apm/instructions/common/ai-customization.instructions.md), and the common package applies it in its [workflow](common/README.md#workflow).
+Determinism in prompts is still guidance, not enforcement: a model can ignore a rule. Use tools, permissions, hooks, or CI where a requirement must hold, and validate behavior with representative scenarios. The full rule set is in the [AI customization instructions](common/.apm/instructions/ai-customization.instructions.md), and the common package applies it in its [workflow](common/README.md#workflow).
 
 ### Why not install entire collections
 
@@ -189,14 +208,35 @@ Review each part's license, tools, harness assumptions, and behavior before adop
 
 Each package README keeps a reuse registry: one row per reused part, so origin, version, and local changes stay traceable. See the [common registry](common/README.md#reuse-registry).
 
-| Part | Source | Type | Local changes |
-|---|---|---|---|
-| Name and link in the package | Upstream link with a pinned commit | `Dependency` or `Adapted` | `None`, or a short summary |
+| Part | Source | Type | Synced | Local changes |
+|---|---|---|---|---|
+| Name and link in the package | Original upstream link | `Dependency`, `Adapted`, `Authored`, or `Ideas, modified` | Upstream commit and copy date | `None`, or a short summary |
 
 - **Dependency:** official or authoritative parts used unchanged, declared in `apm.yml` with a pinned ref. For example, GitHub's [agents](https://github.com/github/awesome-copilot/blob/main/instructions/agents.instructions.md) and [agent skills](https://github.com/github/awesome-copilot/blob/main/instructions/agent-skills.instructions.md) authoring instructions are used directly because they are official and need no tailoring.
-- **Adapted:** parts copied into `.apm/` and tailored. Record what changed. For example, a `python` skill based on ECC's [python-patterns](https://github.com/affaan-m/ECC/blob/main/skills/python-patterns/SKILL.md) and [python-testing](https://github.com/affaan-m/ECC/blob/main/skills/python-testing/SKILL.md), trimmed and merged for DevHub conventions.
+- **Adapted:** parts copied into `.apm/` and standardized, with changes beyond the standardization recorded. For example, the [Python package](python/README.md#reuse-registry) adapts ECC's [python-patterns](https://github.com/affaan-m/ECC/blob/main/skills/python-patterns/SKILL.md) and [python-testing](https://github.com/affaan-m/ECC/blob/main/skills/python-testing/SKILL.md) as references of its `python` skill.
+- **Authored:** DevHub content, such as instructions, skill indexes, and references for which no suitable source exists, condensed from official documentation where possible.
+- **Ideas, modified:** DevHub content that adopted specific elements from a source, such as the common agents' gates and formats from ECC.
 
-Keep the upstream license and notices for adapted parts. Revisit the registry when updating dependencies or when upstream changes substantially.
+Keep the upstream license and notices for adapted parts. Update the registry whenever a reused part is synced, as described in [maintaining reused content](#maintaining-reused-content).
+
+### Official dependencies
+
+The common package depends directly on these parts of [github/awesome-copilot](https://github.com/github/awesome-copilot/tree/main), the official GitHub Copilot customization repository, pinned to one commit in its [`apm.yml`](common/apm.yml). They are used without changes: they are official, follow GitHub Copilot's own best practices, and contain nothing specific to DevHub, so tailoring them would only add maintenance and drift from the official guidance. DevHub-specific rules go into separate files on top, such as the common [AI customization instructions](common/.apm/instructions/ai-customization.instructions.md).
+
+| Dependency | Applies to | Purpose |
+|---|---|---|
+| [`agents` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/agents.instructions.md) | `**/*.agent.md` | Authoring custom agents |
+| [`agent-skills` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/agent-skills.instructions.md) | `**/skills/**/SKILL.md` | Authoring skills |
+| [`instructions` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/instructions.instructions.md) | `**/*.instructions.md` | Authoring instruction files |
+| [`prompt` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/prompt.instructions.md) | `**/*.prompt.md` | Authoring prompt files |
+| [`hooks` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/hooks.instructions.md) | `.github/hooks/**`, `hooks/**` | Authoring hooks |
+| [`create-agentsmd` skill](https://github.com/github/awesome-copilot/blob/main/skills/create-agentsmd/SKILL.md) | On request | Generating a repository `AGENTS.md` |
+| [`acquire-codebase-knowledge` skill](https://github.com/github/awesome-copilot/blob/main/skills/acquire-codebase-knowledge/SKILL.md) | On request | Mapping and documenting an existing codebase |
+| [`ai-prompt-engineering-safety-best-practices` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/ai-prompt-engineering-safety-best-practices.instructions.md) | All files | Prompt engineering and responsible AI practices |
+| [`devops-core-principles` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/devops-core-principles.instructions.md) | All files | DevOps culture and delivery metrics |
+| [`git-commit` skill](https://github.com/github/awesome-copilot/blob/main/skills/git-commit/SKILL.md) | On request | Conventional Commits, used by the Orchestrator's commit command |
+
+The first five are the official authoring guidance used for [managing AI customizations](#managing-ai-customizations). The [common registry](common/README.md#reuse-registry) records the pinned commit; update it as described in [maintaining reused content](#maintaining-reused-content).
 
 ### Model selection
 
@@ -220,7 +260,7 @@ Entry agent (Orchestrator) -> worker agents: roles, tools, models, outcomes
     |
     +-- Reused instructions and skills: general knowledge (the 80%)
     +-- Common package instructions: personal standards (the 20%)
-    +-- Stack packages: language instruction, skill with references, framework skills
+    +-- Stack packages: language and tool instructions, skills with references
     +-- Root AGENTS.md: local facts, routes to owning documentation
     +-- Scoped repository instructions: only when path targeting adds value
     |
@@ -244,7 +284,7 @@ Each approach alone has a weakness. Instructions only load reliably, but a long 
 
 - **Language instruction:** short, scoped by `applyTo` to the language's files. It holds toolchain choices, mandatory rules, and exact validation commands, and it explicitly points to the language skill. Because the instruction loads deterministically, so does the pointer to the skill.
 - **Language skill:** an index with steps and gotchas that opens one reference file per task, such as `references/testing.md` when writing tests. Detail that the task does not need never loads.
-- **Framework skills:** separate skills, such as `fastapi` or `spring-boot`, rather than references. Framework files cannot be told apart by `applyTo` (FastAPI code is `*.py`), frameworks are optional per repository, and they have their own triggers. A framework instruction is the exception when the framework has distinctive files, such as Spring `application*.yml`.
+- **Framework skills:** separate skills, such as `fastapi` or `springboot`, rather than references. Framework files cannot be told apart by `applyTo` (FastAPI code is `*.py`), frameworks are optional per repository, and they have their own triggers. A framework instruction is the exception when the framework has distinctive files, such as Spring `application*.yml`.
 - **Repository `AGENTS.md`:** states the stack, framework, and versions in use, so agents know which skills apply.
 
 ```text
@@ -258,7 +298,9 @@ Common instructions (language-neutral)     coding, security, documentation, Git
 Repository AGENTS.md                       stack, versions, and commands in use
 ```
 
-Apply the [80/20 rule](#the-8020-rule-reuse-then-tailor) to the content as well. Models already know general idioms, so keep only what changes the output: personal toolchain choices, version-specific rules, frequent model mistakes, and exact commands. Link to official style guides instead of copying them, and keep examples short and limited to gotchas.
+Apply the [80/20 rule](#the-8020-rule-reuse-then-tailor) to the content as well. Models already know general idioms, so the owned parts, the instructions and skill indexes, keep only what changes the output: personal toolchain choices, version-specific rules, frequent model mistakes, and exact commands. Every file ends with links to the official documentation.
+
+Most reference content is copied from the [reference collections](#reference-collections), mainly ECC skills and awesome-copilot instructions, and then standardized: one reference file per source, a standard header with the source link and a precedence rule, upstream skill framing removed, and official documentation links added. DevHub-specific defaults, such as toolchain choices or the Dockerfile rules, go into the instructions or an authored reference rather than into the copied text. Copying instead of depending on the collections gives full control over the content and its integration with DevHub conventions, while the main content still comes from well-maintained sources, which avoids the heavy work of writing and maintaining it from scratch. Official parts that need no tailoring remain pinned dependencies; see the [reuse registry](#reuse-registry).
 
 ### Package design
 
@@ -267,8 +309,10 @@ Packages are split so a repository loads the baseline and opts in to only the st
 | Package | Contents | Installed |
 |---|---|---|
 | [common](common/README.md) | Agents, language-neutral instructions, workflow skills | Always |
-| [python](python/README.md), [java](java/README.md), [go](go/README.md), [rust](rust/README.md) | One language instruction, a language skill with references, and framework skills | Opt in per stack |
-| [homelab](homelab/README.md) | Guidance shared by the homelab repositories | Homelab repositories only |
+| [python](python/README.md), [java](java/README.md), [go](go/README.md), [rust](rust/README.md) | Language instructions, language skills with references, and framework skills | Opt in per language |
+| [containerization](containerization/README.md), [iac](iac/README.md) | Tool instructions and skills with references: Docker, Kubernetes, and Helm; Ansible, Terraform, and Bicep | Opt in per tool area |
+
+Every stack package declares `devhub-common` as a dependency in its `apm.yml`, so the common agents and standards are always installed with it; stack packages only add to them.
 
 Not every repository uses every language, and installing all of them would work against a reliable setup:
 
@@ -276,19 +320,25 @@ Not every repository uses every language, and installing all of them would work 
 - **Noise:** unused guidance adds context, possible conflicts, and maintenance, the same reason DevHub does not [install entire collections](#why-not-install-entire-collections).
 - **Independent versions:** each stack package has its own version, changelog, and reuse registry, so a Go update does not touch Python consumers.
 
-A stack package has the same layout for every language:
+A stack package has the same layout for every language or tool:
 
 ```text
-packages/apm/<language>/
+packages/apm/<stack>/
   apm.yml
   README.md                                   contents and reuse registry
-  .apm/instructions/<language>.instructions.md
-  .apm/skills/<language>/SKILL.md
-  .apm/skills/<language>/references/{patterns,testing,tooling}.md
+  CHANGELOG.md
+  .apm/instructions/<name>.instructions.md    one per language or tool
+  .apm/skills/<name>/SKILL.md                 index, steps, and gotchas
+  .apm/skills/<name>/references/patterns.md   always present
+  .apm/skills/<name>/references/<topic>.md    optional: conventions, testing, tooling, and similar
   .apm/skills/<framework>/SKILL.md            optional, one per framework
 ```
 
-> Note to self: Python is my primary language, but Java, Go, and Rust packages exist as well. The layout is the same for each, the sources are available anyway, and reading through well-curated language guidance is a fun way to learn. Packages for languages I rarely use stay small until a project needs them.
+Every instruction states that the common instructions always apply and adds only its stack's rules on top; every instruction, skill, and reference ends with links to the official documentation.
+
+Repositories with their own extras, such as the homelab repositories, use the common and stack packages plus their own `AGENTS.md` and repository customizations. A separate domain or project package is only worth it when several repositories share extras that fit no stack package; none is needed for now, so the former homelab placeholder package was removed.
+
+> Note to self: Python is my primary language, but Java (with Kotlin), Go, and Rust packages exist as well. The layout is the same for each, the sources are available anyway, and reading through well-curated language guidance is a fun way to learn. Packages for languages I rarely use stay small until a project needs them.
 
 ---
 
@@ -310,7 +360,7 @@ Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`,
        - CollinPoetoehena/DevHub/packages/apm/python # one entry per stack in use
    ```
 
-   Add [stack packages](#package-design) only for the languages the repository uses, add domain packages only when relevant, and use pinned references for reproducible resolution.
+   Add [stack packages](#package-design) only for the languages and tools the repository uses, add domain packages only when relevant, and use pinned references for reproducible resolution.
 3. Author one root `AGENTS.md` as described in [authoring repository guidance](#authoring-repository-guidance).
 4. With [APM installed](https://microsoft.github.io/apm/getting-started/installation/), run from the repository root:
 
@@ -402,7 +452,7 @@ Decide frames the loop; Request, Iterate, and Validate repeat until "done" is me
 
 Prompt engineering means shaping input to get more accurate, useful output:
 
-- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common coding instructions](common/.apm/instructions/common/coding.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
+- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common coding instructions](common/.apm/instructions/coding.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
 - **Show the target.** Supply examples of desired input/output or existing code/style to match; specify output format, length, and tone when needed.
 - **Set boundaries.** State exclusions such as no unrelated edits or new dependencies. Assign a role when a particular review perspective helps.
 - **Iterate and challenge.** Treat the first result as a draft, refine it with feedback, and request assumptions, trade-offs, and a concise explanation for difficult problems. An explanation is not proof of correctness.
@@ -435,6 +485,10 @@ Autopilot auto-approves tools, and disabling terminal sandboxing removes its fil
 
 Maintain package sources under `.apm/`, never installed copies. Update a package README and changelog with its changes, and this guide for the shared approach. Retain only reusable, evidence-backed lessons in their owning source; this is explicit maintenance, not model training. The common Orchestrator does this as a lightweight final [learning step](common/README.md#learning): repository lessons go into repository customizations, and common lessons into the common package source when it is editable in the workspace, or are otherwise proposed. Source edits do not refresh running sessions or installed customizations: reinstall, then start a fresh chat.
 
+### Managing AI customizations
+
+Creating or changing agents, skills, instructions, prompts, hooks, or `AGENTS.md` files follows the official GitHub Copilot guidance, not DevHub-specific rewrites of it. The [official dependencies](#official-dependencies) supply it: the [agents](https://github.com/github/awesome-copilot/blob/main/instructions/agents.instructions.md), [agent skills](https://github.com/github/awesome-copilot/blob/main/instructions/agent-skills.instructions.md), [instructions](https://github.com/github/awesome-copilot/blob/main/instructions/instructions.instructions.md), [prompt](https://github.com/github/awesome-copilot/blob/main/instructions/prompt.instructions.md), and [hooks](https://github.com/github/awesome-copilot/blob/main/instructions/hooks.instructions.md) instructions load automatically for matching files, and the [`create-agentsmd`](https://github.com/github/awesome-copilot/blob/main/skills/create-agentsmd/SKILL.md) skill helps write a repository `AGENTS.md`. On top of them, the common [AI customization instructions](common/.apm/instructions/ai-customization.instructions.md) add only DevHub's design rules: deterministic workflows, reports, model selection, and validation. In VS Code, the built-in `agent-customization` skill covers file formats and frontmatter as well.
+
 ### Updating APM packages and the CLI
 
 From the consumer repository root, preview and then apply updates:
@@ -451,6 +505,18 @@ apm update CollinPoetoehena/DevHub/packages/apm/common --target copilot
 ```
 
 Review manifest, lockfile, and deployed-file changes, update the [reuse registry](#reuse-registry) when upstream parts change, and repeat the [activation checks](#verify-activation). For local dependencies, such as DevHub's `./packages/apm/common`, run `apm install --only apm --target copilot` to refresh the deployment. Upgrade the CLI itself with its install method, such as `brew upgrade apm` or `apm self-update`.
+
+### Maintaining reused content
+
+Reused content stays maintainable because every part has one original source link, a synced commit, and a recorded list of local changes in its package's reuse registry. Update a part in five steps:
+
+1. **Check upstream.** Open the source link from the registry and compare the upstream file with the synced commit, for example with the file's history or GitHub's compare view (`https://github.com/<owner>/<repo>/compare/<synced>...main`). Stop when nothing relevant changed.
+2. **Copy the new content.** Replace the body of the local file with the new upstream content and reapply the standardization: keep the standard header and official references, and remove the upstream frontmatter, skill framing, and the sections listed under local changes.
+3. **Check the diff.** Review `git diff` against the current version, so DevHub-specific changes recorded in the registry are not lost and new upstream content does not conflict with the common or stack instructions.
+4. **Record the update.** Update the synced commit and date and the local changes in the registry, and add an entry to the package changelog.
+5. **Validate.** Run the package [validation](#validation) and check the links.
+
+For pinned dependencies, change the `#<commit>` ref in `apm.yml`, reinstall, and review the deployed-file changes the same way. Sync when you work on a package anyway or when upstream changed substantially; do not chase every upstream commit.
 
 ### Validation
 

@@ -1,27 +1,8 @@
 # Python Testing
 
-> Placeholder: test layout, fixtures, mocking, and coverage; content still to be adapted from the sources in the package reuse registry.
-
-TODO
-
-https://github.com/affaan-m/ECC/blob/main/skills/python-testing/SKILL.md
----
-name: python-testing
-description: Python testing strategies using pytest, TDD methodology, fixtures, mocking, parametrization, and coverage requirements. Use when writing pytest tests — fixtures, mocks, parametrization, or coverage.
-metadata:
-  origin: ECC
----
-
-# Python Testing Patterns
+Adapted from [ECC `python-testing`](https://github.com/affaan-m/ECC/blob/main/skills/python-testing/SKILL.md). Repository configuration and the Python and common instructions take precedence over this reference.
 
 Comprehensive testing strategies for Python applications using pytest, TDD methodology, and best practices.
-
-## When to Activate
-
-- Writing new Python code (follow TDD: red, green, refactor)
-- Designing test suites for Python projects
-- Reviewing Python test coverage
-- Setting up testing infrastructure
 
 ## Core Testing Philosophy
 
@@ -829,4 +810,10 @@ pytest --pdb
 | `pytest --cov` | Generate coverage report |
 | `assert` | Simple and readable assertions |
 
-**Remember**: Tests are code too. Keep them clean, readable, and maintainable. Good tests catch bugs; great tests prevent them.
+## References
+
+- [pytest documentation](https://docs.pytest.org/en/stable/)
+- [unittest.mock](https://docs.python.org/3/library/unittest.mock.html)
+- [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/latest/)
+- [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/)
+- [coverage.py](https://coverage.readthedocs.io/en/latest/)
