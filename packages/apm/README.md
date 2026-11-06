@@ -23,7 +23,6 @@ This guide owns personal AI usage principles and the shared concepts, setup, aut
 - [AI usage](#ai-usage)
   - [Personal usage: stay the expert](#personal-usage-stay-the-expert)
   - [Prompt engineering](#prompt-engineering)
-  - [The DRIVE method](#the-drive-method)
 - [Working with agents](#working-with-agents)
   - [Recommended Chat setup](#recommended-chat-setup)
   - [Choosing an agent](#choosing-an-agent)
@@ -300,32 +299,21 @@ For discussion only, explicitly request a proposal without edits or installation
 
 ## AI usage
 
+> Note: this is an important additional section for myself personally to ensure I make the most of AI while maintaining core skills.
+
 ### Personal usage: stay the expert
 
 Use AI as a colleague or assistant that amplifies my capabilities, not as a replacement for my thinking. These are personal reminders, not an exhaustive guide:
 
 - **Stay the expert: Keep thinking, stay curious, and exercise your brain.** Do not blindly accept AI output or stop at a plausible answer. Understand (and ask if not clear) how and why things work, investigate what you do not understand, challenge assumptions, and keep reviewing and testing until you can explain and stand behind the result. Taking time to reason things through may be slower at first than simply accepting an answer, but it keeps my mind engaged, strengthens core skills, and helps me catch mistakes and make better decisions. Understanding how things work and seeing my skills grow is also part of what makes engineering fun and rewarding. Keep in mind, [“Slow is smooth, and smooth is fast.”](https://en.wiktionary.org/wiki/slow_is_smooth,_smooth_is_fast), which means that working carefully and methodically reduces mistakes and ultimately leads to greater speed and efficiency than rushing. Speed should be balanced with care, deliberation, and quality; precision and control eventually produce speed. AI can make mistakes; responsibility for quality and final decisions stays with me.
 - **Engineering judgment remains the differentiator.** Producing code is only part of engineering. Architecture, domain understanding, boundaries, technology trade-offs, priorities, scalability, maintainability, and testing, rollout, and operational risks require judgment. AI can explore options and expose blind spots; I must decide what fits the actual problem and own the consequences.
+- **Think first, rather than defaulting immediately to AI.** Pause to frame the problem, recall what I already know, and form an initial idea or hypothesis. Make a proportionate attempt myself before asking for help; independent thinking matters, but there is no need to stay stuck just to avoid using AI.
+- **Ask myself questions and sketch to solidify understanding.** Can I explain this in my own words? Why does it work, what am I assuming, and what would change or fail under different conditions? Use those questions to find gaps, then investigate or ask AI for a focused explanation. Sketch figures, diagrams, relationships, or flows to make the idea concrete; physical paper is often quicker and easier for rough thinking, but digital drawing works too. The goal is better understanding, not a polished diagram.
+- **Troubleshoot actively and learn from the process.** Do not just copy-paste commands and relay their output to AI. Understand why each command is suggested, how its options work, what it reads or changes, and what result would support or rule out the hypothesis before running it. Read and interpret the output myself, update my hypothesis, and ask about anything unclear. Use AI to help reason through the evidence and explain the cause and fix so I can recognize and investigate similar problems next time instead of just copy-pasting the commands and not learning from the process, resulting in full-dependency on AI which you want to avoid by applying the above.
 - **Amplify skills, do not replace understanding and thinking (avoid "brain rot").** Let AI handle much of the coding, writing, and repetitive execution; I do not need to do every task manually to remain capable. Still, use small, familiar tasks as low-stakes practice: recall a common command such as `grep` or a basic SQL query, check `man <command>` or local documentation when needed, try a small example, or write a short routine email yourself. Repeating these simple tasks keeps everyday skills fluent and builds confidence working without AI; it may take a little longer, but that practice can be worthwhile. Save AI for work where it adds more value, especially unfamiliar, complex, repetitive, or time-consuming tasks, and use it to help when you are stuck. Whatever does the drafting or execution, understand the problem and result well enough to direct the work, review it critically, debug it, and verify it. Use AI to extend what I can do, not to become unable to reason or work without it; avoid deactivating your thinking because it leads to "brain rot".
 - **Use AI strategically, not maximally.** Brainstorming, research, explanations, reviews, code/tests, automation, and documentation can benefit. Complex, unfamiliar, or high-impact work especially benefits from exploring alternatives and challenging assumptions, while decision-making stays human. Optimize for speed, quality, learning, and insight, not the amount of AI used.
 - **Keep context and sources trustworthy.** Start a fresh chat for a new task or stale context. Check claims against official documentation, actual code, tests, and logs rather than treating fluent answers as evidence. Use approved tools for work and do not share secrets or restricted information; a paid subscription alone does not establish safety.
 - **The future of Software Engineering.** Less focus on manual typing, more on architecture, strategy, domain logic, and system thinking — engineers shift toward being architects, designers, analysts, reviewers, with value moving from writing code to problem-solving and engineering judgement.
-
-> **Personal Conclusion:** AI is a game changer for software engineers and in life when used wisely. Let it do much of the drafting, coding, and routine work so I can focus on understanding the problem, making decisions, and solving the right things. But I must keep thinking, stay curious, try to understand what it produces, and review and verify what it produces rather than follow it blindly. That active understanding and growth is not just how I stay capable and responsible; it is also part of what makes the work enjoyable. AI should amplify my abilities, not replace my understanding or judgment; I remain responsible for the work and its consequences.
-
-### Prompt engineering
-
-Prompt engineering means shaping input to get more accurate, useful output:
-
-- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common engineering instructions](common/.apm/instructions/common.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
-- **Show the target.** Supply examples of desired input/output or existing code/style to match; specify output format, length, and tone when needed.
-- **Set boundaries.** State exclusions such as no unrelated edits or new dependencies. Assign a role when a particular review perspective helps.
-- **Iterate and challenge.** Treat the first result as a draft, refine it with feedback, and request assumptions, trade-offs, and a concise explanation for difficult problems. An explanation is not proof of correctness.
-- **Reuse what works.** Save recurring requests and procedures through the appropriate [customization type](#choose-the-right-customization), rather than rewriting or duplicating guidance.
-
-See the official [OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering), [Gemini](https://ai.google.dev/gemini-api/docs/prompting-strategies), and [IBM](https://www.ibm.com/think/topics/prompt-engineering) guides for more detail.
-
-### The DRIVE method
 
 [DRIVE](https://www.robertpeake.com/ai/drive) (Robert Peake) is a five-step discipline for working with AI. AI makes producing work cheap, so the hard parts move to both ends: *judgment* at the front (what is worth doing, and to what standard) and *verification* at the back (whether the result is actually right). The middle can go to the machine; trust my practice, not the model.
 
@@ -342,6 +330,20 @@ Decide --> Request --> Iterate --> Validate --> done --> Evolve
 - **E - Evolve:** after the work, debrief and promote lessons into reusable context: standards, references, templates, or instructions (see [ongoing maintenance](#ongoing-maintenance)). Prune stale rules, and check whether I could redo the work without AI.
 
 Decide frames the loop; Request, Iterate, and Validate repeat until "done" is met; Evolve improves what the next task starts from.
+
+> **Personal Conclusion:** AI is a game changer for software engineers and in life when used wisely. Let it do much of the drafting, coding, and routine work so I can focus on understanding the problem, making decisions, and solving the right things. But I must keep thinking, stay curious, try to understand what it produces, and review and verify what it produces rather than follow it blindly. That active understanding and growth is not just how I stay capable and responsible; it is also part of what makes the work enjoyable. AI should amplify my abilities, not replace my understanding or judgment; I remain responsible for the work and its consequences.
+
+### Prompt engineering
+
+Prompt engineering means shaping input to get more accurate, useful output:
+
+- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common engineering instructions](common/.apm/instructions/common.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
+- **Show the target.** Supply examples of desired input/output or existing code/style to match; specify output format, length, and tone when needed.
+- **Set boundaries.** State exclusions such as no unrelated edits or new dependencies. Assign a role when a particular review perspective helps.
+- **Iterate and challenge.** Treat the first result as a draft, refine it with feedback, and request assumptions, trade-offs, and a concise explanation for difficult problems. An explanation is not proof of correctness.
+- **Reuse what works.** Save recurring requests and procedures through the appropriate [customization type](#choose-the-right-customization), rather than rewriting or duplicating guidance.
+
+See the official [OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering), [Gemini](https://ai.google.dev/gemini-api/docs/prompting-strategies), and [IBM](https://www.ibm.com/think/topics/prompt-engineering) guides for more detail.
 
 ---
 
