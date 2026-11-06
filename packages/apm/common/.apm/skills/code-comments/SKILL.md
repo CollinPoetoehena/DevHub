@@ -66,12 +66,12 @@ Multi-sentence declaration documentation uses normal sentence punctuation. Prose
 
 Only when explicitly requested:
 
-1. Learn the repository's languages, terminology, tooling, and documentation conventions; exclude generated, vendored, and third-party content.
-2. Search systematically for every comment, documentation, marker, directive, suppression, and commented-out-code form in scope.
-3. Apply the decision rules to each, including comments directly above declarations and declaration documentation.
-4. Verify directives and suppressions with the relevant tool before removing them.
-5. Inspect the final diff for behavior, formatting, or unrelated changes; search again for missed violations, such as single-line prose comments ending in `.`, `!`, or `?`.
-6. Run relevant repository validation.
+1. **Learn the conventions.** Identify the repository's languages, terminology, tooling, and documentation conventions; exclude generated, vendored, and third-party content.
+2. **Find every comment.** Search systematically for every comment, documentation, marker, directive, suppression, and commented-out-code form in scope.
+3. **Apply the decision rules.** Apply the decision rules to each, including comments directly above declarations and declaration documentation.
+4. **Verify directives.** Verify directives and suppressions with the relevant tool before removing them.
+5. **Inspect the diff.** Inspect the final diff for behavior, formatting, or unrelated changes; search again for missed violations, such as single-line prose comments ending in `.`, `!`, or `?`.
+6. **Validate.** Run relevant repository validation.
 
 If most original comments survive with only wording changes, re-evaluate necessity. Do not target a comment count; stop when further deletion would remove genuinely useful information.
 

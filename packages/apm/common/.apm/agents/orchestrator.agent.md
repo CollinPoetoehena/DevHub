@@ -21,7 +21,7 @@ Keep this table in sync with each agent's `model` frontmatter. Never override a 
 | Architect | Consequential design decisions | Claude Opus 5.5, fallback GPT-6.1 Sol |
 | Engineer | Implementation, diagnosis, validation | Claude Sonnet 5.5, fallback GPT-5.3-Codex |
 | Documenter | Documentation-only changes and learning | Claude Haiku 5.5, fallback GPT-5.4 nano (low cost) |
-| Reviewer | Independent review | GPT-6.1 Sol, fallback Claude Opus 5.5 |
+| Reviewer | Independent review and validation check | GPT-6.1 Sol, fallback Claude Opus 5.5 |
 
 ## Routing table
 
@@ -90,6 +90,7 @@ Workers start in a fresh context. Give each invocation concrete values only:
 - Route, `mode` (`IMPLEMENT`, `DIAGNOSE`, or `COMMIT` for Engineer; `DOCUMENT` or `LEARN` for Documenter), and allowed scope.
 - For `COMMIT`: the exact paths and the message from the suggested commit command.
 - Repository root and absolute paths of applicable guidance: repository entry guidance (such as `AGENTS.md`), `*.instructions.md` files whose `applyTo` matches the scope, and relevant owning documentation.
+- Skills the step must apply: `git-commit` for `COMMIT`, `workflow-learning` for `LEARN`; workers discover other applicable skills themselves.
 - Inputs from earlier steps: approved plan, design, findings, diagnosis, changed files, and validation evidence.
 - Existing user changes to preserve, and whether approval was granted.
 
@@ -120,14 +121,19 @@ Keep the trace across turns, including approval pauses. Every response that ends
 - Deviations: <route changes, retries, limits reached, or "none">
 - Next: <approval or decision needed, or "none">
 
+## References
+| # | Agent | Instructions | Skills | Files read | External sources |
+|---|---|---|---|---|---|
+| 0 | Orchestrator | <guidance read for routing and delegation> | <skills, or "none"> | <files read, or "none"> | <URLs, or "none"> |
+
 ## Learning
-<lessons with scope, owner, and outcome from the learning report, or "NONE: no learning signals">
+<scorecard, then lessons with scope, owner, and outcome from the learning report, or "NONE: no learning signals">
 
 ## Commit
 <suggested commit command, or "Not suggested: <reason>">
 ```
 
-Include every worker report in full. Condense only verbose logs; never drop findings, decisions, failures, deviations, or validation results. Report models as observed: use the configured value from the registry and the model the worker reports, and write `unknown` when the runtime does not expose it. Do not claim checks, reviews, commits, or pushes without evidence.
+Include every worker report in full. Condense only verbose logs; never drop findings, decisions, failures, deviations, or validation results. Build the References table from your own reads (step 0) and each worker's `References` block, one row per step; copy them as reported, write `not reported` for a missing field, and never add items a worker did not report. Report models as observed: use the configured value from the registry and the model the worker reports, and write `unknown` when the runtime does not expose it. Do not claim checks, reviews, commits, or pushes without evidence. use the configured value from the registry and the model the worker reports, and write `unknown` when the runtime does not expose it. Do not claim checks, reviews, commits, or pushes without evidence.
 
 ## Commit command
 

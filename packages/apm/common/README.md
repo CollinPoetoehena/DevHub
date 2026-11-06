@@ -29,7 +29,7 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 | [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | read, search, web |
 | [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | read, search, edit, execute, web, todo |
 | [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code; applies workflow lessons (`LEARN` mode) | read, search, edit, web |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review without edits | read, search |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | read, search, execute |
 
 Only Orchestrator appears in the agent picker; the workers set `user-invocable: false`.
 
@@ -37,6 +37,7 @@ Instructions:
 
 - [AI customization](.apm/instructions/common/ai-customization.instructions.md): deterministic workflow, reporting, and model-selection rules for authoring customizations.
 - [Coding](.apm/instructions/common/coding.instructions.md), [documentation](.apm/instructions/common/documentation.instructions.md), and [Git](.apm/instructions/common/git.instructions.md): shared engineering standards.
+- [Security](.apm/instructions/common/security.instructions.md): untrusted content, secrets, secure defaults, and review focus for all work.
 - [Ansible](.apm/instructions/ansible.instructions.md), [Dockerfile](.apm/instructions/dockerfile.instructions.md), [GitHub Actions](.apm/instructions/github-actions.instructions.md), and [Python](.apm/instructions/python.instructions.md): scoped technology constraints.
 
 Skills:
@@ -53,13 +54,20 @@ Reused upstream parts are listed in the [reuse registry](#reuse-registry).
 
 Reused parts and their local changes, following the [reuse approach](../README.md#reuse-registry). Dependencies are declared in [`apm.yml`](apm.yml); adapted parts live in [`.apm/`](.apm/).
 
-> Placeholder: complete this registry, including adapted parts and their local changes.
+> Placeholder: language-specific parts, such as Python skills adapted from ECC, are still to be added.
 
 | Part | Source | Type | Local changes |
 |---|---|---|---|
 | `git-commit` skill | [awesome-copilot](https://github.com/github/awesome-copilot/tree/60dcb90/skills/git-commit) at `60dcb90` | Dependency | None |
 | `agents` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/60dcb90/instructions/agents.instructions.md) at `60dcb90` | Dependency | None |
 | `agent-skills` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/60dcb90/instructions/agent-skills.instructions.md) at `60dcb90` | Dependency | None |
+| Planner agent | [ECC `planner`](https://github.com/affaan-m/ECC/blob/main/agents/planner.md) | Ideas, modified | Adopted the four-stage process (requirements, existing code review, step breakdown, ordering), the step format (file, action, reason, dependencies, risk), the planning rules for specificity, minimal change, failure paths, refactors, and phasing, plan-level red flags, and the plan format. Left out the worked example and code-level red flags, which the coding instructions own |
+| Architect agent | [ECC `architect`](https://github.com/affaan-m/ECC/blob/main/agents/architect.md) | Ideas, modified | Adopted the four-stage process (current state, requirements, options, trade-offs), the architectural principles as a per-option `+ \| 0 \| - \| n/a` trade-off rating, the red flags, and ADR-shaped output. Left out the pattern catalogs, the example architecture, and the scalability plan |
+| Reviewer agent | [ECC `code-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/code-reviewer.md) | Ideas, modified | Adopted the pre-finding gate, proof for `CRITICAL` and `HIGH`, the four-level severity scale, zero findings as a valid result, common false positives, independent re-run of validation, and the AI-generated code focus |
+| Security instructions | [ECC `security-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/security-reviewer.md), [ECC `security-review` skill](https://github.com/affaan-m/ECC/blob/main/skills/security-review/SKILL.md), and the prompt defense baseline | Ideas, modified | Adopted untrusted-content handling, OWASP-aligned secure defaults per area, a pattern table rated on the Reviewer's severity scale, false positives, negative security tests, and the exposed-secret response, as one shared instruction instead of a separate agent. Left out the TypeScript, Supabase, and Solana code examples and the framework-specific checklists |
+| `workflow-learning` skill | [ECC `agent-self-evaluation`](https://github.com/affaan-m/ECC/blob/main/skills/agent-self-evaluation/SKILL.md) | Ideas, modified | Adopted a 1 to 5 scorecard with the evidence rule, independent scoring per axis, a user-agreement self-check, and the anti-patterns. Replaced the output-quality axes with workflow axes derived from trace signals, and weak axes feed lesson extraction instead of a rework step |
+
+The ECC parts are used for ideas only; the DevHub agents and skills keep their own roles, outcomes, and reports. ECC's agents embed long general checklists, principles, pattern catalogs, language- and framework-specific examples, and worked examples. Those were not copied: the models already know general practice, the shared instructions own DevHub's standards, and language-specific guidance belongs in scoped instructions or skills. Only the parts that make the output checkable, such as gates, proof rules, and fixed formats, were adopted. The prompt defense baseline's rules against outputting code, scripts, and links were left out because they conflict with engineering work.
 
 ---
 
@@ -117,7 +125,7 @@ An ambiguous message is treated as a new request, so it never counts as approval
 
 Learning is a lightweight, final step of the workflow, not a separate agent or route. When a route ends with a learning signal, such as a review finding, a plan change, a deviation, a failed validation, a blocked worker, or a user correction, the Orchestrator invokes Documenter once in `LEARN` mode with the evidence. Clean runs record `Learning: NONE` and skip the step.
 
-Documenter applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md):
+Documenter applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md). It first scores the run on five fixed axes (routing, accuracy, completeness, validation, efficiency) from 1 to 5, citing evidence for every score below 5; every axis scored 3 or lower must yield a lesson or a stated reason it is not reusable. Lessons then go to their owner:
 
 | Lesson about | Where it goes |
 |---|---|
@@ -135,7 +143,7 @@ The suggestion is not authorization. When the user explicitly authorizes the com
 
 ### Reports and trace
 
-Every worker ends with a fixed `## Report` block: agent, model, status, outcome, reason, guidance read, changes or findings, validation evidence, decisions, deviations, and open items. The Orchestrator includes every report in full and adds the selected route with its reason, a step trace with the configured and reported model per step, and a result summary of changes, validation, review, deviations, and next decisions.
+Every worker ends with a fixed `## Report` block: agent, model, status, outcome, reason, references (instructions, skills, files read, and external sources actually used), changes or findings, validation evidence, decisions, deviations, and open items. The Orchestrator includes every report in full and adds the selected route with its reason, a step trace with the configured and reported model per step, a references table with one row per step including its own, and a result summary of changes, validation, review, deviations, and next decisions.
 
 ### Models
 

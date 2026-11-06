@@ -119,7 +119,7 @@ A single default agent doing everything in one long conversation works for small
 - **Right-sized workflow:** a fixed routing table sends a typo fix straight to a worker and a cross-cutting change through planning, approval, implementation, and review, so effort matches risk instead of every task paying the full workflow cost.
 - **One entry point:** developers select one agent instead of deciding which role, mode, or model each request needs.
 - **Focused context:** each worker runs as a subagent in a fresh context with only its assignment, which keeps the coordinator's context small and reduces cross-task confusion.
-- **Separation of duties:** each role has its own instructions, least-privilege tools, and model. Reviewers cannot edit, planners cannot implement, and review runs in a separate context on a different model family than implementation.
+- **Separation of duties:** each role has its own instructions, least-privilege tools, and model. Reviewers cannot edit and only run inspection and validation commands, planners cannot implement, and review runs in a separate context on a different model family than implementation.
 - **Human control where it matters:** approval gates before planned implementation and before commits keep consequential decisions with the user, while routine steps run autonomously.
 - **Traceability and learning:** fixed outcomes and reports produce a trace of route, steps, models, validation, and deviations; its signals feed the [learning step](common/README.md#learning).
 
@@ -146,6 +146,8 @@ What makes customizations reliable is the explicit, checkable part: fixed decisi
 | "Get approval for big changes" | Named gates: plan approval before implementation, explicit authorization before commits, never push |
 | "Summarize your work" | A fixed `## Report` block per agent and an aggregated trace with route, steps, models, validation evidence, and deviations |
 | "Be careful with edits" | Least-privilege tools per role: Reviewer and Planner cannot edit, Orchestrator cannot run commands |
+| "Only report real issues" | A pre-finding gate (exact line, concrete failure, context read, defensible severity), proof for `CRITICAL` and `HIGH`, and zero findings as a valid result |
+| "Write a good plan" | A fixed step format (file, action, reason, dependencies, risk) and a check before the plan is returned |
 | "Improve over time" | A learning step triggered only by listed signals, with a fixed owner order for each lesson |
 
 Apply the same principle to every customization, not only agents:

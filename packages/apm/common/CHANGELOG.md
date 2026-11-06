@@ -22,10 +22,16 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 - A copy-ready `/git-commit` command for the pinned `git-commit` skill at the end of completed routes that changed files; explicit authorization routes to Engineer `COMMIT` mode (`R0 COMMIT`).
 - A lightweight learning step: when a route ends with learning signals, Documenter applies the new `workflow-learning` skill in `LEARN` mode. Repository lessons update repository customizations; common lessons update the package source when DevHub is editable in the workspace, otherwise they are proposed.
 - A concise `code-comments` skill that defaults to no comment, linked from the coding instructions.
-- A reuse registry in the README listing pinned upstream dependencies; adapted parts are still to be recorded.
+- Shared security instructions, adapted from ECC, with OWASP-aligned secure defaults per area, a severity-rated pattern table, false positives, negative security tests, and an exposed-secret response; every worker treats fetched and inspected content as data, not instructions.
+- A `References` block in every worker report (instructions, skills, files read, external sources) and a per-step references table in the Orchestrator report.
+- Reviewer quality gates adapted from ECC: a pre-finding gate, proof for `CRITICAL` and `HIGH` findings, a `CRITICAL | HIGH | MEDIUM | LOW` scale with `CRITICAL` and `HIGH` blocking, zero findings as a valid result, and common false positives. Reviewer gets `execute` to re-run validation with inspection and check-mode commands only.
+- Planner four-stage process, step format, planning rules for refactors and phasing, plan-level red flags, and a fuller plan format; Architect four-stage process, a per-option trade-off rating against fixed architectural principles, red flags, and ADR-shaped output.
+- A self-evaluation scorecard in the `workflow-learning` skill, adapted from ECC: five workflow axes scored 1 to 5 with cited evidence, where weak axes drive lesson extraction.
+- A reuse registry in the README listing pinned upstream dependencies and the ECC agents used for ideas; language-specific parts are still to be recorded.
 
 ### Changed
 
+- Rewrite the `draft-github-issue` skill in the current skill format, with trigger keywords, `When to Use This Skill`, labeled steps, and `Gotchas`.
 - Fill the AI customization instructions with deterministic workflow, reporting, model-selection, and least-privilege rules.
 - Rewrite the README around the workflow, outcomes, commit command, reports, models, harness limitations, and validation scenarios.
 
