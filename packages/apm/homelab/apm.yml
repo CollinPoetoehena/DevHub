@@ -1,5 +1,0 @@
-# Placeholder for homelab guidance shared across its repositories.
-name: devhub-homelab
-version: 1.0.0
-description: Homelab-specific coding, documentation and tooling instructions
-target: copilot

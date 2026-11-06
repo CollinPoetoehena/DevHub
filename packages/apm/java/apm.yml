@@ -1,0 +1,5 @@
+# Java stack guidance for DevHub repositories; opt in next to devhub-common.
+name: devhub-java
+version: 0.1.0
+description: Java instructions and skills for DevHub repositories that use Java
+target: copilot

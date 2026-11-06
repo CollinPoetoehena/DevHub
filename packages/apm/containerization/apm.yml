@@ -1,0 +1,5 @@
+# Containerization stack guidance for DevHub repositories; opt in next to devhub-common.
+name: devhub-containerization
+version: 0.1.0
+description: Containerization instructions and skills for DevHub repositories
+target: copilot

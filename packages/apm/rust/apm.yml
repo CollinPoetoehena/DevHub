@@ -1,0 +1,5 @@
+# Rust stack guidance for DevHub repositories; opt in next to devhub-common.
+name: devhub-rust
+version: 0.1.0
+description: Rust instructions and skills for DevHub repositories that use Rust
+target: copilot

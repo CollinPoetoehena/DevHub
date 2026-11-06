@@ -1,0 +1,5 @@
+# Python stack guidance for DevHub repositories; opt in next to devhub-common.
+name: devhub-python
+version: 0.1.0
+description: Python instructions and skills for DevHub repositories that use Python
+target: copilot

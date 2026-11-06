@@ -5,7 +5,10 @@ description: Common engineering AI customizations; agents, skills, and scoped in
 target: copilot
 dependencies:
   apm:
-    - github/awesome-copilot/skills/git-commit#60dcb90
-    - github/awesome-copilot/instructions/agent-skills.instructions.md#60dcb90
     - github/awesome-copilot/instructions/agents.instructions.md#60dcb90
-    
+    - github/awesome-copilot/instructions/agent-skills.instructions.md#60dcb90
+    - github/awesome-copilot/skills/create-agents.md#60dcb90
+    - github/awesome-copilot/skills/git-commit#60dcb90
+    - github/awesome-copilot/instructions/hooks.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/instructions.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/prompt.instructions.md#60dcb90

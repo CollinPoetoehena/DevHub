@@ -2,7 +2,7 @@
 
 [APM](https://microsoft.github.io/apm/) distributes shared AI customizations to supported agent harnesses. DevHub uses it to give every personal project the same engineering baseline, with repository-specific context in a root `AGENTS.md`. The harness loads the resulting context; APM does not execute the agent or guarantee compliance.
 
-This guide owns the general approach: why to customize AI, the concepts, the reuse-first design, setup, usage, and maintenance. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), own their contents, design, and reuse registry. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
+This guide owns the general approach: why to customize AI, the concepts, the reuse-first design, setup, usage, and maintenance. Package READMEs, such as [common](common/README.md), the stack packages ([python](python/README.md), [java](java/README.md), [go](go/README.md), [rust](rust/README.md)), and [homelab](homelab/README.md), own their contents, design, and reuse registry. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
 
 ---
 
@@ -21,6 +21,8 @@ This guide owns the general approach: why to customize AI, the concepts, the reu
   - [Model selection](#model-selection)
   - [Custom instructions in subagents](#custom-instructions-in-subagents)
   - [How guidance is layered](#how-guidance-is-layered)
+  - [Language and framework guidance](#language-and-framework-guidance)
+  - [Package design](#package-design)
 - [Repository setup](#repository-setup)
   - [Verify activation](#verify-activation)
 - [Authoring repository guidance](#authoring-repository-guidance)
@@ -218,6 +220,7 @@ Entry agent (Orchestrator) -> worker agents: roles, tools, models, outcomes
     |
     +-- Reused instructions and skills: general knowledge (the 80%)
     +-- Common package instructions: personal standards (the 20%)
+    +-- Stack packages: language instruction, skill with references, framework skills
     +-- Root AGENTS.md: local facts, routes to owning documentation
     +-- Scoped repository instructions: only when path targeting adds value
     |
@@ -226,6 +229,66 @@ Implementation, documentation, review, with validation and a reported trace
 ```
 
 The diagram shows context composition, not precedence or a promise that every file loads automatically. Keep each topic in one owner and link to it; do not copy standards into agents or repositories. Start with one root `AGENTS.md`; add a nested one only when a component has materially different, consequential constraints that a link cannot cover.
+
+### Language and framework guidance
+
+Language and framework guidance, such as Python, Go, FastAPI, or Spring Boot, can live in instructions, skills, or both. Collections differ: [awesome-copilot](https://github.com/github/awesome-copilot/tree/main) uses long instructions per language, while [ECC](https://github.com/affaan-m/ECC/tree/main) uses skills such as `python-patterns` and `python-testing` behind a short instruction. The choice comes down to when each primitive enters the context and what it costs:
+
+| Primitive | When it enters the context | Cost | Best for |
+|---|---|---|---|
+| Instruction with `applyTo` | Automatically, whenever matching files are involved | The full text, every time | Short, mandatory rules and validation commands |
+| Skill `SKILL.md` | When the model judges that the description matches | Only the description until used | Procedures, decision rules, gotchas |
+| Skill `references/*.md` | Only when the skill points to it for the current task | Nothing until opened | Large topic detail: patterns, testing, tooling |
+
+Each approach alone has a weakness. Instructions only load reliably, but a long language file is loaded on every edit of a matching file, including one-line fixes. Skills only are cheap, but loading depends on the model matching a description, so they are sometimes skipped. DevHub therefore combines them:
+
+- **Language instruction:** short, scoped by `applyTo` to the language's files. It holds toolchain choices, mandatory rules, and exact validation commands, and it explicitly points to the language skill. Because the instruction loads deterministically, so does the pointer to the skill.
+- **Language skill:** an index with steps and gotchas that opens one reference file per task, such as `references/testing.md` when writing tests. Detail that the task does not need never loads.
+- **Framework skills:** separate skills, such as `fastapi` or `spring-boot`, rather than references. Framework files cannot be told apart by `applyTo` (FastAPI code is `*.py`), frameworks are optional per repository, and they have their own triggers. A framework instruction is the exception when the framework has distinctive files, such as Spring `application*.yml`.
+- **Repository `AGENTS.md`:** states the stack, framework, and versions in use, so agents know which skills apply.
+
+```text
+Common instructions (language-neutral)     coding, security, documentation, Git
+  +-- Language instruction (applyTo)       python.instructions.md: rules, commands, pointer
+        +-- Language skill (on demand)     skills/python/SKILL.md: index and gotchas
+        |     +-- references/patterns.md   idioms, typing, errors
+        |     +-- references/testing.md    test layout, fixtures, mocking
+        |     +-- references/tooling.md    toolchain and dependencies
+        +-- Framework skills (on demand)   skills/fastapi/SKILL.md
+Repository AGENTS.md                       stack, versions, and commands in use
+```
+
+Apply the [80/20 rule](#the-8020-rule-reuse-then-tailor) to the content as well. Models already know general idioms, so keep only what changes the output: personal toolchain choices, version-specific rules, frequent model mistakes, and exact commands. Link to official style guides instead of copying them, and keep examples short and limited to gotchas.
+
+### Package design
+
+Packages are split so a repository loads the baseline and opts in to only the stacks it uses:
+
+| Package | Contents | Installed |
+|---|---|---|
+| [common](common/README.md) | Agents, language-neutral instructions, workflow skills | Always |
+| [python](python/README.md), [java](java/README.md), [go](go/README.md), [rust](rust/README.md) | One language instruction, a language skill with references, and framework skills | Opt in per stack |
+| [homelab](homelab/README.md) | Guidance shared by the homelab repositories | Homelab repositories only |
+
+Not every repository uses every language, and installing all of them would work against a reliable setup:
+
+- **Discovery budget:** an instruction for files a repository does not have never loads, but every installed skill description competes for attention during discovery. A Python repository should not carry Java and Rust skills.
+- **Noise:** unused guidance adds context, possible conflicts, and maintenance, the same reason DevHub does not [install entire collections](#why-not-install-entire-collections).
+- **Independent versions:** each stack package has its own version, changelog, and reuse registry, so a Go update does not touch Python consumers.
+
+A stack package has the same layout for every language:
+
+```text
+packages/apm/<language>/
+  apm.yml
+  README.md                                   contents and reuse registry
+  .apm/instructions/<language>.instructions.md
+  .apm/skills/<language>/SKILL.md
+  .apm/skills/<language>/references/{patterns,testing,tooling}.md
+  .apm/skills/<framework>/SKILL.md            optional, one per framework
+```
+
+> Note to self: Python is my primary language, but Java, Go, and Rust packages exist as well. The layout is the same for each, the sources are available anyway, and reading through well-curated language guidance is a fun way to learn. Packages for languages I rarely use stay small until a project needs them.
 
 ---
 
@@ -244,9 +307,10 @@ Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`,
    dependencies:
      apm:
        - CollinPoetoehena/DevHub/packages/apm/common
+       - CollinPoetoehena/DevHub/packages/apm/python # one entry per stack in use
    ```
 
-   Add domain packages only when relevant, and use pinned references for reproducible resolution.
+   Add [stack packages](#package-design) only for the languages the repository uses, add domain packages only when relevant, and use pinned references for reproducible resolution.
 3. Author one root `AGENTS.md` as described in [authoring repository guidance](#authoring-repository-guidance).
 4. With [APM installed](https://microsoft.github.io/apm/getting-started/installation/), run from the repository root:
 
