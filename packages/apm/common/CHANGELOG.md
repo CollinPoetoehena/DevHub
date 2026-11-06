@@ -15,10 +15,12 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 ### Added
 
 - Closed outcome sets per worker with exactly one transition per outcome, explicit plan approval, and at most two correction and two plan-revision cycles.
+- Follow-up rules: replies to an open pause continue the active route, other messages are routed again as new requests with earlier results as inputs, and ambiguous messages never count as approval.
 - A fixed `## Report` block for every worker, aggregated by Orchestrator into a trace of route, steps, configured and reported models, validation, review, and deviations.
 - Role-specific model fallback lists per agent, with Reviewer on a different model family than Engineer and Documenter on low-cost models.
 - Documenter for documentation-only routes (`DIRECT_DOCS` and documentation-only plans), returning `ENGINEERING_REQUIRED` when code changes or command verification are needed.
 - A copy-ready `/git-commit` command for the pinned `git-commit` skill at the end of completed routes that changed files; explicit authorization routes to Engineer `COMMIT` mode (`R0 COMMIT`).
+- A lightweight learning step: when a route ends with learning signals, Documenter applies the new `workflow-learning` skill in `LEARN` mode. Repository lessons update repository customizations; common lessons update the package source when DevHub is editable in the workspace, otherwise they are proposed.
 - A concise `code-comments` skill that defaults to no comment, linked from the coding instructions.
 - A reuse registry in the README listing pinned upstream dependencies; adapted parts are still to be recorded.
 

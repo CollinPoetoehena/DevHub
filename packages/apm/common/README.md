@@ -11,6 +11,7 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 - [Workflow](#workflow)
   - [Routing](#routing)
   - [Outcomes and transitions](#outcomes-and-transitions)
+  - [Learning](#learning)
   - [Commit](#commit)
   - [Reports and trace](#reports-and-trace)
   - [Models](#models)
@@ -27,7 +28,7 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 | [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | read, search, web |
 | [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | read, search, web |
 | [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | read, search, edit, execute, web, todo |
-| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | read, search, edit, web |
+| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code; applies workflow lessons (`LEARN` mode) | read, search, edit, web |
 | [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review without edits | read, search |
 
 Only Orchestrator appears in the agent picker; the workers set `user-invocable: false`.
@@ -41,6 +42,7 @@ Instructions:
 Skills:
 
 - [code-comments](.apm/skills/code-comments/SKILL.md): decides whether comments are warranted and writes, trims, or removes them; linked from the [coding instructions](.apm/instructions/common/coding.instructions.md#comments).
+- [workflow-learning](.apm/skills/workflow-learning/SKILL.md): retains lessons from a workflow run in the owning customization file; used by Documenter in `LEARN` mode.
 - [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md): drafts issues without publishing or implementing them.
 
 Reused upstream parts are listed in the [reuse registry](#reuse-registry).
@@ -76,6 +78,7 @@ User -> Orchestrator
                                      -> user approval -> Engineer or Documenter -> Reviewer
 
 Reviewer: PASS -> done | IMPLEMENTATION_CHANGES -> same implementer | PLAN_CHANGES -> Planner
+Route end with learning signals -> Documenter (LEARN, workflow-learning skill) -> final report
 ```
 
 ### Routing
@@ -91,10 +94,38 @@ Each worker returns an execution status (`COMPLETE | NEEDS_INPUT | BLOCKED | FAI
 | Planner | `PLAN_READY`, `ARCHITECTURE_REQUIRED` |
 | Architect | `DESIGN_READY` |
 | Engineer | `IMPLEMENTED`, `DIAGNOSED`, `PLAN_CHANGES`, `COMMITTED` |
-| Documenter | `DOCUMENTED`, `ENGINEERING_REQUIRED` |
+| Documenter | `DOCUMENTED`, `ENGINEERING_REQUIRED`, `LEARNED` |
 | Reviewer | `PASS`, `IMPLEMENTATION_CHANGES`, `PLAN_CHANGES` |
 
 Architect is invoked by the Orchestrator when Planner returns `ARCHITECTURE_REQUIRED`, rather than by Planner itself, so a single coordinator owns every transition and the trace and the workflow does not depend on nested subagent support. Documenter returns `ENGINEERING_REQUIRED` when documentation needs code changes or command-based verification; R3 then re-routes to R4, or R5 when R4 conditions do not hold, as a reported deviation. A plan requires explicit user approval before implementation, also after a revision. Correction cycles and plan revisions are each limited to two; reaching a limit stops the route as `BLOCKED` with the decision needed.
+
+### Follow-ups
+
+Most requests need one prompt: the route runs to completion and pauses only for plan approval, a `NEEDS_INPUT` question, or a `BLOCKED` decision. The Orchestrator classifies every later message by the [follow-up rules](.apm/agents/orchestrator.agent.md#follow-ups):
+
+| Follow-up | Handling |
+|---|---|
+| Plan approval | Continues the route at implementation |
+| Plan edits, or rejection with a reason | Planner revision, then approval again; counts toward the revision limit |
+| Answer to `NEEDS_INPUT`, or decision after `BLOCKED` | Continues the route at the paused step |
+| Commit authorization | `R0 COMMIT` |
+| Correction, extension, or new question after a completed route | New request: routed again, with earlier results as inputs and a new trace that references the earlier route; also a learning signal when it corrects the result |
+
+An ambiguous message is treated as a new request, so it never counts as approval. Limits start again per request.
+
+### Learning
+
+Learning is a lightweight, final step of the workflow, not a separate agent or route. When a route ends with a learning signal, such as a review finding, a plan change, a deviation, a failed validation, a blocked worker, or a user correction, the Orchestrator invokes Documenter once in `LEARN` mode with the evidence. Clean runs record `Learning: NONE` and skip the step.
+
+Documenter applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md):
+
+| Lesson about | Where it goes |
+|---|---|
+| This repository only, or a repository-owned file | Repository customizations: `AGENTS.md`, then a scoped instruction, then a local skill, then a local agent |
+| A file deployed by this package, or a cross-repository convention | This package's `.apm/` source, edited directly when the current repository is DevHub or a DevHub clone is in the workspace, with a `CHANGELOG.md` entry; otherwise proposed |
+| General knowledge from a reused upstream part | Proposed; upstream content is never edited |
+
+Each lesson reports `UPDATED`, `PROPOSED`, or `ALREADY_COVERED`, with its evidence and owner, in the final report's Learning section. Installed copies listed in `apm.lock.yaml` are never edited, and changes to safeguards such as approvals, tools, routing, or commit policy are always proposed. Learning edits are not reviewed, get their own suggested commit, and reach consumers only after `apm install`.
 
 ### Commit
 
@@ -152,6 +183,9 @@ Validate sources with `apm compile --validate --local-only` from this directory.
 | Validation fails or a limit is reached | No completion claim; `BLOCKED` or `FAILED` reported |
 | Any route | Final response contains route, trace with models, and every agent report |
 | Completed route with changes | Ends with a `/git-commit` command for only the changed paths; nothing is committed |
+| Review finding fixed in a correction cycle | Learning step records the rule in its owner, or `ALREADY_COVERED` |
+| Clean run without signals | `Learning: NONE`; no learning step |
+| Lesson about a common agent, no DevHub source in the workspace | `PROPOSED` with the exact suggested text |
 | User authorizes the commit | R0; Engineer commits via `git-commit` and reports the hash; no push |
 
 Source edits do not update deployed customizations or running sessions.

@@ -13,6 +13,8 @@ This guide owns the general approach: why to customize AI, the concepts, the reu
 - [Design](#design)
   - [The 80/20 rule: reuse, then tailor](#the-8020-rule-reuse-then-tailor)
   - [What to own: the 20%](#what-to-own-the-20)
+  - [Why orchestrate](#why-orchestrate)
+  - [Deterministic by design](#deterministic-by-design)
   - [Why not install entire collections](#why-not-install-entire-collections)
   - [Reference collections](#reference-collections)
   - [Reuse registry](#reuse-registry)
@@ -48,6 +50,8 @@ Default agents are capable, but they do not know a repository's/project's conven
 - **Predictable, reviewable workflows:** fixed roles, routes, and reports make AI-assisted work traceable and easier to verify.
 
 Default setups give default context and behavior for agents which is sufficient for general tasks but lack repository- and tool-specific knowledge and therefore lead to worse quality outcomes (e.g. failing to follow Python conventions or project-specific rules, etc.). Customizations complement the default agent and the human contributors; they do not replace engineering judgment or guarantee a result. Keep them small and relevant: overlapping instructions add maintenance, stale facts, and conflicts.
+
+See for an example in the official documentation: [Before and after customization examples](https://awesome-copilot.github.com/learning-hub/before-after-customization-examples/). This is a simple illustration but it demonstrates the core idea: capturing repository-/project-specific knowledge once and reusing it consistently across tasks improves quality and reduces repetitive explanations significantly.
 
 ---
 
@@ -107,6 +111,50 @@ Decide per reusable part:
 | Needs trimming or tailoring | Copy into the package with source and changes recorded in the registry |
 | Unique to DevHub | Author locally |
 | Unique to one repository | Keep in that repository, not in a shared package |
+
+### Why orchestrate
+
+A single default agent doing everything in one long conversation works for small tasks, but becomes unreliable for larger ones: context fills up with unrelated detail, the agent reviews its own work, and planning, implementation, and review all use the same model and tools. A thin orchestrator in front of focused worker agents addresses that:
+
+- **Right-sized workflow:** a fixed routing table sends a typo fix straight to a worker and a cross-cutting change through planning, approval, implementation, and review, so effort matches risk instead of every task paying the full workflow cost.
+- **One entry point:** developers select one agent instead of deciding which role, mode, or model each request needs.
+- **Focused context:** each worker runs as a subagent in a fresh context with only its assignment, which keeps the coordinator's context small and reduces cross-task confusion.
+- **Separation of duties:** each role has its own instructions, least-privilege tools, and model. Reviewers cannot edit, planners cannot implement, and review runs in a separate context on a different model family than implementation.
+- **Human control where it matters:** approval gates before planned implementation and before commits keep consequential decisions with the user, while routine steps run autonomously.
+- **Traceability and learning:** fixed outcomes and reports produce a trace of route, steps, models, validation, and deviations; its signals feed the [learning step](common/README.md#learning).
+
+**Why the cycle improves the result:** the same agent that wrote a change is poor at finding its flaws. It remembers its reasoning, its shortcuts, and the dead ends it already ruled out, so it tends to confirm its own work. A reviewer that starts with a fresh context sees only the requirement, the plan, and the diff. It has no memory of the reasoning that produced them, so it is more likely to question assumptions the implementer took for granted. Using a different model family for review adds a second, independent set of blind spots to check. Planning works the same way: a planner that does not write code is less likely to jump into implementation before the approach is clear.
+
+**Why it saves time overall:** a multi-step cycle usually costs about the same wall-clock time as a long chain of manual prompts, but it changes where your effort goes. Consider a task that takes six prompts over about 30 minutes, with you reading each intermediate result, correcting drift, and re-explaining context. The orchestrated version may take a similar 30 minutes, but you write one request, approve the plan at a defined gate, and read one report at the end. Quality is higher on the first pass, so fewer rounds of rework follow; meaning you can spend less time on corrections and context management and focus on another related task in parallel for example. The exact numbers depend on the task. Small tasks gain little and should go straight to a worker or the default agent.
+
+**Why the report matters:** the final report lists the route, each step, the model used, validation results, and deviations. You can judge what was done and what remains unverified without rereading the whole conversation, and those same signals drive learning, so later runs improve.
+
+**Follow-up prompts:** one prompt is usually enough, but follow-ups are normal and part of the design. A route pauses only at defined points: plan approval, a question a worker cannot answer itself (`NEEDS_INPUT`), or a decision after a blocked step. Your reply continues the same route at that point. Plan edits go back to Planner as a bounded revision. After a route completes, a follow-up such as "also handle the empty case" or "that is wrong, use X" is routed again as a new request. The orchestrator passes the earlier plan, findings, and changed files as inputs, so you do not have to re-explain context. A correction of a completed result is also a learning signal, so the same mistake is less likely next time. An ambiguous reply is treated as a new request rather than as approval, so nothing is implemented or committed by accident. Committing is itself a follow-up: the report ends with a suggested command, and an explicit "commit" runs it. Start a new chat for unrelated work, since a long conversation grows the orchestrator's context and weakens the fresh-context benefit. See [Follow-ups](common/README.md#follow-ups) for the exact handling.
+
+Orchestration has costs: more model calls, latency, and context passed between agents. Keep the orchestrator a router rather than another all-knowing agent, keep worker count small, and use the default agent directly for quick questions. See [Agents and subagents](https://awesome-copilot.github.com/learning-hub/agents-and-subagents/) for the underlying pattern and the [common workflow](common/README.md#workflow) for DevHub's implementation.
+
+### Deterministic by design
+
+What makes customizations reliable is the explicit, checkable part: fixed decisions, fixed formats, and fixed limits. Vague guidance such as "review when appropriate", "use good judgment", or "report what you did" gives a model room to decide differently each run, so the same request produces different routes, skipped steps, or reports that hide failures. The earlier 1.x agents had this problem: long prose, implicit handoffs, and free-form results led to unpredictable and unreliable behavior. The current design replaces that with explicit structure:
+
+| Vague | Deterministic |
+|---|---|
+| "Decide whether planning is needed" | A routing table evaluated top to bottom, first match wins, and uncertainty falls through to the most controlled route |
+| "Continue as appropriate" | A closed outcome set per agent, such as `PASS \| IMPLEMENTATION_CHANGES \| PLAN_CHANGES`, with exactly one next step per outcome |
+| "Let me know if something went wrong" | Execution status (`COMPLETE \| NEEDS_INPUT \| BLOCKED \| FAILED`) separate from the outcome, so a failed step cannot look like success |
+| "Fix the issues the reviewer found" | At most two correction cycles and two plan revisions, then `BLOCKED` with the decision needed |
+| "Get approval for big changes" | Named gates: plan approval before implementation, explicit authorization before commits, never push |
+| "Summarize your work" | A fixed `## Report` block per agent and an aggregated trace with route, steps, models, validation evidence, and deviations |
+| "Be careful with edits" | Least-privilege tools per role: Reviewer and Planner cannot edit, Orchestrator cannot run commands |
+| "Improve over time" | A learning step triggered only by listed signals, with a fixed owner order for each lesson |
+
+Apply the same principle to every customization, not only agents:
+
+- **Agents:** one role, explicit boundaries, restricted tools, a pinned model, and a fixed report. See [Building custom agents](https://awesome-copilot.github.com/learning-hub/building-custom-agents/).
+- **Skills:** a description with concrete trigger phrases, numbered steps, explicit decision rules, and gotchas instead of general advice. See [Creating effective skills](https://awesome-copilot.github.com/learning-hub/creating-effective-skills/).
+- **Instructions:** short, specific, testable rules scoped with `applyTo`, such as "use `pathlib` for file paths" rather than "write clean code". See [Defining custom instructions](https://awesome-copilot.github.com/learning-hub/defining-custom-instructions/).
+
+Determinism in prompts is still guidance, not enforcement: a model can ignore a rule. Use tools, permissions, hooks, or CI where a requirement must hold, and validate behavior with representative scenarios. The full rule set is in the [AI customization instructions](common/.apm/instructions/common/ai-customization.instructions.md), and the common package applies it in its [workflow](common/README.md#workflow).
 
 ### Why not install entire collections
 
@@ -319,7 +367,7 @@ Autopilot auto-approves tools, and disabling terminal sandboxing removes its fil
 
 ## Maintenance and validation
 
-Maintain package sources under `.apm/`, never installed copies. Update a package README and changelog with its changes, and this guide for the shared approach. Retain only reusable, evidence-backed lessons in their owning source; this is explicit maintenance, not model training. Source edits do not refresh running sessions or installed customizations: reinstall, then start a fresh chat.
+Maintain package sources under `.apm/`, never installed copies. Update a package README and changelog with its changes, and this guide for the shared approach. Retain only reusable, evidence-backed lessons in their owning source; this is explicit maintenance, not model training. The common Orchestrator does this as a lightweight final [learning step](common/README.md#learning): repository lessons go into repository customizations, and common lessons into the common package source when it is editable in the workspace, or are otherwise proposed. Source edits do not refresh running sessions or installed customizations: reinstall, then start a fresh chat.
 
 ### Updating APM packages and the CLI
 

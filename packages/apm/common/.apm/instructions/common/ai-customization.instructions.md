@@ -23,6 +23,7 @@ applyTo: "**/*.agent.md,**/*.instructions.md,**/*.prompt.md,**/SKILL.md,**/AGENT
 - **Structured report**: Every agent ends with a fixed `## Report` block containing at least agent, model, status, outcome, reason, guidance read, actions or changes, evidence (exact commands and `PASSED | FAILED | SKIPPED | BLOCKED`), decisions, deviations, and open items.
 - **Aggregated trace**: Coordinating agents collect every worker report and present the selected route with its reason, a step trace (agent, configured and reported model, status, outcome, summary), the full reports, and the final result. Condense only verbose logs; never drop findings, failures, deviations, or validation results.
 - **Report deviations**: Surface any route change, retry, skipped step, or limit reached with its reason. Report only what was observed; write `unknown` rather than guessing.
+- **Learning step**: Workflows end with a lightweight learning step triggered only by defined signals, such as review findings, deviations, failed validation, or user corrections. Lessons need evidence and go into their single owner: repository-owned files for repository lessons, the package source (never installed copies) for shared lessons. Changes to safeguards are proposed, not applied.
 
 ## Model Selection
 
