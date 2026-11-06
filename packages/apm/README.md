@@ -1,111 +1,162 @@
 # DevHub Agent Package Manager (APM) Packages
 
-[APM](https://microsoft.github.io/apm/) distributes shared AI customizations to supported agent harnesses. DevHub uses it for a common baseline across personal projects, with repository-specific guidance in a root `AGENTS.md`. The harness loads the resulting context; APM does not execute the agent or guarantee compliance.
+[APM](https://microsoft.github.io/apm/) distributes shared AI customizations to supported agent harnesses. DevHub uses it to give every personal project the same engineering baseline, with repository-specific context in a root `AGENTS.md`. The harness loads the resulting context; APM does not execute the agent or guarantee compliance.
 
-This guide owns personal AI usage principles and the shared concepts, setup, authoring, usage, maintenance, and validation of AI customizations. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), describe only their contents, dependencies, and package-specific decisions. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
+This guide owns the general approach: why to customize AI, the concepts, the reuse-first design, setup, usage, and maintenance. Package READMEs, such as [common](common/README.md) and [homelab](homelab/README.md), own their contents, design, and reuse registry. [Getting Started](../../docs/GETTING-STARTED.md) owns shared-workspace arrangements.
 
 ---
 
 ## Table of Contents
 
-- [Why customize AI](#why-customize-ai)
-  - [Reuse before authoring](#reuse-before-authoring)
-- [Design and ownership](#design-and-ownership)
-  - [Choose the right customization](#choose-the-right-customization)
+- [Why create AI customizations](#why-create-ai-customizations)
+- [Concepts](#concepts)
+- [Design](#design)
+  - [The 80/20 rule: reuse, then tailor](#the-8020-rule-reuse-then-tailor)
+  - [What to own: the 20%](#what-to-own-the-20)
+  - [Why not install entire collections](#why-not-install-entire-collections)
+  - [Reference collections](#reference-collections)
+  - [Reuse registry](#reuse-registry)
+  - [Model selection](#model-selection)
+  - [Custom instructions in subagents](#custom-instructions-in-subagents)
   - [How guidance is layered](#how-guidance-is-layered)
-  - [Nested instructions](#nested-instructions)
-  - [Reliable customization design](#reliable-customization-design)
 - [Repository setup](#repository-setup)
   - [Verify activation](#verify-activation)
 - [Authoring repository guidance](#authoring-repository-guidance)
-  - [Consumer-specific guidance](#consumer-specific-guidance)
-  - [Use the setup skill](#use-the-setup-skill)
 - [AI usage](#ai-usage)
   - [Personal usage: stay the expert](#personal-usage-stay-the-expert)
   - [Prompt engineering](#prompt-engineering)
 - [Working with agents](#working-with-agents)
-  - [Recommended Chat setup](#recommended-chat-setup)
   - [Choosing an agent](#choosing-an-agent)
-  - [Planning before implementation](#planning-before-implementation)
-  - [Model selection](#model-selection)
+  - [Recommended Chat setup](#recommended-chat-setup)
 - [Maintenance and validation](#maintenance-and-validation)
-  - [Ongoing maintenance](#ongoing-maintenance)
   - [Updating APM packages and the CLI](#updating-apm-packages-and-the-cli)
   - [Validation](#validation)
 - [DevHub's own setup](#devhubs-own-setup)
 - [References](#references)
-  - [Customization and distribution](#customization-and-distribution)
-  - [Agent execution and model selection](#agent-execution-and-model-selection)
-  - [Prompt engineering and AI background](#prompt-engineering-and-ai-background)
 
 ---
 
-## Why customize AI
+## Why create AI customizations
 
-Default agents are useful for focused tasks, but cannot be expected to know a repository's recurring conventions, architecture, or validation workflow without that context. Instructions make stable expectations available; agents define roles; skills provide focused procedures; prompts express reusable requests. Customizations complement the default agent rather than replace it or guarantee a particular result.
+Default agents are capable, but they do not know a repository's/project's conventions, architecture, or validation workflow, so the same context gets repeated in every chat. Customizations write that context down once in a form both agents and people can use:
 
-Maintain shared expectations centrally and local context with its owner. This avoids repeatedly explaining the same standards or copying them across projects. Keep the context small and relevant: overlapping instructions add maintenance, stale facts, and potential conflicts.
+- **Lasting standards and fundamentals:** coding principles, documentation rules, review discipline, and engineering workflow outlive any specific tool, language, or project. Capturing them once standardizes code and projects now and keeps paying off across a whole career. When tools change, add or swap a skill for the new tool while the fundamentals stay in place.
+- **Consistent enforcement without memorization:** standards are applied on every task without anyone needing to remember every rule.
+- **Document once, use twice:** conventions need documenting anyway. Written as instructions and skills, they guide AI automatically and remain readable for humans, so nobody has to memorize them.
+- **Faster onboarding:** new contributors, and future me returning to an old project, benefit from institutional knowledge automatically.
+- **Less repetition and drift:** shared expectations live in one versioned package instead of being re-explained in prompts or copied across repositories.
+- **Predictable, reviewable workflows:** fixed roles, routes, and reports make AI-assisted work traceable and easier to verify.
 
-### Reuse before authoring
-
-Inspect existing package and host capabilities before creating another customization. Reuse suitable official or community resources for needs they already cover; extend local guidance only for a remaining DevHub-specific gap.
-
-Review scope, license, prerequisites, source trust, and compatibility before declaring dependencies. Prefer selected primitives and reviewed references over importing entire collections. Host-provided capabilities may be sufficient without another package dependency.
-
-Reused procedures supplement existing rules; they do not grant commit/push permission, bypass approvals, or justify unrelated tooling. See the [reference collections](#customization-and-distribution) for discovery and each package README for its selected dependencies.
+Default setups give default context and behavior for agents which is sufficient for general tasks but lack repository- and tool-specific knowledge and therefore lead to worse quality outcomes (e.g. failing to follow Python conventions or project-specific rules, etc.). Customizations complement the default agent and the human contributors; they do not replace engineering judgment or guarantee a result. Keep them small and relevant: overlapping instructions add maintenance, stale facts, and conflicts.
 
 ---
 
-## Design and ownership
+## Concepts
 
-```text
-Shared APM packages -- APM install --> Harness-supported customizations
-  common baseline                                   |
-  optional domain guidance                          |
-  reusable agents and skills                        v
-                                            discovered task context
-                                                    ^
-Repository root AGENTS.md -- harness discovery ------+
-  links to owning READMEs
-  essential local constraints
-```
-
-| Layer | Owner and responsibility |
-|---|---|
-| [Common package](common/README.md) | Shared engineering, testing, and documentation standards; scoped technology/tool instructions; reusable agents and skills. Declare it in every personal project's manifest. |
-| Optional domain package | Context genuinely shared by several related repositories. The [homelab package](homelab/) is an existing placeholder; add domain packages only for concrete reuse, not a speculative hierarchy. |
-| Root `AGENTS.md` | The repository's agent-facing entry point: links to authoritative project documentation and essential local constraints. |
-| Owning README or focused documentation | Human-facing purpose, architecture, component contracts, commands, and decisions. These remain authoritative rather than being copied into AI instructions. |
-| Current request | The task, scope, and acceptance criteria; temporary requirements do not become permanent instructions automatically. |
-
-This is composition, not a universal inheritance or override mechanism. Avoid contradictory guidance and surface conflicts. Shared rules belong in the common package, domain rules in the relevant domain package, and repository-only knowledge with its repository.
-
-The same pattern scales to a team or organization: a common baseline plus selected team/domain packages and local repository guidance. More packages or instruction layers are justified by actual ownership and reuse, not organization size alone.
-
-### Choose the right customization
-
-The customization types answer different questions:
-
-| Part | Responsibility | Typical content |
+| Primitive | What it is | Use when |
 |---|---|---|
-| Agent | **Who** performs the work | Role, responsibilities, workflow, boundaries, and expected output |
-| Instruction | **Rules and context** for the work | Engineering standards, technology constraints, and repository conventions |
-| Skill | **How** to perform a repeatable procedure | Steps, references, scripts, and task resources |
-| Prompt | **What** reusable task to request | A user-invoked template with specific inputs |
-| User request | **What** needs to be done now | Current scope and acceptance criteria |
+| Repository instructions (`AGENTS.md`) | Always-on context for one repository | Local facts and routes to owning documentation |
+| Scoped instructions (`*.instructions.md`) | Standards attached by file pattern (`applyTo`) or description | Rules for most work on matching files, such as coding or documentation standards |
+| Skills (`SKILL.md`) | On-demand procedures with optional scripts and references; only the description loads until relevant | A specific, repeatable task such as committing, testing, or writing comments |
+| Agents (`*.agent.md`) | Roles with their own instructions, tools, model, and allowed subagents | Distinct responsibilities, tool restrictions, context isolation, or delegation |
+| Hooks | Shell commands run at agent lifecycle events | Deterministic enforcement, such as blocking a command or running a formatter |
+| Prompts (`*.prompt.md`) | Reusable, user-invoked requests | A recurring single request with parameters |
 
-| Need | Default |
+Rules of thumb: most work needs it, use an instruction; a specific task needs it, use a skill; a different role, toolset, or model needs it, use an agent; it must always happen, use a hook, CI, or permissions, because instructions guide rather than enforce.
+
+An agent can delegate to subagents: each runs in a fresh, isolated context and returns one result, which keeps the coordinator's context focused. Handoffs instead switch the active agent for the user.
+
+Learn more:
+
+- [Building custom agents](https://awesome-copilot.github.com/learning-hub/building-custom-agents/) and [agents and subagents](https://awesome-copilot.github.com/learning-hub/agents-and-subagents/)
+- [Custom agents and subagents](https://docs.github.com/en/copilot/concepts/customizations/custom-agents#custom-agents-and-subagents) (GitHub Docs)
+- [Creating effective skills](https://awesome-copilot.github.com/learning-hub/creating-effective-skills/)
+- [Defining custom instructions](https://awesome-copilot.github.com/learning-hub/defining-custom-instructions/)
+- [Before and after customization examples](https://awesome-copilot.github.com/learning-hub/before-after-customization-examples/)
+- [Copilot configuration basics](https://awesome-copilot.github.com/learning-hub/copilot-configuration-basics/)
+- [VS Code hooks](https://code.visualstudio.com/docs/agent-customization/hooks)
+
+---
+
+## Design
+
+### The 80/20 rule: reuse, then tailor
+
+Roughly 80% of useful AI customization already exists. Language patterns such as Python best practices, testing techniques, general coding principles, review methods, planning approaches, and authoring guidelines for agents and skills are built, maintained, and battle-tested by others. Reinventing them is a large amount of work and makes the setup very complex. An earlier DevHub setup did exactly that, and the result was long prompts, overlapping rules, and unreliable, inconsistent agent behavior.
+
+This is the most important design rule, because it is easy to get lost in building AI customizations. It is the same principle as in normal engineering: nobody writes their own programming language or basic libraries; they reuse existing ones and add thin wrappers or configuration for their situation. AI customizations work the same way: reuse existing ones and tailor them, rather than building everything from scratch.
+
+Keep it simple. When adopting a source, keep its substance: the reference collections below are well designed and widely used, so remove what does not apply and add only what is missing rather than rewriting them.
+
+### What to own: the 20%
+
+Own only what no external source can know:
+
+- **Thin agents:** roles that act mainly as wrappers. They define routing, responsibilities, tools, models, outcomes, and reports, and delegate knowledge to skills and instructions. The [common package](common/README.md#workflow) defines DevHub's Orchestrator workflow.
+- **Workflow and governance:** routing rules, approval gates, definition of done, and when review or planning is required.
+- **Personal and project conventions:** documentation style, Git policy, naming, repository layout, and validation commands.
+- **Tailoring of reused content:** removing what is not needed and adding DevHub-specific constraints.
+- **Personal usage guidance:** how I work with AI, in [AI usage](#ai-usage).
+
+Decide per reusable part:
+
+| Situation | Approach |
 |---|---|
-| Persistent repository context | One root `AGENTS.md`, usable across harnesses that support it |
-| Cross-cutting file/type constraints | Scoped instruction files, such as the common package's `*.instructions.md` with `applyTo` globs for Copilot |
-| Distinct role, workflow, or capabilities | Reuse a common agent; author another only for a real gap |
-| Repeatable specialized procedure | A skill, shared through APM or owned locally when project-specific |
-| Reusable user-invoked request | A prompt |
-| Personal preferences | Optional user-level configuration supported by the harness, not a substitute for repository setup |
+| Official or authoritative, used unchanged | Pinned APM dependency |
+| Useful unchanged, plus local rules | Pinned APM dependency, plus a scoped local instruction |
+| Needs trimming or tailoring | Copy into the package with source and changes recorded in the registry |
+| Unique to DevHub | Author locally |
+| Unique to one repository | Keep in that repository, not in a shared package |
 
-Do not create both a root `AGENTS.md` and a repository-wide `copilot-instructions.md` merely because both formats exist. Add a harness-specific adapter only when required by a supported surface, keeping one authoritative source rather than independently maintained copies.
+### Why not install entire collections
 
-`AGENTS.md` is cross-agent, not universal. Custom agents, scoped instructions, skill locations, and discovery rules vary by harness. Verify the intended environment using the [official references](#references), rather than assuming that a Copilot installation serves every AI tool.
+Installing a whole collection, or depending on it wholesale, looks efficient but works against a reliable setup:
+
+- **Simplicity:** collections are general-purpose and support many harnesses, languages, and workflows. That complexity is rarely needed, and every extra agent or skill competes for attention during discovery.
+- **Noise:** unused agents, skills, and instructions add context, discovery conflicts, and maintenance without benefit.
+- **Control and security:** a live dependency on a large community repository can change behavior, tools, or permissions on update. Selecting and pinning individual parts keeps every change reviewable.
+- **Flexibility:** selected parts can be tailored to personal and team conventions without fighting upstream defaults.
+- **Compatibility:** many collections target other harnesses, such as Claude Code or Cursor, whose assumptions do not map cleanly to Copilot.
+- **Licensing and provenance:** selecting individual parts makes it clear which license and source applies to what.
+
+### Reference collections
+
+Inspect these before authoring anything. Ranked by fit for a Copilot-based setup; last checked November 2026, so rankings and contents may change:
+
+| Rank | Collection | What it is |
+|---|---|---|
+| 1 | [github/awesome-copilot](https://github.com/github/awesome-copilot/tree/main) | GitHub's community catalog of Copilot instructions, agents, skills, and plugins, including authoring guidelines for agents and skills. Copilot-native, so closest to this setup. |
+| 2 | [anthropics/skills](https://github.com/anthropics/skills/tree/main) | Anthropic's public Agent Skills examples, from the authors of the skills format. |
+| 3 | [affaan-m/ECC](https://github.com/affaan-m/ECC/tree/main) | Large multi-harness system with many specialist agents and language skills, such as Python, Go, and Java patterns and testing. |
+| 4 | [obra/superpowers](https://github.com/obra/superpowers/tree/main) | Agentic skills framework and development methodology, such as planning, test-driven development, and debugging workflows. |
+| 5 | [garrytan/gstack](https://github.com/garrytan/gstack) | An opinionated personal Claude Code setup with role-based tools; useful for ideas, less for direct reuse. |
+
+Review each part's license, tools, harness assumptions, and behavior before adopting it.
+
+### Reuse registry
+
+Each package README keeps a reuse registry: one row per reused part, so origin, version, and local changes stay traceable. See the [common registry](common/README.md#reuse-registry).
+
+| Part | Source | Type | Local changes |
+|---|---|---|---|
+| Name and link in the package | Upstream link with a pinned commit | `Dependency` or `Adapted` | `None`, or a short summary |
+
+- **Dependency:** official or authoritative parts used unchanged, declared in `apm.yml` with a pinned ref. For example, GitHub's [agents](https://github.com/github/awesome-copilot/blob/main/instructions/agents.instructions.md) and [agent skills](https://github.com/github/awesome-copilot/blob/main/instructions/agent-skills.instructions.md) authoring instructions are used directly because they are official and need no tailoring.
+- **Adapted:** parts copied into `.apm/` and tailored. Record what changed. For example, a `python` skill based on ECC's [python-patterns](https://github.com/affaan-m/ECC/blob/main/skills/python-patterns/SKILL.md) and [python-testing](https://github.com/affaan-m/ECC/blob/main/skills/python-testing/SKILL.md), trimmed and merged for DevHub conventions.
+
+Keep the upstream license and notices for adapted parts. Revisit the registry when updating dependencies or when upstream changes substantially.
+
+### Model selection
+
+Agents in shared packages pin a role-specific model fallback list in their frontmatter instead of relying on Auto. Pinning ensures each role uses a model suited to its work: strongest reasoning models for planning and architecture, strong coding models for implementation, a different model family for review, and low-cost models for simple work such as documentation. With Auto, a step can be routed to a model that is weaker than the task requires.
+
+Pinning costs somewhat more than Auto, which offers [a 10% discount on paid plans](https://docs.github.com/en/copilot/concepts/models/auto-model-selection#discount-for-using-auto-model-selection). In return, model use is controlled and visible in each workflow trace, which gives more consistent output and lets cost be optimized deliberately, for example by routing simple tasks to low-cost models. Verify names against the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) and update pins when models are retired. For the default agent or ad hoc requests, Auto remains a good choice. See [common models](common/README.md#models) for the current pins.
+
+### Custom instructions in subagents
+
+When Copilot runs a custom agent as a subagent, it does not follow the repository's custom instructions by default; only agents the user selects do. Every worker agent in the shared packages therefore sets `include-custom-instructions: true`, so workers that plan, design, edit, document, or review apply the same `AGENTS.md`, coding, documentation, and other scoped standards as the entry agent. Without it, a worker only sees the context in its delegation prompt and can silently ignore project conventions. Entry agents such as the Orchestrator do not need it. See [creating custom agents for Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli).
+
+VS Code recognizes the field for the Copilot harness, but [does not forward it](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_copilot-specific-configuration) when converting agent files for the session runtime. Keep it for runtimes that honor it, and keep passing applicable guidance paths in each delegation prompt, as the common Orchestrator does, rather than relying on the field alone.
 
 ### How guidance is layered
 
@@ -113,76 +164,27 @@ Do not create both a root `AGENTS.md` and a repository-wide `copilot-instruction
 User request: scope and acceptance criteria
     |
     v
-Entry point: Orchestrator (recommended), a specialist, or default agent
+Entry agent (Orchestrator) -> worker agents: roles, tools, models, outcomes
     |
-    +-- Role definition (agent): responsibilities, boundaries, and workflow
-    +-- Common instructions: engineering, testing, and documentation standards
-    +-- Matching technology/tool instructions: shared packages and/or consumer
-    +-- Root AGENTS.md: local constraints and routes to owning documentation
-    |       |
-    |       +--> Relevant README, architecture, component docs, scripts, or CI
-    |
-    +-- Relevant skills: focused procedures loaded when needed
+    +-- Reused instructions and skills: general knowledge (the 80%)
+    +-- Common package instructions: personal standards (the 20%)
+    +-- Root AGENTS.md: local facts, routes to owning documentation
+    +-- Scoped repository instructions: only when path targeting adds value
     |
     v
-Implementation / documentation / review, with validation and evidence
+Implementation, documentation, review, with validation and a reported trace
 ```
 
-The diagram shows context composition, not precedence or a promise that every linked file loads automatically. The selected agent contributes role responsibilities and workflow, not a separate copy of every engineering rule. Repository links route it to the authoritative context needed for the task; read the relevant owner rather than loading every document.
-
-Keep common standards in one shared instruction source rather than dispersing them among role definitions. Explicit references from agents and repository guidance help locate that source even when a task does not edit matching files. Scoped instructions add only the relevant constraints; their discovery and attachment remain harness-dependent.
-
-For example, Coder and Reviewer both need the engineering baseline: keeping coding standards only in Coder would leave review and other roles without the same quality bar. Keep the universal core small, while scoped instructions supply documentation, technology, and tool constraints. The common package's [design and execution flow](common/README.md#design) explains how its roles use this context.
-
-### Nested instructions
-
-Start with one root `AGENTS.md` and links to component READMEs. A nested file is exceptional and justified only when:
-
-1. A component has materially different, consequential agent constraints or validation.
-2. Including that guidance in the root would burden unrelated tasks.
-3. A root link to the component's owning documentation does not adequately cover the need.
-
-A different language, large folder, or separate package alone is insufficient. Record the reason in the owning documentation and verify nested discovery in the chosen harness. Do not rely on a universal "nearest file wins" rule.
-
-### Reliable customization design
-
-Keep every setup small: one entry point, clear ownership, short rules, and repeatable procedures in skills. More emphatic prose, repeated instructions, or additional agents do not guarantee compliance.
-
-| Concern | Design rule |
-|---|---|
-| Entry and routing | Select the intended workflow agent explicitly. Define a narrow lightweight exception and a default workflow; uncertainty follows the default. Discovery descriptions help selection but do not guarantee invocation. |
-| Context | Resolve and read required guidance before work and pass actual paths to specialists. File-pattern attachment, Markdown links, and installed files are not proof of loading. Missing required context is a blocker. |
-| Workflow | State required stages and observable acceptance criteria. Keep optional roles optional, but do not make essential review or validation discretionary. |
-| Completion | Maintain task evidence in persistent session storage outside versioned sources. Track final changes, checks, review, learning, and actual publishing state across turns. Later edits invalidate affected checks and review. |
-| Enforcement | Use small validators, existing Git hooks, CI, permissions, and approvals for verifiable requirements. Keep enforcement separate from role prose and protect policy changes with approval. |
-| Publishing | Treat commit and push as independently authorized operations. Verify the actual commit message and remote state; displayed commands are not execution evidence. Never publish automatically from a stop hook. |
-| Maintenance | Assess observed friction; retain only reusable lessons with an owner and validation. A proposal or no durable lesson is valid. Guidance edits join the final validation/review cycle. |
-
-Start with a short checklist and existing tools. Add scripts, schemas, fingerprint tracking, or hooks only for a demonstrated need; do not turn an ordinary handoff or Git workflow into a custom execution framework. The common [finalization skill](common/.apm/skills/finalize-task/SKILL.md) uses ordinary Git commands without bundled code or hooks.
-
-Hooks and tools enforce only the conditions they actually check. Agent-authored evidence is an attestation, not proof of a review or permission. Local hooks can be bypassed, host lifecycle hooks differ by runtime, and failures or timeouts need explicit verification. Do not install enforcement globally or overwrite existing hooks as part of ordinary package deployment. See [VS Code hooks](https://code.visualstudio.com/docs/agent-customization/hooks), [Copilot hook contracts](https://docs.github.com/en/copilot/reference/hooks-reference), and [Git hooks](https://git-scm.com/docs/githooks).
-
-Before adopting or changing a workflow, repeat representative scenarios in the intended harness:
-
-- A mechanical edit takes the lightweight route; a small behavioral fix and uncertainty take the default route.
-- Diagnosis-only work uses Investigator when helpful or requested and stops at findings, even when a fix is obvious. An explicitly requested unavailable Investigator is a blocker.
-- Fix-authorized unclear failures may use Investigator before Coder; understood fixes do not require investigation. Coder checks implementation-critical assumptions from the handoff, owns validation, and Standard retains independent review.
-- Missing guidance, unavailable required agents, failed checks, and unresolved review findings block completion.
-- A correction or learning edit after review requires renewed applicable validation and review.
-- Unrelated staged work is preserved; commit-only authorization does not authorize push.
-- A prohibited commit trailer is rejected, including when a hook adds it; push failure is reported as failure.
-- A retained lesson has evidence and an owner; an unrelated task does not trigger specialized procedures.
-
-Static validation, deployment, discovery, and repeated behavioral checks are separate evidence. Record limitations rather than promising reliable behavior from file presence alone. The [common Orchestrator design](common/README.md#design) applies these rules to this package.
+The diagram shows context composition, not precedence or a promise that every file loads automatically. Keep each topic in one owner and link to it; do not copy standards into agents or repositories. Start with one root `AGENTS.md`; add a nested one only when a component has materially different, consequential constraints that a link cannot cover.
 
 ---
 
 ## Repository setup
 
-Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`, plus installation from that repository root. The manifest declares a consistent baseline and the lockfile pins its resolved dependencies; repository-local deployment supports discovery when the repository is opened alone. Once installed, this gives supported editors and review workflows a shared setup, subject to their discovery rules. Do not assume every host or reviewer automatically installs or loads it. The optional [parent-workspace setup](../../docs/GETTING-STARTED.md#ai-customizations) is an additional convenience, not a replacement.
+Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`, plus installation from that repository root. The optional [parent-workspace setup](../../docs/GETTING-STARTED.md#ai-customizations) is an additional convenience, not a replacement.
 
-1. Inspect existing manifests, instructions, skills, documentation, and local changes. Preserve useful repository guidance and user-authored customizations; do not blindly replace an existing setup.
-2. Declare the common dependency in the repository's `apm.yml`. For a new consumer, adapt this example to the repository's identity and reviewed dependency-reference conventions:
+1. Inspect existing manifests, instructions, skills, and documentation. Preserve useful local customizations rather than replacing them.
+2. Declare the common dependency in `apm.yml`, adapted to the repository:
 
    ```yaml
    name: personal-project
@@ -194,57 +196,43 @@ Each consumer repository needs its own checked-in `apm.yml` and `apm.lock.yaml`,
        - CollinPoetoehena/DevHub/packages/apm/common
    ```
 
-   Preserve existing manifest settings. Add domain packages only when relevant; do not create copies of their source directories in consumers. Use reviewed references and the lockfile for reproducible dependency resolution.
-3. Author one root `AGENTS.md` using the [guidance below](#authoring-repository-guidance). Keep shared rules in the package rather than copying them into the repository.
-4. With [APM installed](https://microsoft.github.io/apm/getting-started/installation/), run from the consumer repository root for Copilot:
+   Add domain packages only when relevant, and use pinned references for reproducible resolution.
+3. Author one root `AGENTS.md` as described in [authoring repository guidance](#authoring-repository-guidance).
+4. With [APM installed](https://microsoft.github.io/apm/getting-started/installation/), run from the repository root:
 
    ```sh
    apm install --only apm --target copilot
    ```
 
-   For this target, installed agents and instructions are under `.github/`, and skills under `.agents/skills/`. Those package-installed files are deployment artifacts, not another authoring source. Keep local customizations distinct from package-owned paths and review collisions before accepting replacements. Resolve dependency or policy failures before treating setup as complete; do not bypass policy or force replacements to make a check succeed.
-   Keep `apm_modules/` and `.apm-local/` ignored: they hold restored dependencies and local installation state. Version `apm.yml`, `apm.lock.yaml`, and reviewed target-owned customizations, including installed agents, instructions, and skills; do not blanket-ignore `.github/`, `.agents/`, or authored `.apm/` package sources. See APM's [what to commit](https://microsoft.github.io/apm/quickstart/#3-install-a-package).
-5. Verify activation as described below. Keep a repository-level setup even when a parent-workspace install is used for convenience; verify standalone repository use separately.
-
-Copilot natively reads installed instruction files, so root-context compilation is not needed for this setup. Other targets may require native adapters or `apm compile`; consult the target matrix and compile reference before selecting them. Compilation can write root context files, including `AGENTS.md`: inspect planned output in isolation and establish ownership before writing to a repository with an authored file. Do not overwrite local guidance to make shared instructions available.
+   For Copilot, agents and instructions deploy under `.github/` and skills under `.agents/skills/`. These are deployment artifacts, not an authoring source. Version `apm.yml`, `apm.lock.yaml`, and the deployed customizations; keep `apm_modules/` and `.apm-local/` ignored. See APM's [what to commit](https://microsoft.github.io/apm/quickstart/#3-install-a-package). Resolve policy or collision failures rather than forcing replacements.
+5. Verify activation.
 
 ### Verify activation
 
-A manifest, successful installation, and instruction compliance are three different checks:
+A manifest, a successful installation, and correct behavior are separate checks:
 
-- **Static setup:** verify manifest and skill metadata, relative links, file scopes, and the absence of conflicting or duplicate guidance using the [validation procedure](#validation).
-- **Deployment:** confirm that the intended target received the common instructions, scoped instructions, agents, and skills. Merely checking out the package does not activate it.
-- **Host discovery:** in the selected harness, confirm the root repository guidance and installed customizations are discoverable. Refresh or start a new session after changes.
-- **Behavior:** exercise a small task with an observable criterion that depends on a local convention. Inspect references or debug evidence where supported, plus the actual result and validation activity. Check one relevant scoped instruction and, when used, the setup skill. For coordinated workflows, also check routing, mandatory review, corrections, and blocked completion; use the [reliability scenarios](#reliable-customization-design).
+- **Static:** validate sources as described in [validation](#validation).
+- **Deployment:** confirm the target received the agents, instructions, and skills.
+- **Discovery:** start a fresh chat with the **Copilot** session target and confirm the Orchestrator appears and the root `AGENTS.md` is read. Discovery rules differ per harness.
+- **Behavior:** run representative tasks, such as the scenarios in the [common package](common/README.md#consumption-and-validation), and check routing, reports, and validation.
 
-For VS Code's Local harness, root `AGENTS.md` discovery is controlled by `chat.useAgentsMdFile` (enabled by default); nested discovery additionally requires `chat.useNestedAgentsMdFiles` (disabled by default). These settings do not control other harnesses. Shared-parent and multi-root discovery also need separate verification; see [workspace setup](../../docs/GETTING-STARTED.md#personal-project-workspace).
-
-Instructions guide behavior. Tests, CI, access controls, and approvals remain the mechanisms for verifying or enforcing requirements. Report missing discovery or unverified behavior explicitly; do not treat installation as proof of compliance.
+Instructions guide behavior; tests, CI, permissions, and approvals enforce it. Report unverified discovery or behavior explicitly.
 
 ---
 
 ## Authoring repository guidance
 
-Always create a root `AGENTS.md` for a DevHub project, aiming for that one file. It gives compatible agents a stable entry point from which to find the relevant context. Read existing documentation and configuration first. Every instruction should supply useful agent context that is otherwise missing, or direct the agent to its authoritative source:
+Create one root `AGENTS.md` per project. Every line should supply context an agent would otherwise miss, or route it to the authoritative source:
 
-- Link to the root README for purpose and scope, and to architecture or guidelines for placement and decisions.
-- Link to area READMEs for component details. Tell the agent to read the relevant owner, not every linked document for every task.
-- Keep architecture, user-facing setup, and detailed procedures in their existing documentation. If needed information is missing, improve that owning document and link it rather than creating a parallel AI explanation.
-- Include only essential agent-specific local constraints inline: unusual naming/style conventions, compatibility boundaries, sensitive operations, generated-source ownership, or a validation requirement the agent could otherwise miss.
-- Do not repeat common engineering standards or facts already maintained in native metadata, scripts, or CI. Point to those sources for versions and commands instead of freezing a second copy.
-- Preserve compatible existing instructions during migration. Remove duplicates only within the authorized scope, update their callers, and surface conflicts rather than inventing precedence.
-
-Explicit Markdown links are also a discovery strategy: pair each link with a short direction about when to read it. For example, route package changes to the package README and boundary changes to the architecture guide. This steers an agent's next reads and searches instead of relying solely on automatic relevance discovery, which may miss important files. Links do not automatically load every target or guarantee that it is followed; retain the [activation and behavior checks](#verify-activation).
-
-Keep links resolvable in the intended checkout. Use relative links for repository-owned files, and stable public source links for shared external guidance when sibling checkouts are optional. Do not put private paths, inventories, or operational values in public instructions.
-
-Use concise Markdown and relative links. A root `AGENTS.md` does not need skill-style YAML frontmatter. Include only sections that serve the repository; for example:
+- Link to the README for purpose and scope, to architecture or guidelines for decisions, and to area READMEs for component details. Say when to read each, rather than asking the agent to read everything.
+- Inline only consequential local constraints: unusual conventions, compatibility boundaries, sensitive operations, generated-source ownership, or validation the agent could miss.
+- Do not repeat shared standards from packages or facts maintained in metadata, scripts, or CI.
+- Do not put private paths, inventories, or operational values in public instructions.
 
 ```markdown
 # Repository Agent Guidance
 
 Read [README.md](README.md) for purpose and scope.
-Follow the installed common baseline; see the repository's AI setup guide.
 
 ## Find the owning context
 
@@ -256,44 +244,7 @@ Follow the installed common baseline; see the repository's AI setup guide.
 - Record only consequential repository-specific agent guidance here.
 ```
 
-The example is a structure, not content to copy unchanged. Replace generic directions with verified links and useful constraints from the actual repository.
-
-### Consumer-specific guidance
-
-Reuse common roles and add local constraints outside installed package-owned files:
-
-```text
-consumer/
-  apm.yml
-  AGENTS.md
-  .github/instructions/
-    service-api.instructions.md        # only when path targeting adds value
-  .agents/skills/
-    deploy-service/SKILL.md             # only for a project-specific procedure
-```
-
-For Copilot, a scoped instruction can target a service boundary without duplicating the root entry point:
-
-```yaml
----
-description: "Use when changing the service API."
-applyTo: "src/api/**,tests/api/**"
----
-```
-
-Keep deployment environment, SDK, registry, and domain decisions in their owning documentation, with necessary agent-specific constraints linked or scoped locally. Select a shared domain package only when several repositories need that context. Neither a local file nor a selected package is an automatic override.
-
-### Use the setup skill
-
-The common package's [setup-ai-customizations skill](common/.apm/skills/setup-ai-customizations/SKILL.md) inspects and creates or updates this setup without duplicating project documentation. After installing the updated package, request:
-
-```text
-Use setup-ai-customizations to configure this repository for Copilot.
-Reuse its existing documentation, preserve local customizations, and verify
-the common APM baseline and root AGENTS.md.
-```
-
-For discussion only, explicitly request a proposal without edits or installation. The skill's package-documentation resolution and validation procedure account for the different source and installed layouts.
+Add scoped instructions under `.github/instructions/` or local skills under `.agents/skills/` only for a demonstrated need, kept distinct from package-installed files.
 
 ---
 
@@ -327,7 +278,7 @@ Decide --> Request --> Iterate --> Validate --> done --> Evolve
 - **R - Request:** brief intent, context, constraints, success criteria, and assumptions; agree the plan first. Unstated assumptions are the usual cause of fluent but wrong results.
 - **I - Iterate (can also be called Isolate):** read output as it takes shape and steer it; correct small errors early and test each suggestion against "done". Limit parallel agents to what I can still oversee. In other words, break down complex tasks into manageable parts and handle them sequentially to maintain control and accuracy.
 - **V - Validate:** check the result against the criteria from Decide using evidence (tests, real figures, a second source), sized to the stakes. A confident tone is not evidence.
-- **E - Evolve:** after the work, debrief and promote lessons into reusable context: standards, references, templates, or instructions (see [ongoing maintenance](#ongoing-maintenance)). Prune stale rules, and check whether I could redo the work without AI.
+- **E - Evolve:** after the work, debrief and promote lessons into reusable context: standards, references, templates, or instructions (see [maintenance and validation](#maintenance-and-validation)). Prune stale rules, and check whether I could redo the work without AI.
 
 Decide frames the loop; Request, Iterate, and Validate repeat until "done" is met; Evolve improves what the next task starts from.
 
@@ -337,130 +288,78 @@ Decide frames the loop; Request, Iterate, and Validate repeat until "done" is me
 
 Prompt engineering means shaping input to get more accurate, useful output:
 
-- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common engineering instructions](common/.apm/instructions/common.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
+- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common coding instructions](common/.apm/instructions/common/coding.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost.
 - **Show the target.** Supply examples of desired input/output or existing code/style to match; specify output format, length, and tone when needed.
 - **Set boundaries.** State exclusions such as no unrelated edits or new dependencies. Assign a role when a particular review perspective helps.
 - **Iterate and challenge.** Treat the first result as a draft, refine it with feedback, and request assumptions, trade-offs, and a concise explanation for difficult problems. An explanation is not proof of correctness.
-- **Reuse what works.** Save recurring requests and procedures through the appropriate [customization type](#choose-the-right-customization), rather than rewriting or duplicating guidance.
+- **Reuse what works.** Save recurring requests and procedures through the appropriate [customization type](#concepts), rather than rewriting or duplicating guidance.
 
 See the official [OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering), [Gemini](https://ai.google.dev/gemini-api/docs/prompting-strategies), and [IBM](https://www.ibm.com/think/topics/prompt-engineering) guides for more detail.
 
 ---
+---
 
 ## Working with agents
 
-Orchestration coordinates analysis, implementation, validation, documentation, review, and corrections for Standard implementations. Bounded specialist assignments provide focused context, clear ownership, and another opportunity to detect assumptions or coverage gaps. Parallelize genuinely independent work, not shared-file edits or dependent stages.
+### Choosing an agent
 
-This can reduce repeated user-driven handoffs and make a consolidated result easier to review. It also adds coordination, model usage, and elapsed time, and does not guarantee an unbiased or defect-free result. Keep only Tiny mechanical work direct; the common workflow requires implementation ownership and independent review for every other implementation.
-
-Keep implementation and its tests with one owner; use review to assess correctness and test adequacy rather than making routine testing a separate handoff. Package READMEs describe the actual roles and restrictions they provide.
+Select the common **Orchestrator** for all engineering work. It routes each request with a fixed routing table, delegates to Planner, Architect, Engineer, Documenter, and Reviewer, asks for approval before planned implementation, and ends with a trace of every step, the models used, and a suggested commit command. The [common package](common/README.md#workflow) owns the routes, outcomes, and reports. Use the built-in agent for quick ad hoc questions when the workflow adds nothing. This ensures consistent routing, accountability, and traceability across all engineering tasks.
 
 ### Recommended Chat setup
 
 For autonomous work in a trusted DevHub workspace:
 
-1. In VS Code Chat, select **Copilot** as the session target, independently of the model and selected agent.
-2. Select the common **Orchestrator**, a specialist, or optionally the built-in **Agent** for some simpler tasks if you prefer (e.g. simple spelling fixes, etc., however keep in mind that the Orchestrator also automatically handles those tasks so you can use the Orchestrator for all tasks). **Autopilot** lets work continue with fewer prompts where supported; it is an agent mode, not a replacement for the selected role.
-3. Where policy permits and the risk is acceptable, the DevHub convenience setup turns terminal sandboxing off for trusted local tooling. This is optional, not a package requirement or a general fix for shell configuration errors.
+1. In VS Code Chat, select **Copilot** as the session target (this is the harness for the agent workflow).
+2. Select **Orchestrator**. **Autopilot** lets work continue with fewer prompts where supported; it is an agent mode, not a replacement for the selected role.
+3. Where policy permits and the risk is acceptable, turn terminal sandboxing off for trusted local tooling to avoid unnecessary restrictions on filesystem and network access that can hinder normal operation.
 
-Autopilot auto-approves tools; disabling terminal sandboxing removes its filesystem and network restrictions. Use this combination only with trusted content and actions you accept running with your account's access. Keep sandboxing enabled and use manual permissions otherwise. These controls are independent and never supersede organization policy; see the [execution references](#agent-execution-and-model-selection).
-
-### Choosing an agent
-
-Select the common Orchestrator for end-to-end engineering work. It handles only Tiny mechanical implementations directly; all other implementations use its Standard plan, Coder, and independent Reviewer cycle. Specialists or the default agent remain supported for focused requests, but do not implicitly provide the Orchestrator workflow. Do not invoke every role merely because it is available.
-
-Choose Investigator for diagnosis-only bugs, regressions, failing tests, or troubleshooting. It returns evidence and correction direction, not fixes. Orchestrator can also use it optionally for unclear failures when fixes are authorized; understood fixes go directly to Coder. See [diagnosis and correction handoff](common/README.md#diagnosis-and-correction-handoff) for boundaries and evidence transfer.
-
-Delegation depends on the harness and configured tools/allowlists. Discovery descriptions do not grant tool capabilities, and role instructions are not a security sandbox. Verify support and ensure each assignment includes relevant common/project guidance, constraints, and acceptance criteria.
-
-### Planning before implementation
-
-For large or uncertain work, request a plan before edits:
-
-```text
-Analyze this request and propose an implementation plan. Do not edit files
-or install anything. Identify dependencies, risks, and validation criteria.
-Wait for approval before implementation.
-```
-
-For well-scoped work, request implementation directly. Review the final changes and evidence even when the workflow proceeds autonomously.
-
-### Model selection
-
-Prefer Auto where offered, choosing an explicit model when results or cost warrant it. Let the active harness handle routing rather than maintaining another package-level routing system.
-
-Auto and Copilot Fusion expose different cost, quality, and effort controls depending on the surface and account. Model settings in a custom agent and subagent routing also depend on the host. Consult the official references for current availability and pricing; do not assume that all workers use the same model or receive the same discount.
+Autopilot auto-approves tools, and disabling terminal sandboxing removes its filesystem and network restrictions. Use this combination only with trusted content and actions you accept running with your account's access. These controls never supersede organization policy; see the [execution references](#agent-execution-and-model-selection).
 
 ---
 
 ## Maintenance and validation
 
-### Ongoing maintenance
-
-Maintain package sources under `.apm/`, not installed deployment copies. Keep package READMEs limited to contents, dependencies, and package-specific decisions; update this guide for shared design or procedures, and the owning project docs for local knowledge.
-
-Review customizations when experience reveals a recurring gap or the supported workflow changes. Retain only reusable, evidence-backed lessons; update the appropriate source and its changelog where maintained. Report proposals when that owner cannot be edited. This is explicit documentation maintenance, not persistent model training or automatic self-modification.
-
-The common [self-learning skill](common/.apm/skills/self-learning/SKILL.md) supplies this assessment procedure without adding another routine agent. Changes to enforcement, tool permissions, or publishing policy require explicit approval; maintenance does not authorize weakening safeguards.
-
-Refresh consumer installations deliberately after source/dependency changes and review collisions first. Source edits do not refresh a running session or already installed agent. If behavior appears stale, compare source and deployed definitions before reinstalling, then start a fresh chat and verify behavior.
+Maintain package sources under `.apm/`, never installed copies. Update a package README and changelog with its changes, and this guide for the shared approach. Retain only reusable, evidence-backed lessons in their owning source; this is explicit maintenance, not model training. Source edits do not refresh running sessions or installed customizations: reinstall, then start a fresh chat.
 
 ### Updating APM packages and the CLI
 
-Run dependency updates from the consumer repository root. Inspect local changes first, then preview the plan without writing files:
+From the consumer repository root, preview and then apply updates:
 
 ```sh
 apm update --target copilot --dry-run
-```
-
-Review the proposed additions, updates, removals, and source references. When acceptable, run the interactive update and confirm its plan:
-
-```sh
 apm update --target copilot
 ```
 
-To update only the common package, select its dependency instead of updating everything:
+To update only the common package:
 
 ```sh
 apm update CollinPoetoehena/DevHub/packages/apm/common --target copilot
 ```
 
-APM refreshes dependencies and deploys their supported customizations; a separate install is not normally needed after an update. Review resulting manifest, lockfile, and deployed-file changes, resolve policy or collision warnings, then start a fresh chat and repeat the [activation checks](#verify-activation). Do not use `--force` to discard authored customizations.
-
-An update is not a reinstall of locked content: it can change dependency references, including full-SHA pins. Current APM documentation describes resolving an upstream annotated semantic-version tag and rewriting such pins after consent. Inspect the plan carefully; if you require a particular reviewed revision, choose it explicitly in the manifest rather than assuming an update preserves it. Use `apm install --only apm --target copilot --frozen` when restoring an existing, valid lockfile without upgrading references.
-
-For local dependencies, such as DevHub's `./packages/apm/common`, edit and validate the source package, then run `apm install --only apm --target copilot` from the consumer root to refresh its deployment. This does not publish the package or upgrade remote consumers.
-
-`apm update` updates packages, not the APM CLI. Upgrade the CLI using the method that installed it—for example, `brew upgrade apm` for Homebrew, or `apm self-update` for supported standalone installations. See the official [update](https://microsoft.github.io/apm/reference/cli/update/) and [self-update](https://microsoft.github.io/apm/reference/cli/self-update/) references for current options.
+Review manifest, lockfile, and deployed-file changes, update the [reuse registry](#reuse-registry) when upstream parts change, and repeat the [activation checks](#verify-activation). For local dependencies, such as DevHub's `./packages/apm/common`, run `apm install --only apm --target copilot` to refresh the deployment. Upgrade the CLI itself with its install method, such as `brew upgrade apm` or `apm self-update`.
 
 ### Validation
 
-From the affected APM package directory, validate local primitives without installing over workspace customizations:
+From the package directory, validate agents and instructions without installing:
 
 ```sh
 apm compile --validate --local-only
 ```
 
-This checks agents and instructions; separately validate skills' required metadata, directory/name agreement, description triggers, and resource links. Check instruction frontmatter/scopes, documentation links and headings, source ownership, and consumer references. Run relevant existing checks; documentation-only edits do not justify new test scaffolding.
-
-When deployment validation is needed, use an explicitly resolved scratch directory with the supported `--root` option from the consumer root:
+Separately check skill metadata, links, and instruction scopes. For deployment checks, install into a fresh scratch root:
 
 ```sh
 scratch=$(mktemp -d -t devhub-apm-check.XXXXXX) &&
 apm install --only apm --target copilot --root "$scratch"
 ```
 
-Use a fresh task-specific location, not an existing workspace or another user's directory. Resolve policy/dependency warnings and inspect output before claiming success; do not bypass policy or force replacement. Clean up only the specific scratch files you created. See the [APM command references](#customization-and-distribution) for other targets and options.
-
-Static validation and isolated deployment do not establish host discovery or compliance. Complete the [activation checks](#verify-activation) with a representative task, relevant scoped guidance, and a failure/edge case where feasible. Distinguish passed, failed, skipped, and blocked checks in the report.
+Static validation and deployment do not prove discovery or behavior; complete the [activation checks](#verify-activation) and report passed, failed, skipped, and blocked checks.
 
 ---
 
 ## DevHub's own setup
 
-DevHub consumes the common package through its [root manifest](../../apm.yml), using a local dependency for development. Sources are maintained under each package's `.apm/` directories; installation does not synchronize later source edits automatically.
-
-The [root AGENTS.md](../../AGENTS.md) links to the [repository overview](../../README.md), [packages](../README.md), [tools](../../tools/README.md), and focused project documentation. That navigation covers the current components, so **DevHub needs no nested `AGENTS.md` files** and maintains no duplicate repository-wide Copilot instruction file. Reconsider only when a demonstrated gap meets the [nested instruction criteria](#nested-instructions).
+DevHub consumes the common package through its [root manifest](../../apm.yml) as a local dependency. The [root AGENTS.md](../../AGENTS.md) routes agents to the [repository overview](../../README.md), [packages](../README.md), [tools](../../tools/README.md), and focused documentation, so DevHub needs no nested `AGENTS.md` files and no separate repository-wide Copilot instruction file.
 
 ---
 

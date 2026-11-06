@@ -1,6 +1,33 @@
 # Changelog
 
-## [1.0.1] - 2026-TODO
+## [2.0.0] - 2026-TODO
+
+A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instructions, and skills tried to reinvent general engineering knowledge, carried long blocks of prose that were often irrelevant to the task, and left routing and completion to the model's judgment. Outputs were non-deterministic and behavior was unreliable and hard to trace. Version 2 follows the [80/20 approach](../README.md#the-8020-rule-reuse-then-tailor): it reuses upstream skills and instructions for general knowledge and keeps only thin, role-focused agents locally. A fixed routing table, closed outcome sets, and fixed reports make each request's route predictable, roles clearly separated, and every step traceable.
+
+### Breaking
+
+- Replace the agent set with Orchestrator, Planner, Architect, Engineer, Documenter, and Reviewer, all authored from scratch; remove Coder and Investigator. Engineer takes over implementation and diagnosis (`DIAGNOSE` mode).
+- Replace the Tiny and Standard modes with a first-match routing table (`COMMIT`, `ANSWER`, `REVIEW`, `DIRECT_DOCS`, `DIRECT_CHANGE`, `PLANNED`); uncertainty falls through to `PLANNED`.
+- Make Orchestrator the only agent in the picker; workers set `user-invocable: false` and run as subagents.
+- Target the Copilot harness; the `agents` allowlist remains only for the Local harness.
+- Replace the copy-ready Git add, commit, and push block with a `/git-commit` command; pushing is no longer part of the workflow.
+
+### Added
+
+- Closed outcome sets per worker with exactly one transition per outcome, explicit plan approval, and at most two correction and two plan-revision cycles.
+- A fixed `## Report` block for every worker, aggregated by Orchestrator into a trace of route, steps, configured and reported models, validation, review, and deviations.
+- Role-specific model fallback lists per agent, with Reviewer on a different model family than Engineer and Documenter on low-cost models.
+- Documenter for documentation-only routes (`DIRECT_DOCS` and documentation-only plans), returning `ENGINEERING_REQUIRED` when code changes or command verification are needed.
+- A copy-ready `/git-commit` command for the pinned `git-commit` skill at the end of completed routes that changed files; explicit authorization routes to Engineer `COMMIT` mode (`R0 COMMIT`).
+- A concise `code-comments` skill that defaults to no comment, linked from the coding instructions.
+- A reuse registry in the README listing pinned upstream dependencies; adapted parts are still to be recorded.
+
+### Changed
+
+- Fill the AI customization instructions with deterministic workflow, reporting, model-selection, and least-privilege rules.
+- Rewrite the README around the workflow, outcomes, commit command, reports, models, harness limitations, and validation scenarios.
+
+## [1.0.1] - 2026-11-04
 
 - Add diagnosis-only Investigator with bounded local diagnostics and optional Orchestrator routing; preserve fix authorization, Coder validation, and Standard independent review.
 - Keep Orchestrator routing and completion rules concise and move detailed procedures into referenced skills; runtime compliance remains subject to host discovery and behavioral verification.

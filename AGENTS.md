@@ -37,4 +37,4 @@ Read only the documentation relevant to the task, then inspect the affected impl
 
 ## Instruction layout
 
-DevHub uses this single root file, which routes agents to owning READMEs and focused documentation. No nested `AGENTS.md` files are needed for the current repository, and no duplicate repository-wide Copilot instruction file is maintained. Add a nested file only for a demonstrated gap that meets the [exception criteria](packages/apm/README.md#nested-instructions).
+DevHub uses this single root file, which routes agents to owning READMEs and focused documentation. No nested `AGENTS.md` files are needed for the current repository, and no duplicate repository-wide Copilot instruction file is maintained. Add a nested file only for a demonstrated gap that meets the [exception criteria](packages/apm/README.md#how-guidance-is-layered).

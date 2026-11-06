@@ -79,6 +79,10 @@ Language-independent:
 - **Magic Numbers**: Use named constants for meaningful thresholds, delays, and limits.
 - **Long Functions**: Split large functions into focused pieces with clear responsibilities.
 
+## Comments
+
+- Add, edit, review, and remove code comments, doc comments, docstrings, markers, and suppressions with the [code-comments skill](../../skills/code-comments/SKILL.md); the default is no comment.
+
 ## Code Quality Checklist
 
 Before marking work complete:

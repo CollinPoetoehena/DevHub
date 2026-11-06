@@ -1,185 +1,157 @@
 # DevHub Common Agent Package
 
-`devhub-common` distributes reusable engineering agents, instructions, and skills through [APM](https://microsoft.github.io/apm/). [`.apm/`](.apm/) is the authoring source; [`apm.yml`](apm.yml) declares pinned upstream skills.
+`devhub-common` distributes reusable engineering agents, instructions, and skills through [APM](https://microsoft.github.io/apm/). [`.apm/`](.apm/) is the authoring source; [`apm.yml`](apm.yml) declares pinned upstream dependencies.
 
-The [APM overview](../README.md) owns shared setup, authoring, usage, and [reliability principles](../README.md#reliable-customization-design). This README describes the common package's roles, Orchestrator workflow, and safeguards.
+The [APM overview](../README.md) owns shared setup, authoring, and usage. This README describes the package contents, the Orchestrator workflow, and its limits.
 
 ## Table of Contents
 
 - [Package contents](#package-contents)
-  - [Agents](#agents)
-  - [Instructions](#instructions)
-  - [Skills](#skills)
-  - [Pinned upstream skills](#pinned-upstream-skills)
-- [Design](#design)
-  - [Reliability](#reliability)
-  - [Two implementation modes](#two-implementation-modes)
-  - [Diagnosis and correction handoff](#diagnosis-and-correction-handoff)
-  - [Guidance and task evidence](#guidance-and-task-evidence)
-  - [Validation and independent review](#validation-and-independent-review)
-  - [Self-learning and maintenance feedback](#self-learning-and-maintenance-feedback)
-  - [Completion and publishing](#completion-and-publishing)
-- [Agent constraints](#agent-constraints)
+- [Reuse registry](#reuse-registry)
+- [Workflow](#workflow)
+  - [Routing](#routing)
+  - [Outcomes and transitions](#outcomes-and-transitions)
+  - [Commit](#commit)
+  - [Reports and trace](#reports-and-trace)
+  - [Models](#models)
+- [Harness limitations](#harness-limitations)
 - [Consumption and validation](#consumption-and-validation)
 
 ---
 
 ## Package contents
 
-### Agents
+| Agent | Responsibility | Tools |
+|---|---|---|
+| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | read, search, agent, todo |
+| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | read, search, web |
+| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | read, search, web |
+| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | read, search, edit, execute, web, todo |
+| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | read, search, edit, web |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review without edits | read, search |
 
-| Agent | Responsibility |
-|---|---|
-| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point; routes, coordinates, verifies, and owns delivery. |
-| [Architect](.apm/agents/architect.agent.md) | Resolves material design decisions and defines boundaries. |
-| [Investigator](.apm/agents/investigator.agent.md) | Diagnoses bugs, regressions, and failing tests; returns evidence without fixes. |
-| [Coder](.apm/agents/coder.agent.md) | Owns implementation, tests, and focused validation. |
-| [Documenter](.apm/agents/documenter.agent.md) | Maintains verified, concise documentation. |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Independently reviews actual changes and validation adequacy. |
+Only Orchestrator appears in the agent picker; the workers set `user-invocable: false`.
 
-### Instructions
+Instructions:
 
-- [Common](.apm/instructions/common.instructions.md): small universal engineering and validation core, explicitly read by every role.
-- [Documentation](.apm/instructions/documentation.instructions.md): separate documentation standards for factual checks, placement, and formatting, scoped with `applyTo: "**/*.md"` rather than embedded in the common core for better reliability and targeted enforcement for documentation files.
-- [AI customizations](.apm/instructions/ai-customization.instructions.md): agent, instruction, prompt, skill, and repository guidance design.
-- [Ansible](.apm/instructions/ansible.instructions.md), [Dockerfile](.apm/instructions/dockerfile.instructions.md), [GitHub Actions](.apm/instructions/github-actions.instructions.md), and [Python](.apm/instructions/python.instructions.md): scoped technology and tool constraints.
+- [AI customization](.apm/instructions/common/ai-customization.instructions.md): deterministic workflow, reporting, and model-selection rules for authoring customizations.
+- [Coding](.apm/instructions/common/coding.instructions.md), [documentation](.apm/instructions/common/documentation.instructions.md), and [Git](.apm/instructions/common/git.instructions.md): shared engineering standards.
+- [Ansible](.apm/instructions/ansible.instructions.md), [Dockerfile](.apm/instructions/dockerfile.instructions.md), [GitHub Actions](.apm/instructions/github-actions.instructions.md), and [Python](.apm/instructions/python.instructions.md): scoped technology constraints.
 
-The documentation file's pattern targets Markdown edits, and its description supports task-based discovery. The common core links to it, and Documenter explicitly reads it, so documentation work does not depend solely on automatic attachment. Verify loading in the intended harness; the pattern improves targeting but does not guarantee compliance.
+Skills:
 
-### Skills
+- [code-comments](.apm/skills/code-comments/SKILL.md): decides whether comments are warranted and writes, trims, or removes them; linked from the [coding instructions](.apm/instructions/common/coding.instructions.md#comments).
+- [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md): drafts issues without publishing or implementing them.
 
-| Skill | Purpose |
-|---|---|
-| [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md) | Drafts issues without publishing or implementing them. |
-| [manage-skills](.apm/skills/manage-skills/SKILL.md) | Creates and maintains focused skills. |
-| [setup-ai-customizations](.apm/skills/setup-ai-customizations/SKILL.md) | Sets up the shared baseline and local repository context. |
-| [self-learning](.apm/skills/self-learning/SKILL.md) | Assesses task evidence, retains reusable lessons with an owner, and reports the disposition and reason. |
-| [finalize-task](.apm/skills/finalize-task/SKILL.md) | Checks completion and authorized publishing; provides copy-ready commands for remaining Git actions. |
-
-### Pinned upstream skills
-
-[`apm.yml`](apm.yml) includes these [awesome-copilot](https://github.com/github/awesome-copilot) skills, pinned to `5269f7ea2d6c3a9bfda5ed878b6726cf509121fd`:
-
-| Skill | Purpose |
-|---|---|
-| [git-commit](https://github.com/github/awesome-copilot/tree/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/git-commit) | Supports requested Conventional Commits; does not authorize publishing or replace finalization checks. |
-| [webapp-testing](https://github.com/github/awesome-copilot/tree/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/webapp-testing) | Tests local web interfaces with Playwright. |
+Reused upstream parts are listed in the [reuse registry](#reuse-registry).
 
 ---
 
-## Design
+## Reuse registry
 
-Select Orchestrator explicitly for the coordinated workflow. Its description aids discovery but cannot force another agent to invoke it. It remains the lead rather than another implementation specialist.
+Reused parts and their local changes, following the [reuse approach](../README.md#reuse-registry). Dependencies are declared in [`apm.yml`](apm.yml); adapted parts live in [`.apm/`](.apm/).
+
+> Placeholder: complete this registry, including adapted parts and their local changes.
+
+| Part | Source | Type | Local changes |
+|---|---|---|---|
+| `git-commit` skill | [awesome-copilot](https://github.com/github/awesome-copilot/tree/60dcb90/skills/git-commit) at `60dcb90` | Dependency | None |
+| `agents` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/60dcb90/instructions/agents.instructions.md) at `60dcb90` | Dependency | None |
+| `agent-skills` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/60dcb90/instructions/agent-skills.instructions.md) at `60dcb90` | Dependency | None |
+
+---
+
+## Workflow
+
+The Orchestrator owns routing and approvals, Planner owns the approach, Architect owns consequential design decisions, Engineer and Documenter own delivery, and Reviewer owns assessment. Workers run as subagents and return to the Orchestrator, which stays the active conversation so it can ask questions, obtain approval, and consolidate results.
 
 ```text
-Request intent
-  +-- Discussion / plan / review only: respect that scope
-  +-- Diagnosis only: Investigator when helpful or requested -> findings, no fixes
-  |
-  +-- Implementation: load guidance and classify
-         +-- Tiny: direct change and focused validation
-         |
-         +-- Standard: short plan -> optional Investigator for unclear failures
-                                    -> Coder implementation and testing + (optional Documenter)
-                                    |
-                      self-learning assessment and any retained edits
-                                    |
-                      Reviewer checks final diff and evidence
-                         +-- Findings -> correction -> validate -> review
-                         +-- Clear
-                                    |
-                      Completion evidence check (both modes)
-                                    |
-                      Separately authorized commit / push, then report
+User -> Orchestrator
+          +-- R0 COMMIT         -> Engineer (COMMIT, git-commit skill) -> stop
+          +-- R1 ANSWER         -> answer (Engineer DIAGNOSE if commands are needed)
+          +-- R2 REVIEW         -> Reviewer -> findings, stop
+          +-- R3 DIRECT_DOCS    -> Documenter -> done
+          +-- R4 DIRECT_CHANGE  -> Engineer -> Reviewer
+          +-- R5 PLANNED        -> Planner (-> Architect -> Planner)
+                                     -> user approval -> Engineer or Documenter -> Reviewer
+
+Reviewer: PASS -> done | IMPLEMENTATION_CHANGES -> same implementer | PLAN_CHANGES -> Planner
 ```
 
-Architect, Investigator, and Documenter are optional, based on design decisions, diagnostic uncertainty, or documentation ownership. Independent, disjoint assignments can run in parallel; dependent or shared-file work cannot. Tiny work also runs the learning assessment before its completion check, but does not require an independent Reviewer.
+### Routing
 
-### Reliability
+The [Orchestrator routing table](.apm/agents/orchestrator.agent.md#routing-table) is evaluated top to bottom and the first match wins. A rule matches only when its condition clearly holds, so uncertainty falls through to `R5 PLANNED`. Documentation that defines future behavior, such as an ADR or proposed contract, is planning rather than documentation maintenance. Review-only, diagnosis-only, and plan-only requests never start implementation. Under R5, Documenter implements plans that change only documentation; Engineer implements all others, including documentation coupled to its changes.
 
-This package applies the [shared reliability principles](../README.md#reliable-customization-design) through a small, explicit workflow tailored for mechanical and standard implementation modes for this common package:
+### Outcomes and transitions
 
-- **Concise agents:** keep role identity, ownership, routing, required handoffs, and completion rules in agents. Avoid long procedural detail, duplicated standards, and rigid report templates. Specifically, the Orchestrator should focus on routing and invocation rather than embedding procedural steps (like an earlier setup of this agent used to do, which produced unnecessary complexity and reduced reliability).
-- **Exactly two implementation modes in Orchestrator:** Tiny is a narrow mechanical exception; Standard covers everything else, including uncertainty. Do not add Small/Moderate/Large or more tiers that make delegation or review discretionary and more complex; keep the Orchestrator simple and predictable.
-- **Procedures in skills instead of an agent like the Orchestrator:** [self-learning](.apm/skills/self-learning/SKILL.md) and [finalize-task](.apm/skills/finalize-task/SKILL.md) own repeatable steps. Orchestrator states when to invoke them rather than embedding their procedures; no separate Learning agent is needed for this (it is really part of the skill-based workflow (a procedure/workflow), not a distinct agent role).
-- **Scoped standards:** retain a small universal common core and separate documentation and technology instructions. Resolve guidance and pass readable paths to specialists rather than assuming attachment or inheritance.
-- **Required correction cycle:** Standard uses Coder and independent Reviewer; valid findings return to implementation, validation, and renewed review. Architect and Documenter remain optional specialists, not mandatory extra stages.
-- **Lightweight evidence and publishing:** maintain brief task notes, renew affected checks/review after edits, and use ordinary Git commands. Commit and push require separate permission and verification of actual results; no custom execution framework or bundled hook is needed.
-- **Evidence-backed maintenance:** retain only reusable lessons in their owning source, validate retained edits before final review, and report proposals or no durable lesson honestly.
+Each worker returns an execution status (`COMPLETE | NEEDS_INPUT | BLOCKED | FAILED`) and, when complete, exactly one outcome from a closed set. Each outcome maps to exactly one next step in the [transition table](.apm/agents/orchestrator.agent.md#transitions).
 
-These choices reduce ambiguity and context overhead; they do not guarantee model compliance. Missing guidance, required capabilities, checks, or review remain blockers. Installation, host discovery, and representative behavioral checks must be verified separately.
-
-### Two implementation modes
-
-| Mode | Admission and execution |
+| Agent | Outcomes |
 |---|---|
-| **Tiny** | All conditions hold: mechanical and local, solution already understood, no design or behavioral decision, no significant component interaction or sensitive operation, and immediate verification. Implement directly. |
-| **Standard** | Everything else, including uncertainty. Plan briefly, use Coder for implementation/validation, and Reviewer for independent review. |
+| Planner | `PLAN_READY`, `ARCHITECTURE_REQUIRED` |
+| Architect | `DESIGN_READY` |
+| Engineer | `IMPLEMENTED`, `DIAGNOSED`, `PLAN_CHANGES`, `COMMITTED` |
+| Documenter | `DOCUMENTED`, `ENGINEERING_REQUIRED` |
+| Reviewer | `PASS`, `IMPLEMENTATION_CHANGES`, `PLAN_CHANGES` |
 
-A typo or known broken link can be Tiny; a small behavioral bug fix is Standard even in one file. Promote immediately when investigation or edits invalidate a Tiny condition. Missing required agents or tools blocks the Standard workflow rather than making review optional.
+Architect is invoked by the Orchestrator when Planner returns `ARCHITECTURE_REQUIRED`, rather than by Planner itself, so a single coordinator owns every transition and the trace and the workflow does not depend on nested subagent support. Documenter returns `ENGINEERING_REQUIRED` when documentation needs code changes or command-based verification; R3 then re-routes to R4, or R5 when R4 conditions do not hold, as a reported deviation. A plan requires explicit user approval before implementation, also after a revision. Correction cycles and plan revisions are each limited to two; reaching a limit stops the route as `BLOCKED` with the decision needed.
 
-### Diagnosis and correction handoff
+### Commit
 
-Diagnosis-only requests do not authorize fixes. Use [Investigator](.apm/agents/investigator.agent.md) when helpful or explicitly requested; an explicitly requested but unavailable Investigator is a blocker. With fix authorization, unclear failures may benefit from investigation before Coder; understood fixes go directly to Coder. This is optional routing, not a third implementation mode or a prerequisite for every fix.
+A completed route that changed files ends with a copy-ready `/git-commit` command for the pinned [`git-commit`](https://github.com/github/awesome-copilot/tree/main/skills/git-commit) skill. It lists only the paths workers changed, uses one command per logical change, and carries a Conventional Commits message without `Co-authored-by:` trailers, as required by the [Git instructions](.apm/instructions/common/git.instructions.md). It is suggested only after review returned `PASS` or when the route requires no review.
 
-Investigator returns observations, reproduction conditions, exact diagnostic commands/outcomes, supported causes or ranked hypotheses with confidence basis, and unknowns. Pass that evidence to Coder, who verifies implementation-critical assumptions without automatically repeating the entire investigation. Coder still owns validation, and Standard still requires independent Reviewer review.
+The suggestion is not authorization. When the user explicitly authorizes the commit, rule `R0 COMMIT` delegates it to Engineer, which runs the skill, because Orchestrator has no terminal access. The user can also run the command in a chat whose agent has terminal access. Pushing is never part of the workflow and requires its own explicit authorization.
 
-### Guidance and task evidence
+### Reports and trace
 
-Every role resolves and reads the common baseline, matching scoped instructions, repository entry guidance, and relevant owning documentation. Custom-agent subagents do not inherit the Orchestrator's loaded instructions, and `applyTo` instructions only attach once matching files enter their context. The Orchestrator therefore starts every specialist prompt, including re-invocations, with a guidance block of absolute readable paths (common, matching scoped, repository entry, owning documentation, and skills) and brief task-critical rules. Specialists also discover applicable instructions and skills themselves in case the block is incomplete and report additions separately; the Orchestrator checks each reported guidance read against the block and carries additions into later blocks. See [VS Code subagents](https://code.visualstudio.com/docs/agents/run/subagents).
+Every worker ends with a fixed `## Report` block: agent, model, status, outcome, reason, guidance read, changes or findings, validation evidence, decisions, deviations, and open items. The Orchestrator includes every report in full and adds the selected route with its reason, a step trace with the configured and reported model per step, and a result summary of changes, validation, review, deviations, and next decisions.
 
-Keep brief task notes in persistent session storage outside versioned sources. Track mode, scope, acceptance criteria, guidance read, exact check/review results, learning disposition, and separate publishing authorizations/results. Carry these notes across follow-up turns and renew affected checks and review after edits. No custom schema or fingerprint tooling is required.
+### Models
 
-Missing required guidance or material conflicts are visible blockers. Installing a package or linking an instruction does not establish loading; see [activation checks](../README.md#verify-activation).
+Each agent pins a role-specific `model` fallback list in its frontmatter; the first available model is used. Orchestrator does not override worker models, and its [agent registry](.apm/agents/orchestrator.agent.md#agent-registry) must stay in sync with the frontmatter.
 
-### Validation and independent review
+| Agent | Models | Rationale |
+|---|---|---|
+| Orchestrator | Claude Sonnet 5.5, GPT-6.1 Terra | Reliable, fast classification and coordination |
+| Planner, Architect | Claude Opus 5.5, GPT-6.1 Sol | Strongest reasoning for consequential decisions |
+| Engineer | Claude Sonnet 5.5, GPT-5.3-Codex | Strong agentic coding; GPT-5.3-Codex is the long-term support fallback |
+| Documenter | Claude Haiku 5.5, GPT-5.4 nano | Low-cost models for low-risk documentation work |
+| Reviewer | GPT-6.1 Sol, Claude Opus 5.5 | A different model family from Engineer to reduce shared blind spots |
 
-Coder owns implementation and its meaningful tests and focused validation. No routine Tester handoff is needed. Reviewer inspects the actual final diff, surrounding contracts, documentation, and evidence instead of trusting an implementer's summary.
-
-Standard review is required, not selected by perceived usefulness. Concrete findings return to correction and validation, then renewed review. Retained learning edits are part of that final diff. Any subsequent edit requires renewed applicable checks and review; repeated distinct failures produce an explicit blocker.
-
-Review can increase cost and elapsed time and is not proof of correctness. Its value is independent context and a compulsory correction opportunity, without invoking every available specialist.
-
-### Self-learning and maintenance feedback
-
-The [self-learning skill](.apm/skills/self-learning/SKILL.md) owns the repeatable assessment. No separate Learning agent is included: this is a procedure, not another routine role or handoff.
-
-Assess failures, corrections, review findings, and recurring friction; inspect existing guidance before retaining a lesson. Record `updated`, `proposed`, `already-covered`, or `none`, with observation, rationale, owner, action, and validation where applicable. Always include the disposition and an evidence-based reason in the final user-facing handoff, not only task notes. Link owning edits and report validation for `updated`; identify the intended owner and why a proposal was not applied for `proposed`; link the existing rule and explain its coverage for `already-covered`; explain why no durable lesson emerged for `none`. Missing evidence is a blocker, not a reason to invent a lesson.
-
-Update shared source only in the owning repository and within authorized scope; keep project knowledge local and propose changes when the owner cannot be edited. Changes to enforcement, permissions, or publishing policy require explicit approval. This is controlled maintenance, not persistent model training. All retained edits join validation and final review.
-
-### Completion and publishing
-
-Both modes use the [finalize-task checklist](.apm/skills/finalize-task/SKILL.md) before claiming completion. Confirm acceptance criteria, guidance, exact check results, learning disposition, and applicable final review. Missing evidence, failed checks, and unresolved review findings are blockers; later edits require renewed affected checks and review.
-
-The Orchestrator re-enters finalization at each final handoff for the same task, including refinements and no-edit clarifications while changes or publishing are pending. Cumulative task notes are reconciled with current Git; affected checks and review are renewed after edits; each handoff restates outcome, evidence, learning, blockers, and actual commit/push state with regenerated copy-ready commands for all still-uncommitted task edits (push-only or none when applicable). This is guidance, not a runtime guarantee; changed sources need deliberate activation in a fresh session.
-
-Commit and push each require separate explicit authorization. Inspect the worktree and staged diff with ordinary Git commands, preserve unrelated changes, and use the available `git-commit` skill when committing. Stage only reviewed paths or safely separated hunks. Actual commits and copy-ready suggested commands must use Conventional Commits without `Co-authored-by:` trailers, including delegated `git-commit` preparation. Inspect the full proposed message before executing or emitting commands; preserve legitimate other trailers such as issue references and `BREAKING CHANGE:`. `-m` is valid Git syntax, not unwanted message content.
-
-Inspect the actual committed changes and full message before push, including any hook-added content. Unexpected changes or prohibited trailers require an explicit blocker, not automatic amendment. Unresolved instruction conflicts or external attribution are also blockers: this guidance cannot override all host behavior, and finalization must not automatically change configuration or bypass hooks. Confirm the intended branch, remote, and outgoing history; after an authorized push, verify the remote branch tip against the local commit.
-
-The skill is a short procedure with no bundled code, tests, hooks, runtime dependency, or evidence-file setup. It guides behavior rather than automatically enforcing it. Existing repository hooks, permissions, and CI remain separate controls; do not install, replace, or bypass them as part of finalization.
-
-Reports stay proportional: outcome, meaningful decisions, exact checks/review, self-learning disposition and reason, blockers, and actual publishing state. Whenever task changes remain uncommitted or unpushed, include one copy-ready shell block, labeled as not executed and for the user to review before running. For uncommitted work, chain explicit task-path `git add`, a concrete Conventional Commits `git commit` message, and explicit `git push` with `&&`. Do not split push into another block or insert an interactive confirmation: the user can execute the reviewed sequence immediately. An already committed and verified task gets only the remaining push. Commands use the verified repository, branch, remote, and outgoing history and safe quoting. This user-executed sequence does not authorize agent execution; the agent's own publishing still requires separate permission and post-commit inspection.
-
-Do not suggest broad staging or a commit that captures unrelated staged work. Mixed task/unrelated changes, failed checks or review, detached HEAD, an unknown destination, or unrelated outgoing commits require an explicit blocker and only safe commands, not guessed values or an unsafe publish sequence. If all publishing is verified complete or there are no task changes, state that instead of providing redundant commands.
+Names follow the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) list. Verify them in the model picker and update the frontmatter and registry together when models are retired. The trace reports a model as `unknown` when the runtime does not expose it to the agent.
 
 ---
 
-## Agent constraints
+## Harness limitations
 
-- Orchestrator requests `model: auto` and retains a broad wildcard tool list with explicit coordination/execution aliases for the existing protected-environment setup. This is not a narrow capability restriction; actual availability and Auto routing depend on the active harness.
-- Its Local-harness agent allowlist contains Architect, Investigator, Coder, Documenter, and Reviewer. Specialists declare `agents: []` where honored and never publish.
-- Investigator declares read/search/execute tools for diagnosis only: no source/configuration/test/documentation edits, fixes, installs, environment repair, deployment, publishing, or delegation. It inspects commands/scripts/fixtures and side effects before bounded, known-safe local checks; no live infrastructure, secret dumps, snapshot updates, autofixes, migrations, or service changes. Unsafe or unavailable experiments stop with a reported limitation. Temporary output stays in disposable task-scoped or repository-required results locations, never user data.
-- Reviewer declares read/search/execute tools; execution is for read-only inspection or safe checks. This is a role boundary, not an operating-system sandbox.
-- Investigator's `execute` access likewise is not a sandbox or an enforced read-only filesystem; its diagnostic boundaries depend on compliance and host permissions.
-- Field and tool support vary by harness; Copilot does not honor every Local field, including the `agents` allowlist. Verify the [current agent schema](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference) and actual tool/agent availability.
-- Source validation cannot prove discovery, mandatory delegation, or compliance in a running session.
+- The workflow targets the **Copilot** harness, selected as the session target in VS Code Chat. Copilot delegates to custom agents through its native `task` tool, enabled by the `agent` tool alias. See [Copilot subagents](https://code.visualstudio.com/docs/agents/run/subagents#_subagents-by-harness) and [Copilot custom agents](https://docs.github.com/en/copilot/reference/custom-agents-configuration).
+- Copilot honors the `model` fallback lists, `user-invocable`, and `disable-model-invocation`. It does not accept the `agents` allowlist or handoffs, so the agent files keep `agents` only for the Local harness, and in Copilot the Orchestrator's delegation is restricted by its instructions and the workers' descriptions, not by an allowlist. See [harness compatibility](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
+- Workers start in a fresh context, so the Orchestrator passes guidance paths and prior results explicitly. Workers never ask the user directly; they return `NEEDS_INPUT` and the Orchestrator asks, which keeps approvals and the trace in one conversation.
+- Routing tables, outcomes, and reports are instructions to the model, not an execution engine. Tool restrictions limit capabilities; `execute` is not a sandbox. Hard enforcement of transitions or approvals requires hooks, permissions, or a dedicated controller.
 
 ---
 
 ## Consumption and validation
 
-Consumers identify this package as `CollinPoetoehena/DevHub/packages/apm/common`; DevHub's root [`apm.yml`](../../../apm.yml) uses `./packages/apm/common`. Follow the [repository setup](../README.md#repository-setup), [consumer guidance](../README.md#consumer-specific-guidance), and [validation procedure](../README.md#validation).
+Consumers identify this package as `CollinPoetoehena/DevHub/packages/apm/common`; DevHub's root [`apm.yml`](../../../apm.yml) uses `./packages/apm/common`. Follow the [repository setup](../README.md#repository-setup) and [validation procedure](../README.md#validation).
 
-Validate sources with `apm compile --validate --local-only` from this directory. Check skill metadata and resource links separately. Refresh installations deliberately, then start a fresh session and verify discovery and representative [reliability scenarios](../README.md#reliable-customization-design) in each intended harness. Source edits do not update deployed customizations or running sessions.
+Validate sources with `apm compile --validate --local-only` from this directory. After reinstalling, start a fresh chat and repeat representative scenarios:
+
+| Scenario | Expected behavior |
+|---|---|
+| Explain a function | R1; no edits |
+| Review the current changes | R2; findings reported, no edits |
+| Fix a README typo | R3; Documenter only |
+| Document behavior that needs a command to verify | Documenter returns `ENGINEERING_REQUIRED`; re-routed to R4 or R5 as a reported deviation |
+| Approved ADR-only plan | R5; Documenter, then Reviewer |
+| Localized bug with a known test | R4; Engineer, then Reviewer |
+| Proposed deployment ADR or cross-cutting change | R5; plan presented, implementation waits for approval |
+| Plan needs a design decision | Architect, then Planner |
+| Reviewer finds a defect | Correction by the same implementer, then renewed review |
+| Engineer needs an unapproved design change | `PLAN_CHANGES`; replanning and approval |
+| Validation fails or a limit is reached | No completion claim; `BLOCKED` or `FAILED` reported |
+| Any route | Final response contains route, trace with models, and every agent report |
+| Completed route with changes | Ends with a `/git-commit` command for only the changed paths; nothing is committed |
+| User authorizes the commit | R0; Engineer commits via `git-commit` and reports the hash; no push |
+
+Source edits do not update deployed customizations or running sessions.

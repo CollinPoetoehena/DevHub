@@ -4,4 +4,4 @@
 
 The [common package](../common/README.md) remains the engineering baseline and owns shared roles and procedures. Homelab-specific additions belong here only when they are suitable for sharing across those repositories; private implementation and operational values stay with their protected owner.
 
-Follow the [APM design and setup guide](../README.md) for [package selection](../README.md#design-and-ownership), [repository guidance](../README.md#authoring-repository-guidance), and [maintenance and validation](../README.md#maintenance-and-validation). This package does not replace the common baseline.
+Follow the [APM design and setup guide](../README.md) for [package selection](../README.md#design), [repository guidance](../README.md#authoring-repository-guidance), and [maintenance and validation](../README.md#maintenance-and-validation). This package does not replace the common baseline.
