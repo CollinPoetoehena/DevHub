@@ -22,6 +22,7 @@ This guide owns the general approach: why to customize AI, the concepts, the reu
   - [Official dependencies](#official-dependencies)
   - [Model selection](#model-selection)
   - [Custom instructions in subagents](#custom-instructions-in-subagents)
+  - [Agent tools and permissions](#agent-tools-and-permissions)
   - [How guidance is layered](#how-guidance-is-layered)
   - [Language and framework guidance](#language-and-framework-guidance)
   - [Package design](#package-design)
@@ -180,14 +181,14 @@ What makes customizations reliable is the explicit, checkable part: fixed decisi
 | "Fix the issues the reviewer found" | At most two correction cycles and two plan revisions, then `BLOCKED` with the decision needed |
 | "Get approval for big changes" | Named gates: plan approval before implementation, explicit authorization before commits, never push |
 | "Summarize your work" | A fixed `## Report` block per agent and an aggregated trace with route, steps, models, validation evidence, and deviations |
-| "Be careful with edits" | Least-privilege tools per role: Reviewer and Planner cannot edit, Orchestrator cannot run commands |
+| "Be careful with edits" | Explicit role boundaries: Planner, Architect, and Reviewer do not edit; Orchestrator delegates delivery. These are behavioral limits, not tool filters; see [tools and permissions](#agent-tools-and-permissions) |
 | "Only report real issues" | A pre-finding gate (exact line, concrete failure, context read, defensible severity), proof for `CRITICAL` and `HIGH`, and zero findings as a valid result |
 | "Write a good plan" | A fixed step format (file, action, reason, dependencies, risk) and a check before the plan is returned |
 | "Improve over time" | A learning step triggered only by listed signals, with a fixed owner order for each lesson |
 
 Apply the same principle to every customization, not only agents:
 
-- **Agents:** one role, explicit boundaries, restricted tools, a pinned model, and a fixed report. See [Building custom agents](https://awesome-copilot.github.com/learning-hub/building-custom-agents/).
+- **Agents:** one role, explicit boundaries, deliberate [tool access](#agent-tools-and-permissions), a pinned model, and a fixed report. Prefer least-privilege tools when the harness reliably exposes them. See [Building custom agents](https://awesome-copilot.github.com/learning-hub/building-custom-agents/).
 - **Skills:** a description with concrete trigger phrases, numbered steps, explicit decision rules, and gotchas instead of general advice. See [Creating effective skills](https://awesome-copilot.github.com/learning-hub/creating-effective-skills/).
 - **Instructions:** short, specific, testable rules scoped with `applyTo`, such as "use `pathlib` for file paths" rather than "write clean code". See [Defining custom instructions](https://awesome-copilot.github.com/learning-hub/defining-custom-instructions/).
 
@@ -274,6 +275,14 @@ Explicit selection makes model use deliberate and visible in the workflow trace.
 When Copilot runs a custom agent as a subagent, it does not follow the repository's custom instructions by default; only agents the user selects do. Every worker agent in the shared packages therefore sets `include-custom-instructions: true`, so workers that plan, design, edit, document, or review apply the same `AGENTS.md`, coding, documentation, and other scoped standards as the entry agent. Without it, a worker only sees the context in its delegation prompt and can silently ignore project conventions. Entry agents such as the Orchestrator do not need it. See [creating custom agents for Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli).
 
 VS Code recognizes the field for the Copilot harness, but [does not forward it](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_copilot-specific-configuration) when converting agent files for the session runtime. Keep it for runtimes that honor it, and keep passing applicable guidance paths in each delegation prompt, as the common Orchestrator does, rather than relying on the field alone.
+
+### Agent tools and permissions
+
+All seven common agents explicitly declare `tools: ['*']` to request every tool the host makes available. This is a compatibility workaround: in a Learner implementation run, Engineer declared `edit`, but its invoked worker exposed no `create` or `edit` tool and returned `BLOCKED` without changing files. The same wildcard policy applies across roles to avoid inconsistent alias/filter handling, not because every role needs every tool or experienced that exact failure. Omitting `tools` can also enable default tool access; listing `['*']` makes the intentional all-tools policy visible instead of relying on an implicit default. It cannot guarantee that the runtime exposes every tool. See [tool configuration](https://docs.github.com/en/copilot/reference/custom-agents-configuration#tools).
+
+In this trusted local setup, the owner observed fewer repetitive allow prompts with the explicit wildcard, including cases where a declared tool previously still prompted for permission. Some prompts remain, which is acceptable. Tool availability and action approval are separate: `['*']` does not grant operating-system permissions, disable host confirmation, or override organization policy, and prompt reduction is not a portable guarantee.
+
+Least privilege remains preferable when it works reliably; the broad declaration is an accepted trade-off for the owner's trusted personal workspace because restrictive declarations have blocked delivery. Each agent definition still states what it should and should not do, including scope, command use, delegation, source ownership, and explicit commit/push authorization. The owner reviews every resulting change before accepting or using it, alongside the workflow's independent review where required. These checks make the trade-off reasonable here, not universally safe: role instructions are behavioral limits rather than hard enforcement, and post-run review cannot undo leaked secrets, destructive commands, or live-system effects. Keep host permissions and confirmation controls appropriate to those risks; do not carry this workaround unexamined into untrusted or production environments.
 
 ### How guidance is layered
 
@@ -492,7 +501,7 @@ See the official [OpenAI](https://developers.openai.com/api/docs/guides/prompt-e
 
 ### Choosing an agent
 
-Select the common **Orchestrator** for all engineering work. It routes each request with a fixed routing table, delegates to Planner, Architect, Engineer, Documenter, and Reviewer, asks for approval before planned implementation, and ends with a trace of every step, the models used, and a suggested commit command. The [common package](common/README.md#workflow) owns the routes, outcomes, and reports. Use the built-in agent for quick ad hoc questions when the workflow adds nothing. This ensures consistent routing, accountability, and traceability across all engineering tasks.
+Select the common **Orchestrator** for all engineering work. It routes each request with a fixed routing table, delegates to Planner, Architect, Engineer, Documenter, and Reviewer, asks for approval before planned implementation, invokes Learner for evidence-based workflow evaluation when learning signals occur, and ends with a trace of every step, the models used, and a suggested commit command. The [common package](common/README.md#workflow) owns the routes, outcomes, and reports. Use the built-in agent for quick ad hoc questions when the workflow adds nothing. This ensures consistent routing, accountability, and traceability across all engineering tasks.
 
 ### Recommended Chat setup
 

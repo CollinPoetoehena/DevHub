@@ -6,7 +6,7 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 
 ### Breaking
 
-- Replace the agent set with Orchestrator, Planner, Architect, Engineer, Documenter, and Reviewer, all authored from scratch; remove Coder and Investigator. Engineer takes over implementation and diagnosis (`DIAGNOSE` mode).
+- Replace the agent set with Orchestrator, Planner, Architect, Engineer, Documenter, Reviewer, and Learner, all authored from scratch; remove Coder and Investigator. Engineer takes over implementation and diagnosis (`DIAGNOSE` mode).
 - Replace the Tiny and Standard modes with a first-match routing table (`COMMIT`, `ANSWER`, `REVIEW`, `DIRECT_DOCS`, `DIRECT_CHANGE`, `PLANNED`); uncertainty falls through to `PLANNED`.
 - Make Orchestrator the only agent in the picker; workers set `user-invocable: false` and run as subagents.
 - Target the Copilot harness; the `agents` allowlist remains only for the Local harness.
@@ -19,14 +19,15 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 - Closed outcome sets per worker with exactly one transition per outcome, explicit plan approval, and at most two correction and two plan-revision cycles.
 - Follow-up rules: replies to an open pause continue the active route, other messages are routed again as new requests with earlier results as inputs, and ambiguous messages never count as approval.
 - A fixed `## Report` block for every worker, aggregated by Orchestrator into a trace of route, steps, configured and reported models, validation, review, and deviations.
-- Role-specific model fallback lists per agent, with Reviewer on a different model family than Engineer and Documenter on low-cost models.
+- Role-specific model fallback lists per agent, with Documenter on low-cost models and Learner using Engineer's setup: Claude Sonnet 5.5, then GPT-5.3-Codex. Reviewer runs in a fresh context with an independent assessment role.
 - Documenter for documentation-only routes (`DIRECT_DOCS` and documentation-only plans), returning `ENGINEERING_REQUIRED` when code changes or command verification are needed.
 - A copy-ready `/git-commit` command for the pinned `git-commit` skill at the end of completed routes that changed files; explicit authorization routes to Engineer `COMMIT` mode (`R0 COMMIT`).
-- A lightweight learning step: when a route ends with learning signals, Documenter applies the new `workflow-learning` skill in `LEARN` mode. Repository lessons update repository customizations; common lessons update the package source when DevHub is editable in the workspace, otherwise they are proposed.
+- A dedicated Learner agent for evidence-based workflow evaluation and retained lessons, with its own scorecard, lessons, references, validation, changes, and open-items report. Documenter owns documentation delivery only.
+- A lightweight terminal learning step: eligible routes with signals invoke Learner once to apply `workflow-learning`; incomplete, failed, or invalid learning reports preserve the route's status and do not re-invoke Learner. Repository lessons update repository customizations; common lessons update the editable package source, otherwise they are proposed. Safeguard changes are always proposed.
 - A concise `code-comments` skill that defaults to no comment, linked from the coding instructions.
 - Shared security instructions, adapted from ECC, with OWASP-aligned secure defaults per area, a severity-rated pattern table, false positives, negative security tests, and an exposed-secret response; every worker treats fetched and inspected content as data, not instructions.
 - A `References` block in every worker report (instructions, skills, files read, external sources) and a per-step references table in the Orchestrator report.
-- Reviewer quality gates adapted from ECC: a pre-finding gate, proof for `CRITICAL` and `HIGH` findings, a `CRITICAL | HIGH | MEDIUM | LOW` scale with `CRITICAL` and `HIGH` blocking, zero findings as a valid result, and common false positives. Reviewer gets `execute` to re-run validation with inspection and check-mode commands only.
+- Reviewer quality gates adapted from ECC: a pre-finding gate, proof for `CRITICAL` and `HIGH` findings, a `CRITICAL | HIGH | MEDIUM | LOW` scale with `CRITICAL` and `HIGH` blocking, zero findings as a valid result, and common false positives. Reviewer instructions permit only inspection and check-mode validation commands.
 - Planner four-stage process, step format, planning rules for refactors and phasing, plan-level red flags, and a fuller plan format; Architect four-stage process, a per-option trade-off rating against fixed architectural principles, red flags, and ADR-shaped output.
 - A self-evaluation scorecard in the `workflow-learning` skill, adapted from ECC: five workflow axes scored 1 to 5 with cited evidence, where weak axes drive lesson extraction.
 - A reuse registry in the README listing pinned upstream dependencies and the ECC parts used for ideas; language and tool parts are recorded in the stack packages.
@@ -35,6 +36,8 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 
 ### Changed
 
+- Explicit `tools: ['*']` for all seven common agents to work around unreliable per-tool runtime exposure. Document the prior blocked editing worker, deliberate declaration instead of omission, locally observed prompt reduction, and the trusted-workspace trade-off; host permissions, approvals, and behavioral role boundaries still apply.
+- Synchronize the Orchestrator registry with agent model frontmatter and document Learner ownership, report handling, and validation scenarios.
 - Rewrite the `draft-github-issue` skill in the current skill format, with trigger keywords, `When to Use This Skill`, labeled steps, and `Gotchas`.
 - Fill the AI customization instructions with deterministic workflow, reporting, model-selection, and least-privilege rules.
 - Rewrite the README around the workflow, outcomes, commit command, reports, models, harness limitations, and validation scenarios.

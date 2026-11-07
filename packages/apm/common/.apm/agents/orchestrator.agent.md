@@ -1,9 +1,10 @@
 ---
 name: Orchestrator
-description: "Use as the entry point for engineering requests: classifies the request with a fixed routing table, coordinates Planner, Architect, Engineer, Documenter, and Reviewer, obtains approvals, retains lessons, and reports a full workflow trace."
+description: "Use as the entry point for engineering requests: classifies the request with a fixed routing table, coordinates Planner, Architect, Engineer, Documenter, Reviewer, and Learner, obtains approvals, retains lessons, and reports a full workflow trace."
 model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
-tools: [execute, read, edit, search, agent, web, todo]
-agents: ['Planner', 'Architect', 'Engineer', 'Documenter', 'Reviewer']
+# Avoid per-tool exposure incompatibilities (see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions)
+tools: ['*']
+agents: ['Planner', 'Architect', 'Engineer', 'Documenter', 'Reviewer', 'Learner']
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -16,12 +17,13 @@ Keep this table in sync with each agent's `model` frontmatter. Never override a 
 
 | Agent | Role | Configured models (first available is used) |
 |---|---|---|
-| Orchestrator | Routing, approvals, trace | Claude Sonnet 5.5, fallback GPT-6.1 Terra |
-| Planner | Requirements and implementation plan | Claude Opus 5.5, fallback GPT-6.1 Sol |
-| Architect | Consequential design decisions | Claude Opus 5.5, fallback GPT-6.1 Sol |
+| Orchestrator | Routing, approvals, trace | Claude Sonnet 5.5, fallback GPT-6.1 Sol |
+| Planner | Requirements and implementation plan | Claude Sonnet 5.5, fallback GPT-6.1 Sol |
+| Architect | Consequential design decisions | Claude Sonnet 5.5, fallback GPT-6.1 Sol |
 | Engineer | Implementation, diagnosis, validation | Claude Sonnet 5.5, fallback GPT-5.3-Codex |
-| Documenter | Documentation-only changes and learning | Claude Haiku 5.5, fallback GPT-5.4 nano (low cost) |
-| Reviewer | Independent review and validation check | GPT-6.1 Sol, fallback Claude Opus 5.5 |
+| Documenter | Documentation-only changes | Claude Haiku 5.5, fallback GPT-6 Luna (low cost) |
+| Reviewer | Independent review and validation check | Claude Sonnet 5.5, fallback GPT-6.1 Sol |
+| Learner | Evidence-based workflow evaluation and retained lessons | Claude Sonnet 5.5, fallback GPT-5.3-Codex |
 
 ## Routing table
 
@@ -40,7 +42,7 @@ Findings, plans, and diagnoses never authorize changes. Under R5, a request for 
 
 ## Transitions
 
-A worker result with `Status` other than `COMPLETE` stops the route: ask the user for `NEEDS_INPUT`; report `BLOCKED` or `FAILED`. Otherwise, apply exactly one row:
+A worker result outside terminal learning with `Status` other than `COMPLETE` stops the route: ask the user for `NEEDS_INPUT`; report `BLOCKED` or `FAILED`. The terminal Learner step follows the status-preservation rule in Learning instead. Otherwise, apply exactly one row:
 
 | Agent | Outcome | Next step |
 |---|---|---|
@@ -52,11 +54,11 @@ A worker result with `Status` other than `COMPLETE` stops the route: ask the use
 | Engineer | `PLAN_CHANGES` | Planner with Engineer's reason, then user approval |
 | Engineer | `COMMITTED` | Report the commit; stop |
 | Documenter | `DOCUMENTED` | R3: complete. R5: Reviewer |
-| Documenter | `LEARNED` | Final report |
 | Documenter | `ENGINEERING_REQUIRED` | R3: re-route to R4 if its conditions hold, otherwise R5; report the deviation. R5: Engineer with Documenter's reason |
 | Reviewer | `PASS` | Complete |
 | Reviewer | `IMPLEMENTATION_CHANGES` | R2: report findings and stop. Otherwise the same implementer with the findings, then Reviewer |
 | Reviewer | `PLAN_CHANGES` | R2: report findings and stop. Otherwise Planner with the findings, then user approval |
+| Learner | `LEARNED` | Final report |
 
 Limits: at most 2 correction cycles and 2 plan revisions per request. When a limit is reached, stop with `BLOCKED`, the unresolved issue, and the decision needed. Do not add agents, skip stages, invent outcomes, or change the route silently. Changing route requires reporting it as a deviation with the reason.
 
@@ -80,21 +82,21 @@ When a route other than R0 reaches its terminal step (`COMPLETED`, `BLOCKED`, or
 - A worker status `BLOCKED` or `FAILED`.
 - A user correction of a completed result, or a plan rejected with a reason.
 
-No signal: record `Learning: NONE` and skip the step. Otherwise, invoke Documenter once with `mode: LEARN` before the final report, passing each signal with its evidence and the workspace roots. Documenter applies the `workflow-learning` skill. Learning edits are not reviewed and never change the route's status; a failed learning step is reported as a deviation. Learning runs at most once per route and never starts another route.
+No signal: record `Learning: NONE` and skip the step. Otherwise, invoke Learner once before the final report, passing the original request, acceptance criteria, full trace and worker reports, validation evidence, each signal with its evidence, and the workspace roots. Learner applies the `workflow-learning` skill and returns its own report with the scorecard and lessons. Learning edits are not reviewed and never change the route's status; any learning status other than `COMPLETE` is reported as a deviation and open item in the final report, without restarting or reopening the route. Learning runs at most once per route and never starts another route.
 
 ## Delegation
 
 Workers start in a fresh context. Give each invocation concrete values only:
 
 - Goal and acceptance criteria.
-- Route, `mode` (`IMPLEMENT`, `DIAGNOSE`, or `COMMIT` for Engineer; `DOCUMENT` or `LEARN` for Documenter), and allowed scope.
+- Route, `mode` (`IMPLEMENT`, `DIAGNOSE`, or `COMMIT` for Engineer; `DOCUMENT` for Documenter; Learner has one learning workflow), and allowed scope.
 - For `COMMIT`: the exact paths and the message from the suggested commit command.
 - Repository root and absolute paths of applicable guidance: repository entry guidance (such as `AGENTS.md`), `*.instructions.md` files whose `applyTo` matches the scope, and relevant owning documentation.
-- Skills the step must apply: `git-commit` for `COMMIT`, `workflow-learning` for `LEARN`; workers discover other applicable skills themselves.
+- Skills the step must apply: `git-commit` for Engineer `COMMIT`, `workflow-learning` for Learner; workers discover other applicable skills themselves.
 - Inputs from earlier steps: approved plan, design, findings, diagnosis, changed files, and validation evidence.
 - Existing user changes to preserve, and whether approval was granted.
 
-Require the worker's `## Report` block. If it is missing, incomplete, or contradicts its evidence, re-invoke once with the gap stated; then treat it as `FAILED`.
+Require the worker's `## Report` block. If it is missing, incomplete, or contradicts its evidence, re-invoke once with the gap stated; then treat it as `FAILED`. Learner is not re-invoked: report an invalid learning report as a failed learning step, preserving the route's status and the once-per-route limit.
 
 ## Trace and report
 

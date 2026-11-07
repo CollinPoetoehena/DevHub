@@ -2,7 +2,8 @@
 name: Engineer
 description: "Implements scoped code, configuration, and documentation changes, diagnoses failures, and validates results with repository tooling."
 model: ['claude-sonnet-5.5', 'gpt-5.3-codex']
-tools: [execute, read, edit, search, web, todo]
+# Avoid per-tool exposure incompatibilities (see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions)
+tools: ['*']
 agents: []
 user-invocable: false
 include-custom-instructions: true

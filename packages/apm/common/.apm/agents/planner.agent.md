@@ -2,7 +2,8 @@
 name: Planner
 description: "Produces evidence-based implementation plans for ambiguous, cross-cutting, or consequential engineering changes; requests Architect input for material design decisions."
 model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
-tools: [execute, read, search, web, todo]
+# Avoid per-tool exposure incompatibilities (see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions)
+tools: ['*']
 agents: []
 user-invocable: false
 include-custom-instructions: true

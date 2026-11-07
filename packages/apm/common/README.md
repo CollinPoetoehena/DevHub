@@ -24,18 +24,19 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 
 | Agent | Responsibility | Tools |
 |---|---|---|
-| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | execute, read, edit, search, agent, web, todo |
-| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | execute, read, search, web, todo |
-| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | execute, read, search, web, todo |
-| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | execute, read, edit, search, web, todo |
-| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code; applies workflow lessons (`LEARN` mode) | execute, read, edit, search, web, todo |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | execute, read, search, web, todo |
+| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | `['*']` |
+| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | `['*']` |
+| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | `['*']` |
+| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | `['*']` |
+| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | `['*']` |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | `['*']` |
+| [Learner](.apm/agents/learner.agent.md) | Evidence-based workflow evaluation and retained lessons in owning customization sources | `['*']` |
 
-The table lists the enabled `tools` aliases exactly as configured in agent frontmatter. `read` and `search` inspect the repository, `edit` changes files, `execute` enables shell commands, `web` retrieves external information, `todo` tracks work, and `agent` enables delegation. Only Orchestrator enables `agent`; workers declare `agents: []`.
+The table matches each agent's `tools` frontmatter: all explicitly request every available tool. The [APM tools and permissions design](../README.md#agent-tools-and-permissions) owns the compatibility example, explicit-versus-omitted rationale, observed prompt reduction, and accepted-risk boundaries.
 
-Tool availability is broader than permission under the role instructions: Orchestrator still delegates delivery and commits despite having `edit` and `execute`; Planner, Architect, and Documenter are instructed not to run commands; Reviewer may execute only inspection and validation checks without modifying files or state. These are behavioral restrictions, not hard tool-level enforcement, and `execute` can modify files even without `edit`. See [harness limitations](#harness-limitations).
+Tool access does not authorize every action. Orchestrator delegates delivery and commits; Planner, Architect, Documenter, and Learner are instructed not to run commands. Reviewer may run only inspection and check-mode validation without editing; Learner edits only the customization sources and changelog allowed by its skill. Only Orchestrator delegates under the role instructions; workers retain `agents: []` for harnesses that honor it. These are behavioral limits, not hard tool-level enforcement. See [harness limitations](#harness-limitations).
 
-See [Custom agents configuration - GitHub Docs](https://docs.github.com/en/copilot/reference/custom-agents-configuration#tools) for aliases and MCP tool selection. An explicit list enables only listed tools, omitting `tools` or using `["*"]` enables all available tools, and `[]` disables them all. Alias support varies by harness; GitHub documents `web` and `todo` as unavailable for Copilot in the cloud.
+Host permissions and approvals still apply. Wildcard access does not guarantee runtime tool availability or remove all confirmation prompts; verify the intended harness after installation.
 
 Only Orchestrator appears in the agent picker; the workers set `user-invocable: false`.
 
@@ -51,7 +52,7 @@ Language and tool instructions, such as Python, Dockerfile, and Ansible, live in
 Skills:
 
 - [code-comments](.apm/skills/code-comments/SKILL.md): decides whether comments are warranted and writes, trims, or removes them; linked from the [coding instructions](.apm/instructions/coding.instructions.md#comments).
-- [workflow-learning](.apm/skills/workflow-learning/SKILL.md): retains lessons from a workflow run in the owning customization file; used by Documenter in `LEARN` mode.
+- [workflow-learning](.apm/skills/workflow-learning/SKILL.md): scores a workflow run and retains lessons in the owning customization file; used by Learner.
 - [draft-github-issue](.apm/skills/draft-github-issue/SKILL.md): drafts issues without publishing or implementing them.
 
 Reused upstream parts are listed in the [reuse registry](#reuse-registry).
@@ -86,7 +87,7 @@ The ECC parts are used for ideas only; the DevHub agents and skills keep their o
 
 ## Workflow
 
-The Orchestrator owns routing and approvals, Planner owns the approach, Architect owns consequential design decisions, Engineer and Documenter own delivery, and Reviewer owns assessment. Workers run as subagents and return to the Orchestrator, which stays the active conversation so it can ask questions, obtain approval, and consolidate results.
+The Orchestrator owns routing and approvals, Planner owns the approach, Architect owns consequential design decisions, Engineer and Documenter own delivery, Reviewer owns assessment, and Learner owns workflow evaluation and retained lessons. Workers run as subagents and return to the Orchestrator, which stays the active conversation so it can ask questions, obtain approval, and consolidate results.
 
 ```text
 User -> Orchestrator
@@ -99,7 +100,7 @@ User -> Orchestrator
                                      -> user approval -> Engineer or Documenter -> Reviewer
 
 Reviewer: PASS -> done | IMPLEMENTATION_CHANGES -> same implementer | PLAN_CHANGES -> Planner
-Route end with learning signals -> Documenter (LEARN, workflow-learning skill) -> final report
+Route end with learning signals -> Learner (workflow-learning skill) -> final report
 ```
 
 ### Routing
@@ -115,8 +116,9 @@ Each worker returns an execution status (`COMPLETE | NEEDS_INPUT | BLOCKED | FAI
 | Planner | `PLAN_READY`, `ARCHITECTURE_REQUIRED` |
 | Architect | `DESIGN_READY` |
 | Engineer | `IMPLEMENTED`, `DIAGNOSED`, `PLAN_CHANGES`, `COMMITTED` |
-| Documenter | `DOCUMENTED`, `ENGINEERING_REQUIRED`, `LEARNED` |
+| Documenter | `DOCUMENTED`, `ENGINEERING_REQUIRED` |
 | Reviewer | `PASS`, `IMPLEMENTATION_CHANGES`, `PLAN_CHANGES` |
+| Learner | `LEARNED` |
 
 Architect is invoked by the Orchestrator when Planner returns `ARCHITECTURE_REQUIRED`, rather than by Planner itself, so a single coordinator owns every transition and the trace and the workflow does not depend on nested subagent support. Documenter returns `ENGINEERING_REQUIRED` when documentation needs code changes or command-based verification; R3 then re-routes to R4, or R5 when R4 conditions do not hold, as a reported deviation. A plan requires explicit user approval before implementation, also after a revision. Correction cycles and plan revisions are each limited to two; reaching a limit stops the route as `BLOCKED` with the decision needed.
 
@@ -136,9 +138,9 @@ An ambiguous message is treated as a new request, so it never counts as approval
 
 ### Learning
 
-Learning is a lightweight, final step of the workflow, not a separate agent or route. When a route ends with a learning signal, such as a review finding, a plan change, a deviation, a failed validation, a blocked worker, or a user correction, the Orchestrator invokes Documenter once in `LEARN` mode with the evidence. Clean runs record `Learning: NONE` and skip the step.
+Learning is a lightweight, final step owned by the dedicated [Learner agent](.apm/agents/learner.agent.md), not a separate route or a Documenter mode to ensure consistent handling and traceability of learning signals (embedding in another agent would provide less control and traceability). When a route other than R0 ends with a learning signal, such as a review finding, a plan change, a deviation, a failed validation, a blocked worker, or a user correction, the Orchestrator invokes Learner once with the original request, acceptance criteria, full trace and worker reports, validation evidence, signals, and workspace roots. Clean runs record `Learning: NONE` and skip the step.
 
-Documenter applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md). It first scores the run on five fixed axes (routing, accuracy, completeness, validation, efficiency) from 1 to 5, citing evidence for every score below 5; every axis scored 3 or lower must yield a lesson or a stated reason it is not reusable. Lessons then go to their owner:
+Learner applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md). It first scores the run on five fixed axes (routing, accuracy, completeness, validation, efficiency) from 1 to 5, citing evidence for every score below 5; every axis scored 3 or lower must yield a lesson or a stated reason it is not reusable. Its own configuration controls models and tools, and its report includes the scorecard, lessons, changes, validation, references, and open items. Lessons then go to their owner:
 
 | Lesson about | Where it goes |
 |---|---|
@@ -146,7 +148,7 @@ Documenter applies the [workflow-learning skill](.apm/skills/workflow-learning/S
 | A file deployed by this package, or a cross-repository convention | This package's `.apm/` source, edited directly when the current repository is DevHub or a DevHub clone is in the workspace, with a `CHANGELOG.md` entry; otherwise proposed |
 | General knowledge from a reused upstream part | Proposed; upstream content is never edited |
 
-Each lesson reports `UPDATED`, `PROPOSED`, or `ALREADY_COVERED`, with its evidence and owner, in the final report's Learning section. Installed copies listed in `apm.lock.yaml` are never edited, and changes to safeguards such as approvals, tools, routing, or commit policy are always proposed. Learning edits are not reviewed, get their own suggested commit, and reach consumers only after `apm install`.
+Each lesson reports `UPDATED`, `PROPOSED`, or `ALREADY_COVERED`, with its evidence and owner, in the final report's Learning section. A completed evaluation returns `LEARNED` even when no lesson qualifies, with `Lessons: NONE` and the reason. Installed copies listed in `apm.lock.yaml` are never edited, and changes to safeguards such as approvals, tools, routing, or commit policy are always proposed. Learning edits are not reviewed, get their own suggested commit, and reach consumers only after `apm install` and a fresh chat. A failed, incomplete, or invalid learning report is reported as a deviation and open item without changing the original route's status or re-invoking Learner.
 
 ### Commit
 
@@ -168,21 +170,22 @@ Each agent pins a role-specific `model` fallback list in its frontmatter. **The 
 | [Planner](.apm/agents/planner.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Capable reasoning for source-grounded requirements, dependency ordering, and validation plans without paying for the highest-cost default on every plan |
 | [Architect](.apm/agents/architect.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Medium-cost default for component, contract, and data-model trade-offs; strong reasoning fallback from another provider |
 | [Engineer](.apm/agents/engineer.agent.md) | Claude Sonnet 5.5 | GPT-5.3-Codex | Strong general-purpose agentic coding, diagnosis, and validation, with a coding-specialized fallback |
-| [Documenter](.apm/agents/documenter.agent.md) | Claude Haiku 5.5 | GPT-6 Luna | Low-cost, fast models for bounded, source-verified documentation maintenance and retaining workflow lessons |
+| [Documenter](.apm/agents/documenter.agent.md) | Claude Haiku 5.5 | GPT-6 Luna | Low-cost, fast models for bounded, source-verified documentation maintenance |
 | [Reviewer](.apm/agents/reviewer.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Balanced model for independent, evidence-based assessment and validation; independence comes from its fresh context and role, not a different default model family |
+| [Learner](.apm/agents/learner.agent.md) | Claude Sonnet 5.5 | GPT-5.3-Codex | Same model setup as Engineer for evidence-based evaluation and precise customization-source edits, independent of Documenter's low-cost documentation setup |
 
 For Architect, a high-cost reasoning model such as Opus could be justified for especially ambiguous, high-impact decisions. Sonnet is deliberately chosen instead: it is capable of architecture analysis while keeping the routine token spend lower than a high-cost default. Keep context focused and avoid unnecessary agent calls to reduce token usage itself; using a medium-cost model reduces the price of tokens, not necessarily their number. The higher-reasoning fallback is available when Sonnet is unavailable, not an escalation triggered by task complexity.
 
-The table reflects the agent frontmatter. The [Orchestrator registry](.apm/agents/orchestrator.agent.md#agent-registry) still lists earlier selections and needs synchronization with that frontmatter; it is not the source for the current table. Verify model identifiers and access in the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) and the model picker, and update the frontmatter and registry together when selections change. The trace reports a model as `unknown` when the runtime does not expose it to the agent.
+The table and [Orchestrator registry](.apm/agents/orchestrator.agent.md#agent-registry) reflect the agent frontmatter, which is authoritative. Verify model identifiers and access in the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) and the model picker, and update the frontmatter and registry together when selections change. The trace reports a model as `unknown` when the runtime does not expose it to the agent.
 
 ---
 
 ## Harness limitations
 
-- The workflow targets the **Copilot** harness, selected as the session target in VS Code Chat. Copilot delegates to custom agents through its native `task` tool, enabled by the `agent` tool alias. See [Copilot subagents](https://code.visualstudio.com/docs/agents/run/subagents#_subagents-by-harness) and [Copilot custom agents](https://docs.github.com/en/copilot/reference/custom-agents-configuration).
+- The workflow targets the **Copilot** harness, selected as the session target in VS Code Chat. Copilot delegates to custom agents through its native `task` tool, included in the explicit wildcard tool request. See [Copilot subagents](https://code.visualstudio.com/docs/agents/run/subagents#_subagents-by-harness) and [Copilot custom agents](https://docs.github.com/en/copilot/reference/custom-agents-configuration).
 - Copilot honors the `model` fallback lists, `user-invocable`, and `disable-model-invocation`. It does not accept the `agents` allowlist or handoffs, so the agent files keep `agents` only for the Local harness, and in Copilot the Orchestrator's delegation is restricted by its instructions and the workers' descriptions, not by an allowlist. See [harness compatibility](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
 - Workers start in a fresh context, so the Orchestrator passes guidance paths and prior results explicitly. Workers never ask the user directly; they return `NEEDS_INPUT` and the Orchestrator asks, which keeps approvals and the trace in one conversation.
-- Routing tables, outcomes, and reports are instructions to the model, not an execution engine. Tool restrictions limit capabilities; `execute` is not a sandbox. Hard enforcement of transitions or approvals requires hooks, permissions, or a dedicated controller.
+- Routing tables, outcomes, reports, and role boundaries are instructions to the model, not an execution engine. The wildcard deliberately provides no per-role tool filter, and command execution is not a sandbox. Hard enforcement of transitions or approvals requires host permissions, hooks, or a dedicated controller; see [tools and permissions](../README.md#agent-tools-and-permissions).
 
 ---
 
@@ -207,9 +210,12 @@ Validate sources with `apm compile --validate --local-only` from this directory.
 | Validation fails or a limit is reached | No completion claim; `BLOCKED` or `FAILED` reported |
 | Any route | Final response contains route, trace with models, and every agent report |
 | Completed route with changes | Ends with a `/git-commit` command for only the changed paths; nothing is committed |
-| Review finding fixed in a correction cycle | Learning step records the rule in its owner, or `ALREADY_COVERED` |
+| Review finding fixed in a correction cycle | Learner runs once, returns its scorecard and lessons, and records the rule in its owner, or `ALREADY_COVERED`; Documenter is not invoked for learning |
 | Clean run without signals | `Learning: NONE`; no learning step |
+| Signal with no reusable lesson | Learner returns `COMPLETE`, `LEARNED`, a scorecard, and `Lessons: NONE` with the reason |
+| Learner lacks required trace evidence or returns an invalid report | Final report records the learning deviation and open item; original route status is preserved and Learner is not re-invoked |
+| Learner proposes a safeguard change | `PROPOSED` with exact suggested text; no safeguard is edited |
 | Lesson about a common agent, no DevHub source in the workspace | `PROPOSED` with the exact suggested text |
-| User authorizes the commit | R0; Engineer commits via `git-commit` and reports the hash; no push |
+| User authorizes the commit | R0; Engineer commits via `git-commit` and reports the hash; no push or learning step |
 
 Source edits do not update deployed customizations or running sessions.

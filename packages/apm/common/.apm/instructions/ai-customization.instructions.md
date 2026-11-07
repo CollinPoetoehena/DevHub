@@ -18,7 +18,7 @@ applyTo: "**/*.agent.md,**/*.instructions.md,**/*.prompt.md,**/SKILL.md,**/AGENT
 - **Conservative default**: Routing tables evaluate top to bottom; uncertainty falls through to the most controlled route.
 - **Bounded loops and gates**: Cap correction and revision cycles, then stop with the blocker and the decision needed. Require explicit user approval at consequential gates; findings, plans, and diagnoses do not authorize changes, commits, or pushes.
 - **Self-checks and proof**: Give agents a fixed check before they return a result, such as a plan check or a pre-finding gate, and require evidence proportional to impact, such as proof for blocking findings. Accept an empty result, such as zero findings, as valid.
-- **Least privilege**: Grant only the tools a role needs and restrict delegation with `agents` allowlists. Use `user-invocable: false` for workers and `disable-model-invocation: true` for entry points. Prose is guidance, not enforcement; use tools, hooks, or CI for hard requirements.
+- **Least privilege**: Prefer only the tools a role needs when the harness reliably exposes them. The common agents deliberately use explicit `tools: ['*']` as the compatibility exception documented in the [tools and permissions design](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions); do not silently narrow it or extend that exception to other environments. Restrict delegation with `agents` allowlists where supported. Use `user-invocable: false` for workers and `disable-model-invocation: true` for entry points. Prose is guidance, not enforcement; use host permissions, hooks, or CI for hard requirements.
 
 ## Reporting and Traceability
 
