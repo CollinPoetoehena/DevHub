@@ -20,9 +20,9 @@ This guide owns the general approach: why to customize AI, the concepts, the reu
   - [Reference collections](#reference-collections)
   - [Reuse registry](#reuse-registry)
   - [Official dependencies](#official-dependencies)
-  - [Model selection](#model-selection)
+  - [Runtime-managed model selection](#runtime-managed-model-selection)
   - [Custom instructions in subagents](#custom-instructions-in-subagents)
-  - [Agent tools and permissions](#agent-tools-and-permissions)
+  - [Agent configuration](#agent-configuration)
   - [How guidance is layered](#how-guidance-is-layered)
   - [Language and framework guidance](#language-and-framework-guidance)
   - [Package design](#package-design)
@@ -69,7 +69,7 @@ See for an example in the official documentation: [Before and after customizatio
 | Repository instructions (`AGENTS.md`) | Always-on context for one repository | Local facts and routes to owning documentation |
 | Scoped instructions (`*.instructions.md`) | Standards attached by file pattern (`applyTo`) or description | Rules for most work on matching files, such as coding or documentation standards |
 | Skills (`SKILL.md`) | On-demand procedures with optional scripts and references; only the description loads until relevant | A specific, repeatable task such as committing, testing, or writing comments |
-| Agents (`*.agent.md`) | Roles with their own instructions, tools, model, and allowed subagents | Distinct responsibilities, tool restrictions, context isolation, or delegation |
+| Agents (`*.agent.md`) | Roles with their own instructions, tool selection, and allowed subagents | Distinct responsibilities, context isolation, or delegation |
 | Hooks | Shell commands run at agent lifecycle events | Deterministic enforcement, such as blocking a command or running a formatter |
 | Prompts (`*.prompt.md`) | Reusable, user-invoked requests | A recurring single request with parameters |
 
@@ -155,15 +155,15 @@ A single default agent doing everything in one long conversation works for small
 - **Right-sized workflow:** a fixed routing table sends a typo fix straight to a worker and a cross-cutting change through planning, approval, implementation, and review, so effort matches risk instead of every task paying the full workflow cost.
 - **One entry point:** developers select one agent instead of deciding which role, mode, or model each request needs.
 - **Focused context:** each worker runs as a subagent in a fresh context with only its assignment, which keeps the coordinator's context small and reduces cross-task confusion.
-- **Separation of duties:** each role has its own instructions, configured tools, and model. Reviewers have no edit tool and are instructed to run only inspection and validation commands; planners cannot implement. Review runs in a separate context, though the [current model defaults](common/README.md#models) use the same model family for review and implementation.
+- **Separation of duties:** each role has its own instructions and behavioral boundaries, while the common agents share the same explicit all-tools request. Reviewers are instructed not to edit and to run only inspection and check-mode validation; planners cannot implement. Review runs in a separate context. The common workflow's route determines whether a separate Reviewer step runs.
 - **Human control where it matters:** approval gates before planned implementation and before commits keep consequential decisions with the user, while routine steps run autonomously.
-- **Traceability and learning:** fixed outcomes and reports produce a trace of route, steps, models, validation, and deviations; its signals feed the [learning step](common/README.md#learning).
+- **Traceability and learning:** fixed outcomes and reports produce a trace of route, steps, tools used, validation, and deviations; its signals feed the [learning step](common/README.md#learning).
 
-**Why the cycle improves the result:** the same agent that wrote a change is poor at finding its flaws. It remembers its reasoning, its shortcuts, and the dead ends it already ruled out, so it tends to confirm its own work. A reviewer that starts with a fresh context sees only the requirement, the plan, and the diff. It has no memory of the reasoning that produced them, so it is more likely to question assumptions the implementer took for granted. Choosing a different model family for review can further reduce shared blind spots, but fresh-context review does not require it and the current defaults do not guarantee it. Planning works the same way: a planner that does not write code is less likely to jump into implementation before the approach is clear.
+**Why the cycle improves the result:** the same agent that wrote a change is poor at finding its flaws. It remembers its reasoning, its shortcuts, and the dead ends it already ruled out, so it tends to confirm its own work. A reviewer that starts with a fresh context sees only the requirement, the plan, and the diff. It has no memory of the reasoning that produced them, so it is more likely to question assumptions the implementer took for granted. Review independence comes from the fresh context and role, not a particular model family, and a separate Reviewer step is route-dependent. Planning works the same way: a planner that does not write code is less likely to jump into implementation before the approach is clear.
 
 **Why it saves time overall:** a multi-step cycle usually costs about the same wall-clock time as a long chain of manual prompts, but it changes where your effort goes. Consider a task that takes six prompts over about 30 minutes, with you reading each intermediate result, correcting drift, and re-explaining context. The orchestrated version may take a similar 30 minutes, but you write one request, approve the plan at a defined gate, and read one report at the end. Quality is higher on the first pass, so fewer rounds of rework follow; meaning you can spend less time on corrections and context management and focus on another related task in parallel for example. The exact numbers depend on the task. Small tasks gain little and should go straight to a worker or the default agent.
 
-**Why the report matters:** the final report lists the route, each step, the model used, validation results, and deviations. You can judge what was done and what remains unverified without rereading the whole conversation, and those same signals drive learning, so later runs improve.
+**Why the report matters:** the final report lists the route, each step, tools used, validation results, and deviations. You can judge what was done and what remains unverified without rereading the whole conversation, and those same signals drive learning, so later runs improve.
 
 **Follow-up prompts:** one prompt is usually enough, but follow-ups are normal and part of the design. A route pauses only at defined points: plan approval, a question a worker cannot answer itself (`NEEDS_INPUT`), or a decision after a blocked step. Your reply continues the same route at that point. Plan edits go back to Planner as a bounded revision. After a route completes, a follow-up such as "also handle the empty case" or "that is wrong, use X" is routed again as a new request. The orchestrator passes the earlier plan, findings, and changed files as inputs, so you do not have to re-explain context. A correction of a completed result is also a learning signal, so the same mistake is less likely next time. An ambiguous reply is treated as a new request rather than as approval, so nothing is implemented or committed by accident. Committing is itself a follow-up: the report ends with a suggested command, and an explicit "commit" runs it. Start a new chat for unrelated work, since a long conversation grows the orchestrator's context and weakens the fresh-context benefit. See [Follow-ups](common/README.md#follow-ups) for the exact handling.
 
@@ -180,15 +180,15 @@ What makes customizations reliable is the explicit, checkable part: fixed decisi
 | "Let me know if something went wrong" | Execution status (`COMPLETE \| NEEDS_INPUT \| BLOCKED \| FAILED`) separate from the outcome, so a failed step cannot look like success |
 | "Fix the issues the reviewer found" | At most two correction cycles and two plan revisions, then `BLOCKED` with the decision needed |
 | "Get approval for big changes" | Named gates: plan approval before implementation, explicit authorization before commits, never push |
-| "Summarize your work" | A fixed `## Report` block per agent and an aggregated trace with route, steps, models, validation evidence, and deviations |
-| "Be careful with edits" | Explicit role boundaries: Planner, Architect, and Reviewer do not edit; Orchestrator delegates delivery. These are behavioral limits, not tool filters; see [tools and permissions](#agent-tools-and-permissions) |
+| "Summarize your work" | A fixed `## Report` block per agent and an aggregated trace with route, steps, tools used, validation evidence, and deviations |
+| "Be careful with edits" | Explicit role boundaries: Planner, Architect, and Reviewer do not edit; Orchestrator delegates delivery. These are behavioral limits, not tool filters; see [agent configuration](#agent-configuration) |
 | "Only report real issues" | A pre-finding gate (exact line, concrete failure, context read, defensible severity), proof for `CRITICAL` and `HIGH`, and zero findings as a valid result |
 | "Write a good plan" | A fixed step format (file, action, reason, dependencies, risk) and a check before the plan is returned |
 | "Improve over time" | A learning step triggered only by listed signals, with a fixed owner order for each lesson |
 
 Apply the same principle to every customization, not only agents:
 
-- **Agents:** one role, explicit boundaries, deliberate [tool access](#agent-tools-and-permissions), a pinned model, and a fixed report. Prefer least-privilege tools when the harness reliably exposes them. See [Building custom agents](https://awesome-copilot.github.com/learning-hub/building-custom-agents/).
+- **Agents:** one role, explicit boundaries, deliberate [tool access](#agent-configuration), runtime-managed model selection, and a fixed report. See [Building custom agents](https://awesome-copilot.github.com/learning-hub/building-custom-agents/).
 - **Skills:** a description with concrete trigger phrases, numbered steps, explicit decision rules, and gotchas instead of general advice. See [Creating effective skills](https://awesome-copilot.github.com/learning-hub/creating-effective-skills/).
 - **Instructions:** short, specific, testable rules scoped with `applyTo`, such as "use `pathlib` for file paths" rather than "write clean code". See [Defining custom instructions](https://awesome-copilot.github.com/learning-hub/defining-custom-instructions/).
 
@@ -249,26 +249,19 @@ The common package depends directly on these parts of [github/awesome-copilot](h
 | [`acquire-codebase-knowledge` skill](https://github.com/github/awesome-copilot/blob/main/skills/acquire-codebase-knowledge/SKILL.md) | On request | Mapping and documenting an existing codebase |
 | [`ai-prompt-engineering-safety-best-practices` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/ai-prompt-engineering-safety-best-practices.instructions.md) | All files | Prompt engineering and responsible AI practices |
 | [`devops-core-principles` instructions](https://github.com/github/awesome-copilot/blob/main/instructions/devops-core-principles.instructions.md) | All files | DevOps culture and delivery metrics |
-| [`git-commit` skill](https://github.com/github/awesome-copilot/blob/main/skills/git-commit/SKILL.md) | On request | Conventional Commits, used by the Orchestrator's commit command |
+| [`git-commit` skill](https://github.com/github/awesome-copilot/blob/main/skills/git-commit/SKILL.md) | On request | Conventional Commits, applied internally by Engineer for R0 `COMMIT` |
 
 The first five are the official authoring guidance used for [managing AI customizations](#managing-ai-customizations). The [common registry](common/README.md#reuse-registry) records the pinned commit; update it as described in [maintaining reused content](#maintaining-reused-content).
 
-### Model selection
+### Runtime-managed model selection
 
-Choose by **task complexity and risk first**, then cost and latency. Low, medium, and high cost are useful relative tiers, not permanent price labels or guarantees of quality. A capable balanced model can handle architecture as well as everyday coding; reserve the most expensive reasoning model for work where ambiguity, interacting constraints, or expensive mistakes justify it.
+The common agents omit `model` declarations and do not pass model overrides. The user can change a supported runtime selection without editing every agent, and a role such as Engineer can handle both small fixes and complex work without a fixed role tier. The [Orchestrator's agent registry](common/.apm/agents/orchestrator.agent.md#agent-registry) describes roles and relative task complexity; it is advisory, not a routing table or model assignment. Selection and inheritance depend on the session and harness; see [VS Code model selection](https://code.visualstudio.com/docs/agent-customization/language-models) and its [subagent rules](https://code.visualstudio.com/docs/agents/run/subagents).
 
-| Model profile | Relative cost / latency | Complexity and suitable tasks | Example models |
-|---|---|---|---|
-| Lightweight / fast | Low / usually lowest | Well-bounded, low-risk tasks: README maintenance, summaries, extraction, repetitive small edits, simple questions | Claude Haiku 5.5, GPT-6 Luna |
-| Balanced / general-purpose | Medium / moderate | Everyday agentic engineering: routing, implementation, debugging, tests, evidence-based planning, architecture with clear constraints, and fresh-context review | Claude Sonnet 5.5, GPT-6.1 Terra |
-| Deep reasoning | High / often higher | Ambiguous or consequential work: difficult cross-component debugging, migration planning, complex architecture trade-offs, and review involving many interacting constraints | Claude Opus 5.5, GPT-6.1 Sol |
-| Coding-specialized | Model-dependent; compare separately | Tool-driven implementation, repository exploration, refactoring, and test/fix loops; specialization is not itself a cost tier | GPT-5.3-Codex |
+This design reduces manual model-list maintenance and the risk of stale identifiers, changed aliases, or pins that fail or silently behave differently across hosts. GitHub updates Fusion's model pool as models become available and are evaluated, but runtime selection does not guarantee compatibility or eliminate maintenance: workflow guidance, host support, and actual sessions still need checking.
 
-These are selection heuristics, not benchmark rankings. Check the official [model comparison](https://docs.github.com/en/copilot/reference/ai-models/model-comparison), [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models), and [models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing) for current capabilities, availability, and token rates. Optimize the total cost of a verified result: retries, long context, output and reasoning tokens, and repeated agent calls matter as well as the model's rate. A cheaper model that needs several corrections may cost more overall; choosing a cheaper tier does not itself reduce token count.
+For Copilot sessions, I prefer [Copilot Fusion](https://docs.github.com/en/copilot/concepts/models/copilot-fusion) when available. **Fusion Standard** is my starting preference for a cost/quality trade-off, not a universally best choice; choose **High** or **Max** for tasks needing more effort when the account and policy allow them. Fusion can select a suitable model, reasoning effort, and execution pattern for task difficulty, but cost and quality depend on the actual task. Fusion operates separately from subagents and does not start them or guarantee routing or inheritance for each worker. For example, any adaptation between a simple and a complex Engineer task is contingent on the selection actually used in that session; verify host behavior rather than assume it.
 
-Agents in shared packages pin a role-specific `model` fallback list instead of relying on Auto. The first entry is the preferred default; subsequent entries are tried in order when a model is unavailable, not when its answer is poor. Prefer a fallback from another provider with comparable capabilities for the role, rather than identical pricing or features. Provider diversity helps availability; it does not guarantee independent review or automatic quality-based escalation.
-
-Explicit selection makes model use deliberate and visible in the workflow trace. Auto remains useful for the built-in agent and ad hoc requests; see [Auto model selection](https://docs.github.com/en/copilot/concepts/models/auto-model-selection) for its routing and current discounts. Neither a stronger model nor a fixed pin replaces the standards explained in [why create AI customizations](#why-create-ai-customizations) and [how much detail is enough](#how-much-detail-is-enough). See [common models](common/README.md#models) for the current defaults, fallbacks, and rationale.
+Subagents isolate intermediate work from the coordinator's context, reducing unrelated context pollution, but repeated instructions and context can increase total tokens and cost. Neither delegation nor runtime selection guarantees savings. General coding-capable Claude and GPT models can both perform engineering work; quality and cost vary by model and task, so validate results rather than assume equivalence. Compare manually selected models using the official [model comparison](https://docs.github.com/en/copilot/reference/ai-models/model-comparison), [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models), and [models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing) references. Deterministic routes, route-dependent review, and testing are defenses, not guarantees that every change is reviewed or correct.
 
 ### Custom instructions in subagents
 
@@ -276,13 +269,31 @@ When Copilot runs a custom agent as a subagent, it does not follow the repositor
 
 VS Code recognizes the field for the Copilot harness, but [does not forward it](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_copilot-specific-configuration) when converting agent files for the session runtime. Keep it for runtimes that honor it, and keep passing applicable guidance paths in each delegation prompt, as the common Orchestrator does, rather than relying on the field alone.
 
-### Agent tools and permissions
+### Agent configuration
 
-All seven common agents explicitly declare `tools: ['*']` to request every tool the host makes available. This is a compatibility workaround: in a Learner implementation run, Engineer declared `edit`, but its invoked worker exposed no `create` or `edit` tool and returned `BLOCKED` without changing files. The same wildcard policy applies across roles to avoid inconsistent alias/filter handling, not because every role needs every tool or experienced that exact failure. Omitting `tools` can also enable default tool access; listing `['*']` makes the intentional all-tools policy visible instead of relying on an implicit default. It cannot guarantee that the runtime exposes every tool. See [tool configuration](https://docs.github.com/en/copilot/reference/custom-agents-configuration#tools).
+All seven common agents explicitly declare `tools: ['*']` and omit `model`. The wildcard requests every tool available to the host; omitting `model` leaves model selection to the runtime. These are deliberate package-wide compatibility choices, not least-privilege boundaries or claims that every role needs every tool. Keep them as a shared invariant unless the design is deliberately revisited.
 
-In this trusted local setup, the owner observed fewer repetitive allow prompts with the explicit wildcard, including cases where a declared tool previously still prompted for permission. Some prompts remain, which is acceptable. Tool availability and action approval are separate: `['*']` does not grant operating-system permissions, disable host confirmation, or override organization policy, and prompt reduction is not a portable guarantee.
+The wildcard follows a local compatibility failure: an invoked worker did not expose the declared file-edit tools and returned `BLOCKED`. Requesting `['*']` avoids depending on inconsistent per-tool aliases or filters across roles, but cannot create tools the host does not provide. In this trusted local setup, the owner also observed fewer repetitive allow prompts with the explicit wildcard; this is a local observation, not a portable guarantee. See GitHub's [tool configuration](https://docs.github.com/en/copilot/reference/custom-agents-configuration#tools) and VS Code's [custom-agent file reference](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
 
-Least privilege remains preferable when it works reliably; the broad declaration is an accepted trade-off for the owner's trusted personal workspace because restrictive declarations have blocked delivery. Each agent definition still states what it should and should not do, including scope, command use, delegation, source ownership, and explicit commit/push authorization. The owner reviews every resulting change before accepting or using it, alongside the workflow's independent review where required. These checks make the trade-off reasonable here, not universally safe: role instructions are behavioral limits rather than hard enforcement, and post-run review cannot undo leaked secrets, destructive commands, or live-system effects. Keep host permissions and confirmation controls appropriate to those risks; do not carry this workaround unexamined into untrusted or production environments.
+Keep five separate questions in view:
+
+- **Harness support:** the selected host and harness decide which agent-file fields, extension tools, and MCP integrations they support. See [moving to the Copilot harness](https://code.visualstudio.com/docs/agents/run/move-to-copilot#_why-move-to-the-copilot-harness).
+- **Available tools:** the host, extensions, MCP servers, and current session determine what tools exist. A file-edit tool and a terminal-execution tool are separate capabilities.
+- **Tool selection:** `tools: ['*']` requests all tools the host makes available; it does not guarantee availability or create missing capabilities.
+- **Role and scope:** agent instructions describe permitted work, paths, command use, and delegation. They guide the agent; they are not hard enforcement.
+- **Approvals and sandboxing:** host permission settings decide when actions need approval, while sandboxing limits some terminal access. These controls are separate, sandboxing does not cover every tool, and organization policy may restrict both. Review [approvals and permissions](https://code.visualstudio.com/docs/agents/run/approvals#_permission-levels) and [scoped approvals in Copilot sessions](https://code.visualstudio.com/docs/agents/run/approvals#_scope-approvals-in-copilot-sessions).
+
+The wildcard can expose powerful operations, and role instructions or post-run review cannot undo leaked secrets, destructive commands, or live-system effects. Keep host permissions and confirmations appropriate to the workspace and your organization's policy; do not carry this compatibility choice unexamined into untrusted or production environments. The common workflow's review route is route-dependent, not a guarantee that every change receives a separate reviewer or a different model family.
+
+To test actual file-edit capability in a fresh session, first prepare a disposable scratch directory and choose two new, explicit paths inside it: `engineer_probe.py` and `documenter_probe.md`. Do not point them at existing work. Send these as two successive requests to Orchestrator, replacing the paths with their absolute paths:
+
+```text
+First request: Have Engineer implement a tiny Python function named capability_probe that returns "engineer-ok" in <scratch>/engineer_probe.py. Use a direct file-edit tool only; do not use shell commands to create or edit files. Read the file back. Report the tools actually invoked and whether editing and readback succeeded. If the needed tool is unavailable, report BLOCKED and the missing capability.
+
+Second request, after the first route finishes: Have Documenter write the single line "documenter-ok" in <scratch>/documenter_probe.md using a direct file-edit tool, then read it back. Do not run shell commands. Report the tools actually invoked and whether editing and readback succeeded; report BLOCKED and the missing capability if a needed tool is unavailable.
+```
+
+Let the normal routes and gates run; these requests do not authorize bypassing them. A separate, optional harmless command probe can test terminal execution when authorized; successful editing does not prove execution access. Inspect the returned trace and readback, not just tool declarations or static compilation. Remove only the two disposable files if appropriate; do not broadly delete the scratch directory or other work.
 
 ### How guidance is layered
 
@@ -290,7 +301,7 @@ Least privilege remains preferable when it works reliably; the broad declaration
 User request: scope and acceptance criteria
     |
     v
-Entry agent (Orchestrator) -> worker agents: roles, tools, models, outcomes
+Entry agent (Orchestrator) -> worker agents: roles, tools, outcomes
     |
     +-- Reused instructions and skills: general knowledge (the 80%)
     +-- Common package instructions: personal standards (the 20%)
@@ -501,17 +512,18 @@ See the official [OpenAI](https://developers.openai.com/api/docs/guides/prompt-e
 
 ### Choosing an agent
 
-Select the common **Orchestrator** for all engineering work. It routes each request with a fixed routing table, delegates to Planner, Architect, Engineer, Documenter, and Reviewer, asks for approval before planned implementation, invokes Learner for evidence-based workflow evaluation when learning signals occur, and ends with a trace of every step, the models used, and a suggested commit command. The [common package](common/README.md#workflow) owns the routes, outcomes, and reports. Use the built-in agent for quick ad hoc questions when the workflow adds nothing. This ensures consistent routing, accountability, and traceability across all engineering tasks.
+Select the common **Orchestrator** for all engineering work. It routes each request with a fixed routing table, delegates to Planner, Architect, Engineer, Documenter, and Reviewer, asks for approval before planned implementation, invokes Learner for evidence-based workflow evaluation when learning signals occur, and ends with a trace of each step, tools used, and copy-ready Git add-and-commit shell command(s) when eligible. The [common package](common/README.md#workflow) owns the routes, outcomes, and reports. Use the built-in agent for quick ad hoc questions when the workflow adds nothing. This ensures consistent routing, accountability, and traceability across all engineering tasks.
 
 ### Recommended Chat setup
 
-For autonomous work in a trusted DevHub workspace:
+For agent work in a trusted DevHub workspace:
 
-1. In VS Code Chat, select **Copilot** as the session target (this is the harness for the agent workflow).
-2. Select **Orchestrator**. **Autopilot** lets work continue with fewer prompts where supported; it is an agent mode, not a replacement for the selected role.
-3. Where policy permits and the risk is acceptable, turn terminal sandboxing off for trusted local tooling to avoid unnecessary restrictions on filesystem and network access that can hinder normal operation.
+1. In VS Code Chat, select the **Copilot** session target for this workflow. The **Local** harness is the legacy implementation; review the [reasons to move](https://code.visualstudio.com/docs/agents/run/move-to-copilot#_why-move-to-the-copilot-harness) and compatibility before changing an existing setup.
+2. Select **Orchestrator** and, when available, start with **Fusion Standard** as described in [runtime-managed model selection](#runtime-managed-model-selection). For this trusted workspace, I recommend **Assisted** as the default permission level when its reduced interruptions fit the risk; configure `chat.permissions.default` for new Copilot sessions. Assisted still prompts for actions the judge does not approve, and the LLM judge can make mistakes. **Manual** remains VS Code's default and requires confirmation for actions not otherwise approved.
+3. **Autopilot** is a separate, higher-trust agent mode that auto-approves all tools; it is not an added safety layer on top of Assisted. Use it only when you accept that behavior and trust the workspace (recommended; I usually enable it by default).
+4. For this trusted local setup, terminal sandboxing is left off to avoid its filesystem and network restrictions. This gives terminal commands broader access; sandboxing is independent of permission level and does not cover every tool. Keep or enable it when its restrictions better fit the task.
 
-Autopilot auto-approves tools, and disabling terminal sandboxing removes its filesystem and network restrictions. Use this combination only with trusted content and actions you accept running with your account's access. These controls never supersede organization policy; see the [execution references](#agent-execution-and-model-selection).
+Review your own VS Code permission and approval settings before use, including `chat.permissions.default`, tool and URL approval scope, terminal approval, and sandbox settings. Do not copy settings blindly: choose the balance that fits your workspace, account, and organization policy. See the official [permission levels](https://code.visualstudio.com/docs/agents/run/approvals#_permission-levels), [scoped approvals](https://code.visualstudio.com/docs/agents/run/approvals#_scope-approvals-in-copilot-sessions), and [terminal sandboxing](https://code.visualstudio.com/docs/agents/run/agent-sandboxing) guidance.
 
 ---
 

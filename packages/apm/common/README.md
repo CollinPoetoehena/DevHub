@@ -14,7 +14,7 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
   - [Learning](#learning)
   - [Commit](#commit)
   - [Reports and trace](#reports-and-trace)
-  - [Models](#models)
+  - [Model selection](#model-selection)
 - [Harness limitations](#harness-limitations)
 - [Consumption and validation](#consumption-and-validation)
 
@@ -32,7 +32,7 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 | [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | `['*']` |
 | [Learner](.apm/agents/learner.agent.md) | Evidence-based workflow evaluation and retained lessons in owning customization sources | `['*']` |
 
-The table matches each agent's `tools` frontmatter: all explicitly request every available tool. The [APM tools and permissions design](../README.md#agent-tools-and-permissions) owns the compatibility example, explicit-versus-omitted rationale, observed prompt reduction, and accepted-risk boundaries.
+The table matches each agent's `tools` frontmatter: all explicitly request every available tool. The [APM agent configuration guidance](../README.md#agent-configuration) owns the compatibility rationale and accepted-risk boundaries.
 
 Tool access does not authorize every action. Orchestrator delegates delivery and commits; Planner, Architect, Documenter, and Learner are instructed not to run commands. Reviewer may run only inspection and check-mode validation without editing; Learner edits only the customization sources and changelog allowed by its skill. Only Orchestrator delegates under the role instructions; workers retain `agents: []` for harnesses that honor it. These are behavioral limits, not hard tool-level enforcement. See [harness limitations](#harness-limitations).
 
@@ -42,7 +42,7 @@ Only Orchestrator appears in the agent picker; the workers set `user-invocable: 
 
 Instructions:
 
-- [AI customization](.apm/instructions/ai-customization.instructions.md): deterministic workflow, reporting, and model-selection rules for authoring customizations.
+- [AI customization](.apm/instructions/ai-customization.instructions.md): deterministic workflow, reporting, and runtime-managed model-selection rules for authoring customizations.
 - [Coding](.apm/instructions/coding.instructions.md), [documentation](.apm/instructions/documentation.instructions.md), and [Git](.apm/instructions/git.instructions.md): shared engineering standards.
 - [Security](.apm/instructions/security.instructions.md): untrusted content, secrets, secure defaults, and review focus for all work.
 - [GitHub Actions](.apm/instructions/github-actions.instructions.md): workflow and CI conventions, kept here because nearly every repository uses them.
@@ -74,7 +74,7 @@ Reused parts and their local changes, following the [reuse approach](../README.m
 | `acquire-codebase-knowledge` skill | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/skills/acquire-codebase-knowledge/SKILL.md) | Dependency | `60dcb90` (2026-11-06) | None; maps and documents an existing codebase on request |
 | `ai-prompt-engineering-safety-best-practices` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/ai-prompt-engineering-safety-best-practices.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; prompt engineering and responsible AI practices |
 | `devops-core-principles` instructions | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/instructions/devops-core-principles.instructions.md) | Dependency | `60dcb90` (2026-11-06) | None; DevOps culture and delivery metrics |
-| `git-commit` skill | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/skills/git-commit/SKILL.md) | Dependency | `60dcb90` (2026-11-06) | None; Conventional Commits for the Orchestrator's commit command |
+| `git-commit` skill | [awesome-copilot](https://github.com/github/awesome-copilot/blob/main/skills/git-commit/SKILL.md) | Dependency | `60dcb90` (2026-11-06) | None; applied internally by Engineer for R0 `COMMIT` |
 | Planner agent | [ECC `planner`](https://github.com/affaan-m/ECC/blob/main/agents/planner.md) | Ideas, modified | Not applicable | Adopted the four-stage process (requirements, existing code review, step breakdown, ordering), the step format (file, action, reason, dependencies, risk), the planning rules for specificity, minimal change, failure paths, refactors, and phasing, plan-level red flags, and the plan format. Left out the worked example and code-level red flags, which the coding instructions own |
 | Architect agent | [ECC `architect`](https://github.com/affaan-m/ECC/blob/main/agents/architect.md) | Ideas, modified | Not applicable | Adopted the four-stage process (current state, requirements, options, trade-offs), the architectural principles as a per-option `+ \| 0 \| - \| n/a` trade-off rating, the red flags, and ADR-shaped output. Left out the pattern catalogs, the example architecture, and the scalability plan |
 | Reviewer agent | [ECC `code-reviewer`](https://github.com/affaan-m/ECC/blob/main/agents/code-reviewer.md) | Ideas, modified | Not applicable | Adopted the pre-finding gate, proof for `CRITICAL` and `HIGH`, the four-level severity scale, zero findings as a valid result, common false positives, independent re-run of validation, and the AI-generated code focus |
@@ -140,7 +140,7 @@ An ambiguous message is treated as a new request, so it never counts as approval
 
 Learning is a lightweight, final step owned by the dedicated [Learner agent](.apm/agents/learner.agent.md), not a separate route or a Documenter mode to ensure consistent handling and traceability of learning signals (embedding in another agent would provide less control and traceability). When a route other than R0 ends with a learning signal, such as a review finding, a plan change, a deviation, a failed validation, a blocked worker, or a user correction, the Orchestrator invokes Learner once with the original request, acceptance criteria, full trace and worker reports, validation evidence, signals, and workspace roots. Clean runs record `Learning: NONE` and skip the step.
 
-Learner applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md). It first scores the run on five fixed axes (routing, accuracy, completeness, validation, efficiency) from 1 to 5, citing evidence for every score below 5; every axis scored 3 or lower must yield a lesson or a stated reason it is not reusable. Its own configuration controls models and tools, and its report includes the scorecard, lessons, changes, validation, references, and open items. Lessons then go to their owner:
+Learner applies the [workflow-learning skill](.apm/skills/workflow-learning/SKILL.md). It first scores the run on five fixed axes (routing, accuracy, completeness, validation, efficiency) from 1 to 5, citing evidence for every score below 5; every axis scored 3 or lower must yield a lesson or a stated reason it is not reusable. Its report includes the scorecard, lessons, changes, validation, references, and open items. Lessons then go to their owner:
 
 | Lesson about | Where it goes |
 |---|---|
@@ -152,40 +152,26 @@ Each lesson reports `UPDATED`, `PROPOSED`, or `ALREADY_COVERED`, with its eviden
 
 ### Commit
 
-A completed route that changed files ends with a copy-ready `/git-commit` command for the pinned [`git-commit`](https://github.com/github/awesome-copilot/tree/main/skills/git-commit) skill. It lists only the paths workers changed, uses one command per logical change, and carries a Conventional Commits message without `Co-authored-by:` trailers, as required by the [Git instructions](.apm/instructions/git.instructions.md). It is suggested only after review returned `PASS` or when the route requires no review.
+A completed route that changed files ends with copy-ready Git shell command(s) in fenced `bash` blocks, such as `git add -- 'path/to/file' && git commit -m 'type(scope): imperative summary'`. Commands list only route-owned paths, use one command per logical commit, quote each path and message, and follow the [Git instructions](.apm/instructions/git.instructions.md). If a changed path also contains pre-existing or unrelated changes, only route-owned hunks can be staged manually; the Orchestrator must not suggest adding the whole path. Commands are suggested only after review returned `PASS` or when the route requires no review.
 
-The suggestion is not authorization. When the user explicitly authorizes the commit, rule `R0 COMMIT` delegates it to Engineer, which runs the skill, because the Orchestrator's role owns coordination rather than commit execution, even though its tool list includes `execute`. The user can also run the command in a chat whose agent has terminal access. Pushing is never part of the workflow and requires its own explicit authorization.
+The suggestion is not authorization. When the user explicitly authorizes a commit, rule `R0 COMMIT` delegates it to Engineer, which applies the pinned [`git-commit`](https://github.com/github/awesome-copilot/tree/main/skills/git-commit) skill internally and reports the resulting hash. The Orchestrator coordinates but does not commit, even though its tool list includes `execute`. Pushing is never part of the workflow and requires its own explicit authorization.
 
 ### Reports and trace
 
-Every worker ends with a fixed `## Report` block: agent, model, status, outcome, reason, references (instructions, skills, files read, and external sources actually used), changes or findings, validation evidence, decisions, deviations, and open items. The Orchestrator includes every report in full and adds the selected route with its reason, a step trace with the configured and reported model per step, a references table with one row per step including its own, and a result summary of changes, validation, review, deviations, and next decisions.
+Every worker ends with a fixed `## Report` block: agent, tools used, status, outcome, reason, references (instructions, skills, files read, and external sources actually used), changes or findings, validation evidence, decisions, deviations, and open items. The Orchestrator includes every report in full and adds the selected route with its reason, a step trace aggregating tools actually used, a references table with one row per step including its own, and a result summary of changes, validation, review, deviations, and next decisions.
 
-### Models
+### Model selection
 
-Each agent pins a role-specific `model` fallback list in its frontmatter. **The first listed model is the preferred default**; if unavailable, the runtime uses the next available entry. The fallback is from another provider with capabilities suited to the same role, not necessarily the same cost tier. It is an availability fallback, not an automatic retry with a stronger model after a poor answer. Orchestrator does not override worker models. See the [general model-selection design](../README.md#model-selection) for task profiles and cost trade-offs.
-
-| Agent | Default | Cross-provider fallback | Rationale |
-|---|---|---|---|
-| [Orchestrator](.apm/agents/orchestrator.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Balanced model for reliable classification, coordination, approvals, and trace consolidation; the fallback can also handle multi-step reasoning |
-| [Planner](.apm/agents/planner.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Capable reasoning for source-grounded requirements, dependency ordering, and validation plans without paying for the highest-cost default on every plan |
-| [Architect](.apm/agents/architect.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Medium-cost default for component, contract, and data-model trade-offs; strong reasoning fallback from another provider |
-| [Engineer](.apm/agents/engineer.agent.md) | Claude Sonnet 5.5 | GPT-5.3-Codex | Strong general-purpose agentic coding, diagnosis, and validation, with a coding-specialized fallback |
-| [Documenter](.apm/agents/documenter.agent.md) | Claude Haiku 5.5 | GPT-6 Luna | Low-cost, fast models for bounded, source-verified documentation maintenance |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Balanced model for independent, evidence-based assessment and validation; independence comes from its fresh context and role, not a different default model family |
-| [Learner](.apm/agents/learner.agent.md) | Claude Sonnet 5.5 | GPT-5.3-Codex | Same model setup as Engineer for evidence-based evaluation and precise customization-source edits, independent of Documenter's low-cost documentation setup |
-
-For Architect, a high-cost reasoning model such as Opus could be justified for especially ambiguous, high-impact decisions. Sonnet is deliberately chosen instead: it is capable of architecture analysis while keeping the routine token spend lower than a high-cost default. Keep context focused and avoid unnecessary agent calls to reduce token usage itself; using a medium-cost model reduces the price of tokens, not necessarily their number. The higher-reasoning fallback is available when Sonnet is unavailable, not an escalation triggered by task complexity.
-
-The table and [Orchestrator registry](.apm/agents/orchestrator.agent.md#agent-registry) reflect the agent frontmatter, which is authoritative. Verify model identifiers and access in the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) and the model picker, and update the frontmatter and registry together when selections change. The trace reports a model as `unknown` when the runtime does not expose it to the agent.
+The common agents omit `model` declarations and do not pass model overrides. The [APM guide's runtime-managed model selection](../README.md#runtime-managed-model-selection) owns model choice, role characteristics, and current model references.
 
 ---
 
 ## Harness limitations
 
 - The workflow targets the **Copilot** harness, selected as the session target in VS Code Chat. Copilot delegates to custom agents through its native `task` tool, included in the explicit wildcard tool request. See [Copilot subagents](https://code.visualstudio.com/docs/agents/run/subagents#_subagents-by-harness) and [Copilot custom agents](https://docs.github.com/en/copilot/reference/custom-agents-configuration).
-- Copilot honors the `model` fallback lists, `user-invocable`, and `disable-model-invocation`. It does not accept the `agents` allowlist or handoffs, so the agent files keep `agents` only for the Local harness, and in Copilot the Orchestrator's delegation is restricted by its instructions and the workers' descriptions, not by an allowlist. See [harness compatibility](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
+- Harness support for custom-agent fields varies. `user-invocable` and `disable-model-invocation` are used for picker and invocation behavior where supported; the `agents` allowlist and handoffs are not supported in the Copilot harness, so the agent files retain `agents` for Local. In Copilot, the Orchestrator's delegation is guided by its instructions and worker descriptions, not enforced by an allowlist. See [harness compatibility](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference#_harness-compatibility).
 - Workers start in a fresh context, so the Orchestrator passes guidance paths and prior results explicitly. Workers never ask the user directly; they return `NEEDS_INPUT` and the Orchestrator asks, which keeps approvals and the trace in one conversation.
-- Routing tables, outcomes, reports, and role boundaries are instructions to the model, not an execution engine. The wildcard deliberately provides no per-role tool filter, and command execution is not a sandbox. Hard enforcement of transitions or approvals requires host permissions, hooks, or a dedicated controller; see [tools and permissions](../README.md#agent-tools-and-permissions).
+- Routing tables, outcomes, reports, and role boundaries are instructions to the model, not an execution engine. The wildcard deliberately provides no per-role tool filter, and command execution is not a sandbox. Hard enforcement of transitions or approvals requires host permissions, hooks, or a dedicated controller; see [agent configuration](../README.md#agent-configuration).
 
 ---
 
@@ -208,8 +194,8 @@ Validate sources with `apm compile --validate --local-only` from this directory.
 | Reviewer finds a defect | Correction by the same implementer, then renewed review |
 | Engineer needs an unapproved design change | `PLAN_CHANGES`; replanning and approval |
 | Validation fails or a limit is reached | No completion claim; `BLOCKED` or `FAILED` reported |
-| Any route | Final response contains route, trace with models, and every agent report |
-| Completed route with changes | Ends with a `/git-commit` command for only the changed paths; nothing is committed |
+| Any route | Final response contains route, trace with tools used, and every agent report |
+| Completed route with changes | Ends with copy-ready Git add-and-commit shell command(s) for only route-owned changes; nothing is committed |
 | Review finding fixed in a correction cycle | Learner runs once, returns its scorecard and lessons, and records the rule in its owner, or `ALREADY_COVERED`; Documenter is not invoked for learning |
 | Clean run without signals | `Learning: NONE`; no learning step |
 | Signal with no reusable lesson | Learner returns `COMPLETE`, `LEARNED`, a scorecard, and `Lessons: NONE` with the reason |

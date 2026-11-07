@@ -68,9 +68,9 @@ This is an additional convenience, not a replacement for a checked-in manifest/l
 
 Select **Orchestrator** in VS Code Chat; refresh or reopen the chat if necessary. A manifest entry alone does not activate the package. Follow [repository setup](../packages/apm/README.md#repository-setup) and [choosing an agent](../packages/apm/README.md#choosing-an-agent) for discovery and host limitations.
 
-Keep repository-specific agent context in a root `AGENTS.md` ([DevHub's file](../AGENTS.md)), linking to owning documentation instead of repeating it. Use the [authoring guidance](../packages/apm/README.md#authoring-repository-guidance) or [setup skill](../packages/apm/common/.apm/skills/setup-ai-customizations/SKILL.md). Scoped constraints and project-only procedures remain separate where needed; do not copy shared agents or assume local instructions override the baseline.
+Keep repository-specific agent context in a root `AGENTS.md` ([DevHub's file](../AGENTS.md)), linking to owning documentation instead of repeating it. Use the [authoring guidance](../packages/apm/README.md#authoring-repository-guidance) and APM [repository setup](../packages/apm/README.md#repository-setup). Scoped constraints and project-only procedures remain separate where needed; do not copy shared agents or assume local instructions override the baseline.
 
-My default is **Auto** model selection where offered; choose an explicit model when results or cost warrant it. Options depend on the host and account; see [VS Code model selection](https://code.visualstudio.com/docs/agent-customization/language-models#use-auto-model-selection). If GitHub Copilot credits are exhausted, check the access, models, and limits available to your account in alternatives such as [Microsoft Copilot](https://www.microsoft.com/en-us/copilot/solutions/individuals); do not assume a particular model is included.
+Follow the APM guide's [recommended Chat setup](../packages/apm/README.md#recommended-chat-setup) and [runtime-managed model selection](../packages/apm/README.md#runtime-managed-model-selection) for harness, permission, and model choices. Available models and costs vary by host, account, and policy; check the linked official references rather than assuming a particular model or plan is available.
 
 ---
 

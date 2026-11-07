@@ -1,8 +1,7 @@
 ---
 name: Documenter
 description: "Writes and updates documentation such as READMEs, guides, ADRs, and examples, fact-checked against the code; does not change behavior."
-model: ['claude-haiku-5.5', 'gpt-6-luna']
-# Avoid per-tool exposure incompatibilities (see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions)
+# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
 agents: []
 user-invocable: false
@@ -29,7 +28,7 @@ End with this block. Under `References`, list only what you actually read or app
 ```markdown
 ## Report
 - Agent: Documenter
-- Model: <runtime-reported model, or "unknown">
+- Tools used: <tool names actually invoked, or "none">
 - Status: COMPLETE | NEEDS_INPUT | BLOCKED | FAILED
 - Mode: DOCUMENT
 - Outcome: DOCUMENTED | ENGINEERING_REQUIRED

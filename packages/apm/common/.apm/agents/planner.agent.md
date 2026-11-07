@@ -1,8 +1,7 @@
 ---
 name: Planner
 description: "Produces evidence-based implementation plans for ambiguous, cross-cutting, or consequential engineering changes; requests Architect input for material design decisions."
-model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
-# Avoid per-tool exposure incompatibilities (see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions)
+# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
 agents: []
 user-invocable: false
@@ -50,7 +49,7 @@ End with this block. Under `References`, list only what you actually read or app
 ```markdown
 ## Report
 - Agent: Planner
-- Model: <runtime-reported model, or "unknown">
+- Tools used: <tool names actually invoked, or "none">
 - Status: COMPLETE | NEEDS_INPUT | BLOCKED | FAILED
 - Outcome: PLAN_READY | ARCHITECTURE_REQUIRED
 - Reason: <one sentence>

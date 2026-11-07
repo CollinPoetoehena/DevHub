@@ -1,8 +1,7 @@
 ---
 name: Learner
 description: "Evaluates completed workflow runs with cited evidence and retains reusable lessons in the owning AI customization sources using workflow-learning."
-model: ['claude-sonnet-5.5', 'gpt-5.3-codex']
-# Avoid per-tool exposure incompatibilities (see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-tools-and-permissions)
+# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
 agents: []
 user-invocable: false
@@ -32,7 +31,7 @@ End with this block. Under `References`, list only what you actually read or app
 ```markdown
 ## Report
 - Agent: Learner
-- Model: <runtime-reported model, or "unknown">
+- Tools used: <tool names actually invoked, or "none">
 - Status: COMPLETE | NEEDS_INPUT | BLOCKED | FAILED
 - Outcome: LEARNED
 - Reason: <one sentence>

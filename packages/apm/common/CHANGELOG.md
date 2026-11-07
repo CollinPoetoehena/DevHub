@@ -10,7 +10,7 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 - Replace the Tiny and Standard modes with a first-match routing table (`COMMIT`, `ANSWER`, `REVIEW`, `DIRECT_DOCS`, `DIRECT_CHANGE`, `PLANNED`); uncertainty falls through to `PLANNED`.
 - Make Orchestrator the only agent in the picker; workers set `user-invocable: false` and run as subagents.
 - Target the Copilot harness; the `agents` allowlist remains only for the Local harness.
-- Replace the copy-ready Git add, commit, and push block with a `/git-commit` command; pushing is no longer part of the workflow.
+- Replace the copy-ready Git add, commit, and push block with copy-ready Git add-and-commit shell commands; pushing is no longer part of the workflow.
 - Move the Python, Dockerfile, and Ansible instructions to the opt-in `devhub-python`, `devhub-containerization`, and `devhub-iac` packages; consumers that need them add those packages.
 - Remove the `common/` subfolder of `.apm/instructions/`; all common instructions now sit directly in `.apm/instructions/`.
 
@@ -18,10 +18,11 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 
 - Closed outcome sets per worker with exactly one transition per outcome, explicit plan approval, and at most two correction and two plan-revision cycles.
 - Follow-up rules: replies to an open pause continue the active route, other messages are routed again as new requests with earlier results as inputs, and ambiguous messages never count as approval.
-- A fixed `## Report` block for every worker, aggregated by Orchestrator into a trace of route, steps, configured and reported models, validation, review, and deviations.
-- Role-specific model fallback lists per agent, with Documenter on low-cost models and Learner using Engineer's setup: Claude Sonnet 5.5, then GPT-5.3-Codex. Reviewer runs in a fresh context with an independent assessment role.
+- A fixed `## Report` block for every worker, aggregated by Orchestrator into a trace of route, steps, tools actually used, validation, review, and deviations.
+- Runtime-managed model selection: common agents omit `model` declarations and Orchestrator does not pass model overrides. Reviewer independence comes from its fresh context and assessment role.
+- An advisory Orchestrator agent registry describing roles and relative task complexity without model assignments or routing changes.
 - Documenter for documentation-only routes (`DIRECT_DOCS` and documentation-only plans), returning `ENGINEERING_REQUIRED` when code changes or command verification are needed.
-- A copy-ready `/git-commit` command for the pinned `git-commit` skill at the end of completed routes that changed files; explicit authorization routes to Engineer `COMMIT` mode (`R0 COMMIT`).
+- Copy-ready Git add-and-commit shell commands at the end of completed routes that changed files; explicit authorization routes to Engineer `COMMIT` mode (`R0 COMMIT`), where the pinned `git-commit` skill is applied internally.
 - A dedicated Learner agent for evidence-based workflow evaluation and retained lessons, with its own scorecard, lessons, references, validation, changes, and open-items report. Documenter owns documentation delivery only.
 - A lightweight terminal learning step: eligible routes with signals invoke Learner once to apply `workflow-learning`; incomplete, failed, or invalid learning reports preserve the route's status and do not re-invoke Learner. Repository lessons update repository customizations; common lessons update the editable package source, otherwise they are proposed. Safeguard changes are always proposed.
 - A concise `code-comments` skill that defaults to no comment, linked from the coding instructions.
@@ -36,11 +37,11 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 
 ### Changed
 
-- Explicit `tools: ['*']` for all seven common agents to work around unreliable per-tool runtime exposure. Document the prior blocked editing worker, deliberate declaration instead of omission, locally observed prompt reduction, and the trusted-workspace trade-off; host permissions, approvals, and behavioral role boundaries still apply.
-- Synchronize the Orchestrator registry with agent model frontmatter and document Learner ownership, report handling, and validation scenarios.
+- Explicit `tools: ['*']` for all seven common agents to address a locally observed per-tool exposure failure. Document the compatibility rationale and trusted-workspace trade-off; host permissions, approvals, and behavioral role boundaries still apply.
+- Document Learner ownership, report handling, and validation scenarios without a model registry.
 - Rewrite the `draft-github-issue` skill in the current skill format, with trigger keywords, `When to Use This Skill`, labeled steps, and `Gotchas`.
-- Fill the AI customization instructions with deterministic workflow, reporting, model-selection, and least-privilege rules.
-- Rewrite the README around the workflow, outcomes, commit command, reports, models, harness limitations, and validation scenarios.
+- Fill the AI customization instructions with deterministic workflow, tools-used reporting, runtime-managed model selection, and tool-enforcement guidance.
+- Rewrite the README around the workflow, outcomes, commit command, reports, runtime-managed models, harness limitations, and validation scenarios.
 - Default GitHub Actions workflows to GitHub-hosted runners unless the repository names a self-hosted runner, and remove the outdated developer note.
 
 ## [1.0.1] - 2026-11-04
