@@ -1,8 +1,8 @@
 ---
 name: Architect
 description: "Resolves consequential design decisions such as component boundaries, interfaces, data models, security architecture, and deployment topology, with grounded trade-offs."
-model: ['Claude Opus 5.5 (copilot)', 'GPT-6.1 Sol (copilot)']
-tools: ['read', 'search', 'web']
+model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
+tools: [execute, read, search, web, todo]
 agents: []
 user-invocable: false
 include-custom-instructions: true

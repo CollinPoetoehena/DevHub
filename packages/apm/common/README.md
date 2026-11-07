@@ -24,12 +24,18 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 
 | Agent | Responsibility | Tools |
 |---|---|---|
-| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | read, search, agent, todo |
-| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | read, search, web |
-| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | read, search, web |
-| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | read, search, edit, execute, web, todo |
-| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code; applies workflow lessons (`LEARN` mode) | read, search, edit, web |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | read, search, execute |
+| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | execute, read, edit, search, agent, web, todo |
+| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | execute, read, search, web, todo |
+| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | execute, read, search, web, todo |
+| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | execute, read, edit, search, web, todo |
+| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code; applies workflow lessons (`LEARN` mode) | execute, read, edit, search, web, todo |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | execute, read, search, web, todo |
+
+The table lists the enabled `tools` aliases exactly as configured in agent frontmatter. `read` and `search` inspect the repository, `edit` changes files, `execute` enables shell commands, `web` retrieves external information, `todo` tracks work, and `agent` enables delegation. Only Orchestrator enables `agent`; workers declare `agents: []`.
+
+Tool availability is broader than permission under the role instructions: Orchestrator still delegates delivery and commits despite having `edit` and `execute`; Planner, Architect, and Documenter are instructed not to run commands; Reviewer may execute only inspection and validation checks without modifying files or state. These are behavioral restrictions, not hard tool-level enforcement, and `execute` can modify files even without `edit`. See [harness limitations](#harness-limitations).
+
+See [Custom agents configuration - GitHub Docs](https://docs.github.com/en/copilot/reference/custom-agents-configuration#tools) for aliases and MCP tool selection. An explicit list enables only listed tools, omitting `tools` or using `["*"]` enables all available tools, and `[]` disables them all. Alias support varies by harness; GitHub documents `web` and `todo` as unavailable for Copilot in the cloud.
 
 Only Orchestrator appears in the agent picker; the workers set `user-invocable: false`.
 
@@ -146,7 +152,7 @@ Each lesson reports `UPDATED`, `PROPOSED`, or `ALREADY_COVERED`, with its eviden
 
 A completed route that changed files ends with a copy-ready `/git-commit` command for the pinned [`git-commit`](https://github.com/github/awesome-copilot/tree/main/skills/git-commit) skill. It lists only the paths workers changed, uses one command per logical change, and carries a Conventional Commits message without `Co-authored-by:` trailers, as required by the [Git instructions](.apm/instructions/git.instructions.md). It is suggested only after review returned `PASS` or when the route requires no review.
 
-The suggestion is not authorization. When the user explicitly authorizes the commit, rule `R0 COMMIT` delegates it to Engineer, which runs the skill, because Orchestrator has no terminal access. The user can also run the command in a chat whose agent has terminal access. Pushing is never part of the workflow and requires its own explicit authorization.
+The suggestion is not authorization. When the user explicitly authorizes the commit, rule `R0 COMMIT` delegates it to Engineer, which runs the skill, because the Orchestrator's role owns coordination rather than commit execution, even though its tool list includes `execute`. The user can also run the command in a chat whose agent has terminal access. Pushing is never part of the workflow and requires its own explicit authorization.
 
 ### Reports and trace
 
@@ -154,17 +160,20 @@ Every worker ends with a fixed `## Report` block: agent, model, status, outcome,
 
 ### Models
 
-Each agent pins a role-specific `model` fallback list in its frontmatter; the first available model is used. Orchestrator does not override worker models, and its [agent registry](.apm/agents/orchestrator.agent.md#agent-registry) must stay in sync with the frontmatter.
+Each agent pins a role-specific `model` fallback list in its frontmatter. **The first listed model is the preferred default**; if unavailable, the runtime uses the next available entry. The fallback is from another provider with capabilities suited to the same role, not necessarily the same cost tier. It is an availability fallback, not an automatic retry with a stronger model after a poor answer. Orchestrator does not override worker models. See the [general model-selection design](../README.md#model-selection) for task profiles and cost trade-offs.
 
-| Agent | Models | Rationale |
-|---|---|---|
-| Orchestrator | Claude Sonnet 5.5, GPT-6.1 Terra | Reliable, fast classification and coordination |
-| Planner, Architect | Claude Opus 5.5, GPT-6.1 Sol | Strongest reasoning for consequential decisions |
-| Engineer | Claude Sonnet 5.5, GPT-5.3-Codex | Strong agentic coding; GPT-5.3-Codex is the long-term support fallback |
-| Documenter | Claude Haiku 5.5, GPT-5.4 nano | Low-cost models for low-risk documentation work |
-| Reviewer | GPT-6.1 Sol, Claude Opus 5.5 | A different model family from Engineer to reduce shared blind spots |
+| Agent | Default | Cross-provider fallback | Rationale |
+|---|---|---|---|
+| [Orchestrator](.apm/agents/orchestrator.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Balanced model for reliable classification, coordination, approvals, and trace consolidation; the fallback can also handle multi-step reasoning |
+| [Planner](.apm/agents/planner.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Capable reasoning for source-grounded requirements, dependency ordering, and validation plans without paying for the highest-cost default on every plan |
+| [Architect](.apm/agents/architect.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Medium-cost default for component, contract, and data-model trade-offs; strong reasoning fallback from another provider |
+| [Engineer](.apm/agents/engineer.agent.md) | Claude Sonnet 5.5 | GPT-5.3-Codex | Strong general-purpose agentic coding, diagnosis, and validation, with a coding-specialized fallback |
+| [Documenter](.apm/agents/documenter.agent.md) | Claude Haiku 5.5 | GPT-6 Luna | Low-cost, fast models for bounded, source-verified documentation maintenance and retaining workflow lessons |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Claude Sonnet 5.5 | GPT-6.1 Sol | Balanced model for independent, evidence-based assessment and validation; independence comes from its fresh context and role, not a different default model family |
 
-Names follow the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) list. Verify them in the model picker and update the frontmatter and registry together when models are retired. The trace reports a model as `unknown` when the runtime does not expose it to the agent.
+For Architect, a high-cost reasoning model such as Opus could be justified for especially ambiguous, high-impact decisions. Sonnet is deliberately chosen instead: it is capable of architecture analysis while keeping the routine token spend lower than a high-cost default. Keep context focused and avoid unnecessary agent calls to reduce token usage itself; using a medium-cost model reduces the price of tokens, not necessarily their number. The higher-reasoning fallback is available when Sonnet is unavailable, not an escalation triggered by task complexity.
+
+The table reflects the agent frontmatter. The [Orchestrator registry](.apm/agents/orchestrator.agent.md#agent-registry) still lists earlier selections and needs synchronization with that frontmatter; it is not the source for the current table. Verify model identifiers and access in the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) and the model picker, and update the frontmatter and registry together when selections change. The trace reports a model as `unknown` when the runtime does not expose it to the agent.
 
 ---
 

@@ -1,8 +1,8 @@
 ---
 name: Engineer
 description: "Implements scoped code, configuration, and documentation changes, diagnoses failures, and validates results with repository tooling."
-model: ['Claude Sonnet 5.5 (copilot)', 'GPT-5.3-Codex (copilot)']
-tools: ['read', 'search', 'edit', 'execute', 'web', 'todo']
+model: ['claude-sonnet-5.5', 'gpt-5.3-codex']
+tools: [execute, read, edit, search, web, todo]
 agents: []
 user-invocable: false
 include-custom-instructions: true

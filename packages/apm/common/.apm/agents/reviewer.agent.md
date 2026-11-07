@@ -1,8 +1,8 @@
 ---
 name: Reviewer
 description: "Independently reviews actual changes for correctness, regressions, requirement coverage, and security, re-runs validation to check the claims, and returns severity-rated, evidence-based findings without editing."
-model: ['GPT-6.1 Sol (copilot)', 'Claude Opus 5.5 (copilot)']
-tools: ['read', 'search', 'execute']
+model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
+tools: [execute, read, search, web, todo]
 agents: []
 user-invocable: false
 include-custom-instructions: true

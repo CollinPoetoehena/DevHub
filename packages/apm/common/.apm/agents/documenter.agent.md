@@ -1,8 +1,8 @@
 ---
 name: Documenter
 description: "Writes and updates documentation such as READMEs, guides, ADRs, and examples, fact-checked against the code, and retains workflow lessons in AI customization files; does not change behavior."
-model: ['Claude Haiku 5.5 (copilot)', 'GPT-5.4 nano (copilot)']
-tools: ['read', 'search', 'edit', 'web']
+model: ['claude-haiku-5.5', 'gpt-6-luna']
+tools: [execute, read, edit, search, web, todo]
 agents: []
 user-invocable: false
 include-custom-instructions: true

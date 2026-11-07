@@ -120,6 +120,20 @@ Decide per reusable part:
 
 ### How much detail is enough
 
+The built-in setup can already write code and understands basic language syntax. It may also apply familiar good practices, but it does not provide a complete, repository-specific engineering standard by default. Do not assume it will consistently choose your input-validation approach, error-handling policy, DRY and KISS trade-offs, or preferred language and tool patterns. This is the gap described in [why create AI customizations](#why-create-ai-customizations): knowing a technique is not the same as knowing when and how this project requires it.
+
+Specify choices that change the result, not a basic language tutorial, such as:
+
+| Detail | What to specify | Owning guidance |
+|---|---|---|
+| Engineering standards | Validate external input at boundaries, surface errors explicitly, reuse existing helpers (DRY), and prefer the simplest sufficient solution (KISS) | [Common instructions](common/README.md#package-contents) |
+| Python patterns | Supported versions, typing and error-handling conventions, framework patterns, and exact lint/type-check/test commands | [Python package](python/README.md) and repository configuration |
+| Docker builds | Layer caching: copy dependency manifests and install dependencies before copying frequently changing source; use the project's build and runtime stages | [Docker instructions](containerization/.apm/instructions/docker.instructions.md) |
+| Helm input schemas | The required format and workflow: `@schema` annotations in values, constraints such as `enum` and `pattern`, and a generated, committed `values.schema.json` rather than hand-editing it | [Helm instructions](containerization/.apm/instructions/helm.instructions.md) |
+| Local contracts | Compatibility limits, security boundaries, generated-file ownership, and the commands that prove the change works | Root `AGENTS.md`, owning documentation, and repository tooling |
+
+Basic syntax, ordinary loops, or how to declare a function do not need repeating. Include version-specific syntax constraints or known model mistakes only when they affect this repository. Put short mandatory rules in scoped instructions and larger procedures or examples in skills; see [language and framework guidance](#language-and-framework-guidance). The common and opt-in stack packages supply these explicit standards, rather than relying on the built-in setup to infer them.
+
 AI customizations are a means to an end. The goal is to build good, maintainable software, not to perfect the customizations. This work has no natural end: every language, framework, and tool can get another rule, reference, or example, and it is easy to spend more time tuning customizations than building the software they are meant to help with. Find the balance between three forces:
 
 - **Usability:** enough guidance that agents follow the conventions and avoid known mistakes.
@@ -140,11 +154,11 @@ A single default agent doing everything in one long conversation works for small
 - **Right-sized workflow:** a fixed routing table sends a typo fix straight to a worker and a cross-cutting change through planning, approval, implementation, and review, so effort matches risk instead of every task paying the full workflow cost.
 - **One entry point:** developers select one agent instead of deciding which role, mode, or model each request needs.
 - **Focused context:** each worker runs as a subagent in a fresh context with only its assignment, which keeps the coordinator's context small and reduces cross-task confusion.
-- **Separation of duties:** each role has its own instructions, least-privilege tools, and model. Reviewers cannot edit and only run inspection and validation commands, planners cannot implement, and review runs in a separate context on a different model family than implementation.
+- **Separation of duties:** each role has its own instructions, configured tools, and model. Reviewers have no edit tool and are instructed to run only inspection and validation commands; planners cannot implement. Review runs in a separate context, though the [current model defaults](common/README.md#models) use the same model family for review and implementation.
 - **Human control where it matters:** approval gates before planned implementation and before commits keep consequential decisions with the user, while routine steps run autonomously.
 - **Traceability and learning:** fixed outcomes and reports produce a trace of route, steps, models, validation, and deviations; its signals feed the [learning step](common/README.md#learning).
 
-**Why the cycle improves the result:** the same agent that wrote a change is poor at finding its flaws. It remembers its reasoning, its shortcuts, and the dead ends it already ruled out, so it tends to confirm its own work. A reviewer that starts with a fresh context sees only the requirement, the plan, and the diff. It has no memory of the reasoning that produced them, so it is more likely to question assumptions the implementer took for granted. Using a different model family for review adds a second, independent set of blind spots to check. Planning works the same way: a planner that does not write code is less likely to jump into implementation before the approach is clear.
+**Why the cycle improves the result:** the same agent that wrote a change is poor at finding its flaws. It remembers its reasoning, its shortcuts, and the dead ends it already ruled out, so it tends to confirm its own work. A reviewer that starts with a fresh context sees only the requirement, the plan, and the diff. It has no memory of the reasoning that produced them, so it is more likely to question assumptions the implementer took for granted. Choosing a different model family for review can further reduce shared blind spots, but fresh-context review does not require it and the current defaults do not guarantee it. Planning works the same way: a planner that does not write code is less likely to jump into implementation before the approach is clear.
 
 **Why it saves time overall:** a multi-step cycle usually costs about the same wall-clock time as a long chain of manual prompts, but it changes where your effort goes. Consider a task that takes six prompts over about 30 minutes, with you reading each intermediate result, correcting drift, and re-explaining context. The orchestrated version may take a similar 30 minutes, but you write one request, approve the plan at a defined gate, and read one report at the end. Quality is higher on the first pass, so fewer rounds of rework follow; meaning you can spend less time on corrections and context management and focus on another related task in parallel for example. The exact numbers depend on the task. Small tasks gain little and should go straight to a worker or the default agent.
 
@@ -240,9 +254,20 @@ The first five are the official authoring guidance used for [managing AI customi
 
 ### Model selection
 
-Agents in shared packages pin a role-specific model fallback list in their frontmatter instead of relying on Auto. Pinning ensures each role uses a model suited to its work: strongest reasoning models for planning and architecture, strong coding models for implementation, a different model family for review, and low-cost models for simple work such as documentation. With Auto, a step can be routed to a model that is weaker than the task requires.
+Choose by **task complexity and risk first**, then cost and latency. Low, medium, and high cost are useful relative tiers, not permanent price labels or guarantees of quality. A capable balanced model can handle architecture as well as everyday coding; reserve the most expensive reasoning model for work where ambiguity, interacting constraints, or expensive mistakes justify it.
 
-Pinning costs somewhat more than Auto, which offers [a 10% discount on paid plans](https://docs.github.com/en/copilot/concepts/models/auto-model-selection#discount-for-using-auto-model-selection). In return, model use is controlled and visible in each workflow trace, which gives more consistent output and lets cost be optimized deliberately, for example by routing simple tasks to low-cost models. Verify names against the [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models) and update pins when models are retired. For the default agent or ad hoc requests, Auto remains a good choice. See [common models](common/README.md#models) for the current pins.
+| Model profile | Relative cost / latency | Complexity and suitable tasks | Example models |
+|---|---|---|---|
+| Lightweight / fast | Low / usually lowest | Well-bounded, low-risk tasks: README maintenance, summaries, extraction, repetitive small edits, simple questions | Claude Haiku 5.5, GPT-6 Luna |
+| Balanced / general-purpose | Medium / moderate | Everyday agentic engineering: routing, implementation, debugging, tests, evidence-based planning, architecture with clear constraints, and fresh-context review | Claude Sonnet 5.5, GPT-6.1 Terra |
+| Deep reasoning | High / often higher | Ambiguous or consequential work: difficult cross-component debugging, migration planning, complex architecture trade-offs, and review involving many interacting constraints | Claude Opus 5.5, GPT-6.1 Sol |
+| Coding-specialized | Model-dependent; compare separately | Tool-driven implementation, repository exploration, refactoring, and test/fix loops; specialization is not itself a cost tier | GPT-5.3-Codex |
+
+These are selection heuristics, not benchmark rankings. Check the official [model comparison](https://docs.github.com/en/copilot/reference/ai-models/model-comparison), [supported models](https://docs.github.com/en/copilot/reference/ai-models/supported-models), and [models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing) for current capabilities, availability, and token rates. Optimize the total cost of a verified result: retries, long context, output and reasoning tokens, and repeated agent calls matter as well as the model's rate. A cheaper model that needs several corrections may cost more overall; choosing a cheaper tier does not itself reduce token count.
+
+Agents in shared packages pin a role-specific `model` fallback list instead of relying on Auto. The first entry is the preferred default; subsequent entries are tried in order when a model is unavailable, not when its answer is poor. Prefer a fallback from another provider with comparable capabilities for the role, rather than identical pricing or features. Provider diversity helps availability; it does not guarantee independent review or automatic quality-based escalation.
+
+Explicit selection makes model use deliberate and visible in the workflow trace. Auto remains useful for the built-in agent and ad hoc requests; see [Auto model selection](https://docs.github.com/en/copilot/concepts/models/auto-model-selection) for its routing and current discounts. Neither a stronger model nor a fixed pin replaces the standards explained in [why create AI customizations](#why-create-ai-customizations) and [how much detail is enough](#how-much-detail-is-enough). See [common models](common/README.md#models) for the current defaults, fallbacks, and rationale.
 
 ### Custom instructions in subagents
 
@@ -568,6 +593,7 @@ This guide records DevHub's choices and essential concepts. Use these official s
 
 - [VS Code Chat](https://code.visualstudio.com/docs/agents/run/chat-view) and [agent harnesses](https://code.visualstudio.com/docs/agents/run/agent-harnesses): session targets and role selection.
 - [Subagents](https://code.visualstudio.com/docs/agents/run/subagents) and [custom-agent file reference](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference): delegation, tools, and allowlists.
+- [Custom agents configuration - GitHub Docs](https://docs.github.com/en/copilot/reference/custom-agents-configuration#tools): tool lists, aliases, and MCP tool selection; see the [common agent tool configuration](common/README.md#package-contents).
 - [Approvals and permissions](https://code.visualstudio.com/docs/agents/run/approvals), [terminal sandboxing](https://code.visualstudio.com/docs/agents/run/agent-sandboxing), and [trust and safety](https://code.visualstudio.com/docs/agents/concepts/trust-and-safety): autonomous execution and security boundaries.
 - [Auto model selection](https://docs.github.com/en/copilot/concepts/models/auto-model-selection), [Copilot Fusion](https://docs.github.com/en/copilot/concepts/models/copilot-fusion), and [model comparison](https://docs.github.com/en/copilot/reference/ai-models/model-comparison): current routing, controls, availability, and pricing.
 

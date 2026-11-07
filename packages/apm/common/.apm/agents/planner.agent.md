@@ -1,8 +1,8 @@
 ---
 name: Planner
 description: "Produces evidence-based implementation plans for ambiguous, cross-cutting, or consequential engineering changes; requests Architect input for material design decisions."
-model: ['Claude Opus 5.5 (copilot)', 'GPT-6.1 Sol (copilot)']
-tools: ['read', 'search', 'web']
+model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
+tools: [execute, read, search, web, todo]
 agents: []
 user-invocable: false
 include-custom-instructions: true

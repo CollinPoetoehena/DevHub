@@ -1,8 +1,8 @@
 ---
 name: Orchestrator
 description: "Use as the entry point for engineering requests: classifies the request with a fixed routing table, coordinates Planner, Architect, Engineer, Documenter, and Reviewer, obtains approvals, retains lessons, and reports a full workflow trace."
-model: ['Claude Sonnet 5.5 (copilot)', 'GPT-6.1 Terra (copilot)']
-tools: ['read', 'search', 'agent', 'todo']
+model: ['claude-sonnet-5.5', 'gpt-6.1-sol']
+tools: [execute, read, edit, search, agent, web, todo]
 agents: ['Planner', 'Architect', 'Engineer', 'Documenter', 'Reviewer']
 user-invocable: true
 disable-model-invocation: true
