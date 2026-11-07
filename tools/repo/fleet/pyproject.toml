@@ -1,0 +1,44 @@
+[project]
+name = "devhub-repo-fleet"
+version = "0.1.0"
+description = "Renders DevHub repository templates and syncs them to inventory repositories through pull requests."
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+repo-fleet = "repo_fleet.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/repo_fleet"]
+
+[dependency-groups]
+dev = ["mypy", "pip-audit", "pytest", "pytest-cov", "ruff"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["src", "tests"]
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers"]
+markers = [
+    "unit: fast tests without external processes or real repository files",
+    "integration: tests that run real git or read the real inventory and templates",
+]
+
+[tool.coverage.run]
+source = ["repo_fleet"]
+branch = true

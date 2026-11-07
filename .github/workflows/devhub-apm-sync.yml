@@ -1,0 +1,19 @@
+# Managed by DevHub tools/repo (templates/common/sync); local changes are overwritten.
+name: DevHub APM sync
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  apm-sync:
+    permissions:
+      contents: write
+      pull-requests: write
+    # Tracks DevHub main on purpose so every repository gets sync fixes without a template change.
+    uses: CollinPoetoehena/DevHub/.github/workflows/apm-sync.yml@main # zizmor: ignore[unpinned-uses]

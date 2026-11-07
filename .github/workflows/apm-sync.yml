@@ -1,0 +1,138 @@
+name: APM sync
+
+on:
+  workflow_call:
+    inputs:
+      apm-version:
+        description: APM CLI version used to check, refresh, and install packages.
+        type: string
+        default: "0.35.0"
+      branch:
+        description: Fixed branch that carries the single update pull request.
+        type: string
+        default: devhub/apm-sync
+    secrets:
+      token:
+        description: Optional token for the pull request, so that it triggers pull request workflows.
+        required: false
+    outputs:
+      outdated:
+        description: Whether the check found APM packages to update ("true" or "false").
+        value: ${{ jobs.check.outputs.outdated }}
+      pull-request-operation:
+        description: Pull request result (created, updated, closed, or none); empty when no sync ran.
+        value: ${{ jobs.sync.outputs.pull-request-operation }}
+      pull-request-url:
+        description: URL of the update pull request, when one exists.
+        value: ${{ jobs.sync.outputs.pull-request-url }}
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      outdated: ${{ steps.check.outputs.outdated }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up APM
+        id: apm
+        uses: microsoft/apm-action@d723bb64ed70c135bbaf87d126b721dd2dae0439 # v1.10.0
+        with:
+          apm-version: ${{ inputs.apm-version }}
+          setup-only: "true"
+
+      - name: Check for outdated packages
+        id: check
+        env:
+          APM: ${{ steps.apm.outputs.apm-path }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          report="$("$APM" outdated 2>&1)"
+          outdated_status=$?
+          reason=""
+          if [ ! -f apm.lock.yaml ]; then
+            reason="apm.lock.yaml is missing"
+          elif grep -Eq '^[[:space:]]*source:[[:space:]]*local[[:space:]]*$' apm.lock.yaml; then
+            reason="local path dependencies are always redeployed"
+          elif ! "$APM" install --frozen --dry-run > /dev/null 2>&1; then
+            reason="apm.yml and apm.lock.yaml are out of sync"
+          elif [ "$outdated_status" -ne 0 ]; then
+            reason="apm outdated failed, so the update runs to be safe"
+          elif grep -Eq '[0-9]+ outdated dependenc' <<< "$report"; then
+            reason="locked commits are behind their referenced refs"
+          fi
+          if [ -n "$reason" ]; then
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+            echo "### APM sync: update needed ($reason)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+            echo "### APM sync: APM packages are up to date: no changes, no update." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          { echo '```text'; echo "$report"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  sync:
+    needs: check
+    if: needs.check.outputs.outdated == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: apm-sync-${{ github.repository }}
+      cancel-in-progress: false
+    outputs:
+      pull-request-operation: ${{ steps.cpr.outputs.pull-request-operation }}
+      pull-request-url: ${{ steps.cpr.outputs.pull-request-url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Update APM packages
+        id: apm
+        uses: microsoft/apm-action@d723bb64ed70c135bbaf87d126b721dd2dae0439 # v1.10.0
+        with:
+          apm-version: ${{ inputs.apm-version }}
+          update: "true"
+
+      # apm update skips local path dependencies; install redeploys them from their current sources.
+      - name: Redeploy local APM packages
+        env:
+          APM: ${{ steps.apm.outputs.apm-path }}
+        run: '"$APM" install'
+
+      # Creates or updates one pull request on the fixed branch only when files changed.
+      - name: Open pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.token || github.token }}
+          branch: ${{ inputs.branch }}
+          title: "chore(apm): update APM packages"
+          commit-message: "chore(apm): update APM packages"
+          body: Refreshes APM dependencies and redeploys their customizations with `apm update` and `apm install`.
+          delete-branch: true
+
+      - name: Report result
+        if: always() && steps.cpr.outcome == 'success'
+        env:
+          OPERATION: ${{ steps.cpr.outputs.pull-request-operation }}
+          URL: ${{ steps.cpr.outputs.pull-request-url }}
+        run: |
+          case "$OPERATION" in
+            created|updated) message="Pull request $OPERATION: $URL" ;;
+            closed) message="Pull request closed: no remaining changes." ;;
+            *) message="No changes, no update." ;;
+          esac
+          echo "### APM sync: $message" >> "$GITHUB_STEP_SUMMARY"

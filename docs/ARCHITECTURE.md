@@ -29,10 +29,10 @@ How DevHub is organized and why. This page records project boundaries and setup 
 |---|---|
 | [Root `AGENTS.md`](../AGENTS.md) | Repository-specific agent entry point, linked to owning documentation rather than duplicated in nested files |
 | [`docs/`](.) | DevHub-specific [guidelines](GUIDELINES.md), architecture, decisions, usage, and selective [command cheat sheets](cheatsheets/README.md) |
-| [`.github/`](../.github/) | Workflow configuration and Copilot-target customizations when installed |
+| [`.github/`](../.github/) | Workflow configuration and Copilot-target customizations when installed; reusable workflows are documented in [`github-actions/`](github-actions/README.md) |
 | [`archive/`](../archive/README.md) | Decision notices for retired approaches; historical content stays in Git history |
 | [`packages/`](../packages/README.md) | Reusable packages, each with native metadata and its own release boundary |
-| [`tools/`](../tools/README.md) | Shared automation, including [Terraform repository inventory and policy](../tools/repo/README.md) |
+| [`tools/`](../tools/README.md) | Shared automation, including [repository fleet management](../tools/repo/README.md) |
 
 Each area's README owns the details of that area. The [root README](../README.md#repository-scope) summarizes this scope.
 
@@ -156,7 +156,7 @@ A group release does not require inventing a mixed-language package. Keep Python
 
 For independent releases in one repository, use scoped tags such as `monitoring/v1.2.0` or `python-sdk/v0.4.0`, subject to ecosystem requirements such as [Go's module-version tag rules](https://go.dev/ref/mod#vcs-version). Build and validate affected components, including shared dependencies; publish immutable packages/images to the chosen registry and let consumers select explicit versions or digests.
 
-These are supported design choices, not a claim that the placeholder [publishing workflow](GITHUB-ACTIONS.md) implements them. Define metadata ownership, tag format, validation, artifact destination, and consumer upgrade steps in the owning component's release guide before publishing.
+These are supported design choices, not a claim that a [reusable workflow](github-actions/README.md) implements them; publishing automation is still a placeholder. Define metadata ownership, tag format, validation, artifact destination, and consumer upgrade steps in the owning component's release guide before publishing.
 
 ---
 
