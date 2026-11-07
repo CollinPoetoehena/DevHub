@@ -1,8 +1,8 @@
 ---
 name: Engineer
 description: "Implements scoped code, configuration, and documentation changes, diagnoses failures, and validates results with repository tooling."
-model: ['Claude Sonnet 5.5 (copilot)', 'GPT-5.3-Codex (copilot)']
-tools: ['read', 'search', 'edit', 'execute', 'web', 'todo']
+# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+tools: ['*']
 agents: []
 user-invocable: false
 include-custom-instructions: true
@@ -32,7 +32,7 @@ End with this block. Under `References`, list only what you actually read or app
 ```markdown
 ## Report
 - Agent: Engineer
-- Model: <runtime-reported model, or "unknown">
+- Tools used: <tool names actually invoked, or "none">
 - Mode: IMPLEMENT | DIAGNOSE | COMMIT
 - Status: COMPLETE | NEEDS_INPUT | BLOCKED | FAILED
 - Outcome: IMPLEMENTED | DIAGNOSED | PLAN_CHANGES | COMMITTED

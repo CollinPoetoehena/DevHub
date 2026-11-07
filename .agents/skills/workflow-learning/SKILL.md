@@ -1,11 +1,13 @@
 ---
 name: workflow-learning
-description: 'Scores a completed workflow run on fixed axes with cited evidence, then turns weak axes and signals into durable improvements of AI customization files: AGENTS.md, scoped instructions, skills, or agents. Use after an Orchestrator route ends with learning signals such as review findings, plan changes, route deviations, failed validation, or user corrections. Updates repository customizations directly, updates the common package source when editable, and otherwise proposes the change.'
+description: 'Scores a completed workflow run on fixed axes with cited evidence, then turns weak axes and signals into durable improvements of AI customization files: AGENTS.md, scoped instructions, skills, or agents. Use by Learner after an Orchestrator route ends with learning signals such as review findings, plan changes, route deviations, failed validation, or user corrections. Updates repository customizations directly, updates the common package source when editable, and otherwise proposes the change.'
 ---
 
 # Workflow Learning
 
 Retain reusable lessons from a workflow run in the file that owns them, so the next run starts better. This is explicit maintenance of customization files, not model training.
+
+Learner owns this workflow in Orchestrator routes and includes this skill's scorecard and lesson entries in its own report. Documenter owns documentation delivery, not learning.
 
 ## When to Use This Skill
 

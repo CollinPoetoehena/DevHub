@@ -1,8 +1,8 @@
 ---
 name: Architect
 description: "Resolves consequential design decisions such as component boundaries, interfaces, data models, security architecture, and deployment topology, with grounded trade-offs."
-model: ['Claude Opus 5.5 (copilot)', 'GPT-6.1 Sol (copilot)']
-tools: ['read', 'search', 'web']
+# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+tools: ['*']
 agents: []
 user-invocable: false
 include-custom-instructions: true
@@ -52,7 +52,7 @@ End with this block. Under `References`, list only what you actually read or app
 ```markdown
 ## Report
 - Agent: Architect
-- Model: <runtime-reported model, or "unknown">
+- Tools used: <tool names actually invoked, or "none">
 - Status: COMPLETE | NEEDS_INPUT | BLOCKED | FAILED
 - Outcome: DESIGN_READY
 - Reason: <one sentence>
