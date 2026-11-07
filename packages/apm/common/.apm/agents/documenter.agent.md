@@ -1,8 +1,9 @@
 ---
 name: Documenter
 description: "Writes and updates documentation such as READMEs, guides, ADRs, and examples, fact-checked against the code; does not change behavior."
-# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+# Request all host-available tools and declare Auto model intent: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
+model: ['auto']
 agents: []
 user-invocable: false
 include-custom-instructions: true

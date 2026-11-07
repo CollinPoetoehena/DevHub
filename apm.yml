@@ -6,10 +6,10 @@ target: copilot
 dependencies:
   apm:
     - ./packages/apm/common
-    - CollinPoetoehena/DevHub/packages/apm/common#manage-repos-automatically
-    - CollinPoetoehena/DevHub/packages/apm/containerization#manage-repos-automatically
-    - CollinPoetoehena/DevHub/packages/apm/go#manage-repos-automatically
-    - CollinPoetoehena/DevHub/packages/apm/iac#manage-repos-automatically
-    - CollinPoetoehena/DevHub/packages/apm/java#manage-repos-automatically
-    - CollinPoetoehena/DevHub/packages/apm/python#manage-repos-automatically
-    - CollinPoetoehena/DevHub/packages/apm/rust#manage-repos-automatically
+    - CollinPoetoehena/DevHub/packages/apm/common#main
+    - CollinPoetoehena/DevHub/packages/apm/containerization#main
+    - CollinPoetoehena/DevHub/packages/apm/go#main
+    - CollinPoetoehena/DevHub/packages/apm/iac#main
+    - CollinPoetoehena/DevHub/packages/apm/java#main
+    - CollinPoetoehena/DevHub/packages/apm/python#main
+    - CollinPoetoehena/DevHub/packages/apm/rust#main

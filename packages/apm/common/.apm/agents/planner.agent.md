@@ -1,8 +1,9 @@
 ---
 name: Planner
 description: "Produces evidence-based implementation plans for ambiguous, cross-cutting, or consequential engineering changes; requests Architect input for material design decisions."
-# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+# Request all host-available tools and declare Auto model intent: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
+model: ['auto']
 agents: []
 user-invocable: false
 include-custom-instructions: true

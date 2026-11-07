@@ -1,0 +1,108 @@
+name: Central repository fleet sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apm.yml
+      - apm.lock.yaml
+      - packages/apm/**
+      - tools/repo/**
+      - .github/workflows/apm-sync.yml
+      - .github/workflows/repo-tools.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: central-repository-fleet-sync-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: apm-sync
+    permissions:
+      contents: read
+    env:
+      FLEET_SYNC_DIR: ${{ runner.temp }}/repo-fleet-sync-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Check out triggering DevHub revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up APM CLI
+        uses: microsoft/apm-action@d723bb64ed70c135bbaf87d126b721dd2dae0439 # v1.10.0
+        with:
+          apm-version: "0.35.0"
+          setup-only: "true"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: tools/repo/fleet/uv.lock
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+
+      - name: Install fleet tool
+        working-directory: tools/repo/fleet
+        run: uv sync --locked
+
+      - name: Validate inventory and templates
+        working-directory: tools/repo/fleet
+        run: uv run repo-fleet check
+
+      - name: Preflight adopted settings and save a guarded plan
+        id: settings_plan
+        working-directory: tools/repo/fleet
+        env:
+          TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
+          TF_WORKSPACE: ${{ vars.TF_WORKSPACE }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.HCP_TERRAFORM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_FLEET_SETTINGS_TOKEN }}
+        run: uv run repo-fleet sync settings-plan --workdir "$FLEET_SYNC_DIR"
+
+      - name: Prepare combined repository changes
+        id: prepare
+        working-directory: tools/repo/fleet
+        env:
+          GH_TOKEN: ${{ secrets.REPO_FLEET_SYNC_TOKEN }}
+          FLEET_PREFLIGHT_DIGEST: ${{ steps.settings_plan.outputs.preflight_digest }}
+        run: uv run repo-fleet sync prepare --workdir "$FLEET_SYNC_DIR"
+
+      - name: Apply the exact saved settings plan
+        id: settings_apply
+        working-directory: tools/repo/fleet
+        env:
+          TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
+          TF_WORKSPACE: ${{ vars.TF_WORKSPACE }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.HCP_TERRAFORM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_FLEET_SETTINGS_TOKEN }}
+          FLEET_PREFLIGHT_DIGEST: ${{ steps.settings_plan.outputs.preflight_digest }}
+          FLEET_PREPARED_DIGEST: ${{ steps.prepare.outputs.prepared_digest }}
+        run: uv run repo-fleet sync settings-apply --workdir "$FLEET_SYNC_DIR"
+
+      - name: Deliver prepared changes as repository pull requests
+        working-directory: tools/repo/fleet
+        env:
+          GH_TOKEN: ${{ secrets.REPO_FLEET_SYNC_TOKEN }}
+          FLEET_PREFLIGHT_DIGEST: ${{ steps.settings_plan.outputs.preflight_digest }}
+          FLEET_PREPARED_DIGEST: ${{ steps.prepare.outputs.prepared_digest }}
+          FLEET_APPLIED_DIGEST: ${{ steps.settings_apply.outputs.applied_digest }}
+        run: uv run repo-fleet sync deliver --workdir "$FLEET_SYNC_DIR"
+
+      - name: Remove temporary plans and checkouts
+        if: always()
+        working-directory: tools/repo/fleet
+        run: uv run repo-fleet sync cleanup --workdir "$FLEET_SYNC_DIR"

@@ -22,17 +22,19 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 
 ## Package contents
 
-| Agent | Responsibility | Tools |
-|---|---|---|
-| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | `['*']` |
-| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | `['*']` |
-| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | `['*']` |
-| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | `['*']` |
-| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | `['*']` |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | `['*']` |
-| [Learner](.apm/agents/learner.agent.md) | Evidence-based workflow evaluation and retained lessons in owning customization sources | `['*']` |
+| Agent | Responsibility | Model declaration | Tools |
+|---|---|---|---|
+| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | `['auto']` | `['*']` |
+| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | `['auto']` | `['*']` |
+| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | `['auto']` | `['*']` |
+| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | `['auto']` | `['*']` |
+| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | `['auto']` | `['*']` |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | `['auto']` | `['*']` |
+| [Learner](.apm/agents/learner.agent.md) | Evidence-based workflow evaluation and retained lessons in owning customization sources | `['auto']` | `['*']` |
 
-The table matches each agent's `tools` frontmatter: all explicitly request every available tool. The [APM agent configuration guidance](../README.md#agent-configuration) owns the compatibility rationale and accepted-risk boundaries.
+For requests routed to it, the Planner turns a high-level goal into a clearer, more complete implementation plan by making relevant requirements, constraints, assumptions, and measurable acceptance criteria explicit, then organizing work into ordered, verifiable steps with validation. This reduces the burden on the user to formulate every detail manually and helps surface omissions or inconsistencies. The Planner supports human decisions rather than making unresolved consequential design choices or approving implementation: it requests missing input or Architect input when needed, and implementation waits for explicit user approval.
+
+The table matches each agent's `model` and `tools` frontmatter. The common agents share a role-independent Auto model declaration and request every host-available tool. The [APM agent configuration guidance](../README.md#agent-configuration) owns the compatibility rationale, model-selection limits, and accepted-risk boundaries.
 
 Tool access does not authorize every action. Orchestrator delegates delivery and commits; Planner, Architect, Documenter, and Learner are instructed not to run commands. Reviewer may run only inspection and check-mode validation without editing; Learner edits only the customization sources and changelog allowed by its skill. Only Orchestrator delegates under the role instructions; workers retain `agents: []` for harnesses that honor it. These are behavioral limits, not hard tool-level enforcement. See [harness limitations](#harness-limitations).
 
@@ -162,7 +164,7 @@ Every worker ends with a fixed `## Report` block: agent, tools used, status, out
 
 ### Model selection
 
-The common agents omit `model` declarations and do not pass model overrides. The [APM guide's runtime-managed model selection](../README.md#runtime-managed-model-selection) owns model choice, role characteristics, and current model references.
+The common agents declare `model: ['auto']`; Orchestrator does not pass concrete model overrides when invoking workers. Model choice remains subject to each host's interpretation, supported surfaces, account, and policy. The [APM guide's runtime-managed model selection](../README.md#runtime-managed-model-selection) owns the rationale, limits, and current model references.
 
 ---
 

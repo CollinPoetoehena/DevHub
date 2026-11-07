@@ -1,8 +1,9 @@
 ---
 name: Architect
 description: "Resolves consequential design decisions such as component boundaries, interfaces, data models, security architecture, and deployment topology, with grounded trade-offs."
-# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+# Request all host-available tools and declare Auto model intent: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
+model: ['auto']
 agents: []
 user-invocable: false
 include-custom-instructions: true

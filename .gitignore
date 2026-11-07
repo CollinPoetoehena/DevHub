@@ -44,6 +44,7 @@ target/
 *.tgz
 *.tar.gz
 *.lock
+!/tools/repo/fleet/uv.lock
 
 # Terraform
 # Local .terraform directories
@@ -64,11 +65,14 @@ override.tf.json
 terraform.rc
 # Lock file
 .terraform.lock.hcl
-!/tools/repo/.terraform.lock.hcl
+!/tools/repo/terraform/.terraform.lock.hcl
 # Sensitive file (e.g. contains my public IP for SSH access, and Azure credentials, etc.)
 terraform.tfvars
 *.tfvars
 *.tfvars.json
+!/tools/repo/terraform/repositories.auto.tfvars.json
+/tools/repo/terraform/tfplan
+.coverage
 *.tfplan
 *.plan
 

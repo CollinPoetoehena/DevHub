@@ -18,7 +18,7 @@ applyTo: "**/*.agent.md,**/*.instructions.md,**/*.prompt.md,**/SKILL.md,**/AGENT
 - **Conservative default**: Routing tables evaluate top to bottom; uncertainty falls through to the most controlled route.
 - **Bounded loops and gates**: Cap correction and revision cycles, then stop with the blocker and the decision needed. Require explicit user approval at consequential gates; findings, plans, and diagnoses do not authorize changes, commits, or pushes.
 - **Self-checks and proof**: Give agents a fixed check before they return a result, such as a plan check or a pre-finding gate, and require evidence proportional to impact, such as proof for blocking findings. Accept an empty result, such as zero findings, as valid.
-- **Tool access and enforcement**: The common agents deliberately request all host-available tools with `tools: ['*']` and omit `model` declarations, as documented in the [agent configuration guidance](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration). Preserve this shared compatibility policy unless it is deliberately revisited; do not treat tool selection as a guarantee of tool availability or as an approval boundary. Restrict delegation with `agents` allowlists where supported. Use `user-invocable: false` for workers and `disable-model-invocation: true` for entry points. Prose is guidance, not enforcement; use host permissions, hooks, or CI for hard requirements.
+- **Tool access and enforcement**: The common agents request all host-available tools with `tools: ['*']` and declare `model: ['auto']` as their shared model-selection intent, as documented in the [agent configuration guidance](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration). Preserve these package-wide choices unless deliberately revisited; neither declaration guarantees host support or tool availability, and tool selection is not an approval boundary. Restrict delegation with `agents` allowlists where supported. Use `user-invocable: false` for workers and `disable-model-invocation: true` for entry points. Prose is guidance, not enforcement; use host permissions, hooks, or CI for hard requirements.
 
 ## Reporting and Traceability
 
@@ -30,7 +30,7 @@ applyTo: "**/*.agent.md,**/*.instructions.md,**/*.prompt.md,**/SKILL.md,**/AGENT
 
 ## Model selection
 
-- **Runtime-managed**: Common agents omit `model` declarations and coordinators do not pass model overrides. Follow the [APM guide's runtime-managed model-selection guidance](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#runtime-managed-model-selection) when discussing model choice.
+- **Runtime-managed**: Common agents declare `model: ['auto']`; coordinators do not pass concrete model overrides to workers. The declaration is not a cross-harness guarantee that the host will select Auto. Follow the [APM guide's runtime-managed model-selection guidance](https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#runtime-managed-model-selection) for host limitations, reasoning controls, and model claims.
 - **Review independence**: A fresh context and independent assessment role reduce shared blind spots; do not claim that review uses a different model family unless that is observed and relevant to the specific run.
 
 ## Validation

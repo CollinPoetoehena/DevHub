@@ -1,8 +1,9 @@
 ---
 name: Engineer
 description: "Implements scoped code, configuration, and documentation changes, diagnoses failures, and validates results with repository tooling."
-# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+# Request all host-available tools and declare Auto model intent: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
+model: ['auto']
 agents: []
 user-invocable: false
 include-custom-instructions: true

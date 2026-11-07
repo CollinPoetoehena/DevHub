@@ -18,7 +18,7 @@ Index for Terraform work. The Terraform and common instructions take precedence 
 
 1. **Write or change configuration.** Open [references/patterns.md](references/patterns.md) for security, modularity, maintainability, style, and documentation.
 2. **Write tests.** Follow the testing section in [references/patterns.md](references/patterns.md) with `.tftest.hcl` files.
-3. **Validate.** Run the validation commands from the Terraform instructions and report each result.
+3. **Validate.** Run the validation commands from the Terraform instructions and report each result. For workflow code that invokes Terraform, check version-sensitive flags and initialization behavior with the pinned real CLI; mocks do not prove CLI acceptance. Keep checks local or isolated (for example, disable backend initialization); do not require live backend access or run `plan`, `apply`, or `destroy` without the authorization required by the Terraform instructions. This targeted check is not required for every Terraform edit.
 
 ## Gotchas
 

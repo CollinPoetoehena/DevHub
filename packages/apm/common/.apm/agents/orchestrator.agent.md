@@ -1,8 +1,9 @@
 ---
 name: Orchestrator
 description: "Use as the entry point for engineering requests: classifies the request with a fixed routing table, coordinates Planner, Architect, Engineer, Documenter, Reviewer, and Learner, obtains approvals, retains lessons, and reports a full workflow trace."
-# Request all tools and omit model pins for compatibility: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
+# Request all host-available tools and declare Auto model intent: see https://github.com/CollinPoetoehena/DevHub/blob/main/packages/apm/README.md#agent-configuration
 tools: ['*']
+model: ['auto']
 agents: ['Planner', 'Architect', 'Engineer', 'Documenter', 'Reviewer', 'Learner']
 user-invocable: true
 disable-model-invocation: true

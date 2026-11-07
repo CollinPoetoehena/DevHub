@@ -88,10 +88,10 @@ I track DevHub and all my personal projects, including the public and private ho
 
 DevHub is intended to grow through broadly reusable material, not by absorbing the implementation of every project:
 
-- **[Tools](tools/README.md)** contains shared automation, including [Terraform repository inventory and policy](tools/repo/README.md).
+- **[Tools](tools/README.md)** contains shared automation, including [repository fleet management](tools/repo/README.md) with Terraform and Python.
 - **[How-tos](docs/how-to/README.md)** provides task-oriented entry points, including creating a repository in the DevHub ecosystem and setting up my code editor, accounts, and Git.
 - **[Getting started](docs/GETTING-STARTED.md)** explains how to set up DevHub and use shared guidance across related repositories.
-- **[GitHub workflows](docs/GITHUB-ACTIONS.md)** records the intended reusable-workflow contract; publishing automation is still a placeholder.
+- **[GitHub Actions](docs/github-actions/README.md)** documents reusable workflows and actions, including the [central APM sync](docs/github-actions/workflows/apm-sync.md) that prepares package-update pull requests across the repository inventory.
 - **[Common AI customizations](packages/apm/common/README.md)** provides the active reusable agents, instructions, and skills.
 - **[Reusable packages](packages/README.md)** groups related package work within DevHub. Package contents, dependencies, and release boundaries remain explicit; sharing a repository does not require one version for everything.
 
