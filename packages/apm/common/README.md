@@ -22,19 +22,19 @@ The [APM overview](../README.md) owns shared setup, authoring, and usage. This R
 
 ## Package contents
 
-| Agent | Responsibility | Model declaration | Tools |
+| Agent | Responsibility | Model field | Tools |
 |---|---|---|---|
-| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | `['auto']` | `['*']` |
-| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, acceptance criteria, validation | `['auto']` | `['*']` |
-| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | `['auto']` | `['*']` |
-| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation | `['auto']` | `['*']` |
-| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | `['auto']` | `['*']` |
-| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | `['auto']` | `['*']` |
-| [Learner](.apm/agents/learner.agent.md) | Evidence-based workflow evaluation and retained lessons in owning customization sources | `['auto']` | `['*']` |
+| [Orchestrator](.apm/agents/orchestrator.agent.md) | Entry point: routes, sequences, obtains approvals, reports the trace | Omitted (host-managed) | `['*']` |
+| [Planner](.apm/agents/planner.agent.md) | Requirements, approach, steps, task contracts, acceptance criteria, validation | Omitted (host-managed) | `['*']` |
+| [Architect](.apm/agents/architect.agent.md) | Consequential design decisions with trade-offs | Omitted (host-managed) | `['*']` |
+| [Engineer](.apm/agents/engineer.agent.md) | Implementation, diagnosis, validation, and batch integration | Omitted (host-managed) | `['*']` |
+| [Documenter](.apm/agents/documenter.agent.md) | Documentation-only changes, fact-checked against the code | Omitted (host-managed) | `['*']` |
+| [Reviewer](.apm/agents/reviewer.agent.md) | Independent, evidence-based review with severity-rated findings; re-runs validation without editing | Omitted (host-managed) | `['*']` |
+| [Learner](.apm/agents/learner.agent.md) | Evidence-based workflow evaluation and retained lessons in owning customization sources | Omitted (host-managed) | `['*']` |
 
-For requests routed to it, the Planner turns a high-level goal into a clearer, more complete implementation plan by making relevant requirements, constraints, assumptions, and measurable acceptance criteria explicit, then organizing work into ordered, verifiable steps with validation. This reduces the burden on the user to formulate every detail manually and helps surface omissions or inconsistencies. The Planner supports human decisions rather than making unresolved consequential design choices or approving implementation: it requests missing input or Architect input when needed, and implementation waits for explicit user approval.
+The table matches each agent's `model` and `tools` frontmatter. The common agents omit `model`, so selection follows the host/session's selected or default model; this does not guarantee Auto. In a Copilot surface that offers Auto, select it in the host's model picker. The [APM guide's runtime-managed model selection](../README.md#runtime-managed-model-selection) owns the compatibility rationale and host-specific limits.
 
-The table matches each agent's `model` and `tools` frontmatter. The common agents share a role-independent Auto model declaration and request every host-available tool. The [APM agent configuration guidance](../README.md#agent-configuration) owns the compatibility rationale, model-selection limits, and accepted-risk boundaries.
+For requests routed to it, the Planner turns a high-level goal into a clearer, more complete implementation plan by making relevant requirements, constraints, assumptions, task contracts, and measurable acceptance criteria explicit, then organizing work into ordered, verifiable steps with validation. This reduces the burden on the user to formulate every detail manually and helps surface omissions or inconsistencies. The Planner supports human decisions rather than making unresolved consequential design choices or approving implementation: it requests missing input or Architect input when needed, and implementation waits for explicit user approval.
 
 Tool access does not authorize every action. Orchestrator delegates delivery and commits; Planner, Architect, Documenter, and Learner are instructed not to run commands. Reviewer may run only inspection and check-mode validation without editing; Learner edits only the customization sources and changelog allowed by its skill. Only Orchestrator delegates under the role instructions; workers retain `agents: []` for harnesses that honor it. These are behavioral limits, not hard tool-level enforcement. See [harness limitations](#harness-limitations).
 
@@ -47,6 +47,7 @@ Instructions:
 - [AI customization](.apm/instructions/ai-customization.instructions.md): deterministic workflow, reporting, and runtime-managed model-selection rules for authoring customizations.
 - [Coding](.apm/instructions/coding.instructions.md), [documentation](.apm/instructions/documentation.instructions.md), and [Git](.apm/instructions/git.instructions.md): shared engineering standards.
 - [Security](.apm/instructions/security.instructions.md): untrusted content, secrets, secure defaults, and review focus for all work.
+- [Testing](.apm/instructions/testing.instructions.md): behavior-focused cases, edge conditions, assertions, determinism, regression checks, and project test tooling.
 - [GitHub Actions](.apm/instructions/github-actions.instructions.md): workflow and CI conventions, kept here because nearly every repository uses them.
 
 Language and tool instructions, such as Python, Dockerfile, and Ansible, live in the opt-in [stack packages](../README.md#package-design) and refine these common instructions.
@@ -99,19 +100,24 @@ User -> Orchestrator
           +-- R3 DIRECT_DOCS    -> Documenter -> done
           +-- R4 DIRECT_CHANGE  -> Engineer -> Reviewer
           +-- R5 PLANNED        -> Planner (-> Architect -> Planner)
-                                     -> user approval -> Engineer or Documenter -> Reviewer
+                                     -> user approval -> one worker or task batch
+                                        -> Engineer integration for batches -> Reviewer
 
-Reviewer: PASS -> done | IMPLEMENTATION_CHANGES -> same implementer | PLAN_CHANGES -> Planner
+Reviewer: PASS -> done | R4 changes -> Engineer -> Reviewer
+          R5 changes -> approved owners -> Engineer integration/validation -> Reviewer
+          PLAN_CHANGES -> Planner -> user approval
 Route end with learning signals -> Learner (workflow-learning skill) -> final report
 ```
 
 ### Routing
 
-The [Orchestrator routing table](.apm/agents/orchestrator.agent.md#routing-table) is evaluated top to bottom and the first match wins. A rule matches only when its condition clearly holds, so uncertainty falls through to `R5 PLANNED`. Documentation that defines future behavior, such as an ADR or proposed contract, is planning rather than documentation maintenance. Review-only, diagnosis-only, and plan-only requests never start implementation. Under R5, Documenter implements plans that change only documentation; Engineer implements all others, including documentation coupled to its changes.
+The [Orchestrator routing table](.apm/agents/orchestrator.agent.md#routing-table) is evaluated top to bottom and the first match wins. A rule matches only when its condition clearly holds, so uncertainty falls through to `R5 PLANNED`. Documentation that defines future behavior, such as an ADR or proposed contract, is planning rather than documentation maintenance. Review-only, diagnosis-only, and plan-only requests never start implementation. Under R5, Documenter owns standalone documentation tasks; Engineer owns code and documentation coupled to code. A single documentation-only task stays with Documenter. For an approved multi-task plan, the Orchestrator follows the task contracts and dependency rules, then one Engineer integrates and validates the bundle before Reviewer assesses it.
+
+R5 plans identify each task by ID, owner, exact file scope, dependencies, deliverables, and acceptance checks. Read-only tasks may run in parallel. Write tasks run concurrently only when isolated worktrees or equivalent working copies are confirmed and there are no shared files or unresolved dependencies; otherwise writes are serialized. If a task fails or blocks, the Orchestrator stops dispatching, blocks dependent and not-yet-started tasks, and settles every running worker before ending the route. It requests cancellation only when the host explicitly supports cancellation and confirms it; otherwise it awaits each result. It collects final or partial reports from all started workers and does not report a terminal result or invoke Learner while a worker is active. Completed task work remains partial, and the incomplete bundle is not integrated until the user resolves the blocker. Simple work remains a single task and worker.
 
 ### Outcomes and transitions
 
-Each worker returns an execution status (`COMPLETE | NEEDS_INPUT | BLOCKED | FAILED`) and, when complete, exactly one outcome from a closed set. Each outcome maps to exactly one next step in the [transition table](.apm/agents/orchestrator.agent.md#transitions).
+Each worker returns an execution status (`COMPLETE | NEEDS_INPUT | BLOCKED | FAILED`) and, when complete, exactly one outcome from a closed set. Each outcome maps to exactly one next step in the [transition table](.apm/agents/orchestrator.agent.md#transitions). For R5 `IMPLEMENTATION_CHANGES`, findings go to the approved owners of the affected tasks: Documenter owns standalone documentation and Engineer owns code plus documentation coupled to code. This ownership also holds for a single docs-only task and a mixed bundle; Engineer does not author standalone documentation. After corrections finish, Engineer integrates and bundle-validates the corrections before Reviewer re-reviews. One correction round counts once against the two-cycle-per-request limit, not once per owner or rerun. R4 corrections stay with Engineer. `PLAN_CHANGES` goes to Planner and requires explicit user approval before implementation. Reviewer sees an R5 bundle only after Engineer completes final integration and validation.
 
 | Agent | Outcomes |
 |---|---|
@@ -164,7 +170,7 @@ Every worker ends with a fixed `## Report` block: agent, tools used, status, out
 
 ### Model selection
 
-The common agents declare `model: ['auto']`; Orchestrator does not pass concrete model overrides when invoking workers. Model choice remains subject to each host's interpretation, supported surfaces, account, and policy. The [APM guide's runtime-managed model selection](../README.md#runtime-managed-model-selection) owns the rationale, limits, and current model references.
+The common agents omit `model`, and Orchestrator does not pass model overrides when invoking workers. Copilot uses the selected or default host model according to the current surface's rules. Select Auto in the host picker only where it is offered; omission itself does not select Auto. This describes the Copilot harness, not the separate Local harness model-selection behavior. See the [APM guide's runtime-managed model selection](../README.md#runtime-managed-model-selection).
 
 ---
 
@@ -193,7 +199,16 @@ Validate sources with `apm compile --validate --local-only` from this directory.
 | Localized bug with a known test | R4; Engineer, then Reviewer |
 | Proposed deployment ADR or cross-cutting change | R5; plan presented, implementation waits for approval |
 | Plan needs a design decision | Architect, then Planner |
-| Reviewer finds a defect | Correction by the same implementer, then renewed review |
+| Small approved implementation task | One task contract and one owner |
+| Independent planned tasks without confirmed workspace isolation | Serialized writes; no assumed parallel editing |
+| Independent planned writes with confirmed isolation | Parallel task workers, one Engineer integration and validation step, then Reviewer |
+| Parallel planned task fails while other workers run | Stop dispatching; block dependent and not-started tasks; cancel only with explicit host support and confirmation, otherwise await workers; collect all final or partial reports before terminal reporting or learning |
+| Planned task fails or blocks | Completed work remains partial; do not integrate the incomplete bundle; no terminal result while any worker is active |
+| Reviewer finds a defect in a single R5 docs-only task | Documenter corrects standalone docs; Engineer integrates and bundle-validates without authoring docs; Reviewer re-reviews |
+| Reviewer finds defects in a mixed R5 bundle | Findings return to approved task owners; Documenter corrects standalone docs and Engineer corrects code/coupled docs; Engineer integrates and bundle-validates before Reviewer re-reviews |
+| R5 review correction round | Counts as one cycle across all owners; no per-worker or rerun reset; two cycles maximum per request |
+| Reviewer finds a defect in R4 | Engineer corrects, then Reviewer re-reviews |
+| Reviewer returns `PLAN_CHANGES` | Planner revises; explicit user approval is required before implementation resumes |
 | Engineer needs an unapproved design change | `PLAN_CHANGES`; replanning and approval |
 | Validation fails or a limit is reached | No completion claim; `BLOCKED` or `FAILED` reported |
 | Any route | Final response contains route, trace with tools used, and every agent report |

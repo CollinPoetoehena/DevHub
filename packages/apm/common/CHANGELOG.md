@@ -38,6 +38,8 @@ A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instruct
 ### Changed
 
 - Explicit `tools: ['*']` for all seven common agents to address a locally observed per-tool exposure failure. Document the compatibility rationale and trusted-workspace trade-off; host permissions, approvals, and behavioral role boundaries still apply.
+- Omit `model` from all seven common agents and clarify host/session inheritance, Auto availability, and advisory size, complexity/risk, and cost intent without model overrides.
+- Add explicit role boundaries and dependency-aware R5 task contracts, safe parallel-write conditions, one Engineer integration and validation step, and partial-work handling when a batch task fails.
 - Document Learner ownership, report handling, and validation scenarios without a model registry.
 - Rewrite the `draft-github-issue` skill in the current skill format, with trigger keywords, `When to Use This Skill`, labeled steps, and `Gotchas`.
 - Fill the AI customization instructions with deterministic workflow, tools-used reporting, runtime-managed model selection, and tool-enforcement guidance.

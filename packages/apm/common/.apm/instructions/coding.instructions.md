@@ -55,6 +55,14 @@ ALWAYS handle errors comprehensively:
 - Log detailed error context on the server side
 - Never silently swallow errors
 
+## Observability and Logging
+
+- Log meaningful operational boundaries, significant events, and failures when they provide diagnostic value—not every function or line.
+- Follow project logging conventions and established language facilities, such as Python `logging` or Go `log/slog`; do not require a particular logger or dependency.
+- Use appropriate severity and structured, actionable context, including correlation identifiers where available.
+- Avoid duplicate failure logs, excessive verbosity, and logs without diagnostic value.
+- Never log secrets, tokens, passwords, or unnecessary personal data; follow the [Security Instructions](security.instructions.md).
+
 ## Input Validation
 
 ALWAYS validate at system boundaries:
