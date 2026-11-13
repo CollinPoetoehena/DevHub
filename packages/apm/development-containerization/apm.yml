@@ -1,0 +1,8 @@
+# Container, Kubernetes, and Helm guidance for DevHub repositories; opt in next to development-core.
+name: devhub-development-containerization
+version: 0.1.0
+description: Docker, Kubernetes, and Helm guidelines, skills, and references for local development
+target: copilot
+dependencies:
+  apm:
+    - CollinPoetoehena/DevHub/packages/apm/development-core

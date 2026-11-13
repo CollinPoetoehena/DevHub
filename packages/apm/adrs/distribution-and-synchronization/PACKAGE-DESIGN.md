@@ -36,7 +36,7 @@ The goal is to **avoid unnecessary distribution**, not merely rename bundles. Co
 
 The [guidance-layering ADR](../ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md) owns how rules compose, and the [skills-first ADR](../workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md) owns workflow responsibilities. Neither requires the generic workflow to be copied into each repository. Repositories retain their declared tooling and constraints; stack maps supplement that context rather than override it. Common guidelines remain useful without the local skills.
 
-The current sources remain in common and stack packages. The selected names and boundaries describe the implementation target, not completed source migration, installation, or runtime discovery.
+The eight source packages now implement these names and boundaries. Local source validation confirms their manifests and references; it does not establish consumer installation, host discovery, or runtime behavior. Installation and synchronization remain separate work.
 
 ### Consumer-selected scope
 
@@ -83,18 +83,10 @@ The [synchronization TODO](SYNCHRONIZATION.md) separately records future local u
 
 ## Status
 
-Accepted: the user selected `guidelines-core` for shared repository standards, separate local `development-core` agents/skills, and opt-in development stacks with their own instruction maps. Package migration, installation, synchronization, and runtime discovery remain future implementation work.
+Accepted: the user selected `guidelines-core` for shared repository standards, separate local `development-core` agents/skills, and opt-in development stacks with their own instruction maps. The eight source packages now implement the split. Consumer installation, synchronization, and runtime discovery remain future work.
 
 ---
 
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Specified separate `guidelines-core` and local `development-*` source packages, keeping stack-specific instruction maps with their skills and preserving independent repository/local consumers.
-- 2026-11-13: Updated development-setup contents and the workflow link for native-agent skills and one specialized Implementer. Package boundaries, future consolidation, and synchronization scope are unchanged.
-- 2026-11-13: Extracted the package split and scope reasoning from the combined distribution record; clarified that generic team-member workflows should not be distributed to every repository. The original package choice and decision date are preserved.

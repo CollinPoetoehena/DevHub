@@ -62,10 +62,3 @@ Accepted: the user selected auto-family routing and Copilot Fusion Standard by d
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Reconciled role references with the skills-first workflow. Native-agent skill invocation retains the user's model/router; the model-selection policy and original decision date are unchanged.
-- 2026-11-13: Extracted model routing from the combined agent-configuration record and grouped it with workflow decisions. [Minimal agent configuration](MINIMAL-AGENT-CONFIGURATION.md) owns metadata and enforcement trade-offs. The routing policy and original decision date are unchanged.

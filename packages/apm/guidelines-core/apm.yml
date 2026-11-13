@@ -1,0 +1,15 @@
+# Shared repository guidelines for DevHub consumers.
+name: devhub-guidelines-core
+version: 1.0.0
+description: Shared engineering, security, testing, documentation, Git, and AI-customization guidelines
+target: copilot
+dependencies:
+  apm:
+    # Authoring guidance for AI customization files and shared safety principles.
+    - github/awesome-copilot/instructions/agents.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/agent-skills.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/hooks.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/instructions.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/prompt.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/ai-prompt-engineering-safety-best-practices.instructions.md#60dcb90
+    - github/awesome-copilot/instructions/devops-core-principles.instructions.md#60dcb90

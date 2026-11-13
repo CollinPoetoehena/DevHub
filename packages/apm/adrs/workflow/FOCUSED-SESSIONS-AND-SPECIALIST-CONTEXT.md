@@ -10,7 +10,7 @@ The [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) chooses interactive Plan followed
 
 ## Decision
 
-Use separate planning and implementation sessions for phase-focused context in complex planned work, staying in the same native Agent mode. The implementation session starts with the approved plan and relevant repository guidance, dependencies, and evidence; it does not depend on the planning transcript. The [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) owns the required artifact and approval contract.
+Use separate planning and implementation sessions for phase-focused context in complex planned work, staying in the same native Agent mode. The implementation session starts with the approved plan and relevant repository guidance, dependencies, and evidence; it does not depend on the planning transcript. Planning takes time up front but is intended to make implementation quicker by reducing repeated instructions, refinements, rework, and errors. The plan is needed for handoff and active work, not permanent repository retention; see the [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) for the optional external-retention guidance and approval contract.
 
 When the task warrants delegation and the host supports it, use [subagents](https://code.visualstudio.com/docs/agents/run/subagents) for bounded tasks:
 
@@ -32,6 +32,7 @@ Main-agent configuration and model choices are owned separately by [minimal agen
 ### Positive
 
 - **Focused phase context**: A fresh implementation session keeps the approved plan and execution evidence prominent without requiring the planning transcript.
+- **Less back-and-forth**: A clear handoff is intended to reduce repeated clarification and implementation refinement, offsetting some of the up-front planning effort over the full task.
 - **Bounded exploration**: Specialists can return scoped findings or reviews without making every exploratory step part of the main agent's conversation.
 - **Reduced unnecessary delegation**: Delegation is reserved for tasks that justify its coordination and context-transfer costs.
 
@@ -66,10 +67,3 @@ Accepted: the user explicitly chose phase-focused sessions and bounded specialis
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Clarified that fresh phase sessions use the same native mode and bounded work uses supported native capabilities and the retained Implementer, following the [skills-first decision](REUSABLE-WORKFLOWS-AS-SKILLS.md).
-- 2026-11-13: Extracted focused-session and specialist-context guidance from the [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) so its rationale and trade-offs can be revisited independently. The extraction does not change policy.

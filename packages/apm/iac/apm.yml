@@ -1,9 +1,0 @@
-# Infrastructure-as-code guidance (Ansible, Terraform, Bicep) for DevHub repositories; opt in next to devhub-common.
-name: devhub-iac
-version: 0.1.0
-description: Ansible, Terraform, and Bicep instructions and skills for DevHub repositories
-target: copilot
-dependencies:
-  apm:
-    # Common DevHub AI customizations that every repository uses; stack packages only add to them
-    - CollinPoetoehena/DevHub/packages/apm/common

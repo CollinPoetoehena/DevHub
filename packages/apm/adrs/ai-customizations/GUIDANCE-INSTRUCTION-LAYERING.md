@@ -72,17 +72,10 @@ A link is a route, not proof that its target is loaded. Make clear when the agen
 
 ## Status
 
-Accepted: the user selected layered guidance with `AGENTS.md`, shared repository guidelines, and stack-owned instruction maps. Package separation and discovery validation remain future implementation work.
+Accepted: the user selected layered guidance with `AGENTS.md`, shared repository guidelines, and stack-owned instruction maps. The `guidelines-core` and `development-*` source packages implement that ownership; installation and discovery remain separate and require host-specific verification.
 
 ---
 
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Aligned ownership with separate repository-facing `guidelines-core` and local development stacks; scoped stack instruction maps stay with their skills, while repository authority and discovery caveats remain unchanged.
-- 2026-11-13: Grouped with related AI-customization decisions and linked the focused package-design record. Guidance ownership and the original decision date are unchanged.

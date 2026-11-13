@@ -21,7 +21,7 @@ The name reflects the purpose:
 
 > **Scope of this README:** This is a concise introduction to DevHub's purpose and structure, not a full explanation of every area or project. More detail belongs in the relevant documentation linked below; the root README should stay short enough to work as a clear entry point.
 
-For documentation changes, follow the owning project's instructions and the [common documentation instructions](packages/apm/common/.apm/instructions/documentation.instructions.md).
+For documentation changes, follow the owning project's instructions and the shared [documentation guidelines](packages/apm/guidelines-core/.apm/instructions/documentation.instructions.md).
 
 ---
 
@@ -53,7 +53,7 @@ The public repository has a second purpose as a portfolio. It provides an honest
 
 ## Standards for my personal projects
 
-DevHub holds the guidance I apply to my personal projects: [repository and package guidelines](docs/GUIDELINES.md), [personal-project principles](docs/GUIDELINES.md#relaxation-and-enjoyment-over-productivity-and-pressure), [engineering AI customizations](packages/apm/common/README.md), [project boundaries](docs/ARCHITECTURE.md), automation, and tooling. Each project records its own setup, decisions, and exceptions; general technical background is linked to official sources where needed.
+DevHub holds the guidance I apply to my personal projects: [repository and package guidelines](docs/GUIDELINES.md), [personal-project principles](docs/GUIDELINES.md#relaxation-and-enjoyment-over-productivity-and-pressure), [shared AI guidelines and local development customizations](packages/apm/README.md), [project boundaries](docs/ARCHITECTURE.md), automation, and tooling. Each project records its own setup, decisions, and exceptions; general technical background is linked to official sources where needed.
 
 I manage my personal projects the way a professional team manages its projects, with consistent standards and practices; they are effectively a team with one developer. This is not to mimic enterprise or industry practice. It is worth the time because it adds real value: clear and consistent projects, automation and tooling that save me time, and documentation that keeps decisions self-explanatory when I return to a project later.
 
@@ -71,7 +71,7 @@ It remains public, so others can read and reuse what is useful, and it serves as
 
 Each part of DevHub has a clear scope, so information has one home:
 
-- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), [getting-started guide](./docs/GETTING-STARTED.md), concise [command cheat sheets](./docs/cheatsheets/README.md), and repository-wide [architecture decision records](./docs/adrs/README.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
+- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), [getting-started guide](./docs/GETTING-STARTED.md), concise [command cheat sheets](./docs/cheatsheets/README.md), and repository-wide [architecture decision records](./docs/adrs/README.md). The [APM overview](packages/apm/README.md) explains the independent shared-guideline and local-development package sources.
 - **[`archive/`](./archive/README.md)** records retired approaches and their rationale, not an actively maintained technical knowledge base.
 - **Area READMEs**, such as [`packages/README.md`](./packages/README.md) and [`tools/README.md`](./tools/README.md), own local commands and component contracts; [tool ADRs](./tools/adrs/README.md) record their durable design decisions.
 - **[Root agent guidance](AGENTS.md)** routes AI agents to that owning context; [APM design and setup](packages/apm/README.md) explains the common baseline and repository-specific customization pattern.
@@ -92,7 +92,7 @@ DevHub is intended to grow through broadly reusable material, not by absorbing t
 - **[How-tos](docs/how-to/README.md)** provides task-oriented entry points, including creating a repository in the DevHub ecosystem and setting up my code editor, accounts, and Git.
 - **[Getting started](docs/GETTING-STARTED.md)** explains how to set up DevHub and use shared guidance across related repositories.
 - **[GitHub Actions](docs/github-actions/README.md)** documents reusable workflows and actions, including the [central APM sync](docs/github-actions/workflows/apm-sync.md) that prepares package-update pull requests across the repository inventory.
-- **[Common AI customizations](packages/apm/common/README.md)** provides the active reusable agents, instructions, and skills.
+- **[APM customizations](packages/apm/README.md)** documents shared `guidelines-core` and the local `development-core` workflow plus opt-in `development-*` stacks.
 - **[Reusable packages](packages/README.md)** groups related package work within DevHub. Package contents, dependencies, and release boundaries remain explicit; sharing a repository does not require one version for everything.
 
 The [shared guidelines](docs/GUIDELINES.md) cover repository and package placement, naming, and setup. The [architecture guide](docs/ARCHITECTURE.md) summarizes current boundaries; [ADRs](docs/adrs/README.md) record the decision rationale and trade-offs. Native packaging details belong in the [Python Packaging User Guide](https://packaging.python.org/en/latest/overview/) and [Go module documentation](https://go.dev/doc/modules/developing).

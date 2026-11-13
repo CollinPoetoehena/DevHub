@@ -1,0 +1,8 @@
+# JVM stack guidance (Java, Kotlin, Spring Boot) for DevHub repositories; opt in next to development-core.
+name: devhub-development-java
+version: 0.1.0
+description: Java, Kotlin, and Spring Boot guidelines, skills, and references for local development
+target: copilot
+dependencies:
+  apm:
+    - CollinPoetoehena/DevHub/packages/apm/development-core

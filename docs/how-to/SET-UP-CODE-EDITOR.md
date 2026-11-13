@@ -34,7 +34,7 @@ This guide describes my code editor setup and the account and Git configuration 
 
 ## Personal DevHub AI customizations
 
-My shared Copilot agents, instructions, and skills are distributed with [APM](https://microsoft.github.io/apm/) from the [common package](../../packages/apm/common/README.md). Declare and install it per repository or workspace root, then verify discovery in the host, as described in [AI customizations](../GETTING-STARTED.md#ai-customizations) and the APM guide's [repository setup](../../packages/apm/README.md#repository-setup) and [activation checks](../../packages/apm/README.md#verify-activation).
+DevHub's [APM packages](../../packages/apm/README.md) separate shared `guidelines-core` for participating repositories from `development-core` and opt-in `development-*` packages for users' local workflows and stack guidance. Select `guidelines-core` independently in each repository that adopts the standards; select `development-core` and relevant stacks in the local development scope you choose. Source readiness does not establish installation, synchronization, or host discovery. Follow [AI customizations](../GETTING-STARTED.md#ai-customizations) and the APM guide's [repository setup](../../packages/apm/README.md#repository-setup) and [activation checks](../../packages/apm/README.md#verify-activation) for package selection and host-specific verification.
 
 Install inside the environment where Copilot runs, such as WSL. Settings Sync does not replace this installation: it syncs editor preferences and user-level prompts, not repository-installed APM customizations.
 

@@ -31,11 +31,11 @@ Keep related project-wide documentation in one cohesive, sectioned authoritative
 
 The shared principles for approaching personal projects—including enjoyment, attention, sustainable scope, and freedom from unnecessary pressure—are in [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure). Individual projects should link to that guidance and keep only their local application and technical details.
 
-The [APM guide](../packages/apm/README.md) owns shared AI customization design and setup. Its [package-design ADR](../packages/apm/adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) separates central instructions present in participating repositories from the generic agent/skill development environment used by team members. Existing common and stack-package sources remain transitional; their presence does not establish that the selected package split is implemented.
+The [APM guide](../packages/apm/README.md) owns shared AI customization design and setup. Its [package-design ADR](../packages/apm/adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) separates shared `guidelines-core`, which repositories may adopt independently, from local `development-core` agents/skills and opt-in `development-*` stacks. These source packages are ready; their presence does not establish installation, synchronization, or host discovery.
 
-Consumer-specific context belongs in one root `AGENTS.md`, with scoped instructions or local skills only for a demonstrated need. Follow the [APM design and setup guide](../packages/apm/README.md) for ownership, authoring, and discovery verification. Give each topic one authoritative owner and link to it rather than repeating its guidance. These customizations supplement the common package; do not assume one instruction automatically overrides another.
+Consumer-specific context belongs in one root `AGENTS.md`, with scoped instructions or local skills only for a demonstrated need. Follow the [APM design and setup guide](../packages/apm/README.md) for ownership, authoring, and discovery verification. Give each topic one authoritative owner and link to it rather than repeating its guidance. Shared guidelines and local development customizations have separate consumers; do not assume one instruction automatically overrides another.
 
-The engineering and documentation rules are intentionally not repeated in this file: `GUIDELINES.md` is the shared human-facing home for repository and package conventions, while the common [coding instructions](../packages/apm/common/.apm/instructions/coding.instructions.md) are the reusable AI-facing source for engineering standards. Keeping each topic in one authoritative place avoids drift, prevents conflicting or stale directions, and makes clear which guidance to maintain.
+The engineering and documentation rules are intentionally not repeated in this file: `GUIDELINES.md` is the shared human-facing home for repository and package conventions, while [`guidelines-core` coding instructions](../packages/apm/guidelines-core/.apm/instructions/coding.instructions.md) are the reusable AI-facing source for engineering standards. Keeping each topic in one authoritative place avoids drift, prevents conflicting or stale directions, and makes clear which guidance to maintain.
 
 ---
 
@@ -45,7 +45,7 @@ The engineering and documentation rules are intentionally not repeated in this f
 
 Each part or component of the repository owns documentation for its behavior, setup, and decisions. Keep one authoritative home for each topic, place it with the part it describes, and link to it from other relevant documentation rather than duplicating it. Use repository-level documentation for topics that span components or describe the repository as a whole.
 
-For Markdown formatting and writing conventions, follow the shared [documentation instructions](../packages/apm/common/.apm/instructions/documentation.instructions.md).
+For Markdown formatting and writing conventions, follow the shared [documentation guidelines](../packages/apm/guidelines-core/.apm/instructions/documentation.instructions.md).
 
 ### Documentation placement
 
@@ -91,7 +91,7 @@ Create an ADR when a choice materially affects architecture, component boundarie
 
 #### Writing and referencing records
 
-Include enough context, decision rationale, positive and negative consequences, alternative analysis, and evidence that the record remains useful without the original conversation. Use the [ADR skill](../packages/apm/common/.apm/skills/adr/SKILL.md) and its [template and examples](../packages/apm/common/.apm/skills/adr/references/ADR-TEMPLATE.md) for authoring guidance, while respecting established project conventions.
+Include enough context, decision rationale, positive and negative consequences, alternative analysis, and evidence that the record remains useful without the original conversation. Use the [ADR skill](../packages/apm/development-core/.apm/skills/adr/SKILL.md) and its [template and examples](../packages/apm/development-core/.apm/skills/adr/references/ADR-TEMPLATE.md) for authoring guidance, while respecting established project conventions.
 
 In a main document, state the current decision and link to the record at the point where the reader may need its rationale. For example: "Nontrivial work starts with an approved Markdown plan before execution; see the [workflow decision](../packages/apm/adrs/workflow/AI-DEVELOPMENT-WORKFLOW.md) for the reasoning and exceptions." The main document still owns behavior, setup, and usage; a link should not force readers into an ADR to discover basic instructions.
 

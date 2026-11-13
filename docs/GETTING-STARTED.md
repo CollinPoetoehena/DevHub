@@ -42,9 +42,9 @@ Keep machine-specific workspace files outside Git. Grouping repositories does no
 
 ## AI customizations
 
-The [APM design and setup guide](../packages/apm/README.md) owns the cross-repository AI configuration pattern: repository standards and local `AGENTS.md` guidance are separate from users' reusable workflow skills and specialized Implementer. Existing common and domain packages remain transitional; package separation and synchronization are not implemented. Follow the guide's [repository setup](../packages/apm/README.md#repository-setup), [activation checks](../packages/apm/README.md#verify-activation), and [maintenance procedure](../packages/apm/README.md#maintenance-and-validation). The [common package README](../packages/apm/common/README.md) owns current source contents.
+The [APM design and setup guide](../packages/apm/README.md) owns the package model: `guidelines-core` supplies shared repository standards and can be adopted independently; `development-core` supplies optional local workflow skills and generic skills; relevant `development-*` stack packages add their scoped maps, skills, and references. The eight source packages are ready, but that does not establish installation, synchronization, or host discovery. Follow the guide's [repository setup](../packages/apm/README.md#repository-setup), [activation checks](../packages/apm/README.md#verify-activation), and [maintenance procedure](../packages/apm/README.md#maintenance-and-validation). The [guidelines package README](../packages/apm/guidelines-core/README.md) and [development-core README](../packages/apm/development-core/README.md) describe their separate contents.
 
-Use the manifest and installation procedure in [repository setup](../packages/apm/README.md#repository-setup) for each consumer root. DevHub's [root manifest](../apm.yml) uses the local `./packages/apm/common` dependency for development.
+Use the manifest and installation procedure in [repository setup](../packages/apm/README.md#repository-setup) for each consumer root. DevHub's [root manifest](../apm.yml) uses the local `./packages/apm/guidelines-core` dependency only; it does not select the local workflow.
 
 For shared-folder use, optionally add an `apm.yml` in the parent folder (`devhub-workspace/` in the example):
 
@@ -55,10 +55,10 @@ targets:
   - copilot
 dependencies:
   apm:
-    - CollinPoetoehena/DevHub/packages/apm/common
+    - CollinPoetoehena/DevHub/packages/apm/development-core
 ```
 
-With APM installed, run from that workspace root:
+Add relevant stack packages such as `development-python` to the same manifest when needed; each stack package depends on `development-core`. This parent-folder example is for the local development setup, not a substitute for adopting shared repository guidelines in each participating repository. With APM installed, run from that workspace root:
 
 ```sh
 apm install --only apm --target copilot
@@ -66,7 +66,7 @@ apm install --only apm --target copilot
 
 This is an additional convenience, not a replacement for a checked-in manifest/lockfile and installation in every consumer repository. It installs at the parent root, not into each clone. Follow the APM guide's dependency-reference and ownership guidance for both setups. Verify that the selected host discovers the parent-installed customizations, especially in multi-root workspaces; opening a shared folder does not guarantee discovery. Verify standalone repository use separately.
 
-Use native Agent mode for ordinary work. For a complex task, use the [two-session workflow](../packages/apm/README.md#choosing-a-workflow): invoke the Planning skill and approve the saved plan, then invoke Implementation Orchestration in a fresh native Agent session with that exact path and approval. The built-in active agent remains the orchestrator for both procedures, retaining the selected model/router and permission mode; do not switch to a custom planner or coordinator. A manifest entry alone does not activate the package; follow [repository setup](../packages/apm/README.md#repository-setup) and [activation checks](../packages/apm/README.md#verify-activation).
+Use native Agent mode directly for simple, clear tasks; neither workflow skill nor forced Implementer delegation is needed. For larger work, use the [two-session workflow](../packages/apm/README.md#choosing-a-workflow): invoke Planning, clarify consequential choices, review and approve the exact saved plan, then use Implementation Orchestration in a fresh native Agent session with that absolute path and approval. The built-in active agent remains the orchestrator for both procedures, retaining the selected model/router and permission mode; do not switch to a custom planner or coordinator. The APM guide provides user-facing invocation examples and explains that hosts vary; agents do not execute slash commands internally. A manifest entry alone does not activate a package; follow [repository setup](../packages/apm/README.md#repository-setup) and [activation checks](../packages/apm/README.md#verify-activation).
 
 Keep repository-specific agent context in a root `AGENTS.md` ([DevHub's file](../AGENTS.md)), linking to owning documentation instead of repeating it. Use the [authoring guidance](../packages/apm/README.md#authoring-repository-guidance) and APM [repository setup](../packages/apm/README.md#repository-setup). Scoped constraints and project-only procedures remain separate where needed; do not copy shared agents or assume local instructions override the baseline.
 

@@ -1,9 +1,0 @@
-# JVM stack guidance (Java, Kotlin, Spring Boot) for DevHub repositories; opt in next to devhub-common.
-name: devhub-java
-version: 0.1.0
-description: Java and Kotlin instructions and skills (java, kotlin, springboot) for DevHub repositories on the JVM
-target: copilot
-dependencies:
-  apm:
-    # Common DevHub AI customizations that every repository uses; stack packages only add to them
-    - CollinPoetoehena/DevHub/packages/apm/common

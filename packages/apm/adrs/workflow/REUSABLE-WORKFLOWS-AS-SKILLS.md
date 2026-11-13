@@ -10,17 +10,17 @@ The user explicitly chose reusable procedures in the existing native Agent mode,
 
 ## Decision
 
-The active built-in host agent orchestrates the work in its existing native Agent mode. It invokes the [planning skill](../../common/.apm/skills/planning/SKILL.md) for interactive planning and the [implementation orchestration skill](../../common/.apm/skills/implementation-orchestration/SKILL.md) for execution. These are extensible procedures, not custom roles or a replacement agent loop. The active agent carries them out using the user's selected model or router and permission mode, including Autopilot where supported. Skills neither select those settings nor waive the user's approval of the exact plan.
+The active built-in host agent orchestrates larger planned work in its existing native Agent mode. It invokes the [planning skill](../../development-core/.apm/skills/planning/SKILL.md) for interactive planning and the [implementation orchestration skill](../../development-core/.apm/skills/implementation-orchestration/SKILL.md) for execution. These are extensible procedures, not custom roles or a replacement agent loop. The active agent carries them out using the user's selected model or router and permission mode, including Autopilot where supported. Skills neither select those settings nor waive the user's approval of the exact plan.
 
-For complex planned work, start a fresh planning session and a fresh execution session in the same native Agent mode. Carry the approved plan and relevant context into execution; material changes return to interactive planning and renewed approval. The simple-edit exception remains plan-free. Users or agents can invoke skills through mechanisms supported by their host; slash invocation is available where supported, not a uniform syntax or an assumption that agents can call native slash commands.
+Simple, clear tasks are ordinary requests to the native Agent and bypass both workflow skills; applicable guidance and checks still apply, without forced Implementer delegation. The implementation-orchestration skill is for approved-plan execution, not simple-task intake. For larger planned work, start a fresh planning session, clarify consequential choices, save the plan, review and approve its exact contents, then start a fresh execution session in the same native Agent mode. Carry the approved plan and relevant context into execution; material changes return to interactive planning and renewed approval. This takes more setup than immediately coding, but is intended to make the full task quicker by clarifying implementation before execution and reducing repeated instructions, refinements, rework, and errors. The plan is a working handoff artifact, not a required permanent repository record; see the [approved-plan contract](APPROVED-PLAN-AND-HANDOFF.md). User-facing invocation examples are in the [APM guide](../../README.md#choosing-a-workflow); slash invocation depends on the host, and agents do not execute slash commands internally.
 
-Use only the custom [Implementer](../../common/.apm/agents/implementer.agent.md): a senior engineer for bounded implementation, without subdelegation. Its contract requires behavioral red-green-refactor tests for testable changes, directly related documentation and ADR skill use where appropriate, and focused work and validation. Implementation assignments within the orchestration skill use this role, with proportionate delegation rather than artificial parallelism. Native research and exploration remain optional where useful and supported; do not rebuild a specialist hierarchy.
+Use only the custom [Implementer](../../development-core/.apm/agents/implementer.agent.md): a senior engineer for bounded implementation, without subdelegation. Its contract requires behavioral red-green-refactor tests for testable changes, directly related documentation and ADR skill use where appropriate, and focused work and validation. Approved-plan implementation assignments within the orchestration skill use this role, with proportionate delegation rather than artificial parallelism. Native research and exploration remain optional where useful and supported; do not rebuild a specialist hierarchy.
 
 The orchestration workflow requires both independent native code and security reviews of the integrated change, in fresh assessment contexts and in parallel where supported. Obtain actual review evidence; naming a role does not establish independence. Correctable blocking findings return to an Implementer and the affected checks and reviews repeat. An unavailable required review or unresolved blocking finding prevents a successful completion claim; report the blocker rather than silently omit a review.
 
 [Agent Skills](https://agentskills.io/what-are-skills) provide a portable format for reusable, progressively disclosed instructions; supporting tools and registries can discover or share them according to their own capabilities and scopes. Portability is a design goal, not a guarantee of identical discovery, invocation, model selection, permissions, or behavior. The native host remains responsible for orchestration; skill prose and role contracts are not technical permission enforcement. Verify host capabilities and apply actual permissions, checks, and human approval as appropriate.
 
-The two skill sources and Implementer source exist; their presence does not establish runtime discovery, compliance, or the separately selected package split. [Package design](../distribution-and-synchronization/PACKAGE-DESIGN.md), [distribution](../distribution-and-synchronization/DISTRIBUTION.md), and the [synchronization TODO](../distribution-and-synchronization/SYNCHRONIZATION.md) remain separate future implementation work.
+The workflow skills and Implementer are available in the `development-core` source package; their presence does not establish consumer installation, runtime discovery, or compliance. [Package design](../distribution-and-synchronization/PACKAGE-DESIGN.md) and [distribution](../distribution-and-synchronization/DISTRIBUTION.md) record the implemented source split and the still-separate consumer setup; the [synchronization TODO](../distribution-and-synchronization/SYNCHRONIZATION.md) remains future work.
 
 ---
 
@@ -32,6 +32,8 @@ The two skill sources and Implementer source exist; their presence does not esta
 - **Reusable procedures**: Focused skills can evolve and be shared through compatible tools and registries independently of a custom main-agent definition.
 - **Focused implementation**: One bounded Implementer adds a concrete test-first engineering contract without a permanent specialist hierarchy.
 - **Preserved control**: Fresh sessions, an approved plan, and human verification remain explicit workflow boundaries.
+- **Proportionate routing**: Simple, clear work stays on the native Agent's direct path rather than invoking a workflow skill or requiring a custom worker.
+- **Less implementation churn**: Interactive preparation is intended to reduce the repeated direction and corrections needed during execution, while the plan itself does not have to outlive the completed work.
 
 ### Negative
 
@@ -58,7 +60,7 @@ These are project-defined arrangements of documented mechanisms, not externally 
 
 ## Status
 
-Accepted: the user explicitly approved skills-first native orchestration and one focused custom Implementer.
+Accepted: the user explicitly approved skills-first native orchestration and one focused custom Implementer. Simple tasks bypass both workflow skills; larger execution requires a fresh session and approval of the exact saved plan. Source readiness does not establish host discovery or behavior.
 
 ---
 

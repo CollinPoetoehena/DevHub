@@ -200,7 +200,7 @@ Current templates:
 
 | Profile | File | Purpose |
 |---|---|---|
-| `common` | [`seed/apm.yml.tmpl`](templates/common/seed/apm.yml.tmpl) | Initial APM manifest containing common and selected stack packages; existing manifests remain repository-owned |
+| `common` | [`seed/apm.yml.tmpl`](templates/common/seed/apm.yml.tmpl) | Seeds an APM manifest using the caller-supplied `$apm_dependencies`; choose the current shared-guideline and local-development packages using the [APM guide](../../packages/apm/README.md#package-design). Existing manifests remain repository-owned. |
 
 ---
 

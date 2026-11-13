@@ -2,7 +2,7 @@
 
 [APM](https://microsoft.github.io/apm/) distributes customization packages; the Copilot host and harness execute the work. This guide summarizes the selected architecture. [ADRs](adrs/README.md) own decision reasoning, and [CONCEPTS.md](CONCEPTS.md) owns general terminology.
 
-The [common package](common/README.md) contains the Planning and Implementation Orchestration skills and only the specialized Implementer agent, following the [skills-first decision](adrs/workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md). Package separation, guideline refinement, installation, and synchronization remain separate work; existing manifests, installed copies, and stack packages are unchanged.
+The [source packages](#package-design) are separated by consumer: `guidelines-core` supplies shared repository guidance, while `development-core` and opt-in `development-*` packages supply local development capabilities. Planning and implementation orchestration are skills in `development-core`; only the specialized Implementer is a custom agent, following the [skills-first decision](adrs/workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md). Source readiness does not establish installation, host discovery, or synchronization.
 
 ## Table of Contents
 
@@ -25,8 +25,8 @@ The [common package](common/README.md) contains the Planning and Implementation 
 | Topic | Decision and rationale |
 |---|---|
 | Workflow | Interactive Plan, autonomous Build and Test, human Verify, then Observe; see the [workflow ADR](adrs/workflow/AI-DEVELOPMENT-WORKFLOW.md). |
-| Reusable workflows | [Planning](common/.apm/skills/planning/SKILL.md) and [implementation orchestration](common/.apm/skills/implementation-orchestration/SKILL.md) are skills invoked by the current native agent, not custom main agents. The orchestrator remains the host's active agent; see the [skills-first ADR](adrs/workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md). |
-| Custom role | Only the [Implementer](common/.apm/agents/implementer.agent.md): bounded implementation, test-first behavior changes, and validation without subdelegation. |
+| Reusable workflows | [Planning](development-core/.apm/skills/planning/SKILL.md) and [implementation orchestration](development-core/.apm/skills/implementation-orchestration/SKILL.md) are skills invoked by the current native agent, not custom main agents. The orchestrator remains the host's active agent; see the [skills-first ADR](adrs/workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md). |
+| Custom role | Only the [Implementer](development-core/.apm/agents/implementer.agent.md): bounded implementation, test-first behavior changes, and validation without subdelegation. |
 | Guidance | Repository `AGENTS.md` plus shared scoped instructions; see the [layering ADR](adrs/ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md). |
 | Distribution | Use APM rather than maintain a custom package-distribution engine; see the [distribution ADR](adrs/distribution-and-synchronization/DISTRIBUTION.md). |
 | Package boundaries | Shared `guidelines-core` in participating repositories; agents/skills in local `development-core`, with instruction maps and skills in opt-in development stacks; see the [package-design ADR](adrs/distribution-and-synchronization/PACKAGE-DESIGN.md). |
@@ -56,34 +56,34 @@ Separating vocabulary from project decisions keeps this README clean and the con
 
 ## Choosing a workflow
 
-Use native Agent mode directly for ordinary work; these skills impose neither universal routing nor forced planning. For complex work, stay in native Agent mode and invoke the [planning skill](common/.apm/skills/planning/SKILL.md) to investigate, question consequential ambiguity, and prepare a complete Markdown plan without implementing.
+For a simple, clear task, make an ordinary request to the native Agent. It works directly with applicable guidance and checks: neither workflow skill is needed, and there is no forced Implementer delegation. Use the workflow below for larger work that needs investigation, decisions, or coordinated implementation. In the planning phase, stay in native Agent mode and invoke the [planning skill](development-core/.apm/skills/planning/SKILL.md) to investigate evidence, clarify consequential choices, and prepare a complete Markdown plan without implementing.
 
 Review and approve the exact saved version. Planning uses the repository's established location when present; otherwise save a unique, non-overwriting `<task-working-directory>/tmp/plan-<id>.md`. This is not the operating system's `/tmp`. Consumers own ignore rules and preservation of local, potentially sensitive plan files; this workflow does not silently edit their ignore configuration.
 
-Start a fresh native Agent session and invoke the [implementation-orchestration skill](common/.apm/skills/implementation-orchestration/SKILL.md) with the absolute plan path and explicit approval of its current contents. It coordinates bounded Implementer work, integration, applicable automated checks, and both independent native code and security reviews. Missing required capabilities block completion. Material changes return to planning and approval. The user verifies and accepts the result before observing it in use. Small, localized work with clear scope and checks may enter implementation directly without a plan artifact.
+After reviewing and approving the exact saved plan, start a fresh native Agent session and invoke the [implementation-orchestration skill](development-core/.apm/skills/implementation-orchestration/SKILL.md) with the absolute plan path and explicit approval of its current contents. It coordinates dependency-aware, bounded Implementer work, integration checks, and independent native code and security reviews. Findings are remediated and re-reviewed; unavailable required checks or reviews block a successful completion claim. Material changes return to planning and approval. The user verifies and accepts the result before observing it in use.
 
 ```text
-Native Agent + planning skill -> saved plan -> human approval
-Fresh native Agent + implementation-orchestration skill -> Implementer work
+Simple task -> native Agent direct work -> applicable checks -> human verification
+Larger work -> native Agent + planning skill -> saved plan -> human approval
+Fresh native Agent + implementation-orchestration skill -> bounded Implementer work
   -> integrated checks + independent reviews -> human Verify -> Observe
 ```
 
 ### Invoke without changing agent modes
 
-In VS Code, after installing the source in a supported location and verifying discovery, select the skill from the `/` menu. Installation remains separate from this source change:
+The user invokes the selected skill using the host's supported mechanism. In VS Code, that may be the `/` menu after installation in a supported location and discovery verification. These examples are user requests; agents do not execute slash commands internally:
 
 ```text
-/planning Plan the requested change; do not implement.
+/planning Plan <larger change>; clarify consequential choices and save the plan.
 ```
 
-In a fresh session, after reviewing the saved file:
+After reviewing and approving the exact saved plan, start a fresh native Agent session and request execution:
 
 ```text
-/implementation-orchestration I approve the current contents of
-<absolute-task-working-directory>/tmp/plan-<id>.md. Implement this version.
+/implementation-orchestration I approve the current contents of <absolute-plan-path>. Implement this version.
 ```
 
-These are user invocation examples, not instructions for an agent to execute slash commands internally. If the host does not expose these slash entries, explicitly ask it to load the named skill using its supported mechanism. Native `/plan`, research, and review commands are separate host features, not aliases or dependencies of these skills. Availability, syntax, discovery locations, and delegation vary across tools; portable instructions do not guarantee identical execution.
+If the host does not expose these slash entries, ask it to load the named skill using its supported mechanism. Native `/plan`, research, and review commands are separate host features, not aliases or dependencies of these skills. Availability, syntax, discovery locations, and delegation vary across tools; portable instructions do not guarantee identical execution.
 
 ### Why workflows are skills
 
@@ -99,7 +99,7 @@ The [workflow ADR](adrs/workflow/AI-DEVELOPMENT-WORKFLOW.md) owns stage policy a
 
 ## How guidance is layered
 
-Shared rules belong in repository-facing `guidelines-core`; stack-specific instruction maps belong with their opt-in development stacks. Each repository owns its root `AGENTS.md`, architecture, configuration, and local constraints. Specific language/tool guidelines refine shared defaults; agents and skills use those rules instead of copying them. These are target package boundaries, not completed source migration.
+Shared rules belong in repository-facing `guidelines-core`, independently of any local workflow; stack-specific instruction maps belong with their opt-in `development-*` packages. Each repository owns its root `AGENTS.md`, architecture, configuration, and local constraints. Specific language/tool guidelines refine shared defaults; agents and skills use those rules instead of copying them. Copilot consumes instruction files, while Claude calls its equivalent rules; retain the filenames and frontmatter required by the supported host. The packages are available as validated sources, but source organization does not prove installation, discovery, or runtime behavior.
 
 See the [layering ADR](adrs/ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md) for ownership, specificity, discovery limitations, and guidance versus enforcement.
 
@@ -111,17 +111,17 @@ Prefer one concise root `AGENTS.md` linking to owning documentation and stating 
 
 ## Package design
 
-The target design separates shared guidelines from local development packages:
+The source design separates shared guidelines from local development packages:
 
 - **Shared guidelines**: `guidelines-core` owns common engineering, security, testing, documentation, Git, and AI-customization standards, adopted by participating repositories without agents or skills.
-- **Local development core**: `development-core` owns reusable workflow skills, generic skills, and the specialized Implementer, installed for the actual team members using that workflow in a consumer-selected local scope.
+- **Local development core**: `development-core` owns reusable workflow skills, generic skills, and the specialized Implementer, selected by team members using that workflow in a consumer-chosen local scope.
 - **Opt-in development stacks**: `development-python`, `development-go`, `development-rust`, `development-java`, `development-containerization`, and `development-iac` own technology skills/resources and their scoped instruction maps.
 
-Common guidelines belong with repository work; the generic workflow and selected stack capabilities belong to their users' development environment. Shared guidelines must not pull in workflow packages, and local development packages must not automatically deploy the repository guideline package into the local scope. Stack instruction maps are the stack-bound exception, not copies of common standards. Genuinely repository-specific capabilities remain with their repository.
+`guidelines-core` is independently adopted by repositories for shared standards. `development-core` is selected by users who want the reusable workflow and generic skills; select only relevant `development-*` stacks alongside it. Each stack package depends on `development-core` for shared local capabilities, but does not install `guidelines-core`. Shared guidelines must not pull in workflow packages, and local development packages must not automatically deploy repository guidelines into the local scope. Stack instruction maps are the stack-bound exception, not copies of common standards. Genuinely repository-specific capabilities remain with their repository.
 
 Consumers can choose user-wide, personal/work, team, or project-specific setups. For example, separate setups can serve `~/projs/personal` and `~/projs/work`, with Copilot CLI started in the chosen parent working directory and intended repositories added as task directories. File access does not prove customization inheritance; verify discovery in the chosen host and scope.
 
-The [package-design ADR](adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) owns these boundaries and destinations. The [distribution ADR](adrs/distribution-and-synchronization/DISTRIBUTION.md) separately chooses APM; the [synchronization TODO](adrs/distribution-and-synchronization/SYNCHRONIZATION.md) records future automation. The target has eight source packages; existing common and stack sources have not been moved.
+The [package-design ADR](adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) owns these boundaries and destinations. The [distribution ADR](adrs/distribution-and-synchronization/DISTRIBUTION.md) separately chooses APM; the [synchronization TODO](adrs/distribution-and-synchronization/SYNCHRONIZATION.md) records future automation. Eight package sources now implement the split. `apm compile --validate --local-only` validates source structure and references; it does not install the packages, establish host discovery, or implement synchronization.
 
 <a id="language-and-framework-guidance"></a>
 
@@ -147,13 +147,13 @@ For model fundamentals and general capability/cost trade-offs, see [models and t
 
 ## Repository setup
 
-The design separates repository instruction installation from local workflow installation. Consumers own dependency references, destinations, update policies, local context, and existing customization files.
+The design separates repository guideline adoption from local workflow selection. A repository may declare `CollinPoetoehena/DevHub/packages/apm/guidelines-core` without adopting a workflow. A user who selects the workflow declares `development-core` and only the relevant stack packages. Consumers own dependency references, destinations, update policies, local context, and existing customization files.
 
-No migration commands or new package paths are specified here. Manifests, synchronization, and supported destinations will be implemented and tested separately; see the [package-design ADR](adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) and [synchronization TODO](adrs/distribution-and-synchronization/SYNCHRONIZATION.md).
+The package source directories and manifests are ready for consumer selection. Use APM's documented commands and verify the host-specific destination and discovery for the chosen scope; DevHub has not implemented automatic package installation, scope setup, or synchronization. The [package-design ADR](adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) owns package boundaries, and the [synchronization TODO](adrs/distribution-and-synchronization/SYNCHRONIZATION.md) records future automation.
 
 ### DevHub's own setup
 
-The [root manifest](../../apm.yml) and [existing package sources](./) remain transitional. They are not migrated by these records.
+DevHub's [root manifest](../../apm.yml) declares only `guidelines-core`, not the generic local development environment. The eight source packages are in this directory; select `development-core` and any relevant stack separately when setting up a local development scope.
 
 ### Verify activation
 
@@ -167,11 +167,11 @@ During implementation, separately verify installation, discovery, and representa
 
 Edit owning sources rather than installed copies; preserve consumer-owned additions. Review updates, attribution, licenses, permissions, compatibility, and collisions. The [reuse ADR](adrs/ai-customizations/REUSE-AND-TAILORING.md) owns selective reuse and the stopping rule.
 
-For later clarification of an ADR, the [ADR skill and template](common/.apm/skills/adr/SKILL.md) support an optional dated, same-document changelog. A substantially replaced decision follows supersession conventions.
+For later clarification of an ADR, the [ADR skill and template](development-core/.apm/skills/adr/SKILL.md) support an optional dated, same-document changelog. A substantially replaced decision follows supersession conventions.
 
 ### Validation
 
-Validate local common-package primitives with `apm compile --validate --local-only` from the [common package](common/README.md). Also check skill frontmatter, bundled links, the single-agent source inventory, and the [workflow scenarios](common/README.md#consumption-and-validation). Primitive validation does not establish host discovery or behavior. Workflow-source changes do not migrate manifests, deploy files, prune installed agents, consolidate stack packages, or add synchronization.
+All eight source packages pass `apm compile --validate --local-only`. This validates package structure and references; also check skill frontmatter, bundled links, and the [workflow scenarios](development-core/README.md#consumption-and-validation). Static source validation does not establish host discovery or behavior. Package-source readiness does not install or activate customizations, synchronize consumer copies, prune installed files, or verify a host's destination mapping.
 
 In each intended host, separately verify discovery, inherited model/tool behavior, planning boundaries, handoff, delegation, checks, and independent reviews. Static validation does not establish live behavior; report unavailable capabilities rather than treating prose as proof.
 
@@ -236,7 +236,7 @@ Even when sessions run in parallel, focus on one task at a time and prefer a few
 
 Prompt engineering means shaping input to get more accurate, useful output:
 
-- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the [common coding instructions](common/.apm/instructions/coding.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost. This aligns with [OpenAI's prompt engineering guidance](https://developers.openai.com/api/docs/guides/prompt-engineering) to provide clear instructions and relevant context.
+- **Context first; scale planning to the task.** Give the goal, relevant code, project structure, documentation, constraints (including language/framework versions), and acceptance criteria. For complex or multi-part work, start a focused new chat, let AI analyze that context and propose a plan, then execute small steps using the agreed context and plan. For example, plan testing across the repository before implementing tests per domain/package; follow the shared [coding guidelines](guidelines-core/.apm/instructions/coding.instructions.md). For one isolated test, function, or formatting fix, ask directly: unnecessary planning adds latency and token cost. This aligns with [OpenAI's prompt engineering guidance](https://developers.openai.com/api/docs/guides/prompt-engineering) to provide clear instructions and relevant context.
 - **Show the target.** Supply examples of desired input/output or existing code/style to match; specify output format, length, and tone when needed. Google's [Gemini prompt design strategies](https://ai.google.dev/gemini-api/docs/prompting-strategies) also cover clear prompts and examples.
 - **Set boundaries.** State exclusions such as no unrelated edits or new dependencies. Assign a role when a particular review perspective helps.
 - **Iterate and challenge.** Treat the first result as a draft, refine it with feedback, and request assumptions, trade-offs, and a concise explanation for difficult problems. An explanation is not proof of correctness. Both [OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering) and [Google](https://ai.google.dev/gemini-api/docs/prompting-strategies) describe iterative refinement as part of effective prompting.

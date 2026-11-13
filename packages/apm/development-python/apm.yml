@@ -1,0 +1,8 @@
+# Python stack guidance for DevHub repositories; opt in next to development-core.
+name: devhub-development-python
+version: 0.1.0
+description: Python, FastAPI, and Django guidelines, skills, and references for local development
+target: copilot
+dependencies:
+  apm:
+    - CollinPoetoehena/DevHub/packages/apm/development-core

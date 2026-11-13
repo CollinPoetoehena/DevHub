@@ -2,7 +2,7 @@
 
 These records capture significant decisions about DevHub's AI customization architecture and their trade-offs. Each ADR owns one specific decision; related records are grouped into topic folders and linked rather than combined into one large record. The [APM guide](../README.md) summarizes the selected design; [CONCEPTS.md](../CONCEPTS.md) owns general terminology.
 
-The planning and implementation orchestration skill sources and the custom Implementer source exist. The package split and its distribution are transitional, and source presence does not establish runtime discovery or behavior. Synchronization is intentionally only a TODO, not an implemented or fully designed mechanism.
+The eight source packages implement the shared-guidelines and local-development split, and their source validation is separate from consumer installation, host discovery, and runtime behavior. Synchronization is intentionally only a TODO, not an implemented or fully designed mechanism.
 
 Follow the central [ADR guidelines](../../../docs/GUIDELINES.md#architecture-decision-records-adrs) for scope, placement, and referencing decisions.
 
@@ -24,8 +24,8 @@ The [workflow folder](workflow/) separates stage policy, the approved-plan contr
 
 | ADR | Decision |
 |---|---|
-| [AI development workflow](workflow/AI-DEVELOPMENT-WORKFLOW.md) | Use interactive Plan, autonomous Build and Test, human Verify, and final Observe, with a simple-edit exception. |
-| [Approved plan and handoff](workflow/APPROVED-PLAN-AND-HANDOFF.md) | Capture a durable plan, obtain approval of its exact version, and carry the agreed contract into implementation. |
+| [AI development workflow](workflow/AI-DEVELOPMENT-WORKFLOW.md) | Use interactive Plan, autonomous Build and Test, human Verify, and final Observe; simple clear tasks bypass the workflow skills and proceed directly in native Agent mode. |
+| [Approved plan and handoff](workflow/APPROVED-PLAN-AND-HANDOFF.md) | Capture an approved plan for active work; keeping it after completion is optional. |
 | [Focused sessions and specialist context](workflow/FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md) | Use phase-focused sessions and bounded specialist contexts when justified, carrying forward essential decisions and evidence. |
 | [Reusable workflows as skills](workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md) | The native agent runs planning and implementation procedures as skills; retain one focused custom Implementer. |
 | [Model selection](workflow/MODEL-SELECTION.md) | Let the harness choose models for each task, with Copilot Fusion Standard as the default user-selected tier. |

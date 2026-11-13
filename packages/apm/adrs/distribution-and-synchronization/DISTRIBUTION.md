@@ -23,7 +23,7 @@ Choose APM because it already owns the package-distribution lifecycle that both 
 
 Native plugins are a credible alternative for bundled workflows, and Git or manual synchronization can distribute files. APM is selected for its explicit dependency and deployment boundary, not because those alternatives cannot work. Any necessary local script should only bridge the consumer-selected scope to supported destinations, not reimplement package resolution or the installation/update engine. APM does not choose the consumer's scope or enforce runtime behavior.
 
-APM's [target matrix](https://microsoft.github.io/apm/reference/targets-matrix/) defines deployment support and paths; it is not proof that a particular user/workspace scope is discovered. Installation, discovery, and correct behavior remain separate facts to verify during implementation.
+APM's [target matrix](https://microsoft.github.io/apm/reference/targets-matrix/) defines deployment support and paths; it is not proof that a particular user/workspace scope is discovered. The package sources are available, but this decision does not establish that they have been installed, discovered, or verified in a chosen host and scope.
 
 ---
 
@@ -56,18 +56,10 @@ APM's [target matrix](https://microsoft.github.io/apm/reference/targets-matrix/)
 
 ## Status
 
-Accepted: the user selected APM as the distribution mechanism. Package boundaries and synchronization are separate records; migration, scripts, manifests, and runtime validation remain unimplemented.
+Accepted: the user selected APM as the distribution mechanism. The eight source packages now implement the separately recorded package boundaries. Consumer installation, scripts, synchronization, and host runtime validation remain separate and are not established by source readiness.
 
 ---
 
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Clarified why APM is selected over native plugins, Git submodules, and custom synchronization, including the benefit of reusing package-distribution logic rather than maintaining it locally. The two-unit architecture is unchanged.
-- 2026-11-13: Added npx as an alternative, distinguishing npm-delivered CLI execution from the customization distribution lifecycle supplied by the invoked tool.
-- 2026-11-13: Moved into the distribution-and-synchronization folder and extracted package boundaries into [package design](PACKAGE-DESIGN.md) and future automation into the [synchronization TODO](SYNCHRONIZATION.md). The APM choice and original decision date are unchanged.

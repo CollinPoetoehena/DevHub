@@ -13,6 +13,6 @@ Related packages stay together for coordinated maintenance, not a shared runtime
 | [Python](python/README.md) | Design and setup guidance for future Python packages; no implemented packages yet. |
 | [Go](go/README.md) | Design and setup guidance for future Go modules and packages; no implemented modules yet. |
 | [Helm](helm/README.md) | Placeholder for future charts; no chart implementation yet. |
-| [APM](apm/README.md) | Selected AI customization architecture: central repository instructions and a separately distributed local agent/skill development setup. [ADRs](apm/adrs/README.md) own decisions and [concepts](apm/CONCEPTS.md) explain terminology; existing common/stack sources remain transitional, not migrated. |
+| [APM](apm/README.md) | Eight source packages: independent shared `guidelines-core`, local `development-core`, and six opt-in `development-*` stacks. [ADRs](apm/adrs/README.md) own decisions and [concepts](apm/CONCEPTS.md) explain terminology; source readiness does not establish installation, synchronization, or host discovery. |
 
 Each area README is the entry point for its ecosystem. As implementations are added, keep each independently consumed package's native manifest, dependencies, tests, and usage/release documentation with its source. Use small, cohesive packages with narrow public contracts; introduce shared dependencies only for demonstrated reuse.

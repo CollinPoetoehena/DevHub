@@ -57,7 +57,7 @@ This is a way to narrow the choices and make progress easier to resume, not stri
 
 ### Drafting an issue
 
-Use the common APM package's [draft-github-issue skill](../../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md) with the task idea and this guide as context. It returns only Markdown: a proposed title followed by the issue body, without publishing an issue or changing the board.
+Use the local development package's [draft-github-issue skill](../../packages/apm/development-core/.apm/skills/draft-github-issue/SKILL.md) with the task idea and this guide as context. It returns only Markdown: a proposed title followed by the issue body, without publishing an issue or changing the board.
 
 For DevHub, identify the owning repository, keep the work small enough to pause and resume, and include priority with a short rationale and a rough effort estimate with uncertainty. If either is unknown, say so rather than inventing it. Use observable acceptance criteria, link dependencies where relevant, and include a clear first action. Keep status and Current Iteration on the board rather than duplicating them in the issue body; iteration dates are not deadlines. Follow the [visibility rules](#visibility-and-boundaries) before sharing context.
 

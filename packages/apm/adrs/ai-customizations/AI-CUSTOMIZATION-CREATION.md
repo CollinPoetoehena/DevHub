@@ -82,11 +82,3 @@ Accepted: the user selected thin, high-level customizations that preserve model 
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Aligned workflow ownership with reusable skills in the native agent and one specialized Implementer. The thin-customization policy is unchanged.
-- 2026-11-13: Moved into the AI-customizations folder and extracted reuse ratios, source selection, and adoption trade-offs into [reuse and tailoring](REUSE-AND-TAILORING.md). The purpose/detail policy and original decision date are unchanged.
-- 2026-11-13: Expanded the native-first value threshold and when owned agents or other layers are justified; clarified that [reuse and tailoring](REUSE-AND-TAILORING.md) owns the practical selection and maintenance test.

@@ -83,10 +83,3 @@ Accepted: the user selected native-capability and reuse/tailoring heuristics wit
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Extracted sourcing, reuse ratios, and stopping criteria from the [creation record](AI-CUSTOMIZATION-CREATION.md) so they can be maintained independently. The original policy and decision date are preserved.
-- 2026-11-13: Expanded the native-capability gap check, value-versus-maintenance test, and limits for bespoke agents or orchestration; cross-linked the [creation ADR](AI-CUSTOMIZATION-CREATION.md)'s value threshold.

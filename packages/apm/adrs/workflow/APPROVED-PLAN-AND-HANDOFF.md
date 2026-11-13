@@ -8,6 +8,8 @@ The [AI development workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) establishes intera
 
 Creating the plan together is part of the work, not merely a prerequisite to delegating it. The user actively investigates the problem, tests ideas against the current system, and decides which trade-offs are acceptable; the AI helps surface evidence and alternatives. Writing down the result makes that reasoning available for review and gives the user a concrete basis for directing execution, recognizing departures from the agreement, and understanding the delivered change. It also makes it less tempting to accept an apparently complete AI-generated plan without understanding its assumptions.
 
+Interactive setup can feel slower than starting to code immediately, but the intended end-to-end benefit is faster implementation: a clear, agreed plan should mean less repeated instruction and refinement, fewer avoidable changes, and lower risk of errors. This is the rationale for investing in planning, not a measured or guaranteed outcome.
+
 ---
 
 ## Decision
@@ -23,11 +25,11 @@ For nontrivial planned work, save a task-specific Markdown plan using the owning
 
 The user and AI develop the plan interactively. The AI asks purposeful questions about uncertainty that could affect requirements, scope, design, dependencies, security, or acceptance; the user evaluates answers, challenges assumptions, and chooses between consequential trade-offs. Do not repeat resolved questions or require decisions on routine coding details. The user must understand the problem, what will and will not be built, and why.
 
-Unresolved consequential questions block approval. The AI may draft the artifact, but the user actively verifies its contents and approves the exact saved version; approval of a file's existence is not approval of its contents. Any material change to that plan requires renewed discussion and approval. The artifact remains the execution reference and supports later inspection of delivered work against the original agreement.
+Unresolved consequential questions block approval. The AI may draft the artifact, but the user actively verifies its contents and approves the exact saved version; approval of a file's existence is not approval of its contents. Any material change to that plan requires renewed discussion and approval. Keep the approved plan available through handoff, implementation, testing, and user acceptance so the work can be checked against the agreement. After the work is complete, the plan does not need to be retained. Keeping a copy is optional; if useful, it may be stored outside the repository in a related task, issue, or ticket (for example, a JIRA or GitHub issue comment). Follow any explicit project or organizational retention requirement.
 
 For planned work, begin Build with the approved file and relevant repository guidance in the separate implementation session required by the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md), rather than relying on hidden planning-conversation history. Both sessions use native Agent mode and the corresponding procedures in the [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md). Routine implementation choices within the approved boundaries remain autonomous. A newly discovered requirement, material design or dependency change, or security assumption that changes the agreement returns to interactive Plan for user discussion and renewed approval. Do not silently rewrite the plan to keep execution moving.
 
-This full artifact and approval contract does not apply to a small, localized, already understood edit covered by the workflow ADR's [simple-edit exception](AI-DEVELOPMENT-WORKFLOW.md#simple-edit-exception).
+This full artifact and approval contract does not apply to a small, localized, already understood task covered by the workflow ADR's [simple-edit exception](AI-DEVELOPMENT-WORKFLOW.md#simple-edit-exception). Such tasks go directly to the native Agent and bypass both workflow skills; they do not require a plan or forced Implementer delegation.
 
 ---
 
@@ -36,14 +38,15 @@ This full artifact and approval contract does not apply to a small, localized, a
 ### Positive
 
 - **Active understanding**: Interactive clarification lets the user consider material choices before implementation makes them harder to inspect.
-- **Inspectable agreement**: A durable file makes the approved scope and reasoning available during execution and later comparison.
+- **Inspectable agreement**: The approved file makes the agreed scope and reasoning available through execution, testing, and acceptance.
+- **Less implementation churn**: Clarifying decisions before coding is intended to reduce repeated AI instructions, refinements, avoidable rework, and mistakes, making the whole task quicker despite the slower setup.
 - **Explicit handoff**: A fresh execution session can use the approved artifact and relevant repository context without depending on the planning transcript.
 - **Change control**: Returning material changes to planning prevents execution from silently redefining the agreement.
 
 ### Negative
 
 - **Planning effort**: Interactive clarification and an approval pass require user time; this cost is accepted for work with consequential uncertainty.
-- **Artifact maintenance**: A plan can be incomplete or become stale. The user must assess its content, and meaningful changes require renewed approval.
+- **Artifact maintenance**: A plan can be incomplete or become stale while work is active. The user must assess its content, and meaningful changes require renewed approval; retaining it after completion is optional.
 - **Handoff omissions**: A fresh session lacks conversational nuance unless the plan and supplied repository context preserve what execution needs.
 - **No guaranteed outcome**: A complete, approved plan does not guarantee implementation quality or eliminate later corrections.
 
@@ -62,18 +65,10 @@ These are project-defined workflow choices. The references describe supporting h
 
 ## Status
 
-Accepted: the user explicitly chose interactive planning, an approved durable plan, and a handoff into autonomous execution for nontrivial work. This record extracts the artifact and handoff contract from the workflow ADR; it does not represent a new policy decision or claim that the workflow is implemented.
+Accepted: the user explicitly chose interactive planning, an approved saved plan, and a fresh-session handoff into autonomous execution for larger work. This record extracts the artifact and handoff contract from the workflow ADR; it does not represent a new policy decision. Source availability does not establish host discovery or runtime behavior.
 
 ---
 
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Clarified the native-mode, skills-first handoff without changing the exact-version approval contract.
-- 2026-11-13: Clarified why collaborative plan creation and a durable handoff support human understanding, judgment, and control.
-- 2026-11-13: Extracted the durable plan, approval, and execution-handoff decision from the [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) to give this independently revisitable contract a focused owner. The extraction does not change policy.

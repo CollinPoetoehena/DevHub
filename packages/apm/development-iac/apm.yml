@@ -1,0 +1,8 @@
+# Infrastructure-as-code guidance (Ansible, Terraform, Bicep) for DevHub repositories; opt in next to development-core.
+name: devhub-development-iac
+version: 0.1.0
+description: Ansible, Terraform, and Bicep guidelines, skills, and references for local development
+target: copilot
+dependencies:
+  apm:
+    - CollinPoetoehena/DevHub/packages/apm/development-core

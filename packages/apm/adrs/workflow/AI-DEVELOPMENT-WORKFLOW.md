@@ -6,7 +6,7 @@ AI-assisted work needs a deliberate workflow from deciding what to build through
 
 The goal is not only a working output. The user wants to remain actively involved in understanding the problem, requirements, trade-offs, design choices, and manageable work packages. Reviewing and refining a plan is part of the engineering work, not administrative overhead to automate away.
 
-The decision drivers are alignment before coding, informed human control, a durable and inspectable specification, retained project knowledge, autonomous implementation and testing within agreed boundaries, and feedback from actual use. Preserving critical thinking and enjoyment of the work is an explicit personal priority. These are intended benefits and preferences, not measured claims about productivity or cognitive effects.
+The decision drivers are alignment before coding, informed human control, an inspectable specification through delivery, retained project knowledge, autonomous implementation and testing within agreed boundaries, and feedback from actual use. Preserving critical thinking and enjoyment of the work is an explicit personal priority. These are intended benefits and preferences, not measured claims about productivity or cognitive effects.
 
 Active participation is valuable in its own right. Defining the problem, examining the existing system, weighing alternatives, and shaping the plan together keep the user focused on the engineering rather than merely requesting an implementation and hoping the result is right. This makes the work more engaging and fulfilling for the user while retaining space to delegate mechanical execution. The user can explain the intended outcome and the reasons behind it, recognize a questionable assumption, and make informed changes later without relying entirely on the AI to interpret its own work.
 
@@ -24,7 +24,7 @@ The workflow addresses recurring failure modes:
 
 ## Decision
 
-Use four main stages: **Plan, Build, Test, and Observe**. Plan is interactive and human-in-the-loop; Build and Test are autonomous within an approved scope; Observe follows the user's final verification and acceptance of the tested result. The separate [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) owns the durable plan contract; the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md) owns context separation and specialist delegation.
+Use four main stages: **Plan, Build, Test, and Observe**. Plan is interactive and human-in-the-loop; Build and Test are autonomous within an approved scope; Observe follows the user's final verification and acceptance of the tested result. The separate [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) owns the plan artifact and approval contract; the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md) owns context separation and specialist delegation.
 
 The [VS Code AI development guides](https://code.visualstudio.com/docs/agents/guides/overview) cover planning, implementation, testing, and validation. The four stage names, human approval gates, and final Observe stage below are this project's chosen workflow, not a claim that the host prescribes this exact sequence.
 
@@ -48,11 +48,11 @@ Verify is a human approval gate after Test, not a fifth autonomous stage. Build 
 
 The user and AI investigate nontrivial work together. The AI asks purposeful follow-up questions about uncertainty that could affect requirements, scope, design, dependencies, security, or acceptance; the user evaluates the answers, challenges assumptions, and chooses between consequential trade-offs. Do not treat a brief request followed by "implement it" or a polished autonomous draft as sufficient alignment. The user should understand what will and will not be built, and why; routine coding details and resolved questions do not need repeated discussion.
 
-The additional planning time is deliberately accepted to keep consequential choices visible and preserve the user's understanding and ownership. It is a workflow preference, not a guarantee of better results on every task. The [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) defines the durable artifact, required contents, exact-version approval, and execution handoff. Unresolved consequential questions block approval.
+Interactive planning takes time up front, but is intended to make the full task quicker: clarifying requirements and decisions before implementation should reduce repeated instructions, implementation refinements, avoidable rework, and errors. It also keeps consequential choices visible and preserves the user's understanding and ownership. This is the rationale for the workflow, not a measured or guaranteed productivity result. The [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) defines the plan's required contents, exact-version approval, execution handoff, and optional post-completion retention. Unresolved consequential questions block approval.
 
 ### Build
 
-Start autonomous implementation within the approved plan. The execution session receives the approved file and relevant repository guidance; it does not rely on hidden planning-conversation history. Routine coding decisions within the agreed boundaries can be autonomous. A newly discovered requirement, material design or dependency change, or security assumption returns to interactive Plan for discussion and renewed approval when it changes the agreement. Do not silently rewrite the plan to keep execution moving. See the [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) for the contract.
+Start autonomous implementation within the approved plan. The execution session receives the approved file and relevant repository guidance; it does not rely on hidden planning-conversation history. Routine coding decisions within the agreed boundaries can be autonomous. A newly discovered requirement, material design or dependency change, or security assumption returns to interactive Plan for discussion and renewed approval when it changes the agreement. Do not silently rewrite the plan to keep execution moving. The plan needs to be available for this handoff and active work, but does not need to be kept after completion; the [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) explains optional retention outside the repository.
 
 ### Test
 
@@ -81,9 +81,9 @@ After acceptance, observe the change in actual use or the relevant deployed envi
 
 ### Simple-edit exception
 
-Skip the separate planning session and full plan file for a small, localized edit whose intended behavior, scope, and verification are already clear, such as a typo correction or a narrowly defined mechanical change. Proceed directly to implementation with a concise statement of scope and proportionate checks.
+Skip both workflow skills, the separate planning session, and the full plan file for a small, localized task whose intended behavior, scope, and verification are already clear, such as a typo correction or a narrowly defined mechanical change. Make an ordinary request to the native Agent, which proceeds directly with applicable guidance and proportionate checks; this does not force delegation to the Implementer.
 
-The exception is based on uncertainty and impact, not only line count. If the edit exposes consequential questions, broader dependencies, or security-sensitive decisions, stop the fast path and establish an approved plan. Direct implementation does not waive applicable review or validation requirements.
+The exception is based on uncertainty and impact, not only line count. If the task exposes consequential questions, broader dependencies, or security-sensitive decisions, stop the fast path and use Planning before implementation. Direct work does not waive applicable review or validation requirements. For larger tasks, use the saved-plan approval and fresh-session execution path described in the [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md).
 
 ---
 
@@ -93,7 +93,8 @@ The exception is based on uncertainty and impact, not only line count. If the ed
 
 - **Active understanding**: The user reasons about requirements and trade-offs before code makes those choices harder to inspect or change.
 - **Engaged participation**: Thinking through the problem and directing the plan make the work itself meaningful to the user, rather than reducing the user's role to prompting and hoping.
-- **Inspectable agreement**: The approved plan exposes assumptions early and supplies a reference for implementation, testing, acceptance, and observation.
+- **Inspectable agreement**: The approved plan exposes assumptions early and supplies a reference through implementation, testing, and acceptance; it need not become a permanent repository record.
+- **Less implementation churn**: Resolving consequential questions before coding is intended to reduce repeated instruction, refinement, and mistakes, making the full workflow quicker despite its up-front planning time.
 - **Autonomous execution**: Build and Test delegate repetitive implementation and verification while human attention stays on intent and consequential decisions.
 - **Real-world feedback**: Observe connects tested results to actual use and supplies evidence for the next iteration.
 - **Proportionate effort**: The simple-edit exception avoids turning a deliberate workflow into paperwork for changes that are already understood.
@@ -101,7 +102,7 @@ The exception is based on uncertainty and impact, not only line count. If the ed
 ### Negative
 
 - **Human availability**: Interactive planning and final Verify require time and attention. This cost is intentionally preferred over leaving important choices implicit.
-- **Plan maintenance**: A saved plan can become stale or omit nuance; approval must be tied to its exact version, and meaningful changes need renewed discussion.
+- **Plan maintenance**: A plan can become stale or omit nuance while work is active; approval must be tied to its exact version, and meaningful changes need renewed discussion. Keeping it after completion is optional.
 - **Passive-approval risk**: Asking questions or producing a file does not guarantee understanding. The user must actively assess the plan and outcome.
 - **Verification limits**: Automated tests and AI reviews do not establish every property; the user still owns acceptance, and Observe can reveal issues after it.
 - **Observation ownership**: Relevant follow-up needs an owner and proportionate effort, without turning every change into an indefinite monitoring obligation.
@@ -124,18 +125,10 @@ These are project-defined workflow choices, not externally standardized policies
 
 ## Status
 
-Accepted: the user explicitly chose Plan, Build, Test, and Observe, with interactive planning, autonomous implementation and testing, human verification before observation, and a simple-edit exception. This records the workflow policy, not a claim that its automation is already implemented.
+Accepted: the user explicitly chose Plan, Build, Test, and Observe, with interactive planning, autonomous implementation and testing, human verification before observation, and a direct native-Agent path for simple, clear work. Workflow skill sources are available; installation, discovery, and runtime behavior remain host-dependent.
 
 ---
 
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Linked the skills-first successor and clarified that review independence and availability depend on the host; required unavailable reviews remain limitations, not completed checks.
-- 2026-11-13: Expanded the rationale for active human understanding, control, and enjoyment, and connected alignment, feedback, and ongoing design to the referenced engineering ideas.
-- 2026-11-13: Relocated from `packages/apm/adrs/AI-DEVELOPMENT-WORKFLOW.md`; the approved-plan contract and focused-session guidance are recorded in separate linked ADRs for independent reference. Organization does not change the decision.

@@ -53,10 +53,3 @@ Accepted: the user selected omitted optional agent configuration in favor of rol
 ## Date
 
 2026-11-13
-
----
-
-# Changelog
-
-- 2026-11-13: Aligned examples and workflow references with native-agent planning and the specialized Implementer. Minimal metadata and host-enforcement policy are unchanged.
-- 2026-11-13: Extracted metadata, portability, and enforcement reasoning from the combined agent-configuration record. [Model selection](MODEL-SELECTION.md) owns routing and tier selection. The original policy and decision date are preserved.

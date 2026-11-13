@@ -1,0 +1,8 @@
+# Go stack guidance for DevHub repositories; opt in next to development-core.
+name: devhub-development-go
+version: 0.1.0
+description: Go guidelines, skills, and references for local development
+target: copilot
+dependencies:
+  apm:
+    - CollinPoetoehena/DevHub/packages/apm/development-core
