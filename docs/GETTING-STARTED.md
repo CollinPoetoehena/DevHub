@@ -66,11 +66,11 @@ apm install --only apm --target copilot
 
 This is an additional convenience, not a replacement for a checked-in manifest/lockfile and installation in every consumer repository. It installs at the parent root, not into each clone. Follow the APM guide's dependency-reference and ownership guidance for both setups. Verify that the selected host discovers the parent-installed customizations, especially in multi-root workspaces; opening a shared folder does not guarantee discovery. Verify standalone repository use separately.
 
-Select **Orchestrator** in VS Code Chat; refresh or reopen the chat if necessary. A manifest entry alone does not activate the package. Follow [repository setup](../packages/apm/README.md#repository-setup) and [choosing an agent](../packages/apm/README.md#choosing-an-agent) for discovery and host limitations.
+Use native Agent mode for ordinary work. For a complex task, use the [two-session workflow](../packages/apm/README.md#choosing-a-workflow): plan and approve first, then select **Orchestrator** in a fresh session with the saved approved plan. A manifest entry alone does not activate the package; follow [repository setup](../packages/apm/README.md#repository-setup) and [activation checks](../packages/apm/README.md#verify-activation).
 
 Keep repository-specific agent context in a root `AGENTS.md` ([DevHub's file](../AGENTS.md)), linking to owning documentation instead of repeating it. Use the [authoring guidance](../packages/apm/README.md#authoring-repository-guidance) and APM [repository setup](../packages/apm/README.md#repository-setup). Scoped constraints and project-only procedures remain separate where needed; do not copy shared agents or assume local instructions override the baseline.
 
-Follow the APM guide's [recommended Chat setup](../packages/apm/README.md#recommended-chat-setup) and [runtime-managed model selection](../packages/apm/README.md#runtime-managed-model-selection) for harness, permission, and model choices. Available models and costs vary by host, account, and policy; check the linked official references rather than assuming a particular model or plan is available.
+Follow the APM guide's [agent configuration](../packages/apm/README.md#agent-configuration) and [runtime-managed model selection](../packages/apm/README.md#runtime-managed-model-selection) for harness, permission, and model choices. Available models and costs vary by host, account, and policy; check the linked official references rather than assuming a particular model or plan is available.
 
 ---
 

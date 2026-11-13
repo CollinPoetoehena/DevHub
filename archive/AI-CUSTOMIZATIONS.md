@@ -6,6 +6,7 @@ This note preserves the rationale for replacing the earlier customization layout
 
 - [Historical layout](#historical-layout)
 - [What did not work](#what-did-not-work)
+- [Retired v2 orchestration layer](#retired-v2-orchestration-layer)
 - [Current approach](#current-approach)
 
 ---
@@ -49,13 +50,19 @@ The problem was this combination and scope, not skills themselves. Focused, reus
 
 ---
 
+## Retired v2 orchestration layer
+
+The later all-purpose router assigned every request to fixed routes and many specialist roles, with exhaustive transition, reporting, and learning protocols. Universal routing reduced user choice for routine tasks; too many roles and detailed protocols made the workflow harder to understand, constrained judgment, and made it less adaptable to tasks and host capabilities. The replacement uses native Agent mode by default and a user-selected two-session workflow for complex tasks. Git history retains the retired definitions rather than maintaining archived copies.
+
+---
+
 ## Current approach
 
 The [common APM package](../packages/apm/common/README.md) distributes shared customizations from one source:
 
-- **Agents own roles:** Orchestrator, Architect, Coder, Documenter, and Reviewer. The Orchestrator handles simple work directly and delegates when useful; Coder owns testing with implementation.
-- **Instructions supply shared standards and scoped constraints:** the common engineering baseline applies across roles; AI customization, Ansible, Dockerfiles, GitHub Actions, and Python add focused guidance.
-- **Skills supply reusable, on-demand procedures:** the package currently includes [manage-skills](../packages/apm/common/.apm/skills/manage-skills/SKILL.md). Add a skill for a proven workflow, not another skills-only policy dump.
-- **Projects extend rather than copy:** keep repository context and local constraints with the consumer; use the [consumer-specific guidance](../packages/apm/README.md#consumer-specific-guidance) instead of forking shared role definitions.
+- **Agents own roles:** the user may select Orchestrator for an approved implementation plan; Engineer implements, and Architect provides optional design advice subject to approval.
+- **Instructions supply shared standards and scoped constraints:** the common engineering baseline applies across roles; opt-in stack packages add language and tool guidance.
+- **Skills supply reusable, on-demand procedures:** the common package includes [code-comments](../packages/apm/common/.apm/skills/code-comments/SKILL.md) and [draft-github-issue](../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md).
+- **Projects extend rather than copy:** keep repository context and local constraints with the consumer; use the [authoring guidance](../packages/apm/README.md#authoring-repository-guidance) instead of forking shared role definitions.
 
 This separates responsibilities, reduces duplicated rules, and keeps procedural detail out of routine work. APM distributes the files; it does not enforce compliance or guarantee discovery in every host. See [current usage](../docs/GETTING-STARTED.md#ai-customizations) and the official [VS Code customization concepts](https://code.visualstudio.com/docs/agents/concepts/customization).

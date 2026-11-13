@@ -91,3 +91,6 @@ ansible.log
 # Keep apm.yml, apm.lock.yaml, and deployed customizations versioned.
 apm_modules/
 .apm-local/
+
+# Local plan handoffs
+/tmp/

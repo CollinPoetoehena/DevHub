@@ -10,6 +10,7 @@ These are shared, human-readable conventions for organizing DevHub and its proje
 - [Documentation Design](#documentation-design)
   - [Documentation ownership](#documentation-ownership)
   - [Documentation placement](#documentation-placement)
+  - [Architecture decision records (ADRs)](#architecture-decision-records-adrs)
 - [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure)
 - [Version control and repository strategy](#version-control-and-repository-strategy)
   - [Monorepo or polyrepo?](#monorepo-or-polyrepo)
@@ -30,7 +31,7 @@ Keep related project-wide documentation in one cohesive, sectioned authoritative
 
 The shared principles for approaching personal projects—including enjoyment, attention, sustainable scope, and freedom from unnecessary pressure—are in [Relaxation and Enjoyment over Productivity and Pressure](#relaxation-and-enjoyment-over-productivity-and-pressure). Individual projects should link to that guidance and keep only their local application and technical details.
 
-Reusable AI customizations, shared engineering standards, and workflows live in the [common APM package](../packages/apm/common/README.md), the source for those customizations. The [APM guide](../packages/apm/README.md) owns their design and setup; the [common package README](../packages/apm/common/README.md) owns the current agent roster and workflow. Language- and tool-specific instructions live in opt-in [stack packages](../packages/apm/README.md#package-design).
+The [APM guide](../packages/apm/README.md) owns shared AI customization design and setup. Its [package-design ADR](../packages/apm/adrs/distribution-and-synchronization/PACKAGE-DESIGN.md) separates central instructions present in participating repositories from the generic agent/skill development environment used by team members. Existing common and stack-package sources remain transitional; their presence does not establish that the selected package split is implemented.
 
 Consumer-specific context belongs in one root `AGENTS.md`, with scoped instructions or local skills only for a demonstrated need. Follow the [APM design and setup guide](../packages/apm/README.md) for ownership, authoring, and discovery verification. Give each topic one authoritative owner and link to it rather than repeating its guidance. These customizations supplement the common package; do not assume one instruction automatically overrides another.
 
@@ -60,6 +61,41 @@ Keeping this documentation in Git makes it part of the project rather than a sep
 An external documentation tool can still be useful for material whose audience, collaboration needs, access controls, or lifecycle are better served there. When it refers to project documentation, make the repository document authoritative and link to it from the external page—for example, link to the relevant README or file in `docs/`—rather than maintaining a second full copy. This keeps the external tool useful as an index or entry point without creating competing versions that can drift.
 
 Choose the storage location based on the content and its access requirements. Do not put secrets or restricted information in a repository unless its access controls and policies explicitly allow it; use an approved system for material that must remain outside source control.
+
+### Architecture decision records (ADRs)
+
+**Guideline:** Use an Architecture Decision Record for a significant architectural choice whose context, alternatives, or consequences will matter beyond the immediate change. An ADR is a standalone, narrowly scoped record of one decision: what problem it addresses, what was chosen, why that choice fits the constraints, and what trade-offs were accepted. It is not a general architecture overview, implementation checklist, or transcript of a discussion.
+
+This is a deliberate exception to the default of keeping related documentation in a cohesive main document. Decision reasoning has a distinct purpose and lifecycle: readers need it when evaluating or revisiting a choice, but usually not when learning how to use the project. Isolating that reasoning makes both kinds of documentation more useful.
+
+Use this separation to:
+
+- **Make the decision explicit and considered:** Put the problem, constraints, assumptions, and credible options on paper before settling on an approach. Compare the options' benefits, drawbacks, and trade-offs against those constraints, then state why the chosen option's positives outweigh its negatives for this context. This makes the choice reviewable rather than an implicit preference or a decision made by default.
+- **Separate design from implementation:** An ADR lets you explore and agree on a significant design choice before writing code. You can focus first on what should be built and why, then plan and implement that agreed approach as separate work. This reduces the pressure to make architectural choices while solving implementation details and gives later implementation work a clear design to follow.
+- **Preserve the reasoning, not just the outcome:** Record the alternatives considered, their comparative advantages and risks, supporting evidence, and why they were or were not selected. Future maintainers can distinguish a deliberate trade-off from an accidental limitation and identify when changed requirements warrant reconsideration.
+- **Keep main documentation focused:** READMEs, architecture overviews, and usage guides should explain the current approach and what readers need to do. Summarize the relevant decision there and link to the ADR for the full comparison; do not make every reader work through rejected options to find setup or usage instructions.
+- **Avoid duplication and drift:** Give the decision rationale one authoritative home. Several documents can reference it without maintaining separate explanations that gradually disagree. Keep any concise current-state summaries consistent with the applicable decision.
+- **Support focused review and reuse:** A bounded record can be discussed, linked from tasks or pull requests, and supplied as context independently of a large documentation file. Its scope makes clear which part of the system it governs and which neighboring decisions it does not settle.
+
+#### Scope and placement
+
+Keep **one ADR per specific significant decision**, with enough context to understand it independently. Do not combine several independently revisitable choices merely because they were discussed together. A storage backend, a retention policy, and an update mechanism can have different alternatives, owners, and reasons to change; putting them in one large ADR makes it confusing to read and harder to review, maintain, or supersede one decision without affecting the others.
+
+Group related focused ADRs in a descriptive subfolder of the owning ADR directory and link them from its index. Each record owns its rationale and trade-offs; neighboring records link to it rather than copy its full reasoning. The [APM ADR index](../packages/apm/adrs/README.md) groups distribution/synchronization, workflow, and AI-customization decisions this way.
+
+Split by decision boundaries, not an arbitrary line count. A long comparison for one consequential choice may still belong in one record; explanatory sections, constraints, and consequences are not automatically separate decisions. When extracting or moving an existing record, preserve its original decision date, status, rationale, and prior history, and add a dated changelog explaining the reorganization and linking the focused records. Reorganization is not approval of a new policy; a genuinely replaced choice follows supersession conventions.
+
+Store records with the owning component or in its established ADR directory, following that area's naming, status, and date conventions. Repository-wide decisions belong with repository-wide documentation; component-specific choices stay with their component. The [APM ADR directory](../packages/apm/adrs/) is an existing component-level example, not a required location for every DevHub decision.
+
+Create an ADR when a choice materially affects architecture, component boundaries, persistence, dependencies, operational responsibilities, security assumptions, or an enduring engineering workflow. Do not create one for every edit, routine implementation detail, or easily reversible choice with no meaningful wider impact. The depth should reflect the decision's significance, not a document-length target.
+
+#### Writing and referencing records
+
+Include enough context, decision rationale, positive and negative consequences, alternative analysis, and evidence that the record remains useful without the original conversation. Use the [ADR skill](../packages/apm/common/.apm/skills/adr/SKILL.md) and its [template and examples](../packages/apm/common/.apm/skills/adr/references/ADR-TEMPLATE.md) for authoring guidance, while respecting established project conventions.
+
+In a main document, state the current decision and link to the record at the point where the reader may need its rationale. For example: "Nontrivial work starts with an approved Markdown plan before execution; see the [workflow decision](../packages/apm/adrs/workflow/AI-DEVELOPMENT-WORKFLOW.md) for the reasoning and exceptions." The main document still owns behavior, setup, and usage; a link should not force readers into an ADR to discover basic instructions.
+
+Distinguish proposals from approved decisions. When an accepted choice is replaced, preserve its original reasoning, mark it superseded according to the project's conventions, link the replacement, and update current-state documentation to point to the applicable record. An ADR records the architectural agreement; it does not by itself prove that the implementation exists or satisfies it.
 
 ---
 
@@ -98,7 +134,7 @@ Start with a monorepo by default: for most related work it is the easiest first 
 
 For further reading, see [Atlassian's monorepo guide](https://www.atlassian.com/git/tutorials/monorepos), [Google's experience and trade-offs with a single repository](https://research.google/pubs/why-google-stores-billions-of-lines-of-code-in-a-single-repository/), and [GitHub's repository visibility documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
 
-DevHub keeps shared development resources, tooling, guidance, and setup together because one maintainer frequently changes them in coordination; the [architecture guide](ARCHITECTURE.md#why-devhub-is-a-monorepo) records the rationale and accepted trade-offs. Distinct applications and services belong in their own repositories when those boundaries apply.
+DevHub keeps shared development resources, tooling, guidance, and setup together because one maintainer frequently changes them in coordination. The [monorepo ADR](adrs/DEVHUB-MONOREPO.md) records the project-specific rationale and trade-offs; the [architecture guide](ARCHITECTURE.md#why-devhub-is-a-monorepo) summarizes the current boundary. Distinct applications and services belong in their own repositories when those boundaries apply.
 
 ### Branches and reviews
 
@@ -122,7 +158,7 @@ This is a personal subscription choice, not repository policy or a prerequisite 
 - Keep native package metadata and artifact identities. Add CI and release automation at the component's scope, including checks for affected consumers.
 - Record the choice and exceptions in the owning project or package README, then track the work in the central DevHub backlog. Revisit the boundary when consumers or maintenance costs change.
 
-For the architectural rationale and release examples, see [Release and versioning units](ARCHITECTURE.md#release-and-versioning-units).
+For the architectural rationale and release examples, see the [release-boundary ADR](adrs/RELEASE-BOUNDARIES-BY-MANAGED-CONTRACT.md).
 
 ---
 

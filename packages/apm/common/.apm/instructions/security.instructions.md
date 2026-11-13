@@ -31,7 +31,7 @@ Apply these when writing code and check them when reviewing it. Follow the langu
 
 Give extra scrutiny to changes in authentication, authorization, input handling, queries, file handling, external calls, payments, cryptography, secrets, dependencies, CI/CD, and deployment configuration. Run the repository's existing dependency audit and security linters in check mode when available; do not add new tools unless asked.
 
-Rate these patterns at least as follows, using the Reviewer's severity scale:
+Treat the following patterns as at least the indicated severity; a host's native reviewer may use a different scale:
 
 | Pattern | Severity |
 |---|---|

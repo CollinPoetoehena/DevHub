@@ -2,6 +2,8 @@
 
 The authoritative design and operating guide for my GitHub repositories. Terraform owns each repository as a platform resource: existence, visibility, merge settings, rulesets, and Actions permissions. The Python `repo-fleet` tool owns shared repository content: it renders per-profile templates and delivers them through pull requests. Both read one inventory.
 
+The [repository-fleet ADRs](adrs/README.md) record the rationale for these tool boundaries, the shared inventory, and centralized fleet sync.
+
 ## Table of Contents
 
 - [Scope and design](#scope-and-design)
@@ -11,6 +13,7 @@ The authoritative design and operating guide for my GitHub repositories. Terrafo
   - [Profiles](#profiles)
   - [Protection and solo reviews](#protection-and-solo-reviews)
   - [Deletion safety](#deletion-safety)
+- [Architecture decisions](#architecture-decisions)
 - [Authentication](#authentication)
 - [State](#state)
 - [Terraform operations](#terraform-operations)
@@ -49,11 +52,7 @@ Each tool owns the part its model fits:
 | Shared files such as workflows | `repo-fleet` | Git already versions file content; templating, diffs, and pull requests are natural in Python, and file contents stay out of Terraform state |
 | APM packages | [Central APM sync](../../docs/github-actions/workflows/apm-sync.md) | DevHub checks the inventory and opens per-repository pull requests from one central workflow |
 
-Rejected alternatives:
-
-- **Terraform `github_repository_file`:** commits directly to a branch without review and stores file contents in state.
-- **Python for everything:** would reimplement the provider's state, import, and drift handling.
-- **Parsing HCL or reading Terraform output from Python:** couples Python to Terraform internals or to state and credentials; a plain JSON inventory needs neither.
+The [tool-boundary ADR](adrs/TOOL-BOUNDARIES.md) compares these responsibilities with Terraform-only and Python-only designs.
 
 ### Layout
 
@@ -65,7 +64,7 @@ Rejected alternatives:
 
 ### Inventory
 
-[`terraform/repositories.auto.tfvars.json`](terraform/repositories.auto.tfvars.json) is the single source of truth. Terraform loads it automatically as the `inventory` variable; `repo-fleet` reads the same file. Repositories are listed explicitly; nothing is discovered from the account or local checkouts.
+[`terraform/repositories.auto.tfvars.json`](terraform/repositories.auto.tfvars.json) is the single source of truth. Terraform loads it automatically as the `inventory` variable; `repo-fleet` reads the same file. Repositories are listed explicitly; nothing is discovered from the account or local checkouts. The [shared-inventory ADR](adrs/SHARED-INVENTORY.md) records the format choice and alternatives.
 
 ```json
 {
@@ -106,6 +105,14 @@ Several independent guards keep a repository from being deleted by accident:
 4. Default-branch rulesets block deletion and force pushes, and `repo-fleet` only pushes its own branch.
 
 Archived repositories are a separate resource that ignores all changes, so Terraform never reactivates or edits them.
+
+## Architecture decisions
+
+| ADR | Decision |
+|---|---|
+| [Tool boundaries](adrs/TOOL-BOUNDARIES.md) | Keep repository platform settings in Terraform and shared content delivery in Python `repo-fleet`. |
+| [Shared inventory](adrs/SHARED-INVENTORY.md) | Use one validated JSON inventory as the input to both tools. |
+| [Central fleet sync](adrs/CENTRAL-FLEET-SYNC.md) | Reconcile settings centrally and deliver shared content through reviewed pull requests after preflight. |
 
 ---
 
@@ -224,7 +231,7 @@ Archived repositories are skipped. A repository without changes gets no branch o
 
 ## Central fleet sync
 
-The [single central fleet workflow](../../docs/github-actions/workflows/apm-sync.md) owns all managed repository settings and combined template/APM content updates. It runs only in DevHub on relevant pushes to `main` or by manual dispatch, preflights the entire active inventory, applies only an allowed saved settings plan, then opens one combined `devhub/repo-sync` PR per changed repository. Archived repositories are verified in state but never mutated by sync. The APM CLI is pinned to 0.35.0; eligible `#main` dependencies are refreshed, commit-pinned dependencies are preserved, and local dependencies are redeployed when needed.
+The [single central fleet workflow](../../docs/github-actions/workflows/apm-sync.md) owns all managed repository settings and combined template/APM content updates. It runs only in DevHub on relevant pushes to `main` or by manual dispatch, preflights the entire active inventory, applies only an allowed saved settings plan, then opens one combined `devhub/repo-sync` PR per changed repository. Archived repositories are verified in state but never mutated by sync. The [central-sync ADR](adrs/CENTRAL-FLEET-SYNC.md) records why the workflow is centralized and the safeguards that bound it. The APM CLI is pinned to 0.35.0; eligible `#main` dependencies are refreshed, commit-pinned dependencies are preserved, and local dependencies are redeployed when needed.
 
 The DevHub `apm-sync` Actions environment must restrict deployments to `main` and hold separate `REPO_FLEET_SYNC_TOKEN`, `REPO_FLEET_SETTINGS_TOKEN`, and `HCP_TERRAFORM_TOKEN` secrets, plus `TF_CLOUD_ORGANIZATION` and `TF_WORKSPACE` variables. The HCP workspace must exist in local execution mode and contain the exact adopted Terraform resources before automation is authorized. The central guide documents required token scopes, bootstrap/adoption, safety gates, and failure recovery.
 

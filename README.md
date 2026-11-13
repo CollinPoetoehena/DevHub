@@ -71,9 +71,9 @@ It remains public, so others can read and reuse what is useful, and it serves as
 
 Each part of DevHub has a clear scope, so information has one home:
 
-- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), decisions, [getting-started guide](./docs/GETTING-STARTED.md), and concise [command cheat sheets](./docs/cheatsheets/README.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
+- **[`docs/`](./docs/)** contains DevHub's [shared guidelines](./docs/GUIDELINES.md), [architecture](./docs/ARCHITECTURE.md), [getting-started guide](./docs/GETTING-STARTED.md), concise [command cheat sheets](./docs/cheatsheets/README.md), and repository-wide [architecture decision records](./docs/adrs/README.md). [Common AI customizations](packages/apm/common/README.md) are the active baseline and authoring source.
 - **[`archive/`](./archive/README.md)** records retired approaches and their rationale, not an actively maintained technical knowledge base.
-- **Area READMEs**, such as [`packages/README.md`](./packages/README.md) and [`tools/README.md`](./tools/README.md), own local commands and component contracts.
+- **Area READMEs**, such as [`packages/README.md`](./packages/README.md) and [`tools/README.md`](./tools/README.md), own local commands and component contracts; [tool ADRs](./tools/adrs/README.md) record their durable design decisions.
 - **[Root agent guidance](AGENTS.md)** routes AI agents to that owning context; [APM design and setup](packages/apm/README.md) explains the common baseline and repository-specific customization pattern.
 
 ---
@@ -88,18 +88,18 @@ I track DevHub and all my personal projects, including the public and private ho
 
 DevHub is intended to grow through broadly reusable material, not by absorbing the implementation of every project:
 
-- **[Tools](tools/README.md)** contains shared automation, including [repository fleet management](tools/repo/README.md) with Terraform and Python.
+- **[Tools](tools/README.md)** contains shared automation, including [repository fleet management](tools/repo/README.md) with Terraform and Python. [Tool ADRs](tools/adrs/README.md) link to rationale maintained alongside each owning tool.
 - **[How-tos](docs/how-to/README.md)** provides task-oriented entry points, including creating a repository in the DevHub ecosystem and setting up my code editor, accounts, and Git.
 - **[Getting started](docs/GETTING-STARTED.md)** explains how to set up DevHub and use shared guidance across related repositories.
 - **[GitHub Actions](docs/github-actions/README.md)** documents reusable workflows and actions, including the [central APM sync](docs/github-actions/workflows/apm-sync.md) that prepares package-update pull requests across the repository inventory.
 - **[Common AI customizations](packages/apm/common/README.md)** provides the active reusable agents, instructions, and skills.
 - **[Reusable packages](packages/README.md)** groups related package work within DevHub. Package contents, dependencies, and release boundaries remain explicit; sharing a repository does not require one version for everything.
 
-The [shared guidelines](docs/GUIDELINES.md) cover repository and package placement, naming, and setup. The [architecture guide](docs/ARCHITECTURE.md) records the rationale, boundaries, and release decisions. Native packaging details belong in the [Python Packaging User Guide](https://packaging.python.org/en/latest/overview/) and [Go module documentation](https://go.dev/doc/modules/developing).
+The [shared guidelines](docs/GUIDELINES.md) cover repository and package placement, naming, and setup. The [architecture guide](docs/ARCHITECTURE.md) summarizes current boundaries; [ADRs](docs/adrs/README.md) record the decision rationale and trade-offs. Native packaging details belong in the [Python Packaging User Guide](https://packaging.python.org/en/latest/overview/) and [Go module documentation](https://go.dev/doc/modules/developing).
 
-I frequently change these resources together. Keeping them in one larger repository avoids managing many repositories, making separate commits for coordinated changes, and copying or synchronizing reusable actions, workflows, and AI customization. As the sole maintainer, keeping many related repositories current within the same context would be unsustainable. The goal is convenient, coherent maintenance, not as many repositories as possible; see [why DevHub is one repository](docs/ARCHITECTURE.md#why-devhub-is-one-repository).
+I frequently change these resources together, so DevHub keeps them in one repository for coordinated maintenance. The [monorepo ADR](docs/adrs/DEVHUB-MONOREPO.md) records the rationale, alternatives, and accepted trade-offs.
 
-I accept more workflows, somewhat more complex CI selection, and a larger shared history because they cost less than distributing and coordinating the same setup across many closely related repositories. Path- and dependency-aware checks, component tags, and published package or container versions can keep validation and consumption selective; these are [design choices, not implemented publishing guarantees](docs/ARCHITECTURE.md#release-and-versioning-units).
+This means more workflows and selective component validation within a shared repository boundary; sharing source does not establish artifact compatibility. Package and release boundaries follow consumer contracts, and publishing automation is not yet implemented; see the [release-boundary ADR](docs/adrs/RELEASE-BOUNDARIES-BY-MANAGED-CONTRACT.md).
 
 DevHub can therefore grow while retaining a clear purpose: shared development resources and entry points, not unrelated service or environment implementations.
 
@@ -107,7 +107,7 @@ DevHub can therefore grow while retaining a clear purpose: shared development re
 
 ## Separate projects
 
-Separate repositories are useful for independently operated services, different ownership, or different access requirements. Size, language, or independent package versions alone do not require a split:
+Separate repositories are useful for independently operated services, different ownership, or different access requirements. Size, language, or independent package versions alone do not require a split; the [homelab repository ADR](docs/adrs/SEPARATE-HOMELAB-REPOSITORIES.md) records the current example:
 
 - **[Home lab — devhub-homelab](https://github.com/CollinPoetoehena/devhub-homelab)** is part of DevHub, with separate public guidance and private implementation repositories for its distinct service lifecycle and access/publication boundaries. Its standards, personal workspace setup, and task tracking remain central here; actual configuration and operational secrets stay in the appropriate protected systems.
 

@@ -89,7 +89,13 @@ Language-independent:
 
 ## Comments
 
-- Add, edit, review, and remove code comments, doc comments, docstrings, markers, and suppressions with the [code-comments skill](../skills/code-comments/SKILL.md); the default is no comment.
+- Focus on why the code exists, not what it does.
+- Default to no comment; names, types, tests, and clear code should carry the explanation.
+- Keep comments only when they preserve accurate, non-obvious context a maintainer cannot recover nearby.
+- Explain why the code is surprising or constrained, such as an invariant, edge case, external limitation, or deliberate trade-off; do not narrate what the code does.
+- Keep comments concise and current. Remove redundant, stale, or unsupported rationale rather than polishing it.
+- Use declaration documentation for caller-visible contracts that signatures cannot express; do not repeat names, types, or obvious behavior.
+- Preserve machine-significant directives and legal headers unless repository evidence shows they are obsolete or there is authority to change them.
 
 ## Code Quality Checklist
 
