@@ -40,7 +40,7 @@ Verify: user checks the outcome and approves
 Observe: behavior in use + feedback -> next Plan
 ```
 
-This workflow decision is independent of a particular agent layout. The [two-agent implementation ADR](SEPARATE-PLANNING-AND-IMPLEMENTATION-AGENTS.md) separately explains how the selected customizations implement it.
+This workflow decision is independent of a particular agent layout. The [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md) explains how the native agent carries out its reusable procedures.
 
 Verify is a human approval gate after Test, not a fifth autonomous stage. Build and Test may iterate, including test-first work; their separation identifies responsibilities and required evidence rather than prohibiting feedback loops.
 
@@ -61,7 +61,7 @@ The AI owns validation and review of integrated changes, not merely writing code
 - **Existing test suite**: Run applicable repository suites using established commands, including regression checks for behavior that must remain unchanged. Run broader suites when required by the plan or change impact; new tests do not replace the existing suite.
 - **Focused automated tests**: Add or update tests for introduced or fixed behavior and meaningful edge cases. For testable behavior changes, use red-green-refactor: confirm a test fails for the intended reason, implement until it passes, then refactor while keeping tests green. Use unit, integration, end-to-end, or browser checks appropriate to the change; do not create unrelated tests or tooling by default.
 - **Build and static checks**: Run applicable build, type-check, linting, and security checks required by the owning component.
-- **Independent reviews**: Obtain code and security reviews of integrated changes, remediate blocking findings, and repeat affected checks and reviews.
+- **Independent reviews**: Obtain independent code and security reviews of integrated changes where supported, remediate blocking findings, and repeat affected checks and reviews. Record unavailable reviews as limitations; a named reviewer does not guarantee independence.
 - **Evidence and limitations**: Report acceptance-criteria coverage, executed commands and results, review outcomes, and limitations. Failed or unavailable required checks block a successful completion claim; distinguish pre-existing failures from regressions.
 
 ### Human Verify gate
@@ -136,5 +136,6 @@ Accepted: the user explicitly chose Plan, Build, Test, and Observe, with interac
 
 # Changelog
 
+- 2026-11-13: Linked the skills-first successor and clarified that review independence and availability depend on the host; required unavailable reviews remain limitations, not completed checks.
 - 2026-11-13: Expanded the rationale for active human understanding, control, and enjoyment, and connected alignment, feedback, and ongoing design to the referenced engineering ideas.
 - 2026-11-13: Relocated from `packages/apm/adrs/AI-DEVELOPMENT-WORKFLOW.md`; the approved-plan contract and focused-session guidance are recorded in separate linked ADRs for independent reference. Organization does not change the decision.

@@ -25,7 +25,7 @@ The user and AI develop the plan interactively. The AI asks purposeful questions
 
 Unresolved consequential questions block approval. The AI may draft the artifact, but the user actively verifies its contents and approves the exact saved version; approval of a file's existence is not approval of its contents. Any material change to that plan requires renewed discussion and approval. The artifact remains the execution reference and supports later inspection of delivered work against the original agreement.
 
-For planned work, begin Build with the approved file and relevant repository guidance in the separate implementation session required by the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md), rather than relying on hidden planning-conversation history. Routine implementation choices within the approved boundaries remain autonomous. A newly discovered requirement, material design or dependency change, or security assumption that changes the agreement returns to interactive Plan for user discussion and renewed approval. Do not silently rewrite the plan to keep execution moving.
+For planned work, begin Build with the approved file and relevant repository guidance in the separate implementation session required by the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md), rather than relying on hidden planning-conversation history. Both sessions use native Agent mode and the corresponding procedures in the [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md). Routine implementation choices within the approved boundaries remain autonomous. A newly discovered requirement, material design or dependency change, or security assumption that changes the agreement returns to interactive Plan for user discussion and renewed approval. Do not silently rewrite the plan to keep execution moving.
 
 This full artifact and approval contract does not apply to a small, localized, already understood edit covered by the workflow ADR's [simple-edit exception](AI-DEVELOPMENT-WORKFLOW.md#simple-edit-exception).
 
@@ -74,5 +74,6 @@ Accepted: the user explicitly chose interactive planning, an approved durable pl
 
 # Changelog
 
+- 2026-11-13: Clarified the native-mode, skills-first handoff without changing the exact-version approval contract.
 - 2026-11-13: Clarified why collaborative plan creation and a durable handoff support human understanding, judgment, and control.
 - 2026-11-13: Extracted the durable plan, approval, and execution-handoff decision from the [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) to give this independently revisitable contract a focused owner. The extraction does not change policy.

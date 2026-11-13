@@ -2,7 +2,7 @@
 
 ## Context
 
-The same role can face very different workloads: Planner may clarify a small change or reason about a large design, and an implementer may edit one function or integrate a complex change. A static model assignment by job title does not capture that variation and must be maintained as available models change.
+The same native agent can clarify a small change or reason about a large design using the planning skill, and an implementer may edit one function or integrate a complex change. A static model assignment by job title does not capture that variation and must be maintained as available models change.
 
 Copilot's model selection and available tiers also vary by host. The decision drivers are task-appropriate routing, user control of quality/cost/latency, and avoiding a locally maintained static model catalog. [Minimal agent configuration](MINIMAL-AGENT-CONFIGURATION.md) separately owns metadata and tool-policy choices.
 
@@ -10,7 +10,7 @@ Copilot's model selection and available tiers also vary by host. The decision dr
 
 ## Decision
 
-Use the **auto family / harness-managed model selection**, with **Copilot Fusion Standard as the default user-selected tier**. Do not pin specific models or reasoning effort to Planner, Implementation Coordinator, implementers, or reviewers. Let the host select the appropriate available model for each task.
+Use the **auto family / harness-managed model selection**, with **Copilot Fusion Standard as the default user-selected tier**. Do not pin specific models or reasoning effort in workflow skills, the Implementer, or review invocations. The active native agent invokes both workflow skills with the user's selected model/router; the skills do not choose another model. The [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md) owns this procedure-versus-role distinction.
 
 This describes selection policy, not a portable literal `model: auto` value. Omit per-agent model overrides so the selected host model/router is inherited where supported. If the user selects a fixed model, omission inherits that choice; it does not force automatic routing. Confirm the intended behavior in the running host.
 
@@ -67,4 +67,5 @@ Accepted: the user selected auto-family routing and Copilot Fusion Standard by d
 
 # Changelog
 
+- 2026-11-13: Reconciled role references with the skills-first workflow. Native-agent skill invocation retains the user's model/router; the model-selection policy and original decision date are unchanged.
 - 2026-11-13: Extracted model routing from the combined agent-configuration record and grouped it with workflow decisions. [Minimal agent configuration](MINIMAL-AGENT-CONFIGURATION.md) owns metadata and enforcement trade-offs. The routing policy and original decision date are unchanged.

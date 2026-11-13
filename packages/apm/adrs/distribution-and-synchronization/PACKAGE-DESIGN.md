@@ -1,36 +1,42 @@
-# ADR: Separate Repository Instructions from Team Development Workflows
+# ADR: Separate Shared Guidelines from Local Development Packages
 
 ## Context
 
-Instructions are repository guidance: shared standards should be present in every participating repository, available to contributors regardless of their agent or workflow. Generic agents and skills are a development environment used by the team members who choose that workflow, not a dependency of the repository itself.
+Shared guidelines are repository guidance: common standards should be present in every participating repository, available to contributors regardless of their agent or workflow. Generic agents and skills are a local development environment used by the team members who choose that workflow, not a dependency of the repository itself. Stack-specific guidance maps to the capabilities of its selected stack and belongs with that stack.
 
 Installing both everywhere distributes the same development environment unnecessarily. It creates managed files, commits, synchronization work, and overlapping discovery for capabilities the repository does not need to carry. The decision drivers are clear boundaries, guidance available wherever repository work happens, independent workflow choice, and less distribution and maintenance overhead.
 
-The transitional common-plus-language/tool-package layout is not a constraint. [Distribution](DISTRIBUTION.md) owns the choice of APM; this record owns what the packages contain, who consumes them, and where they belong.
+Use **guidelines** for the tool-independent concept; Copilot calls them instructions and Claude calls them rules. This terminology does not replace host-required filenames or establish cross-tool discovery. [Distribution](DISTRIBUTION.md) owns the choice of APM; this record owns package contents, consumers, and destinations.
 
 ---
 
 ## Decision
 
-Maintain two distinct APM packages with different consumers and destinations:
+Maintain separate APM package families, with an independent shared baseline and opt-in local development stacks:
 
 | Package | Responsibility and consumer | Intended destination |
 |---|---|---|
-| Common instructions | Shared engineering, language, framework, and tool guidelines for work in participating repositories, independent of a particular team member's workflow | Every repository adopting those standards |
-| AI development setup | Planner, Implementation Coordinator, necessary subordinate roles, and generic shared skills for the actual team members using the development workflow | Their selected local user/workspace/team/project development scope, not every repository by default |
+| `guidelines-core` | Common engineering, security, testing, documentation, Git, and AI-customization guidelines; no generic agents, skills, or stack-specific placeholders | Every repository adopting those standards, independently of a team member's workflow |
+| `development-core` | Planning and implementation-orchestration skills, the specialized Implementer, and generic shared skills; no shared guideline bundle | The selected local development scope of team members using the workflow |
+| `development-python`, `development-go`, `development-rust`, `development-java`, `development-containerization`, `development-iac` | Opt-in technology skills/resources and scoped instruction maps that supplement common guidelines and route to their own stack's capabilities | The selected local development scope of users adopting those stacks |
 
-The goal is to **avoid unnecessary distribution**, not merely rename two bundles. Repository instructions travel with the code because they describe standards applicable there. A team member's generic development workflow does not need to travel with every repository merely because that member works on it.
+Use these directory names under `packages/apm/` and `devhub-`-prefixed manifest identities, such as `devhub-guidelines-core` and `devhub-development-python`. Keep Python/FastAPI/Django together, Java/Kotlin/Spring Boot together, Docker/Kubernetes/Helm together, and Terraform/Ansible/Bicep together. Consumers choose relevant stacks rather than install every technology.
+
+The goal is to **avoid unnecessary distribution**, not merely rename bundles. Common repository guidelines travel with the code; a team member's generic development workflow and optional stack capabilities do not need to travel with every repository. Separate the shared core at the source-package boundary rather than rely on filtering one mixed bundle during installation.
 
 ### Boundaries
 
-- **Repository guidance**: Keep shared instructions present in all participating repositories, including sessions started directly inside them. They apply whether the contributor uses the selected workflow, another workflow, or the default agent.
+- **Repository guidance**: Keep shared guidelines present in all participating repositories, including sessions started directly inside them. They apply whether the contributor uses the selected workflow, another workflow, or the default agent. Adopting `guidelines-core` must not install development agents or skills.
 - **Team-member environment**: Install generic agents and skills only for team members who use them, in their chosen development scope. Updating that environment should not require commits to every repository they edit.
 - **Repository-specific capabilities**: Keep local facts, commands, constraints, and genuinely repository-specific skills with their repository. A repo-specific capability needed by its contributors is different from a generic personal/team workflow.
-- **Central instruction package**: Replace separate Python, Go, Java, containerization, and other stack packages with scoped instruction files in the central package. This is the target design, not a migration already performed.
+- **Stack ownership**: Keep technology-specific instruction maps beside their stack skills and references. Each map states the common baseline, additional stack defaults/conventions/checks, and when to use available skills. It does not duplicate common standards or replace them with a mandatory skill dependency.
+- **Independent dependencies**: Keep shared instruction dependencies in `guidelines-core` and generic skill dependencies in `development-core`. Stack packages may depend on `development-core` for required shared capabilities. Neither development packages nor their dependencies should automatically deploy the repository guideline package into the local scope; `guidelines-core` must not depend on development packages.
 - **Independent ownership**: Consumers own dependency references, lock/update policy, destination, ignore policy, and local additions. Preserve existing files and review collisions rather than overwrite consumer customizations.
 - **Private context**: Keep work-specific knowledge and secrets out of public generic packages. Package separation does not establish data-access or permission isolation.
 
-The [guidance-layering ADR](../ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md) owns how rules compose, and the [two-agent ADR](../workflow/SEPARATE-PLANNING-AND-IMPLEMENTATION-AGENTS.md) owns workflow responsibilities. Neither requires the generic workflow to be copied into each repository.
+The [guidance-layering ADR](../ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md) owns how rules compose, and the [skills-first ADR](../workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md) owns workflow responsibilities. Neither requires the generic workflow to be copied into each repository. Repositories retain their declared tooling and constraints; stack maps supplement that context rather than override it. Common guidelines remain useful without the local skills.
+
+The current sources remain in common and stack packages. The selected names and boundaries describe the implementation target, not completed source migration, installation, or runtime discovery.
 
 ### Consumer-selected scope
 
@@ -42,7 +48,7 @@ The consumer chooses the appropriate development-setup destination:
 
 Working directory, access to added directories, and customization discovery are different contracts. [CLI directory commands](https://docs.github.com/en/copilot/reference/cli-command-reference) do not prove inheritance of parent instructions, agents, or skills. Verify the host's discovery in the chosen scope and direct repository sessions. APM's target paths do not automatically implement a personal/work profile.
 
-The [synchronization TODO](SYNCHRONIZATION.md) separately records future local update and repository-PR automation. Both units use APM, but their consumers, update cadence, and distribution destinations remain independent.
+The [synchronization TODO](SYNCHRONIZATION.md) separately records future local update and repository-PR automation. Both families use APM, but their consumers, update cadence, and distribution destinations remain independent.
 
 ---
 
@@ -54,13 +60,13 @@ The [synchronization TODO](SYNCHRONIZATION.md) separately records future local u
 - **Rules independent of workflow**: Every participating repository carries guidance even when a contributor chooses another or no custom workflow.
 - **Clear package boundaries**: Standards describe how repository work should be done; the development setup describes how its users coordinate that work. Each package has a distinct consumer and lifecycle.
 - **Less repository churn**: Agent/skill environment updates do not automatically create unrelated repository changes.
-- **Consumer flexibility**: Personal, work, team, and project setups can differ without splitting instruction ownership into language packages.
+- **Consumer flexibility**: Personal, work, team, and project setups can select relevant technology stacks without installing unrelated skills or coupling repository standards to a workflow.
 
 ### Negative
 
-- **Two lifecycles**: Consumers must keep instructions and their selected workflow compatible; installing one package does not imply the other is present.
+- **Separate lifecycles**: Consumers must keep repository guidelines and their selected local workflow/stacks compatible; installing one family does not imply the other is present.
 - **Discovery obligations**: Local scopes and direct repository sessions require verification instead of assuming inheritance.
-- **Central package breadth**: Language/tool rules share a package lifecycle; their scopes must prevent irrelevant instructions from distracting tasks.
+- **More package surfaces**: Core plus stack packages need distinct manifests, dependencies, and selection. Stack instruction scopes and links must remain accurate without assuming every skill is installed.
 
 ---
 
@@ -69,14 +75,15 @@ The [synchronization TODO](SYNCHRONIZATION.md) separately records future local u
 | Technique/tool (description and reference) | Advantages | Drawbacks and risks | Reason not selected | Reconsider when |
 |---|---|---|---|---|
 | [One APM bundle in every repository](https://microsoft.github.io/apm/): distribute standards, generic agents, and skills together. | A single manifest can recreate the complete setup for every contributor. | Generic workflow updates create repository churn, couple standards to personal workflow choices, and duplicate capabilities where a local setup already supplies them. | Repository rules need broad presence; generic development capabilities do not need repeated installation. | A team deliberately requires a fully repository-pinned workflow for every contributor. |
-| [Separate language/tool APM packages](https://microsoft.github.io/apm/): keep common plus opt-in Python, Go, and other stack packages. | Consumers can select and version language guidance independently. | Adds manifests, dependencies, release surfaces, and package-selection decisions for content that can be scoped instruction files. | The design favors one central instruction package, with activation scoped inside its files rather than package topology. | A domain needs a genuinely independent contract or substantial executable capability, not merely a few instructions. |
+| **One shared guideline package containing every stack**: a project-defined bundle of common and language/tool rules using [APM](https://microsoft.github.io/apm/). | Fewer manifests and one guideline update surface; scoped files can limit task-specific context. | Every consumer receives guidance for unrelated technologies, and stack maps are separated from the skills/references they describe. | Keep the repository baseline common and technology maps with opt-in local stacks, accepting additional package-selection work. | The stack set is small and uniformly relevant, or separate stack ownership no longer provides enough value. |
+| **One mixed core package with selective installation**: a project-defined bundle of guidelines, agents, and skills using [APM](https://microsoft.github.io/apm/). | Maintains one core source package while attempting different deployment subsets. | Destination separation depends on filtering support and configuration; a normal mixed install can distribute generic workflow files into repositories or duplicate repository standards locally. | Separate source packages make the consumer boundary explicit without relying on unverified selective installation. | Tested distribution mechanisms provide an equally clear boundary and the mixed source lifecycle offers a demonstrated benefit. |
 | [User-only customizations](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference): keep both rules and workflow in a personal profile. | Avoids repository-managed customization files and makes one user's updates convenient. | Other contributors and direct repository sessions may lack shared standards; local profiles can mix personal and work assumptions. | Guidance must be available in participating repositories independently of a specific team member's profile. | A rule is truly personal and should not govern other contributors; keep that preference local. |
 
 ---
 
 ## Status
 
-Accepted: the user selected separate instruction and development-setup packages and clarified their consumers and boundaries. Package migration and runtime discovery remain future implementation work.
+Accepted: the user selected `guidelines-core` for shared repository standards, separate local `development-core` agents/skills, and opt-in development stacks with their own instruction maps. Package migration, installation, synchronization, and runtime discovery remain future implementation work.
 
 ---
 
@@ -88,4 +95,6 @@ Accepted: the user selected separate instruction and development-setup packages 
 
 # Changelog
 
+- 2026-11-13: Specified separate `guidelines-core` and local `development-*` source packages, keeping stack-specific instruction maps with their skills and preserving independent repository/local consumers.
+- 2026-11-13: Updated development-setup contents and the workflow link for native-agent skills and one specialized Implementer. Package boundaries, future consolidation, and synchronization scope are unchanged.
 - 2026-11-13: Extracted the package split and scope reasoning from the combined distribution record; clarified that generic team-member workflows should not be distributed to every repository. The original package choice and decision date are preserved.

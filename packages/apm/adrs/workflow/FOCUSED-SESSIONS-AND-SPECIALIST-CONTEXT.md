@@ -4,18 +4,18 @@
 
 Interactive planning, implementation, and validation have different responsibilities and benefit from carrying the relevant agreement and evidence without carrying every exploratory transcript. Long conversations can bury current requirements among earlier discussion and attempts. Separate role definitions alone do not reset accumulated context.
 
-The [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) chooses interactive Plan followed by autonomous Build and Test. The [two-agent architecture ADR](SEPARATE-PLANNING-AND-IMPLEMENTATION-AGENTS.md) defines the main role layout. This record addresses the distinct context-separation choice: when to use separate phase sessions and, where useful, bounded specialist contexts. Context separation is a practical organizational choice, not a guaranteed quality improvement or universal context-window threshold.
+The [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) chooses interactive Plan followed by autonomous Build and Test. The [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md) defines the native-agent workflow and retained Implementer. This record addresses the distinct context-separation choice: when to use separate phase sessions and, where useful, bounded specialist contexts. Context separation is a practical organizational choice, not a guaranteed quality improvement or universal context-window threshold.
 
 ---
 
 ## Decision
 
-Use separate planning and implementation sessions for phase-focused context. For planned work, the implementation session starts with the approved plan and relevant repository guidance, dependencies, and evidence; it does not depend on the planning transcript. The [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) owns the required artifact and approval contract.
+Use separate planning and implementation sessions for phase-focused context in complex planned work, staying in the same native Agent mode. The implementation session starts with the approved plan and relevant repository guidance, dependencies, and evidence; it does not depend on the planning transcript. The [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) owns the required artifact and approval contract.
 
 When the task warrants delegation and the host supports it, use [subagents](https://code.visualstudio.com/docs/agents/run/subagents) for bounded tasks:
 
-- **Plan specialists**: Use research or architecture-analysis roles for contained evidence gathering.
-- **Build and Test specialists**: Use implementers and independent code or security reviewers for bounded implementation or review work.
+- **Plan specialists**: Use built-in research or exploration for contained evidence gathering where supported.
+- **Build and Test specialists**: Use the custom Implementer and native code or security review for bounded work where supported; verify rather than assume review independence.
 
 Each specialist works in a separate context window and returns concise findings, decisions, or validation evidence. The main agent coordinates and carries forward relevant results rather than accumulating every exploratory transcript. Provide each delegated task with the context and boundaries it needs. Do not add agents for small tasks: delegation has coordination, model-usage, and handoff costs.
 
@@ -71,4 +71,5 @@ Accepted: the user explicitly chose phase-focused sessions and bounded specialis
 
 # Changelog
 
+- 2026-11-13: Clarified that fresh phase sessions use the same native mode and bounded work uses supported native capabilities and the retained Implementer, following the [skills-first decision](REUSABLE-WORKFLOWS-AS-SKILLS.md).
 - 2026-11-13: Extracted focused-session and specialist-context guidance from the [workflow ADR](AI-DEVELOPMENT-WORKFLOW.md) so its rationale and trade-offs can be revisited independently. The extraction does not change policy.

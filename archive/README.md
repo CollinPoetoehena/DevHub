@@ -5,7 +5,7 @@ These notes explain why an approach was retired and what remains useful from it.
 ## Notices
 
 - [Reference library](REFERENCE.md): why the general knowledge base was retired and commands are limited to concise cheat sheets.
-- [Earlier AI customizations](AI-CUSTOMIZATIONS.md): why broad, overlapping skills gave way to packaged roles, scoped instructions, and focused workflows.
+- [Earlier AI customizations](AI-CUSTOMIZATIONS.md): why overlapping policy skills and a many-role router gave way to native Agent coordination, focused workflow skills, scoped instructions, and one specialized Implementer.
 - [Custom service monitoring framework](CUSTOM-SERVICE-MONITORING-FRAMEWORK.md): the original design, why it was retired, and an example using established tools for functional monitoring and remediation.
 
 ---

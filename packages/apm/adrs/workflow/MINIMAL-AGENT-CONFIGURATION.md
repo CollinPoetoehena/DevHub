@@ -16,7 +16,7 @@ In the Markdown definition, state what the role can and cannot do: responsibilit
 
 Omission delegates configuration to the host; it is not a restriction. The [Copilot configuration reference](https://docs.github.com/en/copilot/reference/custom-agents-configuration) states that omitted tools default to all tools and an omitted model inherits the default. Supported fields and their handling differ by [harness](https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference).
 
-Consequently, "Planner must not implement" is a role contract, not a technical read-only boundary. The [two-agent ADR](SEPARATE-PLANNING-AND-IMPLEMENTATION-AGENTS.md) still requires appropriate planning permissions. Enforce necessary restrictions with supported host/session controls, CI, and system permissions. If those are insufficient, a narrowly justified host-specific configuration exception is required before relying on that boundary. Portability does not justify weakening mandatory controls.
+Consequently, "the planning skill must not implement" and "Implementer must not delegate" are procedure and role contracts, not technical permission boundaries. The [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md) retains the native agent for coordination and only the specialized Implementer as a custom role. Enforce necessary restrictions with supported host/session controls, CI, and system permissions. If those are insufficient, a narrowly justified host-specific configuration exception is required before relying on that boundary. Portability does not justify weakening mandatory controls.
 
 Verify inherited defaults, available tools, role compliance, and reviewer/delegation capabilities in the intended CLI and VS Code hosts during implementation. Minimal metadata improves compatibility; it does not guarantee identical behavior everywhere.
 
@@ -58,4 +58,5 @@ Accepted: the user selected omitted optional agent configuration in favor of rol
 
 # Changelog
 
+- 2026-11-13: Aligned examples and workflow references with native-agent planning and the specialized Implementer. Minimal metadata and host-enforcement policy are unchanged.
 - 2026-11-13: Extracted metadata, portability, and enforcement reasoning from the combined agent-configuration record. [Model selection](MODEL-SELECTION.md) owns routing and tier selection. The original policy and decision date are preserved.

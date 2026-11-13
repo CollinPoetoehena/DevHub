@@ -21,14 +21,14 @@ The general concepts are listed here, for full details refer to the [References 
 
 - **Repository instructions** (`AGENTS.md` or a supported equivalent) give an agent repository or subtree context: boundaries, important facts, commands, and links to the owning documentation.
 - **Scoped instructions** (such as `*.instructions.md`) apply standing rules to matching files or tasks when the selected host supports that format and scope. A matching path may select guidance, but neither adding a directory nor linking a document proves it is discovered, inherited, or followed. Instructions guide the model; they are not enforcement.
-- **Skills** package a focused, repeatable capability or procedure, sometimes with scripts and references. In the Agent Skills standard, discovery is progressive: an agent can first see a skill's name and description, then load its instructions when relevant, and open supporting resources as needed. Activation and optional features depend on the host.
+- **Skills** package a focused, repeatable capability or procedure, sometimes with scripts and references. In the Agent Skills standard, discovery is progressive: an agent can first see a skill's name and description, then load its instructions when relevant, and open supporting resources as needed. The active agent invokes the skill without needing another persona or agent mode; supporting hosts can expose it as a slash command. Activation, locations, and optional features depend on the host.
 - **Prompts** are requests, often saved as reusable files and invoked explicitly. Unlike standing instructions, they are not automatically applied to every task. Prompt-file formats and support are host-specific.
 
 ---
 
 ## Roles and work transfer
 
-- **Agent** is the role or configuration doing work in a session. A custom agent defines a reusable specialist role, usually with its own instructions and tool choices.
+- **Agent** is the role or configuration doing work in a session. A custom agent defines a reusable specialist role, usually with its own instructions and tool choices. Planning or orchestration can instead be a skill invoked by the existing built-in agent, with the user's selected model and permission mode unchanged; the coordinating agent remains present.
 - **Subagent** is an invocation delegated a bounded task in a separate context. It may use a built-in or custom role and returns findings or work to the coordinating agent; do not assume it inherits the main conversation or all its context.
 - **Handoff** transfers the active task to another agent or session, usually with selected context. It is not the same as a subagent returning a result. The host determines what state and context cross the handoff.
 

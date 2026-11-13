@@ -52,7 +52,7 @@ The problem was this combination and scope, not skills themselves. Focused, reus
 
 ## Retired v2 orchestration layer
 
-The later all-purpose router assigned every request to fixed routes and many specialist roles, with exhaustive transition, reporting, and learning protocols. Universal routing reduced user choice for routine tasks; too many roles and detailed protocols made the workflow harder to understand, constrained judgment, and made it less adaptable to tasks and host capabilities. The replacement uses native Agent mode by default and a user-selected two-session workflow for complex tasks. Git history retains the retired definitions rather than maintaining archived copies.
+The later all-purpose router assigned every request to fixed routes and many specialist roles, with exhaustive transition, reporting, and learning protocols. Universal routing reduced user choice for routine tasks; too many roles and detailed protocols made the workflow harder to understand, constrained judgment, and made it less adaptable to tasks and host capabilities. The replacement uses native Agent mode by default and a user-selected two-session workflow for complex tasks. Planning and orchestration are reusable skill procedures invoked by the built-in agent, not custom main-agent modes. Git history retains the retired definitions rather than maintaining archived copies.
 
 ---
 
@@ -60,9 +60,9 @@ The later all-purpose router assigned every request to fixed routes and many spe
 
 The [common APM package](../packages/apm/common/README.md) distributes shared customizations from one source:
 
-- **Agents own roles:** the user may select Orchestrator for an approved implementation plan; Engineer implements, and Architect provides optional design advice subject to approval.
-- **Instructions supply shared standards and scoped constraints:** the common engineering baseline applies across roles; opt-in stack packages add language and tool guidance.
-- **Skills supply reusable, on-demand procedures:** the common package includes [code-comments](../packages/apm/common/.apm/skills/code-comments/SKILL.md) and [draft-github-issue](../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md).
+- **Native agents retain coordination:** the active host agent invokes both workflow skills with the user's selected model and permission mode. Only the custom [Implementer](../packages/apm/common/.apm/agents/implementer.agent.md) remains for its bounded, test-first, no-subdelegation role.
+- **Instructions supply shared standards and scoped constraints:** the common engineering baseline applies independently of workflow choice. Central instruction consolidation and distribution remain separate work.
+- **Skills supply reusable, on-demand procedures:** [Planning](../packages/apm/common/.apm/skills/planning/SKILL.md) and [Implementation Orchestration](../packages/apm/common/.apm/skills/implementation-orchestration/SKILL.md) customize procedures without replacing the native agent loop. The [ADR](../packages/apm/common/.apm/skills/adr/SKILL.md) and [draft-github-issue](../packages/apm/common/.apm/skills/draft-github-issue/SKILL.md) skills serve focused tasks.
 - **Projects extend rather than copy:** keep repository context and local constraints with the consumer; use the [authoring guidance](../packages/apm/README.md#authoring-repository-guidance) instead of forking shared role definitions.
 
 This separates responsibilities, reduces duplicated rules, and keeps procedural detail out of routine work. APM distributes the files; it does not enforce compliance or guarantee discovery in every host. See [current usage](../docs/GETTING-STARTED.md#ai-customizations) and the official [VS Code customization concepts](https://code.visualstudio.com/docs/agents/concepts/customization).

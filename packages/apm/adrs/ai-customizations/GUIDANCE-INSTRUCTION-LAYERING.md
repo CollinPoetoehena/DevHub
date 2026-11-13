@@ -10,11 +10,11 @@ The decision drivers are clear ownership, concise entry points, appropriately sc
 
 ## Decision
 
-Use a concise root `AGENTS.md` for repository orientation and local constraints, with links to owning documentation and specific instruction files. Keep reusable engineering, language, framework, and tool standards in scoped `*.instructions.md` files in the central common-instructions package. Do not duplicate those standards in every role definition.
+Use a concise root `AGENTS.md` for repository orientation and local constraints, with links to owning documentation and specific guideline files. Keep common standards in repository-facing `guidelines-core` and technology-specific instruction maps with their opt-in `development-*` stack packages. Use host-supported formats such as Copilot's scoped `*.instructions.md` files; guidelines is the tool-independent term. Do not duplicate standards in every role definition.
 
 ```text
-Shared common-instructions package
-  general engineering rules -> matching language/tool rules
+Repository guidelines-core -> common engineering standards
+Optional local development stack -> scoped technology map + skills
                                       +
 Repository AGENTS.md -> owning docs, configuration, local constraints
                                       +
@@ -27,7 +27,8 @@ This is an ownership model, not a universal host precedence algorithm. [Copilot 
 
 ### Ownership and specificity
 
-- **Shared defaults**: Common instructions own durable coding, documentation, security, and review standards. Language and tool instruction files refine those defaults; they are files in the same central package, not separate Python, Go, or other stack packages.
+- **Shared defaults**: `guidelines-core` owns durable coding, documentation, security, and testing standards without workflow agents or skills. Repositories can adopt these guidelines without the local development setup.
+- **Stack maps**: Python, Go, and other opt-in development stacks own their scoped instruction maps beside their skills/resources. These maps refine common defaults and route to stack capabilities without copying the baseline or assuming a skill must run for every task.
 - **Repository authority**: Root `AGENTS.md` gives the project purpose, relevant entry points, local compatibility limits, and routes to actual configuration and validation commands. Repository-specific choices stay in that repository, not the shared package.
 - **Focused instructions**: Use file patterns and descriptions supported by the host to select relevant rules. Keep instructions short enough to make the important constraints prominent; link deeper explanations rather than repeat tutorials.
 - **Procedures and references**: A reusable task procedure belongs in a skill when it warrants one. Agents and skills use the standing instructions; they do not maintain competing copies. A repo-specific skill stays local, while a generic skill belongs in the separate development setup.
@@ -71,7 +72,7 @@ A link is a route, not proof that its target is loaded. Make clear when the agen
 
 ## Status
 
-Accepted: the user selected layered guidance with `AGENTS.md` and specific instructions. Package consolidation and discovery validation remain future implementation work.
+Accepted: the user selected layered guidance with `AGENTS.md`, shared repository guidelines, and stack-owned instruction maps. Package separation and discovery validation remain future implementation work.
 
 ---
 
@@ -83,4 +84,5 @@ Accepted: the user selected layered guidance with `AGENTS.md` and specific instr
 
 # Changelog
 
+- 2026-11-13: Aligned ownership with separate repository-facing `guidelines-core` and local development stacks; scoped stack instruction maps stay with their skills, while repository authority and discovery caveats remain unchanged.
 - 2026-11-13: Grouped with related AI-customization decisions and linked the focused package-design record. Guidance ownership and the original decision date are unchanged.

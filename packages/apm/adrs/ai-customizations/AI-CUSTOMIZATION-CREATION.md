@@ -10,7 +10,7 @@ The goal is maintainable software and informed human control, not a perfect cust
 
 ## Decision
 
-Create customizations to capture **missing context, consequential conventions, and repeatable role boundaries**, using the smallest layer that changes the result. Main agents remain thin owners of their responsibilities; shared instructions own standards, and skills hold useful task procedures. The [reuse and tailoring ADR](REUSE-AND-TAILORING.md) separately explains how to inspect existing capabilities, choose between native use, reuse, adaptation, and creation, and weigh ongoing ownership.
+Create customizations to capture **missing context, consequential conventions, and repeatable role boundaries**, using the smallest layer that changes the result. The host's native agent retains coordination; shared instructions own standards, and skills hold useful task procedures. Only the specialized Implementer requires a custom role in the current workflow. The [reuse and tailoring ADR](REUSE-AND-TAILORING.md) separately explains how to inspect existing capabilities, choose between native use, reuse, adaptation, and creation, and weigh ongoing ownership.
 
 ### Why customize
 
@@ -20,7 +20,7 @@ Create customizations to capture **missing context, consequential conventions, a
 - **Reviewable control**: Explicit role inputs, outputs, approval boundaries, and checks make the workflow inspectable. Permissions and tooling enforce hard boundaries; prose alone does not.
 - **Less drift**: Reusable guidance has a versioned owner rather than competing copies in chats and role definitions.
 
-Copilot supplies [customization and delegation mechanisms](https://code.visualstudio.com/docs/agent-customization/custom-agents); DevHub supplies the policy needed by its projects. The [workflow ADR](../workflow/AI-DEVELOPMENT-WORKFLOW.md) and [two-agent ADR](../workflow/SEPARATE-PLANNING-AND-IMPLEMENTATION-AGENTS.md) own the selected workflow, rather than this record duplicating its steps.
+Copilot supplies [customization and delegation mechanisms](https://code.visualstudio.com/docs/agent-customization/custom-agents); DevHub supplies the policy needed by its projects. The [workflow ADR](../workflow/AI-DEVELOPMENT-WORKFLOW.md) and [skills-first ADR](../workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md) own the selected workflow, rather than this record duplicating its steps. Planning and implementation orchestration customize procedures, not new personas; invoke their skills in the existing native agent rather than recreate the host's agent hierarchy.
 
 ### Start with existing capability; customize for value
 
@@ -87,5 +87,6 @@ Accepted: the user selected thin, high-level customizations that preserve model 
 
 # Changelog
 
+- 2026-11-13: Aligned workflow ownership with reusable skills in the native agent and one specialized Implementer. The thin-customization policy is unchanged.
 - 2026-11-13: Moved into the AI-customizations folder and extracted reuse ratios, source selection, and adoption trade-offs into [reuse and tailoring](REUSE-AND-TAILORING.md). The purpose/detail policy and original decision date are unchanged.
 - 2026-11-13: Expanded the native-first value threshold and when owned agents or other layers are justified; clarified that [reuse and tailoring](REUSE-AND-TAILORING.md) owns the practical selection and maintenance test.
