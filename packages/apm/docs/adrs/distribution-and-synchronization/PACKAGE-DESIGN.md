@@ -16,8 +16,8 @@ Maintain separate APM package families, with an independent shared baseline and 
 
 | Package | Responsibility and consumer | Intended destination |
 |---|---|---|
-| `guidelines-core` | Common engineering, security, testing, documentation, Git, and AI-customization guidelines; no generic agents, skills, or stack-specific placeholders | Every repository adopting those standards, independently of a team member's workflow |
-| `development-core` | Planning and implementation-orchestration skills, the specialized Implementer, and generic shared skills; no shared guideline bundle | The selected local development scope of team members using the workflow |
+| `guidelines-core` | Common engineering, security, testing, documentation, and AI-customization guidelines; no generic agents, skills, or stack-specific placeholders | Every repository adopting those standards, independently of a team member's workflow |
+| `development-core` | Planner and Implementation Orchestrator entry roles, Implementer, one Reviewer, and focused generic skills; no shared guideline bundle | The selected local development scope of team members using the workflow |
 | `development-python`, `development-go`, `development-rust`, `development-java`, `development-containerization`, `development-iac` | Opt-in technology skills/resources and scoped instruction maps that supplement common guidelines and route to their own stack's capabilities | The selected local development scope of users adopting those stacks |
 
 Use these directory names under `packages/apm/` and `devhub-`-prefixed manifest identities, such as `devhub-guidelines-core` and `devhub-development-python`. Keep Python/FastAPI/Django together, Java/Kotlin/Spring Boot together, Docker/Kubernetes/Helm together, and Terraform/Ansible/Bicep together. Consumers choose relevant stacks rather than install every technology.
@@ -34,9 +34,11 @@ The goal is to **avoid unnecessary distribution**, not merely rename bundles. Co
 - **Independent ownership**: Consumers own dependency references, lock/update policy, destination, ignore policy, and local additions. Preserve existing files and review collisions rather than overwrite consumer customizations.
 - **Private context**: Keep work-specific knowledge and secrets out of public generic packages. Package separation does not establish data-access or permission isolation.
 
-The [guidance-layering ADR](../ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md) owns how rules compose, and the [skills-first ADR](../workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md) owns workflow responsibilities. Neither requires the generic workflow to be copied into each repository. Repositories retain their declared tooling and constraints; stack maps supplement that context rather than override it. Common guidelines remain useful without the local skills.
+The [guidance-layering ADR](../ai-customizations/GUIDANCE-INSTRUCTION-LAYERING.md) owns how rules compose, while the [AI development workflow](../workflow/AI-DEVELOPMENT-WORKFLOW.md) and [workflow-agent ADR](../workflow/WORKFLOW-AGENTS-AND-FOCUSED-SKILLS.md) own execution policy and role responsibilities. Neither requires the generic workflow to be copied into each repository. Repositories retain their declared tooling and constraints; stack maps supplement that context rather than override it. Common guidelines remain useful without the local development workflow.
 
-The eight source packages now implement these names and boundaries. Local source validation confirms their manifests and references; it does not establish consumer installation, host discovery, or runtime behavior. Installation and synchronization remain separate work.
+The eight source packages implement these names and boundaries. `development-core` currently defines four roles in `.apm/agents/` and focused local `sharing-context`, `adr`, `draft-github-issue`, and `commit-command` skills; its [manifest](../../../development-core/apm.yml) separately declares only `create-agentsmd` and `acquire-codebase-knowledge` from Awesome Copilot. The stack manifests depend on `development-core`; `guidelines-core` declares upstream instruction dependencies. Local source validation confirms manifests and references; it does not establish consumer installation, host discovery, or runtime behavior. Installation and synchronization remain separate work.
+
+Manifest refs and lock state have different lifecycles. Upstream `#HEAD` dependencies request a mutable Git ref at resolution time; APM's generated lockfile records the resolved commit and content hashes for reproducible installs. A `#HEAD` declaration does not continuously update installed content. APM's [update command](https://microsoft.github.io/apm/reference/cli/update/) re-resolves dependencies against their allowed refs; consumers must choose and review that update process.
 
 ### Consumer-selected scope
 
@@ -48,7 +50,7 @@ The consumer chooses the appropriate development-setup destination:
 
 Working directory, access to added directories, and customization discovery are different contracts. [CLI directory commands](https://docs.github.com/en/copilot/reference/cli-command-reference) do not prove inheritance of parent instructions, agents, or skills. Verify the host's discovery in the chosen scope and direct repository sessions. APM's target paths do not automatically implement a personal/work profile.
 
-The [synchronization TODO](SYNCHRONIZATION.md) separately records future local update and repository-PR automation. Both families use APM, but their consumers, update cadence, and distribution destinations remain independent.
+The [synchronization record](SYNCHRONIZATION.md) describes the existing central repository-PR delivery and its current manifest-contract limits, alongside deferred local development-scope updates. Both families use APM, but their consumers, update cadence, and distribution destinations remain independent.
 
 ---
 
@@ -67,6 +69,7 @@ The [synchronization TODO](SYNCHRONIZATION.md) separately records future local u
 - **Separate lifecycles**: Consumers must keep repository guidelines and their selected local workflow/stacks compatible; installing one family does not imply the other is present.
 - **Discovery obligations**: Local scopes and direct repository sessions require verification instead of assuming inheritance.
 - **More package surfaces**: Core plus stack packages need distinct manifests, dependencies, and selection. Stack instruction scopes and links must remain accurate without assuming every skill is installed.
+- **Mutable upstream refs**: A `#HEAD` manifest reference can resolve to different content on a later update. Lockfiles preserve a selected resolution, but maintainers must review deliberate refreshes and avoid assuming the manifest is live synchronization.
 
 ---
 
@@ -90,3 +93,8 @@ Accepted: the user selected `guidelines-core` for shared repository standards, s
 ## Date
 
 2026-11-13
+
+---
+# Changelog
+
+- 2026-11-14: Updated `development-core` contents to the four-role and focused-skill design, and clarified that mutable `#HEAD` refs resolve through APM rather than continuously updating installations.

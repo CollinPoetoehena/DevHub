@@ -4,11 +4,15 @@
 
 ### Documentation
 
+- Document Planner, Implementation Orchestrator, Implementer, and Reviewer as thin roles composing focused skills; describe the single SIMPLE/STANDARD implementation entry point and STANDARD shared task memory.
+- Document floating upstream `#HEAD` references and the distinction between latest-source intent, locked revisions, and deployed files.
+- Move concepts and ADR references under the APM `docs/` directory; integrate plan and handoff requirements into the main workflow ADR and remove superseded ADR files, retaining earlier records in Git history.
+- Preserve separate planning and implementation phases: require a reviewed plan for larger work, allow small understood tasks to skip Plan, and keep execution autonomous within the agreement.
 - Document `development-core` as the optional local workflow and generic-skill package, separate from independently adopted `guidelines-core`; clarify the direct native-Agent path for simple tasks and approved-plan orchestration for larger work.
 
 ## [2.0.0] - 2026-11-06
 
-A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instructions, and skills tried to reinvent general engineering knowledge, carried long blocks of prose that were often irrelevant to the task, and left routing and completion to the model's judgment. Outputs were non-deterministic and behavior was unreliable and hard to trace. Version 2 follows the [reuse and tailoring decision](../adrs/ai-customizations/REUSE-AND-TAILORING.md): it reuses upstream skills and instructions for general knowledge and keeps only thin, role-focused agents locally. A fixed routing table, closed outcome sets, and fixed reports make each request's route predictable, roles clearly separated, and every step traceable.
+A redesign of the package, hence a new `MAJOR` version. The 1.x agents, instructions, and skills tried to reinvent general engineering knowledge, carried long blocks of prose that were often irrelevant to the task, and left routing and completion to the model's judgment. Outputs were non-deterministic and behavior was unreliable and hard to trace. Version 2 follows the [reuse and tailoring decision](../docs/adrs/ai-customizations/REUSE-AND-TAILORING.md): it reuses upstream skills and instructions for general knowledge and keeps only thin, role-focused agents locally. A fixed routing table, closed outcome sets, and fixed reports make each request's route predictable, roles clearly separated, and every step traceable.
 
 ### Breaking
 

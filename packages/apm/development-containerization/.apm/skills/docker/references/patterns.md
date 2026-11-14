@@ -227,6 +227,18 @@ USER app
 # 5. No secrets in image layers
 ```
 
+## Build and Release Hygiene
+
+- Install dependencies from committed lockfiles with deterministic commands (for example, `npm ci`) and order stable dependency inputs before frequently changing source to preserve build cache.
+- Treat the built image as a versioned release artifact: build a new image for changes and promote the same artifact between environments rather than modifying running containers. Tags can move; use an image digest when deployments require an immutable reference.
+- Keep the build context small with `.dockerignore`, and copy only the files needed by each build stage. See the [`.dockerignore` example](#dockerignore).
+
+## Health Checks and Runtime Resources
+
+- Add a lightweight health check only when the image has a suitable probe command; do not add diagnostic tools solely for a probe. A Docker health check does not provide separate readiness and liveness semantics, which should be configured in the orchestrator when needed.
+- Set CPU and memory limits for deployed services and tune them from observed usage. The production Compose override above shows one resource-limit pattern.
+- Send application logs to `STDOUT` and `STDERR` so the container runtime can collect and route them.
+
 ### Compose Security
 
 ```yaml
@@ -268,6 +280,13 @@ services:
 # BAD: Hardcoded in image
 # ENV API_KEY=sk-proj-xxxxx      # NEVER DO THIS
 ```
+
+Environment variables and local `env_file` entries are runtime configuration, not a secure secret store. Keep local secret files out of version control and use the secret-injection mechanism supported by the deployment platform.
+
+### Image Security Checks
+
+- Lint Dockerfiles and scan built images for vulnerabilities in CI (for example, Hadolint and Trivy); review findings and rebuild when base-image fixes are available.
+- For production releases, sign images and verify signatures at deployment when the registry and runtime support it.
 
 ## .dockerignore
 

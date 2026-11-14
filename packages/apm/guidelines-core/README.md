@@ -1,12 +1,12 @@
 # DevHub Shared Repository Guidelines
 
-`devhub-guidelines-core` distributes shared repository standards through [APM](https://microsoft.github.io/apm/). Its `.apm/instructions/` directory is the authoring source; [`apm.yml`](apm.yml) declares the pinned instruction dependencies.
+`devhub-guidelines-core` distributes shared repository standards through [APM](https://microsoft.github.io/apm/). Its `.apm/instructions/` directory is the authoring source; [`apm.yml`](apm.yml) references upstream instruction dependencies at `#HEAD`. APM resolves those references against each source's default branch when resolving or refreshing dependencies; they are not fixed commit pins or live updates, and existing lock files may retain resolved revisions until refreshed.
 
 Repositories adopt this package independently of any local development workflow. It contains no agents, skills, or stack-specific maps. The [`development-core`](../development-core/README.md) package is a separate choice for local agents and skills; opt-in `development-*` stack packages own their scoped instruction maps.
 
 ## Guidelines
 
-The package contains common coding, security, testing, documentation, Git, GitHub Actions, and AI-customization guidance. These are host-facing instruction files using the native filenames and frontmatter required by Copilot.
+The package contains common coding, security, testing, documentation, GitHub Actions, and AI-customization guidance. These are host-facing instruction files using the native filenames and frontmatter required by Copilot. Git commit command generation belongs to skill `commit-command` in the separate `development-core` package, not standing instructions.
 
 Guidelines are shared defaults. Repository configuration, owning documentation, and `AGENTS.md` refine or override them; stack-specific guidance adds scoped technology defaults. Copilot calls these files instructions and Claude calls them rules; the package retains the host-required filenames and frontmatter. Surface unresolved conflicts rather than assuming a universal host precedence.
 

@@ -112,7 +112,6 @@ Before marking work complete:
 
 - **Documentation:** [documentation guidelines](documentation.instructions.md) for Markdown, READMEs, and guides.
 - **Security:** [security guidelines](security.instructions.md) for untrusted content, secrets, and secure defaults.
-- **Git:** [Git guidelines](git.instructions.md) for commits and history.
 - **Languages and tools:** guidelines in the opt-in stack packages, such as Python, Go, Java, containerization, and infrastructure as code, add their scoped practices.
 
 Repository configuration, owning documentation, and `AGENTS.md` may refine or override these shared defaults. When applicable sources conflict, follow higher-priority policy and surface unresolved conflicts; do not assume a universal precedence among host-specific sources.

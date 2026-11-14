@@ -24,14 +24,17 @@ The workflow addresses recurring failure modes:
 
 ## Decision
 
-Use four main stages: **Plan, Build, Test, and Observe**. Plan is interactive and human-in-the-loop; Build and Test are autonomous within an approved scope; Observe follows the user's final verification and acceptance of the tested result. The separate [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) owns the plan artifact and approval contract; the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md) owns context separation and specialist delegation.
+Use four main stages: **Plan, Build, Test, and Observe**. Keep two distinct working phases: interactive, human-in-the-loop **planning**, followed by autonomous **implementation and testing** within the agreed scope. Planning is required for larger, unclear, cross-cutting, or consequential work; small, localized, already understood tasks may skip it. Observe follows the user's final verification and acceptance of the tested result. This record owns the plan artifact and handoff contract; the [focused-sessions ADR](FOCUSED-SESSIONS-AND-SPECIALIST-CONTEXT.md) owns context separation and specialist delegation.
 
 The [VS Code AI development guides](https://code.visualstudio.com/docs/agents/guides/overview) cover planning, implementation, testing, and validation. The four stage names, human approval gates, and final Observe stage below are this project's chosen workflow, not a claim that the host prescribes this exact sequence.
 
 ```text
-Plan: user + AI -> full .md plan -> user approval
+Plan: user + Planner -> full .md plan -> user approval
+      (required for larger work; optional for small, understood edits)
                          |
-Build: autonomous implementation
+      fresh implementation session + approved plan
+                         |
+Build: Implementation Orchestrator -> SIMPLE or STANDARD
                          |
 Test: existing suite + automated tests + reviews
                          |
@@ -40,19 +43,34 @@ Verify: user checks the outcome and approves
 Observe: behavior in use + feedback -> next Plan
 ```
 
-This workflow decision is independent of a particular agent layout. The [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md) explains how the native agent carries out its reusable procedures.
+The [workflow-agent ADR](WORKFLOW-AGENTS-AND-FOCUSED-SKILLS.md) maps these phases to thin roles using focused skills. Planner owns Plan; Implementation Orchestrator is the single entry point for Build and Test, including the simple-edit path. Keeping one implementation entry point makes the workflow locally tailorable without requiring every task to take the full STANDARD route; it does not combine planning and implementation.
 
 Verify is a human approval gate after Test, not a fifth autonomous stage. Build and Test may iterate, including test-first work; their separation identifies responsibilities and required evidence rather than prohibiting feedback loops.
 
 ### Plan
 
-The user and AI investigate nontrivial work together. The AI asks purposeful follow-up questions about uncertainty that could affect requirements, scope, design, dependencies, security, or acceptance; the user evaluates the answers, challenges assumptions, and chooses between consequential trade-offs. Do not treat a brief request followed by "implement it" or a polished autonomous draft as sufficient alignment. The user should understand what will and will not be built, and why; routine coding details and resolved questions do not need repeated discussion.
+The user and Planner investigate larger or consequential work together before implementation. Planner uses rounds of purposeful questions about uncertainty that could affect requirements, scope, design, dependencies, security, or acceptance; the user evaluates the answers, challenges assumptions, and chooses between consequential trade-offs. Do not treat a brief request followed by "implement it" or a polished autonomous draft as sufficient alignment. The user should understand what will and will not be built, and why; routine coding details and resolved questions do not need repeated discussion.
 
-Interactive planning takes time up front, but is intended to make the full task quicker: clarifying requirements and decisions before implementation should reduce repeated instructions, implementation refinements, avoidable rework, and errors. It also keeps consequential choices visible and preserves the user's understanding and ownership. This is the rationale for the workflow, not a measured or guaranteed productivity result. The [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) defines the plan's required contents, exact-version approval, execution handoff, and optional post-completion retention. Unresolved consequential questions block approval.
+Interactive planning takes time up front, but is intended to make the full task quicker: clarifying requirements and decisions before implementation should reduce repeated instructions, implementation refinements, avoidable rework, and errors. It also keeps consequential choices visible and preserves the user's understanding and ownership. This is the rationale for the workflow, not a measured or guaranteed productivity result.
+
+Save a unique `<task-working-directory>/tmp/plan-<id>.md` that is understandable without the planning conversation. Include:
+
+- **Problem and outcome**: Desired result, relevant current behavior, and supporting evidence.
+- **Agreed scope**: Requirements, non-goals, compatibility constraints, and observable acceptance criteria.
+- **Design reasoning**: Material choices, alternatives, and accepted assumptions.
+- **Risks and questions**: Dependency and security considerations and unresolved questions.
+- **Manageable work**: Work packages, owned file boundaries, dependencies, and safe parallel groups.
+- **Validation and follow-up**: Required tests, integrated checks, review expectations, and human Verify and Observe activities.
+
+Unresolved consequential questions block approval. The user actively reviews and approves the exact saved version, not merely the file's existence. Material revisions require renewed discussion and approval. Planner saves the plan and stops; it does not start implementation.
 
 ### Build
 
-Start autonomous implementation within the approved plan. The execution session receives the approved file and relevant repository guidance; it does not rely on hidden planning-conversation history. Routine coding decisions within the agreed boundaries can be autonomous. A newly discovered requirement, material design or dependency change, or security assumption returns to interactive Plan for discussion and renewed approval when it changes the agreement. Do not silently rewrite the plan to keep execution moving. The plan needs to be available for this handoff and active work, but does not need to be kept after completion; the [approved-plan and handoff ADR](APPROVED-PLAN-AND-HANDOFF.md) explains optional retention outside the repository.
+For planned work, start a fresh Implementation Orchestrator session with the approved plan's absolute path, confirmation of its current-version approval, and relevant repository guidance. Merely switching roles in the planning conversation is not a fresh handoff. The execution session does not rely on hidden planning history or repeat resolved decisions; routine coding choices within the agreed boundaries remain autonomous. A newly discovered requirement, material design or dependency change, or security assumption returns to the separate planning phase for discussion and renewed approval when it changes the agreement. Do not silently rewrite the plan to keep execution moving.
+
+Implementation Orchestrator delegates edits to Implementer. SIMPLE handles obvious, localized, low-risk work with one fresh worker and proportional checks; STANDARD handles other work with dependency-aware assignments, safe parallelism, integrated validation, and an independent Reviewer. The execution mode and need for planning are separate judgments: a small, well-understood behavior change can need STANDARD checks without a full planning phase. STANDARD uses the `sharing-context` skill to pass concise task evidence to fresh workers, not to replace the approved plan.
+
+Keep the plan available through handoff, implementation, testing, and user acceptance. It need not become a permanent repository record after completion; optional retention in a related issue or task outside the repository is sufficient unless project or organizational requirements say otherwise.
 
 ### Test
 
@@ -61,8 +79,10 @@ The AI owns validation and review of integrated changes, not merely writing code
 - **Existing test suite**: Run applicable repository suites using established commands, including regression checks for behavior that must remain unchanged. Run broader suites when required by the plan or change impact; new tests do not replace the existing suite.
 - **Focused automated tests**: Add or update tests for introduced or fixed behavior and meaningful edge cases. For testable behavior changes, use red-green-refactor: confirm a test fails for the intended reason, implement until it passes, then refactor while keeping tests green. Use unit, integration, end-to-end, or browser checks appropriate to the change; do not create unrelated tests or tooling by default.
 - **Build and static checks**: Run applicable build, type-check, linting, and security checks required by the owning component.
-- **Independent reviews**: Obtain independent code and security reviews of integrated changes where supported, remediate blocking findings, and repeat affected checks and reviews. Record unavailable reviews as limitations; a named reviewer does not guarantee independence.
+- **Independent review**: In STANDARD, use one fresh, read-only Reviewer for code quality, security, and project conformance; remediate blocking findings and repeat affected checks and review. Prefer a different model/provider when supported and permitted, otherwise use the available model. SIMPLE does not require independent review. An unavailable required review blocks completion; a named reviewer does not guarantee independence.
 - **Evidence and limitations**: Report acceptance-criteria coverage, executed commands and results, review outcomes, and limitations. Failed or unavailable required checks block a successful completion claim; distinguish pre-existing failures from regressions.
+
+After either execution mode, reconcile all documentation and required ADRs within the changed scope, including omissions from this or earlier work; ignore unrelated areas. Delegate missing or stale documentation to a new, fresh Implementer for a documentation/ADR-only update, verify its result and applicable checks, and do not require a separate Reviewer for this simple update. Significant decisions follow project ADR conventions; routine edits do not need artificial records. End the evidence report by invoking skill `commit-command` to generate one add/commit/push sequence covering all current changes for the user to verify and execute, or report its safety blocker. The orchestrator does not execute those commands.
 
 ### Human Verify gate
 
@@ -81,9 +101,9 @@ After acceptance, observe the change in actual use or the relevant deployed envi
 
 ### Simple-edit exception
 
-Skip both workflow skills, the separate planning session, and the full plan file for a small, localized task whose intended behavior, scope, and verification are already clear, such as a typo correction or a narrowly defined mechanical change. Make an ordinary request to the native Agent, which proceeds directly with applicable guidance and proportionate checks; this does not force delegation to the Implementer.
+Skip the separate planning phase and full plan file for a small, localized task whose intended behavior, scope, and verification are already clear, such as a typo correction or a narrowly defined mechanical change. Give the request directly to Implementation Orchestrator, which uses SIMPLE when the low-risk criteria are met and otherwise STANDARD. Applicable guidance and proportionate checks still apply.
 
-The exception is based on uncertainty and impact, not only line count. If the task exposes consequential questions, broader dependencies, or security-sensitive decisions, stop the fast path and use Planning before implementation. Direct work does not waive applicable review or validation requirements. For larger tasks, use the saved-plan approval and fresh-session execution path described in the [skills-first ADR](REUSABLE-WORKFLOWS-AS-SKILLS.md).
+The exception is based on uncertainty and impact, not only line count. If the task exposes consequential questions, broader dependencies, or security-sensitive decisions, stop execution and complete the separate planning phase before proceeding. Direct work does not waive applicable review or validation requirements. For larger tasks, use the saved-plan approval and fresh-session handoff above.
 
 ---
 
@@ -117,6 +137,7 @@ These are project-defined workflow choices, not externally standardized policies
 |---|---|---|---|---|
 | **Fully autonomous planning and execution:** a project-defined flow using [agent capabilities](https://code.visualstudio.com/docs/agent-customization/custom-agents) to infer a plan, implement, and review from the initial request without an interactive approval boundary. | Requires less user involvement and can keep execution moving when requirements are already completely specified. It delegates both decision preparation and implementation. | Missing requirements may become unexamined assumptions before the user sees the result. The user has fewer opportunities to reason about the project and may become dependent on outputs they do not understand. | Active alignment and retained human understanding are primary goals, so removing the discussion would automate the part the user deliberately wants to own. Autonomous implementation remains valuable after approval. | A task is already fully specified and qualifies for the simple-edit exception; this is not a blanket replacement for interactive planning. |
 | **Autonomous plan with one approval checkpoint:** a project-defined use of [planning capabilities](https://code.visualstudio.com/docs/agents/run/planning) where the AI drafts the entire plan before asking the user to accept it. | Produces an artifact and preserves a pre-execution approval opportunity with fewer conversational interruptions. A detailed draft can help the user identify questions. | A polished draft can conceal assumptions, and a quick approval does not establish that the user considered the alternatives. Questions that change the plan may still require an interactive round. | A checkpoint is necessary but insufficient: clarification and critical discussion must shape the plan, not merely follow an autonomous proposal. Drafting is allowed as part of the selected interactive process. | The user supplies complete requirements and actively checks the draft; unresolved consequential choices still trigger discussion before approval. |
+| **Planning only in conversation:** use [planning capabilities](https://code.visualstudio.com/docs/agents/run/planning) without a saved handoff artifact. | Preserves discussion nuance and avoids maintaining a second representation of the agreement. | Scope and decisions can be scattered through a transcript that a fresh implementation session cannot reliably inspect. | Larger work needs an explicit, reviewed agreement that remains available through implementation and acceptance. Small, already understood tasks may omit it. | The task qualifies for the simple-edit exception, or a project provides an equivalent reviewed specification artifact. |
 | **Always require a full plan:** apply [planning capabilities](https://code.visualstudio.com/docs/agents/run/planning) and an approved Markdown artifact to every edit, including already understood mechanical changes. | Gives every task the same audit trail and eliminates judgment about when to plan. | Adds discussion and documentation effort where there are no consequential choices. This can encourage perfunctory approval and distract from tasks that genuinely need reasoning. | Deliberate planning is valuable because it resolves uncertainty, not because every edit needs a document. The simple-edit exception preserves proportionate effort without bypassing necessary checks. | A repository or regulated process explicitly requires a plan artifact for every change. |
 | **Manual Build and Test with AI suggestions:** the user implements and validates each step while using [AI assistance](https://code.visualstudio.com/docs/agents/overview) for focused suggestions. | Keeps hands-on control throughout execution and is useful when implementation itself is the learning objective. The user can investigate each change immediately. | Repetitive coding, test execution, and review remain user-managed rather than delegated. Attention can be spent on mechanical steps instead of consequential decisions. | The selected default deliberately automates Build and Test after alignment, while retaining human Verify and Observe. This does not prohibit choosing hands-on work when that is the goal. | Learning through implementation or a change's risk makes continuous human involvement more valuable than autonomous execution. |
 | **Finish at automated Test:** a project-defined flow that treats successful [testing and validation](https://code.visualstudio.com/docs/agents/guides/overview#_test-and-validate) as the endpoint without a human Verify gate or final Observe. | Provides a simple, repeatable endpoint and avoids additional acceptance and follow-up effort. | Tests can miss mismatched intent, usability problems, and behavior that appears only in actual use. A passing suite is not evidence that the user accepts the result. | Human Verify establishes acceptance, and Observe closes the feedback loop after it. Neither can be replaced by declaring that automated checks passed. | For a change with little ongoing impact, observation can be lightweight; this does not remove the human acceptance gate. |
@@ -125,10 +146,15 @@ These are project-defined workflow choices, not externally standardized policies
 
 ## Status
 
-Accepted: the user explicitly chose Plan, Build, Test, and Observe, with interactive planning, autonomous implementation and testing, human verification before observation, and a direct native-Agent path for simple, clear work. Workflow skill sources are available; installation, discovery, and runtime behavior remain host-dependent.
+Accepted: retain Plan, Build, Test, and Observe, with required separate planning for larger or consequential work, autonomous implementation and testing within the agreed scope, and human verification before observation. Small, understood tasks may skip Plan; all implementation uses Implementation Orchestrator with SIMPLE or STANDARD execution. Installation, discovery, and runtime behavior remain host-dependent.
 
 ---
 
 ## Date
 
 2026-11-13
+
+---
+# Changelog
+
+- 2026-11-14: Kept planning and implementation as separate phases, clarified the small-task exception, integrated the plan-artifact and handoff contract, and mapped execution to the current agents and SIMPLE/STANDARD modes. Removed the separate plan/handoff and superseded skills-first records; Git history retains their earlier contents.

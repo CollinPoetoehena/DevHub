@@ -1,11 +1,10 @@
-# Reusable workflow and generic skills for local development environments.
+# Workflow agents and focused generic skills for local development environments.
 name: devhub-development-core
 version: 2.0.0
-description: Planning and implementation workflow skills, Implementer, and generic development skills
+description: Planner, Implementation Orchestrator, Implementer, Reviewer, and focused development skills
 target: copilot
 dependencies:
   apm:
     # Generic skills available to local development users.
-    - github/awesome-copilot/skills/create-agentsmd#60dcb90
-    - github/awesome-copilot/skills/acquire-codebase-knowledge#60dcb90
-    - github/awesome-copilot/skills/git-commit#60dcb90
+    - github/awesome-copilot/skills/create-agentsmd#HEAD
+    - github/awesome-copilot/skills/acquire-codebase-knowledge#HEAD

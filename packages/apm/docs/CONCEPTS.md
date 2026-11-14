@@ -1,6 +1,6 @@
 # AI Customization Concepts
 
-This is a short glossary for the [APM overview](README.md), not a setup guide. Host support and activation rules change; check the linked documentation for current behavior.
+This is a short glossary for the [APM overview](../README.md), not a setup guide. Host support and activation rules change; check the linked documentation for current behavior.
 
 The general concepts are listed here, for full details refer to the [References section](#references).
 
@@ -28,7 +28,7 @@ The general concepts are listed here, for full details refer to the [References 
 
 ## Roles and work transfer
 
-- **Agent** is the role or configuration doing work in a session. A custom agent defines a reusable specialist role, usually with its own instructions and tool choices. Planning or orchestration can instead be a skill invoked by the existing built-in agent, with the user's selected model and permission mode unchanged; the coordinating agent remains present.
+- **Agent** is the role or configuration doing work in a session. A custom agent defines a reusable specialist role, usually with its own instructions and tool choices. It can connect focused skills into a larger workflow; loading a skill is not itself a new agent or isolated context. A workflow can alternatively be a skill used by a built-in agent; the appropriate boundary depends on whether the customization owns a role or a reusable procedure.
 - **Subagent** is an invocation delegated a bounded task in a separate context. It may use a built-in or custom role and returns findings or work to the coordinating agent; do not assume it inherits the main conversation or all its context.
 - **Handoff** transfers the active task to another agent or session, usually with selected context. It is not the same as a subagent returning a result. The host determines what state and context cross the handoff.
 
@@ -39,6 +39,18 @@ The general concepts are listed here, for full details refer to the [References 
 **AI orchestration** coordinates agents, tools, context, and workflow steps toward a request's goal. It matters because clear responsibilities, work transfer, and approval points let systems handle multi-step work without requiring users to direct every action. The aim can be bounded autonomy: agents drive the work while people set constraints and approve consequential decisions.
 
 For patterns and practical guidance, see Microsoft's [AI agent design patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns), IBM's [AI agent orchestration](https://www.ibm.com/think/topics/ai-agent-orchestration), JetBrains' [AI agent orchestration](https://www.jetbrains.com/pages/ai-agents/architecture/ai-agent-orchestration/), and the Copilot Academy [use-case guide](https://copilot-academy.github.io/workshops/copilot-customization/identify_use_cases), [customization handbook](https://copilot-academy.github.io/workshops/copilot-customization/copilot_customization_handbook), [custom agent developer guide](https://copilot-academy.github.io/workshops/copilot-customization/custom_agent_developer_guide), [agent skills developer guide](https://copilot-academy.github.io/workshops/copilot-customization/agent_skills_developer_guide), and [agentic workflows guide](https://copilot-academy.github.io/workshops/copilot-customization/agentic_workflows).
+
+Common patterns can be combined rather than applied to an entire task indiscriminately:
+
+| Pattern | Work transfer |
+|---|---|
+| Sequential | One step consumes the previous step's result; prerequisites determine order. |
+| Concurrent | Independent workers run in parallel, then their results are integrated. Shared writes still require coordination. |
+| Orchestrator-workers | A coordinator decomposes work, assigns bounded tasks, and reconciles results. |
+| Evaluator-optimizer | A separate evaluator critiques output and the producing worker revises it until the criteria are met or a limit is reached. |
+| Handoff | Responsibility moves to another agent rather than returning a delegated result to the original coordinator. |
+
+Microsoft's guide covers sequential, concurrent, and handoff patterns; Anthropic's [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) describes orchestrator-workers and evaluator-optimizer. These are design vocabulary, not a requirement to build a multiagent system for every request.
 
 ---
 

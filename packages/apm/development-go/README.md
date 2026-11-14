@@ -32,7 +32,7 @@ Adapted parts are copied from the source at the synced commit and then standardi
 | Part | Source | Type | Synced | Local changes |
 |---|---|---|---|---|
 | `go/references/patterns.md` | [ECC `golang-patterns`](https://github.com/affaan-m/ECC/blob/main/skills/golang-patterns/SKILL.md) | Adapted | `b38be6a` (2026-11-06) | Moved the tooling section to `tooling.md` |
-| `go/references/conventions.md` | [awesome-copilot `go.instructions.md`](https://github.com/github/awesome-copilot/blob/main/instructions/go.instructions.md) | Adapted | `797337f` (2026-11-06) | Removed the tools and development workflow section, which `tooling.md` and the common Git instructions own |
+| `go/references/conventions.md` | [awesome-copilot `go.instructions.md`](https://github.com/github/awesome-copilot/blob/main/instructions/go.instructions.md) | Adapted | `797337f` (2026-11-06) | Removed the tools and development workflow section, which [tooling.md](.apm/skills/go/references/tooling.md) and skill `commit-command` cover |
 | `go/references/testing.md` | [ECC `golang-testing`](https://github.com/affaan-m/ECC/blob/main/skills/golang-testing/SKILL.md) | Adapted | `b38be6a` (2026-11-06) | None |
 | `go/references/tooling.md` | Tooling section of [ECC `golang-patterns`](https://github.com/affaan-m/ECC/blob/main/skills/golang-patterns/SKILL.md) | Authored | `b38be6a` (2026-11-06) | Rewritten for DevHub defaults; linter configuration updated to the golangci-lint v2 format; govulncheck added |
 | Instruction and `SKILL.md` index | DevHub | Authored | Not applicable | None |

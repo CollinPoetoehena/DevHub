@@ -10,7 +10,7 @@ The goal is maintainable software and informed human control, not a perfect cust
 
 ## Decision
 
-Create customizations to capture **missing context, consequential conventions, and repeatable role boundaries**, using the smallest layer that changes the result. The host's native agent retains coordination; shared instructions own standards, and skills hold useful task procedures. Only the specialized Implementer requires a custom role in the current workflow. The [reuse and tailoring ADR](REUSE-AND-TAILORING.md) separately explains how to inspect existing capabilities, choose between native use, reuse, adaptation, and creation, and weigh ongoing ownership.
+Create customizations to capture **missing context, consequential conventions, and repeatable role boundaries**, using the smallest layer that changes the result. Shared instructions own standards, skills hold focused reusable procedures, and custom agents provide named role entry points when they improve task selection and context ownership. DevHub's current workflow uses Planner and Implementation Orchestrator roles, with an Implementer and one Reviewer; see [the workflow-agent decision](../workflow/WORKFLOW-AGENTS-AND-FOCUSED-SKILLS.md). The [reuse and tailoring ADR](REUSE-AND-TAILORING.md) separately explains how to inspect existing capabilities, choose between native use, reuse, adaptation, and creation, and weigh ongoing ownership.
 
 ### Why customize
 
@@ -20,13 +20,13 @@ Create customizations to capture **missing context, consequential conventions, a
 - **Reviewable control**: Explicit role inputs, outputs, approval boundaries, and checks make the workflow inspectable. Permissions and tooling enforce hard boundaries; prose alone does not.
 - **Less drift**: Reusable guidance has a versioned owner rather than competing copies in chats and role definitions.
 
-Copilot supplies [customization and delegation mechanisms](https://code.visualstudio.com/docs/agent-customization/custom-agents); DevHub supplies the policy needed by its projects. The [workflow ADR](../workflow/AI-DEVELOPMENT-WORKFLOW.md) and [skills-first ADR](../workflow/REUSABLE-WORKFLOWS-AS-SKILLS.md) own the selected workflow, rather than this record duplicating its steps. Planning and implementation orchestration customize procedures, not new personas; invoke their skills in the existing native agent rather than recreate the host's agent hierarchy.
+Copilot supplies [customization and delegation mechanisms](https://code.visualstudio.com/docs/agent-customization/custom-agents); DevHub supplies the policy needed by its projects. The [workflow ADR](../workflow/AI-DEVELOPMENT-WORKFLOW.md) and [workflow-agent ADR](../workflow/WORKFLOW-AGENTS-AND-FOCUSED-SKILLS.md) own the selected workflow and role structure, rather than this record duplicating their procedures.
 
 ### Start with existing capability; customize for value
 
 Treat the active host and harness as the starting point, not a blank slate. First understand what its default agents, tools, context handling, delegation, permissions, and the repository's existing tooling already do. When they handle the task adequately, use them as-is. Recreating their general abilities in custom agents, wrappers, tools, or an orchestrator duplicates behavior and creates another layer to discover, test, and maintain without necessarily improving the result.
 
-A customization earns its cost by closing a specific, recurring gap: for example, local constraints the model cannot infer, a standard that should be applied consistently, a repeatable procedure, or a distinct role contract that a default agent with instructions and skills cannot reliably fulfill. Prefer instructions for durable rules and skills for reusable procedures; add a custom agent only when its distinct responsibilities and boundaries improve the work. If no concrete gap or meaningful outcome can be named, keep the default setup. The [reuse and tailoring ADR](REUSE-AND-TAILORING.md) gives the practical selection and maintenance test.
+A customization earns its cost by closing a specific, recurring gap: for example, local constraints the model cannot infer, a standard that should be applied consistently, a repeatable procedure, or a stable role selector that makes a recurring responsibility and handoff easier to choose and follow. Prefer instructions for durable rules and skills for reusable procedures; add a custom agent when its role contract or discoverable entry point improves the work. If no concrete gap or meaningful outcome can be named, keep the default setup. The [reuse and tailoring ADR](REUSE-AND-TAILORING.md) gives the practical selection and maintenance test.
 
 ### Detail: control the outcome, not every thought
 
@@ -53,12 +53,12 @@ Flexibility does not waive security, approval, compatibility, or acceptance crit
 ### Positive
 
 - **Model potential retained**: Explicit outcomes and boundaries permit adaptive reasoning and useful alternatives without surrendering control of intent.
-- **Sustainable ownership**: Reuse and evidence-based additions keep the owned surface smaller and more purposeful.
+- **Sustainable ownership**: Reuse and evidence-based additions keep the owned surface smaller and more purposeful; named roles are justified by entry-point and context needs rather than by a preference for more agents.
 - **Shared understanding**: Written local expectations support both human onboarding and AI-assisted execution.
 
 ### Negative
 
-- **Judgment required**: Deciding what is a genuine gap and how much detail it needs cannot be reduced to a percentage or file-size rule.
+- **Judgment required**: Deciding what is a genuine gap, when a role wrapper improves discovery, and how much detail it needs cannot be reduced to a percentage or file-size rule.
 - **Behavioral variance**: Flexible guidance is not deterministic compliance; representative evaluation, checks, and human review remain necessary.
 - **Guidance maintenance**: Local constraints and known-failure guardrails must remain accurate as tools, models, and projects evolve.
 
@@ -82,3 +82,8 @@ Accepted: the user selected thin, high-level customizations that preserve model 
 ## Date
 
 2026-11-13
+
+---
+# Changelog
+
+- 2026-11-14: Updated the selected customization set to reflect role-level Planner and Implementation Orchestrator entry points plus focused reusable skills; linked the focused workflow decisions.

@@ -4,7 +4,9 @@
 
 The shared instruction and development-setup packages need a maintained way to declare dependencies, select versions, install content, and update supported customization primitives. Copying files is possible, but owning a custom resolver, installer, and host-specific deployment mappings would recreate package-management work.
 
-The decision drivers are declarative dependencies, repeatable distribution without a homegrown package manager, reviewable updates, and explicit consumer ownership. This record chooses the distribution mechanism; [package design](PACKAGE-DESIGN.md) separately owns the package split and destinations, and the [synchronization TODO](SYNCHRONIZATION.md) owns future update automation.
+The decision drivers are declarative dependencies, repeatable distribution without a homegrown package manager, reviewable updates, and explicit consumer ownership. This record chooses the distribution mechanism; [package design](PACKAGE-DESIGN.md) separately owns the package split and destinations, and the [synchronization record](SYNCHRONIZATION.md) owns existing fleet delivery and deferred local setup work.
+
+The current upstream skill and instruction dependencies include mutable `#HEAD` refs. APM resolves a ref and records exact commit and content hashes in the generated lockfile; the manifest does not continuously synchronize installed files. `apm update` explicitly re-resolves permitted refs, while lockfile-based installs retain the recorded resolution. APM manages distribution mechanics, but consumers still own when and how updates are reviewed and applied.
 
 ---
 
@@ -18,7 +20,7 @@ Choose APM because it already owns the package-distribution lifecycle that both 
 
 - **Reuse distribution logic**: Delegate dependency resolution, pinning, installation, updates, and target-aware deployment to the package manager rather than design, implement, and maintain those capabilities ourselves.
 - **One lifecycle for both units**: Instructions and the development setup can have different destinations and update policies while sharing the same package-management mechanism.
-- **Reviewable inputs**: Manifests and lockfiles make selected sources and resolved content inspectable. Consumers still review provenance, licenses, permissions, and updates; pinning is not proof of safety or correct behavior.
+- **Reviewable inputs**: Manifests declare sources and refs; lockfiles make resolved commits and content hashes inspectable. Consumers still review provenance, licenses, permissions, and updates; a mutable ref is not live synchronization and a lockfile is not proof of safety or correct behavior.
 - **Supported target mapping**: Reuse APM's maintained deployment mappings instead of hardcoding every primitive's destination in a custom distributor. Support is limited to the documented target matrix and must be verified for the chosen host.
 
 Native plugins are a credible alternative for bundled workflows, and Git or manual synchronization can distribute files. APM is selected for its explicit dependency and deployment boundary, not because those alternatives cannot work. Any necessary local script should only bridge the consumer-selected scope to supported destinations, not reimplement package resolution or the installation/update engine. APM does not choose the consumer's scope or enforce runtime behavior.
@@ -33,12 +35,12 @@ APM's [target matrix](https://microsoft.github.io/apm/reference/targets-matrix/)
 
 - **Managed distribution**: APM handles the package-distribution logic instead of making DevHub maintain its own dependency resolver, version/lock handling, installer, updater, and target mappings. Local integration remains limited to any necessary scope adapter.
 - **Consistent package lifecycle**: Both units use the same dependency and deployment mechanism without coupling their installation destinations or update cadence.
-- **Reviewable versions**: Declared dependencies and locked content let consumers inspect what an installation or update selects.
+- **Reviewable versions**: Declared dependencies and locked content let consumers inspect the ref requested and the exact content resolved.
 
 ### Negative
 
 - **Package-manager dependency**: Distribution depends on APM's supported primitives, target behavior, and evolving contracts. Package-manager updates need review, and consumer-selected local scopes may still require an adapter.
-- **Scope verification**: Local synchronization and host discovery require explicit validation, especially for parent workspaces and direct repository sessions.
+- **Scope verification**: Local synchronization and host discovery require explicit validation, especially for parent workspaces and direct repository sessions. A mutable `#HEAD` ref advances only when a consumer performs a dependency refresh and accepts its changes.
 
 ---
 
@@ -56,10 +58,15 @@ APM's [target matrix](https://microsoft.github.io/apm/reference/targets-matrix/)
 
 ## Status
 
-Accepted: the user selected APM as the distribution mechanism. The eight source packages now implement the separately recorded package boundaries. Consumer installation, scripts, synchronization, and host runtime validation remain separate and are not established by source readiness.
+Accepted: the user selected APM as the distribution mechanism. The eight source packages implement the separately recorded package boundaries. Central repository-fleet PR delivery exists under a narrower contract that does not yet support the current eight-package split or `#HEAD` refs; local development-scope installation and host runtime discovery remain separate and are not established by source readiness.
 
 ---
 
 ## Date
 
 2026-11-13
+
+---
+# Changelog
+
+- 2026-11-14: Clarified the current mutable-ref and lockfile behavior so upstream `#HEAD` does not imply automatic live updates.
